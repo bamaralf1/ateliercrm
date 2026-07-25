@@ -19,14 +19,14 @@ export function renderizarDashboard(dataStore) {
   const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
   const listaRecentesHtml = recentes.length ? recentes.map(o => `
     <li class="item-obra-recente">
-      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || 'ð¼ï¸')}</div>
+      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || '🖼️')}</div>
       <div class="info-obra-recente">
         <div class="nome">${o.titulo}</div>
         <div class="meta">${o.tecnica || ''} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
       </div>
       <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
     </li>
-  `).join('') : `<div class="estado-vazio"><div class="icone-vazio">ð¼ï¸</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para começar.</p></div>`;
+  `).join('') : `<div class="estado-vazio"><div class="icone-vazio">🖼️</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para começar.</p></div>`;
   return `
     <div class="view-cabecalho">
       <div>
@@ -38,7 +38,7 @@ export function renderizarDashboard(dataStore) {
       </div>
     </div>
     <div class="grid-cards stagger-in">
-      <div class="card card-destaque"><div class="rotulo-card">Total de Obras</div><div class="valor-card">${obras.length}</div><div class="card-tendencia ${crescimentoMensal >= 0 ? 'positiva' : 'negativa'}">${crescimentoMensal >= 0 ? 'â' : '↓'} ${Math.abs(crescimentoMensal).toFixed(1)}% este mês</div></div>
+      <div class="card card-destaque"><div class="rotulo-card">Total de Obras</div><div class="valor-card">${obras.length}</div><div class="card-tendencia ${crescimentoMensal >= 0 ? 'positiva' : 'negativa'}">${crescimentoMensal >= 0 ? '↑' : '↓'} ${Math.abs(crescimentoMensal).toFixed(1)}% este mês</div></div>
       <div class="card"><div class="rotulo-card">Obras Vendidas</div><div class="valor-card">${vendidas.length}</div><div class="card-sub">${obras.length > 0 ? ((vendidas.length / obras.length) * 100).toFixed(1) : 0}% do total</div></div>
       <div class="card"><div class="rotulo-card">Em Estoque</div><div class="valor-card">${emEstoque.length}</div><div class="card-sub">${obras.length > 0 ? ((emEstoque.length / obras.length) * 100).toFixed(1) : 0}% disponível</div></div>
       <div class="card card-valor"><div class="rotulo-card">Valor do Acervo</div><div class="valor-card">${formatarMoeda(valorAcervo)}</div><div class="card-sub">Ticket médio: ${formatarMoeda(ticketMedio)}</div></div>
@@ -47,13 +47,13 @@ export function renderizarDashboard(dataStore) {
     </div>
     <div class="grid-painel">
       <div class="painel"><h3>📊 Produtividade Mensal</h3><div class="grafico-container">${graficoSvg}</div><div class="grafico-legenda"><span class="leg-item">📊 Obras criadas por mês</span></div></div>
-      <div class="painel"><h3>ð¨ Técnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join('') : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
+      <div class="painel"><h3>🎨 Técnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join('') : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
     </div>
     <div class="grid-painel">
-      <div class="painel"><h3>ð Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
+      <div class="painel"><h3>🕐 Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
       <div class="painel"><h3>📋 Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map(a => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join('') : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
     </div>
-    <div class="painel"><h3>⚡ Atalhos rápidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">â Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">â Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">ð§¾ Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">ð¤ Gerenciar Clientes</button></div></div>
+    <div class="painel"><h3>⚡ Atalhos rápidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">✚ Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">✚ Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">🧾 Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">👤 Gerenciar Clientes</button></div></div>
   `;
 }
 
@@ -210,7 +210,7 @@ document.addEventListener('keydown', (e) => {
 export function abrirSpotlight() {
   const overlay = document.createElement('div');
   overlay.className = 'spotlight-overlay';
-  overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>â¬â¬ Navegar</span><span>â Abrir</span><span>ESC Fechar</span></div></div>`;
+  overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>⬆⬇ Navegar</span><span>⏎ Abrir</span><span>ESC Fechar</span></div></div>`;
   document.body.appendChild(overlay);
   const input = overlay.querySelector('.spotlight-input');
   const results = overlay.querySelector('.spotlight-results');
@@ -256,7 +256,7 @@ export function abrirSpotlight() {
       try {
         const hist = JSON.parse(localStorage.getItem('atelier_spotlight_hist') || '[]');
         if (hist.length > 0) {
-          results.innerHTML = secao('Recentes', 'ð') + hist.map(h => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">ð</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join('');
+          results.innerHTML = secao('Recentes', '🕐') + hist.map(h => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">🕐</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join('');
           results.querySelectorAll('.sp-historico').forEach(el => el.addEventListener('click', () => { input.value = el.dataset.termo; buscar(el.dataset.termo); }));
           return;
         }
@@ -273,12 +273,12 @@ export function abrirSpotlight() {
     const eventos = (dataStore?.listar('eventos') || []).filter(e => (e.nome || '').toLowerCase().includes(t)).slice(0, 5);
 
     let html = '';
-    if (obras.length) { html += secao('Obras', 'ð¼ï¸') + obras.map(o => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ''}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ''} · ${formatarMoeda(o.preco)}</span></div>`).join(''); }
-    if (clientes.length) { html += secao('Clientes', 'ð¤') + clientes.map(c => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">ð¤</span><span>${c.nome}</span><span class="si-info">${c.email || ''}</span></div>`).join(''); }
-    if (vendas.length) { html += secao('Vendas', 'ð°') + vendas.map(v => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">ð°</span><span>Recibo ${v.numeroRecibo || ''}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join(''); }
-    if (contatos.length) { html += secao('Contatos', 'ð¤') + contatos.map(c => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">ð¤</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ''}</span></div>`).join(''); }
-    if (encomendas.length) { html += secao('Encomendas', 'ð¦') + encomendas.map(e => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">ð¦</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ''}</span></div>`).join(''); }
-    if (eventos.length) { html += secao('Eventos', 'ðª') + eventos.map(e => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">ðª</span><span>${e.nome}</span><span class="si-info">${e.tipo || ''}</span></div>`).join(''); }
+    if (obras.length) { html += secao('Obras', '🖼️') + obras.map(o => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ''}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ''} · ${formatarMoeda(o.preco)}</span></div>`).join(''); }
+    if (clientes.length) { html += secao('Clientes', '👤') + clientes.map(c => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">👤</span><span>${c.nome}</span><span class="si-info">${c.email || ''}</span></div>`).join(''); }
+    if (vendas.length) { html += secao('Vendas', '💰') + vendas.map(v => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">💰</span><span>Recibo ${v.numeroRecibo || ''}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join(''); }
+    if (contatos.length) { html += secao('Contatos', '🤝') + contatos.map(c => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">🤝</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ''}</span></div>`).join(''); }
+    if (encomendas.length) { html += secao('Encomendas', '📦') + encomendas.map(e => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">📦</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ''}</span></div>`).join(''); }
+    if (eventos.length) { html += secao('Eventos', '🎪') + eventos.map(e => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">🎪</span><span>${e.nome}</span><span class="si-info">${e.tipo || ''}</span></div>`).join(''); }
     results.innerHTML = html || '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Nenhum resultado encontrado.</div>';
     results.querySelectorAll('.spotlight-item').forEach(el => { el.addEventListener('click', () => navegarParaItem(el)); });
   }, 150);
@@ -484,11 +484,11 @@ export function obterDicaDoDia() {
 
 // Tour
 const tourPassos = [
-  { alvo: '.sidebar', titulo: 'ð¨ Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
+  { alvo: '.sidebar', titulo: '🎨 Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
   { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 5 temas.', pos: 'bottom' },
   { alvo: '#btnBackup', titulo: '💾 Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
-  { alvo: '[data-rota="catalogo"]', titulo: 'ð¼ï¸ Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
-  { alvo: '[data-rota="vendas"]', titulo: 'ð° Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
+  { alvo: '[data-rota="catalogo"]', titulo: '🖼️ Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
+  { alvo: '[data-rota="vendas"]', titulo: '💰 Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
   { alvo: '[data-rota="diario"]', titulo: '📖 Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
   { alvo: '[data-rota="configuracoes"]', titulo: '⚙️ Configurações', desc: 'Configure idioma, segurança e dados do artista.', pos: 'right' }
 ];
@@ -514,7 +514,7 @@ export function iniciarTour() {
     if (top < 10) top = 10;
     tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
     const isUltimo = passoAtual === tourPassos.length - 1;
-    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">â Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? 'â Finalizar' : 'Próximo â'}</button></div>`;
+    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '✅ Finalizar' : 'Próximo →'}</button></div>`;
     document.body.appendChild(tooltip);
     document.getElementById('tourNext')?.addEventListener('click', () => { if (isUltimo) finalizarTour(); else { passoAtual++; mostrarPasso(); } });
     document.getElementById('tourPrev')?.addEventListener('click', () => { passoAtual--; mostrarPasso(); });
@@ -635,7 +635,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     const lidas = lerLidas();
     const atividades = activityLogger.obterRecentes(20);
     if (atividades.length === 0) {
-      lista.innerHTML = '<div class="notif-vazio">ð Nenhuma notificação ainda.</div>';
+      lista.innerHTML = '<div class="notif-vazio">🔔 Nenhuma notificação ainda.</div>';
       return;
     }
     lista.innerHTML = atividades.map(a => `
@@ -646,7 +646,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
           <div class="ni-detalhes">${sanitizarHTML(a.detalhes || '')}</div>
           <div class="ni-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
         </div>
-        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">â</button>
+        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">✓</button>
       </div>
     `).join('');
     lista.querySelectorAll('.ni-marcar').forEach(btn => {
@@ -695,7 +695,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     overlay = document.createElement('div');
     overlay.id = 'globalDropOverlay';
     overlay.className = 'global-drop-overlay';
-    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">ð¸</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG â Múltiplos arquivos</div></div>';
+    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">📸</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
     document.body.appendChild(overlay);
   }
   let dropTimer = 0;
@@ -716,7 +716,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
     const imagens = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (imagens.length === 0) { mostrarToast('â ï¸ Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
+    if (imagens.length === 0) { mostrarToast('⚠️ Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
     if (imagens.length === 1) {
       router?.navegar('catalogo');
       setTimeout(() => eventBus.emitir('abrir-nova-obra'), 300);

@@ -8694,7 +8694,7 @@ Only state can be modified.`);
         { id: "mat_3", nome: "Pincel Chato N\xBA 12", categoria: "ferramentas", subcategoria: "pincel", marca: "Tigre", quantidade: 5, unidade: "un", quantidadeMinima: 2, local: "Porta-pinc\xE9is", dataAquisicao: "2025-02-20", validade: "", precoUnitario: 22, foto: "", notas: "Cerdas sint\xE9ticas" },
         { id: "mat_4", nome: "Papel Aquarela 300g A3", categoria: "superficies", subcategoria: "papel", marca: "Canson", quantidade: 15, unidade: "un", quantidadeMinima: 5, local: "Gaveta B1", dataAquisicao: "2025-04-05", validade: "", precoUnitario: 12, foto: "", notas: "Granula\xE7\xE3o m\xE9dia" },
         { id: "mat_5", nome: "Tinta Acr\xEDlica Dourada", categoria: "tintas", subcategoria: "acr\xEDlico", marca: "Acrilex", quantidade: 200, unidade: "ml", quantidadeMinima: 50, local: "Prateleira A1", dataAquisicao: "2025-05-01", validade: "2026-05-01", precoUnitario: 18, foto: "", notas: "Acabamento met\xE1lico" },
-        { id: "mat_6", nome: "Moldura Cl\xE1ssica 30\xD740", categoria: "molduras", subcategoria: "cl\xE1ssica", marca: "Molduraz", quantidade: 2, unidade: "un", quantidadeMinima: 4, local: "Dep\xF3sito", dataAquisicao: "2025-06-10", validade: "", precoUnitario: 65, foto: "", notas: "\xE2\x9A\xA0\xEF\xB8\x8F ABAIXO DO M\xCDNIMO \u2014 repor urgente!" }
+        { id: "mat_6", nome: "Moldura Cl\xE1ssica 30\xD740", categoria: "molduras", subcategoria: "cl\xE1ssica", marca: "Molduraz", quantidade: 2, unidade: "un", quantidadeMinima: 4, local: "Dep\xF3sito", dataAquisicao: "2025-06-10", validade: "", precoUnitario: 65, foto: "", notas: "\u26A0\uFE0F ABAIXO DO M\xCDNIMO \u2014 repor urgente!" }
       ];
       this.dados.fornecedores = [
         { id: "forn_1", nome: "Casa do Artista", contato: "(11) 99999-0001", email: "vendas@casaartista.com.br", especialidade: "Tintas e pinc\xE9is", avaliacao: 4, notas: "Bom prazo de entrega.", historicoCompras: [{ data: "2025-01-15", valor: 320, itens: "Tintas diversas" }] },
@@ -11549,9 +11549,9 @@ Only state can be modified.`);
             </select>
           </td>
           <td class="acoes-linha-tabela">
-            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}">\xF0\x9F\x93\x84 Recibo</button>
-            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}">\xF0\x9F\x93\x9D Proposta</button>
-            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">\xE2\x9C\x95</button>
+            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}">\u{1F4C4} Recibo</button>
+            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}">\u{1F4DD} Proposta</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">\u2715</button>
           </td>
         </tr>
       `;
@@ -11565,7 +11565,7 @@ Only state can be modified.`);
       </div>
     ` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio">\xF0\x9F\x92\xB0</div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F4B0}</div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
       </div>
     `;
       const totalVendas = vendas.reduce((s, v) => s + Number(v.precoFinal || 0), 0);
@@ -11586,7 +11586,7 @@ Only state can be modified.`);
             <input type="checkbox" id="selectAllVend" ${this.selecionados.size === vendas.length && vendas.length > 0 ? "checked" : ""}>
             <label for="selectAllVend">Todos</label>
           </div>
-          <button class="btn-gradient" id="btnNovaVenda">\xE2\x9C\x9A Nova Venda</button>
+          <button class="btn-gradient" id="btnNovaVenda">\u271A Nova Venda</button>
         </div>
       </div>
       ${vendas.length > 0 ? `<div class="vendas-summary">${statusSummary}</div>` : ""}
@@ -11594,8 +11594,8 @@ Only state can be modified.`);
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} venda${this.selecionados.size === 1 ? "" : "s"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportVend">\xF0\x9F\x93\x84 Exportar</button>
-          <button class="btn-secundario btn-danger" id="bulkCancelarVend">\xE2\x9C\x95 Cancelar</button>
+          <button class="btn-secundario" id="bulkExportVend">\u{1F4C4} Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkCancelarVend">\u2715 Cancelar</button>
         </div>
       </div>` : ""}
       <div class="catalogo-filtros">
@@ -11872,7 +11872,7 @@ Only state can be modified.`);
         const cliente = clientes.find((c) => c.id === v.clienteId);
         return `
         <li class="item-escolha-venda">
-          <span>${obra ? obra.titulo : "-"} \xE2\x80\x94 ${cliente ? cliente.nome : "-"} (${formatarMoeda(v.precoFinal)})</span>
+          <span>${obra ? obra.titulo : "-"} \u2014 ${cliente ? cliente.nome : "-"} (${formatarMoeda(v.precoFinal)})</span>
           <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
         </li>
       `;
@@ -18992,14 +18992,14 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
     const listaRecentesHtml = recentes.length ? recentes.map((o) => `
     <li class="item-obra-recente">
-      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : o.emoji || "\xF0\x9F\x96\xBC\xEF\xB8\x8F"}</div>
+      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : o.emoji || "\u{1F5BC}\uFE0F"}</div>
       <div class="info-obra-recente">
         <div class="nome">${o.titulo}</div>
         <div class="meta">${o.tecnica || ""} \xB7 ${formatarData(o.dataCadastro || o.criadoEm)}</div>
       </div>
       <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
     </li>
-  `).join("") : `<div class="estado-vazio"><div class="icone-vazio">\xF0\x9F\x96\xBC\xEF\xB8\x8F</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para come\xE7ar.</p></div>`;
+  `).join("") : `<div class="estado-vazio"><div class="icone-vazio">\u{1F5BC}\uFE0F</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para come\xE7ar.</p></div>`;
     return `
     <div class="view-cabecalho">
       <div>
@@ -19011,7 +19011,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       </div>
     </div>
     <div class="grid-cards stagger-in">
-      <div class="card card-destaque"><div class="rotulo-card">Total de Obras</div><div class="valor-card">${obras.length}</div><div class="card-tendencia ${crescimentoMensal >= 0 ? "positiva" : "negativa"}">${crescimentoMensal >= 0 ? "\xE2\x86\x91" : "\u2193"} ${Math.abs(crescimentoMensal).toFixed(1)}% este m\xEAs</div></div>
+      <div class="card card-destaque"><div class="rotulo-card">Total de Obras</div><div class="valor-card">${obras.length}</div><div class="card-tendencia ${crescimentoMensal >= 0 ? "positiva" : "negativa"}">${crescimentoMensal >= 0 ? "\u2191" : "\u2193"} ${Math.abs(crescimentoMensal).toFixed(1)}% este m\xEAs</div></div>
       <div class="card"><div class="rotulo-card">Obras Vendidas</div><div class="valor-card">${vendidas.length}</div><div class="card-sub">${obras.length > 0 ? (vendidas.length / obras.length * 100).toFixed(1) : 0}% do total</div></div>
       <div class="card"><div class="rotulo-card">Em Estoque</div><div class="valor-card">${emEstoque.length}</div><div class="card-sub">${obras.length > 0 ? (emEstoque.length / obras.length * 100).toFixed(1) : 0}% dispon\xEDvel</div></div>
       <div class="card card-valor"><div class="rotulo-card">Valor do Acervo</div><div class="valor-card">${formatarMoeda(valorAcervo)}</div><div class="card-sub">Ticket m\xE9dio: ${formatarMoeda(ticketMedio)}</div></div>
@@ -19020,13 +19020,13 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     </div>
     <div class="grid-painel">
       <div class="painel"><h3>\u{1F4CA} Produtividade Mensal</h3><div class="grafico-container">${graficoSvg}</div><div class="grafico-legenda"><span class="leg-item">\u{1F4CA} Obras criadas por m\xEAs</span></div></div>
-      <div class="painel"><h3>\xF0\x9F\x8E\xA8 T\xE9cnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join("") : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
+      <div class="painel"><h3>\u{1F3A8} T\xE9cnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join("") : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
     </div>
     <div class="grid-painel">
-      <div class="painel"><h3>\xF0\x9F\x95\x90 Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
+      <div class="painel"><h3>\u{1F550} Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
       <div class="painel"><h3>\u{1F4CB} Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map((a) => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join("") : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
     </div>
-    <div class="painel"><h3>\u26A1 Atalhos r\xE1pidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">\xE2\x9C\x9A Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">\xE2\x9C\x9A Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">\xF0\x9F\xA7\xBE Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">\xF0\x9F\x91\xA4 Gerenciar Clientes</button></div></div>
+    <div class="painel"><h3>\u26A1 Atalhos r\xE1pidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">\u271A Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">\u271A Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">\u{1F9FE} Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">\u{1F464} Gerenciar Clientes</button></div></div>
   `;
   }
   function sanitizarHTML(str) {
@@ -19201,7 +19201,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
   function abrirSpotlight() {
     const overlay = document.createElement("div");
     overlay.className = "spotlight-overlay";
-    overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>\xE2\xAC\x86\xE2\xAC\x87 Navegar</span><span>\xE2\x8F\x8E Abrir</span><span>ESC Fechar</span></div></div>`;
+    overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>\u2B06\u2B07 Navegar</span><span>\u23CE Abrir</span><span>ESC Fechar</span></div></div>`;
     document.body.appendChild(overlay);
     const input = overlay.querySelector(".spotlight-input");
     const results = overlay.querySelector(".spotlight-results");
@@ -19243,7 +19243,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         try {
           const hist = JSON.parse(localStorage.getItem("atelier_spotlight_hist") || "[]");
           if (hist.length > 0) {
-            results.innerHTML = secao("Recentes", "\xF0\x9F\x95\x90") + hist.map((h) => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">\xF0\x9F\x95\x90</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join("");
+            results.innerHTML = secao("Recentes", "\u{1F550}") + hist.map((h) => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">\u{1F550}</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join("");
             results.querySelectorAll(".sp-historico").forEach((el) => el.addEventListener("click", () => {
               input.value = el.dataset.termo;
               buscar(el.dataset.termo);
@@ -19264,22 +19264,22 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const eventos = (dataStore?.listar("eventos") || []).filter((e) => (e.nome || "").toLowerCase().includes(t)).slice(0, 5);
       let html = "";
       if (obras.length) {
-        html += secao("Obras", "\xF0\x9F\x96\xBC\xEF\xB8\x8F") + obras.map((o) => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ""}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ""} \xB7 ${formatarMoeda(o.preco)}</span></div>`).join("");
+        html += secao("Obras", "\u{1F5BC}\uFE0F") + obras.map((o) => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ""}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ""} \xB7 ${formatarMoeda(o.preco)}</span></div>`).join("");
       }
       if (clientes.length) {
-        html += secao("Clientes", "\xF0\x9F\x91\xA4") + clientes.map((c) => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">\xF0\x9F\x91\xA4</span><span>${c.nome}</span><span class="si-info">${c.email || ""}</span></div>`).join("");
+        html += secao("Clientes", "\u{1F464}") + clientes.map((c) => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">\u{1F464}</span><span>${c.nome}</span><span class="si-info">${c.email || ""}</span></div>`).join("");
       }
       if (vendas.length) {
-        html += secao("Vendas", "\xF0\x9F\x92\xB0") + vendas.map((v) => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">\xF0\x9F\x92\xB0</span><span>Recibo ${v.numeroRecibo || ""}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join("");
+        html += secao("Vendas", "\u{1F4B0}") + vendas.map((v) => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">\u{1F4B0}</span><span>Recibo ${v.numeroRecibo || ""}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join("");
       }
       if (contatos.length) {
-        html += secao("Contatos", "\xF0\x9F\xA4\x9D") + contatos.map((c) => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">\xF0\x9F\xA4\x9D</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ""}</span></div>`).join("");
+        html += secao("Contatos", "\u{1F91D}") + contatos.map((c) => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">\u{1F91D}</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ""}</span></div>`).join("");
       }
       if (encomendas.length) {
-        html += secao("Encomendas", "\xF0\x9F\x93\xA6") + encomendas.map((e) => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">\xF0\x9F\x93\xA6</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ""}</span></div>`).join("");
+        html += secao("Encomendas", "\u{1F4E6}") + encomendas.map((e) => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">\u{1F4E6}</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ""}</span></div>`).join("");
       }
       if (eventos.length) {
-        html += secao("Eventos", "\xF0\x9F\x8E\xAA") + eventos.map((e) => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">\xF0\x9F\x8E\xAA</span><span>${e.nome}</span><span class="si-info">${e.tipo || ""}</span></div>`).join("");
+        html += secao("Eventos", "\u{1F3AA}") + eventos.map((e) => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">\u{1F3AA}</span><span>${e.nome}</span><span class="si-info">${e.tipo || ""}</span></div>`).join("");
       }
       results.innerHTML = html || '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Nenhum resultado encontrado.</div>';
       results.querySelectorAll(".spotlight-item").forEach((el) => {
@@ -19514,11 +19514,11 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     return dicasDiarias[diaDoAno % dicasDiarias.length];
   }
   var tourPassos = [
-    { alvo: ".sidebar", titulo: "\xF0\x9F\x8E\xA8 Bem-vindo ao Atelier CRM!", desc: "Este \xE9 seu hub criativo. Navegue entre os m\xF3dulos pelo menu lateral.", pos: "right" },
+    { alvo: ".sidebar", titulo: "\u{1F3A8} Bem-vindo ao Atelier CRM!", desc: "Este \xE9 seu hub criativo. Navegue entre os m\xF3dulos pelo menu lateral.", pos: "right" },
     { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 5 temas.", pos: "bottom" },
     { alvo: "#btnBackup", titulo: "\u{1F4BE} Backup Seguro", desc: "Exporte seus dados periodicamente.", pos: "bottom" },
-    { alvo: '[data-rota="catalogo"]', titulo: "\xF0\x9F\x96\xBC\xEF\xB8\x8F Cat\xE1logo de Obras", desc: "Cadastre, edite e gerencie seu portf\xF3lio.", pos: "right" },
-    { alvo: '[data-rota="vendas"]', titulo: "\xF0\x9F\x92\xB0 Vendas e Recibos", desc: "Registre vendas e gere recibos em PDF.", pos: "right" },
+    { alvo: '[data-rota="catalogo"]', titulo: "\u{1F5BC}\uFE0F Cat\xE1logo de Obras", desc: "Cadastre, edite e gerencie seu portf\xF3lio.", pos: "right" },
+    { alvo: '[data-rota="vendas"]', titulo: "\u{1F4B0} Vendas e Recibos", desc: "Registre vendas e gere recibos em PDF.", pos: "right" },
     { alvo: '[data-rota="diario"]', titulo: "\u{1F4D6} Di\xE1rio Criativo", desc: "Registre seu processo di\xE1rio.", pos: "right" },
     { alvo: '[data-rota="configuracoes"]', titulo: "\u2699\uFE0F Configura\xE7\xF5es", desc: "Configure idioma, seguran\xE7a e dados do artista.", pos: "right" }
   ];
@@ -19556,7 +19556,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       tooltip.style.left = left + "px";
       tooltip.style.top = top + "px";
       const isUltimo = passoAtual === tourPassos.length - 1;
-      tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">\xE2\x86\x90 Anterior</button>' : ""}<button class="tt-btn-next" id="tourNext">${isUltimo ? "\xE2\x9C\x85 Finalizar" : "Pr\xF3ximo \xE2\x86\x92"}</button></div>`;
+      tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">\u2190 Anterior</button>' : ""}<button class="tt-btn-next" id="tourNext">${isUltimo ? "\u2705 Finalizar" : "Pr\xF3ximo \u2192"}</button></div>`;
       document.body.appendChild(tooltip);
       document.getElementById("tourNext")?.addEventListener("click", () => {
         if (isUltimo) finalizarTour();
@@ -19704,7 +19704,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const lidas = lerLidas();
       const atividades = activityLogger.obterRecentes(20);
       if (atividades.length === 0) {
-        lista.innerHTML = '<div class="notif-vazio">\xF0\x9F\x94\x94 Nenhuma notifica\xE7\xE3o ainda.</div>';
+        lista.innerHTML = '<div class="notif-vazio">\u{1F514} Nenhuma notifica\xE7\xE3o ainda.</div>';
         return;
       }
       lista.innerHTML = atividades.map((a) => `
@@ -19715,7 +19715,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           <div class="ni-detalhes">${sanitizarHTML(a.detalhes || "")}</div>
           <div class="ni-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
         </div>
-        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">\xE2\x9C\x93</button>
+        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">\u2713</button>
       </div>
     `).join("");
       lista.querySelectorAll(".ni-marcar").forEach((btn) => {
@@ -19764,7 +19764,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       overlay = document.createElement("div");
       overlay.id = "globalDropOverlay";
       overlay.className = "global-drop-overlay";
-      overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">\xF0\x9F\x93\xB8</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG \xB7 PNG \xE2\x80\x94 M\xFAltiplos arquivos</div></div>';
+      overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">\u{1F4F8}</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG \xB7 PNG \u2014 M\xFAltiplos arquivos</div></div>';
       document.body.appendChild(overlay);
     }
     let dropTimer = 0;
@@ -19788,7 +19788,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       if (!files || files.length === 0) return;
       const imagens = Array.from(files).filter((f) => f.type.startsWith("image/"));
       if (imagens.length === 0) {
-        mostrarToast("\xE2\x9A\xA0\xEF\xB8\x8F Apenas imagens (JPG/PNG) s\xE3o suportadas.", "erro");
+        mostrarToast("\u26A0\uFE0F Apenas imagens (JPG/PNG) s\xE3o suportadas.", "erro");
         return;
       }
       if (imagens.length === 1) {

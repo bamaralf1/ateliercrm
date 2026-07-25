@@ -45,9 +45,9 @@ export class VendasView extends BaseView {
             </select>
           </td>
           <td class="acoes-linha-tabela">
-            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}">ð Recibo</button>
-            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}">ð Proposta</button>
-            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">â</button>
+            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}">📄 Recibo</button>
+            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}">📝 Proposta</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">✕</button>
           </td>
         </tr>
       `;
@@ -62,7 +62,7 @@ export class VendasView extends BaseView {
       </div>
     ` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio">ð°</div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio">💰</div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
       </div>
     `;
 
@@ -82,7 +82,7 @@ export class VendasView extends BaseView {
             <input type="checkbox" id="selectAllVend" ${this.selecionados.size === vendas.length && vendas.length > 0 ? 'checked' : ''}>
             <label for="selectAllVend">Todos</label>
           </div>
-          <button class="btn-gradient" id="btnNovaVenda">â Nova Venda</button>
+          <button class="btn-gradient" id="btnNovaVenda">✚ Nova Venda</button>
         </div>
       </div>
       ${vendas.length > 0 ? `<div class="vendas-summary">${statusSummary}</div>` : ''}
@@ -90,8 +90,8 @@ export class VendasView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} venda${this.selecionados.size === 1 ? '' : 's'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportVend">ð Exportar</button>
-          <button class="btn-secundario btn-danger" id="bulkCancelarVend">â Cancelar</button>
+          <button class="btn-secundario" id="bulkExportVend">📄 Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkCancelarVend">✕ Cancelar</button>
         </div>
       </div>` : ''}
       <div class="catalogo-filtros">
@@ -369,7 +369,7 @@ export class VendasView extends BaseView {
       const cliente = clientes.find(c => c.id === v.clienteId);
       return `
         <li class="item-escolha-venda">
-          <span>${obra ? obra.titulo : '-'} â ${cliente ? cliente.nome : '-'} (${formatarMoeda(v.precoFinal)})</span>
+          <span>${obra ? obra.titulo : '-'} — ${cliente ? cliente.nome : '-'} (${formatarMoeda(v.precoFinal)})</span>
           <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
         </li>
       `;
