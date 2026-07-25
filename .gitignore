@@ -1,0 +1,6 @@
+node_modules/
+js/atelier-crm.js
+src/atelier-crm.ts
+coverage/
+.DS_Store
+Thumbs.db

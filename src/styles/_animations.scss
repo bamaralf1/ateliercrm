@@ -1,0 +1,293 @@
+// ═══════════════════════════════════════════════
+//  ANIMATIONS & MICROINTERACTIONS
+//  Keyframes, transition classes, loading states
+// ═══════════════════════════════════════════════
+
+// --- Page view transition ---
+@keyframes viewEntrance {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Grid cards entrance ---
+@keyframes gridEntrance {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Staggered list entrance ---
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Slide down (dropdowns, panels) ---
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Fade in down (summary bars) ---
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Modal backdrop + content ---
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px) rotateX(5deg); }
+  to { opacity: 1; transform: scale(1) translateY(0) rotateX(0deg); }
+}
+
+// --- Toast entrance ---
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Skeleton shimmer ---
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// --- Notification badge pulse ---
+@keyframes notifPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+// --- Badge entrance ---
+@keyframes badgeIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+// --- Tooltip entrance ---
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+// --- Ripple effect ---
+@keyframes rippleEffect {
+  to { transform: scale(4); opacity: 0; }
+}
+
+// --- Pulse for important elements ---
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb, 37,99,235), 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb, 37,99,235), 0); }
+}
+
+// --- Bounce (notifications) ---
+@keyframes bounceIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.15); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+// --- Spin (loading) ---
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// --- Shake (form error) ---
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+// --- Checkmark animation ---
+@keyframes checkDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+// ─── Microinteraction utility classes ───
+
+// Reduce motion
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// View entrance (applied to .view)
+.view {
+  animation: viewEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// Grid entrance
+.grid-cards, .grid-obras, .grid-clientes {
+  animation: gridEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// Staggered children (1-12 items)
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.stagger-children > *:nth-child(1)  { animation-delay: 0.02s; }
+.stagger-children > *:nth-child(2)  { animation-delay: 0.04s; }
+.stagger-children > *:nth-child(3)  { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(4)  { animation-delay: 0.08s; }
+.stagger-children > *:nth-child(5)  { animation-delay: 0.10s; }
+.stagger-children > *:nth-child(6)  { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(7)  { animation-delay: 0.14s; }
+.stagger-children > *:nth-child(8)  { animation-delay: 0.16s; }
+.stagger-children > *:nth-child(9)  { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.20s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.22s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.24s; }
+
+// Skeleton loading
+.skeleton {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--border) 60%, transparent) 25%,
+    transparent 50%,
+    color-mix(in srgb, var(--border) 60%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+// Skeleton variants
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+.skeleton-text:last-child { width: 60%; }
+.skeleton-heading { height: 24px; width: 40%; margin-bottom: 16px; }
+.skeleton-card { height: 160px; border-radius: var(--radius); }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton-thumb { width: 80px; height: 80px; border-radius: 8px; }
+
+// Loading spinner
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+.spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+
+// Pulse glow (important CTAs)
+.btn-pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+// Shake (form error feedback)
+.shake {
+  animation: shake 0.4s ease;
+}
+
+// Bounce in
+.bounce-in {
+  animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Ripple container
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10%);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0%;
+  opacity: 0;
+  transition: none;
+  pointer-events: none;
+}
+.ripple:active::after {
+  animation: rippleEffect 0.5s ease-out;
+  background-size: 1000%;
+  opacity: 1;
+}
+
+// Focus visible ring
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+// Form validation feedback
+input.erro, select.erro, textarea.erro {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220,38,38,0.15);
+}
+input.sucesso, select.sucesso, textarea.sucesso {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 2px rgba(22,163,74,0.15);
+}
+.msg-erro {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  animation: slideDown 0.2s ease;
+}
+
+// Lazy load fade-in
+.lazy-fade {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.lazy-fade.carregado {
+  opacity: 1;
+}
+
+// Empty state (used in views)
+.estado-vazio {
+  text-align: center;
+  padding: 48px 24px;
+  opacity: 0.7;
+}
+.estado-vazio .icone {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.estado-vazio h3 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.estado-vazio p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+// Premium empty state
+.estado-vazio.premium {
+  padding: 64px 24px;
+  background: linear-gradient(180deg, var(--card) 0%, transparent 100%);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+.estado-vazio.premium .icone {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  filter: grayscale(0.5);
+}

@@ -1,0 +1,19932 @@
+(() => {
+  var __defProp = Object.defineProperty;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+
+  // node_modules/@vue/shared/dist/shared.esm-bundler.js
+  // @__NO_SIDE_EFFECTS__
+  function makeMap(str) {
+    const map2 = /* @__PURE__ */ Object.create(null);
+    for (const key of str.split(",")) map2[key] = 1;
+    return (val) => val in map2;
+  }
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var NOOP = () => {
+  };
+  var NO = () => false;
+  var extend = Object.assign;
+  var remove = (arr, el) => {
+    const i = arr.indexOf(el);
+    if (i > -1) {
+      arr.splice(i, 1);
+    }
+  };
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var hasOwn = (val, key) => hasOwnProperty.call(val, key);
+  var isArray = Array.isArray;
+  var isMap = (val) => toTypeString(val) === "[object Map]";
+  var isSet = (val) => toTypeString(val) === "[object Set]";
+  var isFunction = (val) => typeof val === "function";
+  var isString = (val) => typeof val === "string";
+  var isSymbol = (val) => typeof val === "symbol";
+  var isObject = (val) => val !== null && typeof val === "object";
+  var isPromise = (val) => {
+    return (isObject(val) || isFunction(val)) && isFunction(val.then) && isFunction(val.catch);
+  };
+  var objectToString = Object.prototype.toString;
+  var toTypeString = (value) => objectToString.call(value);
+  var toRawType = (value) => {
+    return toTypeString(value).slice(8, -1);
+  };
+  var isPlainObject = (val) => toTypeString(val) === "[object Object]";
+  var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
+  var cacheStringFunction = (fn) => {
+    const cache = /* @__PURE__ */ Object.create(null);
+    return ((str) => {
+      const hit = cache[str];
+      return hit || (cache[str] = fn(str));
+    });
+  };
+  var camelizeRE = /-\w/g;
+  var camelize = cacheStringFunction(
+    (str) => {
+      return str.replace(camelizeRE, (c) => c.slice(1).toUpperCase());
+    }
+  );
+  var hyphenateRE = /\B([A-Z])/g;
+  var hyphenate = cacheStringFunction(
+    (str) => str.replace(hyphenateRE, "-$1").toLowerCase()
+  );
+  var capitalize = cacheStringFunction((str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  });
+  var toHandlerKey = cacheStringFunction(
+    (str) => {
+      const s = str ? `on${capitalize(str)}` : ``;
+      return s;
+    }
+  );
+  var hasChanged = (value, oldValue) => !Object.is(value, oldValue);
+  var def = (obj, key, value, writable = false) => {
+    Object.defineProperty(obj, key, {
+      configurable: true,
+      enumerable: false,
+      writable,
+      value
+    });
+  };
+  var _globalThis;
+  var getGlobalThis = () => {
+    return _globalThis || (_globalThis = typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : {});
+  };
+  var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
+  var isBooleanAttr = /* @__PURE__ */ makeMap(
+    specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,inert,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`
+  );
+
+  // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
+  function warn(msg, ...args) {
+    console.warn(`[Vue warn] ${msg}`, ...args);
+  }
+  var activeEffectScope;
+  var EffectScope = class {
+    // TODO isolatedDeclarations "__v_skip"
+    constructor(detached = false) {
+      this.detached = detached;
+      this._active = true;
+      this._on = 0;
+      this.effects = [];
+      this.cleanups = [];
+      this._isPaused = false;
+      this._warnOnRun = true;
+      this.__v_skip = true;
+      if (!detached && activeEffectScope) {
+        if (activeEffectScope.active) {
+          this.parent = activeEffectScope;
+          this.index = (activeEffectScope.scopes || (activeEffectScope.scopes = [])).push(
+            this
+          ) - 1;
+        } else {
+          this._active = false;
+          this._warnOnRun = false;
+        }
+      }
+    }
+    get active() {
+      return this._active;
+    }
+    pause() {
+      if (this._active) {
+        this._isPaused = true;
+        let i, l;
+        if (this.scopes) {
+          const scopes = this.scopes.slice();
+          for (i = 0, l = scopes.length; i < l; i++) {
+            scopes[i].pause();
+          }
+        }
+        for (i = 0, l = this.effects.length; i < l; i++) {
+          this.effects[i].pause();
+        }
+      }
+    }
+    /**
+     * Resumes the effect scope, including all child scopes and effects.
+     */
+    resume() {
+      if (this._active) {
+        if (this._isPaused) {
+          this._isPaused = false;
+          let i, l;
+          if (this.scopes) {
+            const scopes = this.scopes.slice();
+            for (i = 0, l = scopes.length; i < l; i++) {
+              scopes[i].resume();
+            }
+          }
+          const effects = this.effects.slice();
+          for (i = 0, l = effects.length; i < l; i++) {
+            effects[i].resume();
+          }
+        }
+      }
+    }
+    run(fn) {
+      if (this._active) {
+        const currentEffectScope = activeEffectScope;
+        try {
+          activeEffectScope = this;
+          return fn();
+        } finally {
+          activeEffectScope = currentEffectScope;
+        }
+      } else if (this._warnOnRun) {
+        warn(`cannot run an inactive effect scope.`);
+      }
+    }
+    /**
+     * This should only be called on non-detached scopes
+     * @internal
+     */
+    on() {
+      if (++this._on === 1) {
+        this.prevScope = activeEffectScope;
+        activeEffectScope = this;
+      }
+    }
+    /**
+     * This should only be called on non-detached scopes
+     * @internal
+     */
+    off() {
+      if (this._on > 0 && --this._on === 0) {
+        if (activeEffectScope === this) {
+          activeEffectScope = this.prevScope;
+        } else {
+          let current = activeEffectScope;
+          while (current) {
+            if (current.prevScope === this) {
+              current.prevScope = this.prevScope;
+              break;
+            }
+            current = current.prevScope;
+          }
+        }
+        this.prevScope = void 0;
+      }
+    }
+    stop(fromParent) {
+      if (this._active) {
+        this._active = false;
+        let i, l;
+        for (i = 0, l = this.effects.length; i < l; i++) {
+          this.effects[i].stop();
+        }
+        this.effects.length = 0;
+        for (i = 0, l = this.cleanups.length; i < l; i++) {
+          this.cleanups[i]();
+        }
+        this.cleanups.length = 0;
+        if (this.scopes) {
+          const scopes = this.scopes.slice();
+          for (i = 0, l = scopes.length; i < l; i++) {
+            scopes[i].stop(true);
+          }
+          this.scopes.length = 0;
+        }
+        if (!this.detached && this.parent && !fromParent) {
+          const last = this.parent.scopes.pop();
+          if (last && last !== this) {
+            this.parent.scopes[this.index] = last;
+            last.index = this.index;
+          }
+        }
+        this.parent = void 0;
+      }
+    }
+  };
+  function effectScope(detached) {
+    return new EffectScope(detached);
+  }
+  function getCurrentScope() {
+    return activeEffectScope;
+  }
+  function onScopeDispose(fn, failSilently = false) {
+    if (activeEffectScope) {
+      activeEffectScope.cleanups.push(fn);
+    } else if (!failSilently) {
+      warn(
+        `onScopeDispose() is called when there is no active effect scope to be associated with.`
+      );
+    }
+  }
+  var activeSub;
+  var pausedQueueEffects = /* @__PURE__ */ new WeakSet();
+  var ReactiveEffect = class {
+    constructor(fn) {
+      this.fn = fn;
+      this.deps = void 0;
+      this.depsTail = void 0;
+      this.flags = 1 | 4;
+      this.next = void 0;
+      this.cleanup = void 0;
+      this.scheduler = void 0;
+      if (activeEffectScope) {
+        if (activeEffectScope.active) {
+          activeEffectScope.effects.push(this);
+        } else {
+          this.flags &= -2;
+        }
+      }
+    }
+    pause() {
+      this.flags |= 64;
+    }
+    resume() {
+      if (this.flags & 64) {
+        this.flags &= -65;
+        if (pausedQueueEffects.has(this)) {
+          pausedQueueEffects.delete(this);
+          this.trigger();
+        }
+      }
+    }
+    /**
+     * @internal
+     */
+    notify() {
+      if (this.flags & 2 && !(this.flags & 32)) {
+        return;
+      }
+      if (!(this.flags & 8)) {
+        batch(this);
+      }
+    }
+    run() {
+      if (!(this.flags & 1)) {
+        return this.fn();
+      }
+      this.flags |= 2;
+      cleanupEffect(this);
+      prepareDeps(this);
+      const prevEffect = activeSub;
+      const prevShouldTrack = shouldTrack;
+      activeSub = this;
+      shouldTrack = true;
+      try {
+        return this.fn();
+      } finally {
+        if (activeSub !== this) {
+          warn(
+            "Active effect was not restored correctly - this is likely a Vue internal bug."
+          );
+        }
+        cleanupDeps(this);
+        activeSub = prevEffect;
+        shouldTrack = prevShouldTrack;
+        this.flags &= -3;
+      }
+    }
+    stop() {
+      if (this.flags & 1) {
+        for (let link = this.deps; link; link = link.nextDep) {
+          removeSub(link);
+        }
+        this.deps = this.depsTail = void 0;
+        cleanupEffect(this);
+        this.onStop && this.onStop();
+        this.flags &= -2;
+      }
+    }
+    trigger() {
+      if (this.flags & 64) {
+        pausedQueueEffects.add(this);
+      } else if (this.scheduler) {
+        this.scheduler();
+      } else {
+        this.runIfDirty();
+      }
+    }
+    /**
+     * @internal
+     */
+    runIfDirty() {
+      if (isDirty(this)) {
+        this.run();
+      }
+    }
+    get dirty() {
+      return isDirty(this);
+    }
+  };
+  var batchDepth = 0;
+  var batchedSub;
+  var batchedComputed;
+  function batch(sub, isComputed2 = false) {
+    sub.flags |= 8;
+    if (isComputed2) {
+      sub.next = batchedComputed;
+      batchedComputed = sub;
+      return;
+    }
+    sub.next = batchedSub;
+    batchedSub = sub;
+  }
+  function startBatch() {
+    batchDepth++;
+  }
+  function endBatch() {
+    if (--batchDepth > 0) {
+      return;
+    }
+    if (batchedComputed) {
+      let e = batchedComputed;
+      batchedComputed = void 0;
+      while (e) {
+        const next = e.next;
+        e.next = void 0;
+        e.flags &= -9;
+        e = next;
+      }
+    }
+    let error;
+    while (batchedSub) {
+      let e = batchedSub;
+      batchedSub = void 0;
+      while (e) {
+        const next = e.next;
+        e.next = void 0;
+        e.flags &= -9;
+        if (e.flags & 1) {
+          try {
+            ;
+            e.trigger();
+          } catch (err) {
+            if (!error) error = err;
+          }
+        }
+        e = next;
+      }
+    }
+    if (error) throw error;
+  }
+  function prepareDeps(sub) {
+    for (let link = sub.deps; link; link = link.nextDep) {
+      link.version = -1;
+      link.prevActiveLink = link.dep.activeLink;
+      link.dep.activeLink = link;
+    }
+  }
+  function cleanupDeps(sub) {
+    let head;
+    let tail = sub.depsTail;
+    let link = tail;
+    while (link) {
+      const prev = link.prevDep;
+      if (link.version === -1) {
+        if (link === tail) tail = prev;
+        removeSub(link);
+        removeDep(link);
+      } else {
+        head = link;
+      }
+      link.dep.activeLink = link.prevActiveLink;
+      link.prevActiveLink = void 0;
+      link = prev;
+    }
+    sub.deps = head;
+    sub.depsTail = tail;
+  }
+  function isDirty(sub) {
+    for (let link = sub.deps; link; link = link.nextDep) {
+      if (link.dep.version !== link.version || link.dep.computed && (refreshComputed(link.dep.computed) || link.dep.version !== link.version)) {
+        return true;
+      }
+    }
+    if (sub._dirty) {
+      return true;
+    }
+    return false;
+  }
+  function refreshComputed(computed3) {
+    if (computed3.flags & 4 && !(computed3.flags & 16)) {
+      return;
+    }
+    computed3.flags &= -17;
+    if (computed3.globalVersion === globalVersion) {
+      return;
+    }
+    computed3.globalVersion = globalVersion;
+    if (!computed3.isSSR && computed3.flags & 128 && (!computed3.deps && !computed3._dirty || !isDirty(computed3))) {
+      return;
+    }
+    computed3.flags |= 2;
+    const dep = computed3.dep;
+    const prevSub = activeSub;
+    const prevShouldTrack = shouldTrack;
+    activeSub = computed3;
+    shouldTrack = true;
+    try {
+      prepareDeps(computed3);
+      const value = computed3.fn(computed3._value);
+      if (dep.version === 0 || hasChanged(value, computed3._value)) {
+        computed3.flags |= 128;
+        computed3._value = value;
+        dep.version++;
+      }
+    } catch (err) {
+      dep.version++;
+      throw err;
+    } finally {
+      activeSub = prevSub;
+      shouldTrack = prevShouldTrack;
+      cleanupDeps(computed3);
+      computed3.flags &= -3;
+    }
+  }
+  function removeSub(link, soft = false) {
+    const { dep, prevSub, nextSub } = link;
+    if (prevSub) {
+      prevSub.nextSub = nextSub;
+      link.prevSub = void 0;
+    }
+    if (nextSub) {
+      nextSub.prevSub = prevSub;
+      link.nextSub = void 0;
+    }
+    if (dep.subsHead === link) {
+      dep.subsHead = nextSub;
+    }
+    if (dep.subs === link) {
+      dep.subs = prevSub;
+      if (!prevSub && dep.computed) {
+        dep.computed.flags &= -5;
+        for (let l = dep.computed.deps; l; l = l.nextDep) {
+          removeSub(l, true);
+        }
+      }
+    }
+    if (!soft && !--dep.sc && dep.map) {
+      dep.map.delete(dep.key);
+    }
+  }
+  function removeDep(link) {
+    const { prevDep, nextDep } = link;
+    if (prevDep) {
+      prevDep.nextDep = nextDep;
+      link.prevDep = void 0;
+    }
+    if (nextDep) {
+      nextDep.prevDep = prevDep;
+      link.nextDep = void 0;
+    }
+  }
+  var shouldTrack = true;
+  var trackStack = [];
+  function pauseTracking() {
+    trackStack.push(shouldTrack);
+    shouldTrack = false;
+  }
+  function resetTracking() {
+    const last = trackStack.pop();
+    shouldTrack = last === void 0 ? true : last;
+  }
+  function cleanupEffect(e) {
+    const { cleanup } = e;
+    e.cleanup = void 0;
+    if (cleanup) {
+      const prevSub = activeSub;
+      activeSub = void 0;
+      try {
+        cleanup();
+      } finally {
+        activeSub = prevSub;
+      }
+    }
+  }
+  var globalVersion = 0;
+  var Link = class {
+    constructor(sub, dep) {
+      this.sub = sub;
+      this.dep = dep;
+      this.version = dep.version;
+      this.nextDep = this.prevDep = this.nextSub = this.prevSub = this.prevActiveLink = void 0;
+    }
+  };
+  var Dep = class {
+    // TODO isolatedDeclarations "__v_skip"
+    constructor(computed3) {
+      this.computed = computed3;
+      this.version = 0;
+      this.activeLink = void 0;
+      this.subs = void 0;
+      this.map = void 0;
+      this.key = void 0;
+      this.sc = 0;
+      this.__v_skip = true;
+      if (true) {
+        this.subsHead = void 0;
+      }
+    }
+    track(debugInfo) {
+      if (!activeSub || !shouldTrack || activeSub === this.computed) {
+        return;
+      }
+      let link = this.activeLink;
+      if (link === void 0 || link.sub !== activeSub) {
+        link = this.activeLink = new Link(activeSub, this);
+        if (!activeSub.deps) {
+          activeSub.deps = activeSub.depsTail = link;
+        } else {
+          link.prevDep = activeSub.depsTail;
+          activeSub.depsTail.nextDep = link;
+          activeSub.depsTail = link;
+        }
+        addSub(link);
+      } else if (link.version === -1) {
+        link.version = this.version;
+        if (link.nextDep) {
+          const next = link.nextDep;
+          next.prevDep = link.prevDep;
+          if (link.prevDep) {
+            link.prevDep.nextDep = next;
+          }
+          link.prevDep = activeSub.depsTail;
+          link.nextDep = void 0;
+          activeSub.depsTail.nextDep = link;
+          activeSub.depsTail = link;
+          if (activeSub.deps === link) {
+            activeSub.deps = next;
+          }
+        }
+      }
+      if (activeSub.onTrack) {
+        activeSub.onTrack(
+          extend(
+            {
+              effect: activeSub
+            },
+            debugInfo
+          )
+        );
+      }
+      return link;
+    }
+    trigger(debugInfo) {
+      this.version++;
+      globalVersion++;
+      this.notify(debugInfo);
+    }
+    notify(debugInfo) {
+      startBatch();
+      try {
+        if (true) {
+          for (let head = this.subsHead; head; head = head.nextSub) {
+            if (head.sub.onTrigger && !(head.sub.flags & 8)) {
+              head.sub.onTrigger(
+                extend(
+                  {
+                    effect: head.sub
+                  },
+                  debugInfo
+                )
+              );
+            }
+          }
+        }
+        for (let link = this.subs; link; link = link.prevSub) {
+          if (link.sub.notify()) {
+            ;
+            link.sub.dep.notify();
+          }
+        }
+      } finally {
+        endBatch();
+      }
+    }
+  };
+  function addSub(link) {
+    link.dep.sc++;
+    if (link.sub.flags & 4) {
+      const computed3 = link.dep.computed;
+      if (computed3 && !link.dep.subs) {
+        computed3.flags |= 4 | 16;
+        for (let l = computed3.deps; l; l = l.nextDep) {
+          addSub(l);
+        }
+      }
+      const currentTail = link.dep.subs;
+      if (currentTail !== link) {
+        link.prevSub = currentTail;
+        if (currentTail) currentTail.nextSub = link;
+      }
+      if (link.dep.subsHead === void 0) {
+        link.dep.subsHead = link;
+      }
+      link.dep.subs = link;
+    }
+  }
+  var targetMap = /* @__PURE__ */ new WeakMap();
+  var ITERATE_KEY = /* @__PURE__ */ Symbol(
+    true ? "Object iterate" : ""
+  );
+  var MAP_KEY_ITERATE_KEY = /* @__PURE__ */ Symbol(
+    true ? "Map keys iterate" : ""
+  );
+  var ARRAY_ITERATE_KEY = /* @__PURE__ */ Symbol(
+    true ? "Array iterate" : ""
+  );
+  function track(target2, type, key) {
+    if (shouldTrack && activeSub) {
+      let depsMap = targetMap.get(target2);
+      if (!depsMap) {
+        targetMap.set(target2, depsMap = /* @__PURE__ */ new Map());
+      }
+      let dep = depsMap.get(key);
+      if (!dep) {
+        depsMap.set(key, dep = new Dep());
+        dep.map = depsMap;
+        dep.key = key;
+      }
+      if (true) {
+        dep.track({
+          target: target2,
+          type,
+          key
+        });
+      } else {
+        dep.track();
+      }
+    }
+  }
+  function trigger(target2, type, key, newValue, oldValue, oldTarget) {
+    const depsMap = targetMap.get(target2);
+    if (!depsMap) {
+      globalVersion++;
+      return;
+    }
+    const run = (dep) => {
+      if (dep) {
+        if (true) {
+          dep.trigger({
+            target: target2,
+            type,
+            key,
+            newValue,
+            oldValue,
+            oldTarget
+          });
+        } else {
+          dep.trigger();
+        }
+      }
+    };
+    startBatch();
+    if (type === "clear") {
+      depsMap.forEach(run);
+    } else {
+      const targetIsArray = isArray(target2);
+      const isArrayIndex = targetIsArray && isIntegerKey(key);
+      if (targetIsArray && key === "length") {
+        const newLength = Number(newValue);
+        depsMap.forEach((dep, key2) => {
+          if (key2 === "length" || key2 === ARRAY_ITERATE_KEY || !isSymbol(key2) && key2 >= newLength) {
+            run(dep);
+          }
+        });
+      } else {
+        if (key !== void 0 || depsMap.has(void 0)) {
+          run(depsMap.get(key));
+        }
+        if (isArrayIndex) {
+          run(depsMap.get(ARRAY_ITERATE_KEY));
+        }
+        switch (type) {
+          case "add":
+            if (!targetIsArray) {
+              run(depsMap.get(ITERATE_KEY));
+              if (isMap(target2)) {
+                run(depsMap.get(MAP_KEY_ITERATE_KEY));
+              }
+            } else if (isArrayIndex) {
+              run(depsMap.get("length"));
+            }
+            break;
+          case "delete":
+            if (!targetIsArray) {
+              run(depsMap.get(ITERATE_KEY));
+              if (isMap(target2)) {
+                run(depsMap.get(MAP_KEY_ITERATE_KEY));
+              }
+            }
+            break;
+          case "set":
+            if (isMap(target2)) {
+              run(depsMap.get(ITERATE_KEY));
+            }
+            break;
+        }
+      }
+    }
+    endBatch();
+  }
+  function getDepFromReactive(object, key) {
+    const depMap = targetMap.get(object);
+    return depMap && depMap.get(key);
+  }
+  function reactiveReadArray(array) {
+    const raw = /* @__PURE__ */ toRaw(array);
+    if (raw === array) return raw;
+    track(raw, "iterate", ARRAY_ITERATE_KEY);
+    return /* @__PURE__ */ isShallow(array) ? raw : raw.map(toReactive);
+  }
+  function shallowReadArray(arr) {
+    track(arr = /* @__PURE__ */ toRaw(arr), "iterate", ARRAY_ITERATE_KEY);
+    return arr;
+  }
+  function toWrapped(target2, item) {
+    if (/* @__PURE__ */ isReadonly(target2)) {
+      return /* @__PURE__ */ isReactive(target2) ? toReadonly(toReactive(item)) : toReadonly(item);
+    }
+    return toReactive(item);
+  }
+  var arrayInstrumentations = {
+    __proto__: null,
+    [Symbol.iterator]() {
+      return iterator(this, Symbol.iterator, (item) => toWrapped(this, item));
+    },
+    concat(...args) {
+      return reactiveReadArray(this).concat(
+        ...args.map((x) => isArray(x) ? reactiveReadArray(x) : x)
+      );
+    },
+    entries() {
+      return iterator(this, "entries", (value) => {
+        value[1] = toWrapped(this, value[1]);
+        return value;
+      });
+    },
+    every(fn, thisArg) {
+      return apply(this, "every", fn, thisArg, void 0, arguments);
+    },
+    filter(fn, thisArg) {
+      return apply(
+        this,
+        "filter",
+        fn,
+        thisArg,
+        (v) => v.map((item) => toWrapped(this, item)),
+        arguments
+      );
+    },
+    find(fn, thisArg) {
+      return apply(
+        this,
+        "find",
+        fn,
+        thisArg,
+        (item) => toWrapped(this, item),
+        arguments
+      );
+    },
+    findIndex(fn, thisArg) {
+      return apply(this, "findIndex", fn, thisArg, void 0, arguments);
+    },
+    findLast(fn, thisArg) {
+      return apply(
+        this,
+        "findLast",
+        fn,
+        thisArg,
+        (item) => toWrapped(this, item),
+        arguments
+      );
+    },
+    findLastIndex(fn, thisArg) {
+      return apply(this, "findLastIndex", fn, thisArg, void 0, arguments);
+    },
+    // flat, flatMap could benefit from ARRAY_ITERATE but are not straight-forward to implement
+    forEach(fn, thisArg) {
+      return apply(this, "forEach", fn, thisArg, void 0, arguments);
+    },
+    includes(...args) {
+      return searchProxy(this, "includes", args);
+    },
+    indexOf(...args) {
+      return searchProxy(this, "indexOf", args);
+    },
+    join(separator) {
+      return reactiveReadArray(this).join(separator);
+    },
+    // keys() iterator only reads `length`, no optimization required
+    lastIndexOf(...args) {
+      return searchProxy(this, "lastIndexOf", args);
+    },
+    map(fn, thisArg) {
+      return apply(this, "map", fn, thisArg, void 0, arguments);
+    },
+    pop() {
+      return noTracking(this, "pop");
+    },
+    push(...args) {
+      return noTracking(this, "push", args);
+    },
+    reduce(fn, ...args) {
+      return reduce(this, "reduce", fn, args);
+    },
+    reduceRight(fn, ...args) {
+      return reduce(this, "reduceRight", fn, args);
+    },
+    shift() {
+      return noTracking(this, "shift");
+    },
+    // slice could use ARRAY_ITERATE but also seems to beg for range tracking
+    some(fn, thisArg) {
+      return apply(this, "some", fn, thisArg, void 0, arguments);
+    },
+    splice(...args) {
+      return noTracking(this, "splice", args);
+    },
+    toReversed() {
+      return reactiveReadArray(this).toReversed();
+    },
+    toSorted(comparer) {
+      return reactiveReadArray(this).toSorted(comparer);
+    },
+    toSpliced(...args) {
+      return reactiveReadArray(this).toSpliced(...args);
+    },
+    unshift(...args) {
+      return noTracking(this, "unshift", args);
+    },
+    values() {
+      return iterator(this, "values", (item) => toWrapped(this, item));
+    }
+  };
+  function iterator(self2, method, wrapValue) {
+    const arr = shallowReadArray(self2);
+    const iter = arr[method]();
+    if (arr !== self2 && !/* @__PURE__ */ isShallow(self2)) {
+      iter._next = iter.next;
+      iter.next = () => {
+        const result = iter._next();
+        if (!result.done) {
+          result.value = wrapValue(result.value);
+        }
+        return result;
+      };
+    }
+    return iter;
+  }
+  var arrayProto = Array.prototype;
+  function apply(self2, method, fn, thisArg, wrappedRetFn, args) {
+    const arr = shallowReadArray(self2);
+    const needsWrap = arr !== self2 && !/* @__PURE__ */ isShallow(self2);
+    const methodFn = arr[method];
+    if (methodFn !== arrayProto[method]) {
+      const result2 = methodFn.apply(self2, args);
+      return needsWrap ? toReactive(result2) : result2;
+    }
+    let wrappedFn = fn;
+    if (arr !== self2) {
+      if (needsWrap) {
+        wrappedFn = function(item, index) {
+          return fn.call(this, toWrapped(self2, item), index, self2);
+        };
+      } else if (fn.length > 2) {
+        wrappedFn = function(item, index) {
+          return fn.call(this, item, index, self2);
+        };
+      }
+    }
+    const result = methodFn.call(arr, wrappedFn, thisArg);
+    return needsWrap && wrappedRetFn ? wrappedRetFn(result) : result;
+  }
+  function reduce(self2, method, fn, args) {
+    const arr = shallowReadArray(self2);
+    const needsWrap = arr !== self2 && !/* @__PURE__ */ isShallow(self2);
+    let wrappedFn = fn;
+    let wrapInitialAccumulator = false;
+    if (arr !== self2) {
+      if (needsWrap) {
+        wrapInitialAccumulator = args.length === 0;
+        wrappedFn = function(acc, item, index) {
+          if (wrapInitialAccumulator) {
+            wrapInitialAccumulator = false;
+            acc = toWrapped(self2, acc);
+          }
+          return fn.call(this, acc, toWrapped(self2, item), index, self2);
+        };
+      } else if (fn.length > 3) {
+        wrappedFn = function(acc, item, index) {
+          return fn.call(this, acc, item, index, self2);
+        };
+      }
+    }
+    const result = arr[method](wrappedFn, ...args);
+    return wrapInitialAccumulator ? toWrapped(self2, result) : result;
+  }
+  function searchProxy(self2, method, args) {
+    const arr = /* @__PURE__ */ toRaw(self2);
+    track(arr, "iterate", ARRAY_ITERATE_KEY);
+    const res = arr[method](...args);
+    if ((res === -1 || res === false) && /* @__PURE__ */ isProxy(args[0])) {
+      args[0] = /* @__PURE__ */ toRaw(args[0]);
+      return arr[method](...args);
+    }
+    return res;
+  }
+  function noTracking(self2, method, args = []) {
+    pauseTracking();
+    startBatch();
+    const res = (/* @__PURE__ */ toRaw(self2))[method].apply(self2, args);
+    endBatch();
+    resetTracking();
+    return res;
+  }
+  var isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
+  var builtInSymbols = new Set(
+    /* @__PURE__ */ Object.getOwnPropertyNames(Symbol).filter((key) => key !== "arguments" && key !== "caller").map((key) => Symbol[key]).filter(isSymbol)
+  );
+  function hasOwnProperty2(key) {
+    if (!isSymbol(key)) key = String(key);
+    const obj = /* @__PURE__ */ toRaw(this);
+    track(obj, "has", key);
+    return obj.hasOwnProperty(key);
+  }
+  var BaseReactiveHandler = class {
+    constructor(_isReadonly = false, _isShallow = false) {
+      this._isReadonly = _isReadonly;
+      this._isShallow = _isShallow;
+    }
+    get(target2, key, receiver) {
+      if (key === "__v_skip") return target2["__v_skip"];
+      const isReadonly22 = this._isReadonly, isShallow2 = this._isShallow;
+      if (key === "__v_isReactive") {
+        return !isReadonly22;
+      } else if (key === "__v_isReadonly") {
+        return isReadonly22;
+      } else if (key === "__v_isShallow") {
+        return isShallow2;
+      } else if (key === "__v_raw") {
+        if (receiver === (isReadonly22 ? isShallow2 ? shallowReadonlyMap : readonlyMap : isShallow2 ? shallowReactiveMap : reactiveMap).get(target2) || // receiver is not the reactive proxy, but has the same prototype
+        // this means the receiver is a user proxy of the reactive proxy
+        Object.getPrototypeOf(target2) === Object.getPrototypeOf(receiver)) {
+          return target2;
+        }
+        return;
+      }
+      const targetIsArray = isArray(target2);
+      if (!isReadonly22) {
+        let fn;
+        if (targetIsArray && (fn = arrayInstrumentations[key])) {
+          return fn;
+        }
+        if (key === "hasOwnProperty") {
+          return hasOwnProperty2;
+        }
+      }
+      const res = Reflect.get(
+        target2,
+        key,
+        // if this is a proxy wrapping a ref, return methods using the raw ref
+        // as receiver so that we don't have to call `toRaw` on the ref in all
+        // its class methods
+        /* @__PURE__ */ isRef(target2) ? target2 : receiver
+      );
+      if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
+        return res;
+      }
+      if (!isReadonly22) {
+        track(target2, "get", key);
+      }
+      if (isShallow2) {
+        return res;
+      }
+      if (/* @__PURE__ */ isRef(res)) {
+        const value = targetIsArray && isIntegerKey(key) ? res : res.value;
+        return isReadonly22 && isObject(value) ? /* @__PURE__ */ readonly(value) : value;
+      }
+      if (isObject(res)) {
+        return isReadonly22 ? /* @__PURE__ */ readonly(res) : /* @__PURE__ */ reactive(res);
+      }
+      return res;
+    }
+  };
+  var MutableReactiveHandler = class extends BaseReactiveHandler {
+    constructor(isShallow2 = false) {
+      super(false, isShallow2);
+    }
+    set(target2, key, value, receiver) {
+      let oldValue = target2[key];
+      const isArrayWithIntegerKey = isArray(target2) && isIntegerKey(key);
+      if (!this._isShallow) {
+        const isOldValueReadonly = /* @__PURE__ */ isReadonly(oldValue);
+        if (!/* @__PURE__ */ isShallow(value) && !/* @__PURE__ */ isReadonly(value)) {
+          oldValue = /* @__PURE__ */ toRaw(oldValue);
+          value = /* @__PURE__ */ toRaw(value);
+        }
+        if (!isArrayWithIntegerKey && /* @__PURE__ */ isRef(oldValue) && !/* @__PURE__ */ isRef(value)) {
+          if (isOldValueReadonly) {
+            if (true) {
+              warn(
+                `Set operation on key "${String(key)}" failed: target is readonly.`,
+                target2[key]
+              );
+            }
+            return true;
+          } else {
+            oldValue.value = value;
+            return true;
+          }
+        }
+      }
+      const hadKey = isArrayWithIntegerKey ? Number(key) < target2.length : hasOwn(target2, key);
+      const result = Reflect.set(
+        target2,
+        key,
+        value,
+        /* @__PURE__ */ isRef(target2) ? target2 : receiver
+      );
+      if (target2 === /* @__PURE__ */ toRaw(receiver) && result) {
+        if (!hadKey) {
+          trigger(target2, "add", key, value);
+        } else if (hasChanged(value, oldValue)) {
+          trigger(target2, "set", key, value, oldValue);
+        }
+      }
+      return result;
+    }
+    deleteProperty(target2, key) {
+      const hadKey = hasOwn(target2, key);
+      const oldValue = target2[key];
+      const result = Reflect.deleteProperty(target2, key);
+      if (result && hadKey) {
+        trigger(target2, "delete", key, void 0, oldValue);
+      }
+      return result;
+    }
+    has(target2, key) {
+      const result = Reflect.has(target2, key);
+      if (!isSymbol(key) || !builtInSymbols.has(key)) {
+        track(target2, "has", key);
+      }
+      return result;
+    }
+    ownKeys(target2) {
+      track(
+        target2,
+        "iterate",
+        isArray(target2) ? "length" : ITERATE_KEY
+      );
+      return Reflect.ownKeys(target2);
+    }
+  };
+  var ReadonlyReactiveHandler = class extends BaseReactiveHandler {
+    constructor(isShallow2 = false) {
+      super(true, isShallow2);
+    }
+    set(target2, key) {
+      if (true) {
+        warn(
+          `Set operation on key "${String(key)}" failed: target is readonly.`,
+          target2
+        );
+      }
+      return true;
+    }
+    deleteProperty(target2, key) {
+      if (true) {
+        warn(
+          `Delete operation on key "${String(key)}" failed: target is readonly.`,
+          target2
+        );
+      }
+      return true;
+    }
+  };
+  var mutableHandlers = /* @__PURE__ */ new MutableReactiveHandler();
+  var readonlyHandlers = /* @__PURE__ */ new ReadonlyReactiveHandler();
+  var shallowReadonlyHandlers = /* @__PURE__ */ new ReadonlyReactiveHandler(true);
+  var toShallow = (value) => value;
+  var getProto = (v) => Reflect.getPrototypeOf(v);
+  function createIterableMethod(method, isReadonly22, isShallow2) {
+    return function(...args) {
+      const target2 = this["__v_raw"];
+      const rawTarget = /* @__PURE__ */ toRaw(target2);
+      const targetIsMap = isMap(rawTarget);
+      const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
+      const isKeyOnly = method === "keys" && targetIsMap;
+      const innerIterator = target2[method](...args);
+      const wrap = isShallow2 ? toShallow : isReadonly22 ? toReadonly : toReactive;
+      !isReadonly22 && track(
+        rawTarget,
+        "iterate",
+        isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY
+      );
+      return extend(
+        // inheriting all iterator properties
+        Object.create(innerIterator),
+        {
+          // iterator protocol
+          next() {
+            const { value, done } = innerIterator.next();
+            return done ? { value, done } : {
+              value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value),
+              done
+            };
+          }
+        }
+      );
+    };
+  }
+  function createReadonlyMethod(type) {
+    return function(...args) {
+      if (true) {
+        const key = args[0] ? `on key "${args[0]}" ` : ``;
+        warn(
+          `${capitalize(type)} operation ${key}failed: target is readonly.`,
+          /* @__PURE__ */ toRaw(this)
+        );
+      }
+      return type === "delete" ? false : type === "clear" ? void 0 : this;
+    };
+  }
+  function createInstrumentations(readonly2, shallow) {
+    const instrumentations = {
+      get(key) {
+        const target2 = this["__v_raw"];
+        const rawTarget = /* @__PURE__ */ toRaw(target2);
+        const rawKey = /* @__PURE__ */ toRaw(key);
+        if (!readonly2) {
+          if (hasChanged(key, rawKey)) {
+            track(rawTarget, "get", key);
+          }
+          track(rawTarget, "get", rawKey);
+        }
+        const { has } = getProto(rawTarget);
+        const wrap = shallow ? toShallow : readonly2 ? toReadonly : toReactive;
+        if (has.call(rawTarget, key)) {
+          return wrap(target2.get(key));
+        } else if (has.call(rawTarget, rawKey)) {
+          return wrap(target2.get(rawKey));
+        } else if (target2 !== rawTarget) {
+          target2.get(key);
+        }
+      },
+      get size() {
+        const target2 = this["__v_raw"];
+        !readonly2 && track(/* @__PURE__ */ toRaw(target2), "iterate", ITERATE_KEY);
+        return target2.size;
+      },
+      has(key) {
+        const target2 = this["__v_raw"];
+        const rawTarget = /* @__PURE__ */ toRaw(target2);
+        const rawKey = /* @__PURE__ */ toRaw(key);
+        if (!readonly2) {
+          if (hasChanged(key, rawKey)) {
+            track(rawTarget, "has", key);
+          }
+          track(rawTarget, "has", rawKey);
+        }
+        return key === rawKey ? target2.has(key) : target2.has(key) || target2.has(rawKey);
+      },
+      forEach(callback, thisArg) {
+        const observed = this;
+        const target2 = observed["__v_raw"];
+        const rawTarget = /* @__PURE__ */ toRaw(target2);
+        const wrap = shallow ? toShallow : readonly2 ? toReadonly : toReactive;
+        !readonly2 && track(rawTarget, "iterate", ITERATE_KEY);
+        return target2.forEach((value, key) => {
+          return callback.call(thisArg, wrap(value), wrap(key), observed);
+        });
+      }
+    };
+    extend(
+      instrumentations,
+      readonly2 ? {
+        add: createReadonlyMethod("add"),
+        set: createReadonlyMethod("set"),
+        delete: createReadonlyMethod("delete"),
+        clear: createReadonlyMethod("clear")
+      } : {
+        add(value) {
+          const target2 = /* @__PURE__ */ toRaw(this);
+          const proto = getProto(target2);
+          const rawValue = /* @__PURE__ */ toRaw(value);
+          const valueToAdd = !shallow && !/* @__PURE__ */ isShallow(value) && !/* @__PURE__ */ isReadonly(value) ? rawValue : value;
+          const hadKey = proto.has.call(target2, valueToAdd) || hasChanged(value, valueToAdd) && proto.has.call(target2, value) || hasChanged(rawValue, valueToAdd) && proto.has.call(target2, rawValue);
+          if (!hadKey) {
+            target2.add(valueToAdd);
+            trigger(target2, "add", valueToAdd, valueToAdd);
+          }
+          return this;
+        },
+        set(key, value) {
+          if (!shallow && !/* @__PURE__ */ isShallow(value) && !/* @__PURE__ */ isReadonly(value)) {
+            value = /* @__PURE__ */ toRaw(value);
+          }
+          const target2 = /* @__PURE__ */ toRaw(this);
+          const { has, get } = getProto(target2);
+          let hadKey = has.call(target2, key);
+          if (!hadKey) {
+            key = /* @__PURE__ */ toRaw(key);
+            hadKey = has.call(target2, key);
+          } else if (true) {
+            checkIdentityKeys(target2, has, key);
+          }
+          const oldValue = get.call(target2, key);
+          target2.set(key, value);
+          if (!hadKey) {
+            trigger(target2, "add", key, value);
+          } else if (hasChanged(value, oldValue)) {
+            trigger(target2, "set", key, value, oldValue);
+          }
+          return this;
+        },
+        delete(key) {
+          const target2 = /* @__PURE__ */ toRaw(this);
+          const { has, get } = getProto(target2);
+          let hadKey = has.call(target2, key);
+          if (!hadKey) {
+            key = /* @__PURE__ */ toRaw(key);
+            hadKey = has.call(target2, key);
+          } else if (true) {
+            checkIdentityKeys(target2, has, key);
+          }
+          const oldValue = get ? get.call(target2, key) : void 0;
+          const result = target2.delete(key);
+          if (hadKey) {
+            trigger(target2, "delete", key, void 0, oldValue);
+          }
+          return result;
+        },
+        clear() {
+          const target2 = /* @__PURE__ */ toRaw(this);
+          const hadItems = target2.size !== 0;
+          const oldTarget = true ? isMap(target2) ? new Map(target2) : new Set(target2) : void 0;
+          const result = target2.clear();
+          if (hadItems) {
+            trigger(
+              target2,
+              "clear",
+              void 0,
+              void 0,
+              oldTarget
+            );
+          }
+          return result;
+        }
+      }
+    );
+    const iteratorMethods = [
+      "keys",
+      "values",
+      "entries",
+      Symbol.iterator
+    ];
+    iteratorMethods.forEach((method) => {
+      instrumentations[method] = createIterableMethod(method, readonly2, shallow);
+    });
+    return instrumentations;
+  }
+  function createInstrumentationGetter(isReadonly22, shallow) {
+    const instrumentations = createInstrumentations(isReadonly22, shallow);
+    return (target2, key, receiver) => {
+      if (key === "__v_isReactive") {
+        return !isReadonly22;
+      } else if (key === "__v_isReadonly") {
+        return isReadonly22;
+      } else if (key === "__v_raw") {
+        return target2;
+      }
+      return Reflect.get(
+        hasOwn(instrumentations, key) && key in target2 ? instrumentations : target2,
+        key,
+        receiver
+      );
+    };
+  }
+  var mutableCollectionHandlers = {
+    get: /* @__PURE__ */ createInstrumentationGetter(false, false)
+  };
+  var readonlyCollectionHandlers = {
+    get: /* @__PURE__ */ createInstrumentationGetter(true, false)
+  };
+  var shallowReadonlyCollectionHandlers = {
+    get: /* @__PURE__ */ createInstrumentationGetter(true, true)
+  };
+  function checkIdentityKeys(target2, has, key) {
+    const rawKey = /* @__PURE__ */ toRaw(key);
+    if (rawKey !== key && has.call(target2, rawKey)) {
+      const type = toRawType(target2);
+      warn(
+        `Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`
+      );
+    }
+  }
+  var reactiveMap = /* @__PURE__ */ new WeakMap();
+  var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
+  var readonlyMap = /* @__PURE__ */ new WeakMap();
+  var shallowReadonlyMap = /* @__PURE__ */ new WeakMap();
+  function targetTypeMap(rawType) {
+    switch (rawType) {
+      case "Object":
+      case "Array":
+        return 1;
+      case "Map":
+      case "Set":
+      case "WeakMap":
+      case "WeakSet":
+        return 2;
+      default:
+        return 0;
+    }
+  }
+  // @__NO_SIDE_EFFECTS__
+  function reactive(target2) {
+    if (/* @__PURE__ */ isReadonly(target2)) {
+      return target2;
+    }
+    return createReactiveObject(
+      target2,
+      false,
+      mutableHandlers,
+      mutableCollectionHandlers,
+      reactiveMap
+    );
+  }
+  // @__NO_SIDE_EFFECTS__
+  function readonly(target2) {
+    return createReactiveObject(
+      target2,
+      true,
+      readonlyHandlers,
+      readonlyCollectionHandlers,
+      readonlyMap
+    );
+  }
+  // @__NO_SIDE_EFFECTS__
+  function shallowReadonly(target2) {
+    return createReactiveObject(
+      target2,
+      true,
+      shallowReadonlyHandlers,
+      shallowReadonlyCollectionHandlers,
+      shallowReadonlyMap
+    );
+  }
+  function createReactiveObject(target2, isReadonly22, baseHandlers, collectionHandlers, proxyMap) {
+    if (!isObject(target2)) {
+      if (true) {
+        warn(
+          `value cannot be made ${isReadonly22 ? "readonly" : "reactive"}: ${String(
+            target2
+          )}`
+        );
+      }
+      return target2;
+    }
+    if (target2["__v_raw"] && !(isReadonly22 && target2["__v_isReactive"])) {
+      return target2;
+    }
+    if (target2["__v_skip"] || !Object.isExtensible(target2)) {
+      return target2;
+    }
+    const existingProxy = proxyMap.get(target2);
+    if (existingProxy) {
+      return existingProxy;
+    }
+    const targetType = targetTypeMap(toRawType(target2));
+    if (targetType === 0) {
+      return target2;
+    }
+    const proxy = new Proxy(
+      target2,
+      targetType === 2 ? collectionHandlers : baseHandlers
+    );
+    proxyMap.set(target2, proxy);
+    return proxy;
+  }
+  // @__NO_SIDE_EFFECTS__
+  function isReactive(value) {
+    if (/* @__PURE__ */ isReadonly(value)) {
+      return /* @__PURE__ */ isReactive(value["__v_raw"]);
+    }
+    return !!(value && value["__v_isReactive"]);
+  }
+  // @__NO_SIDE_EFFECTS__
+  function isReadonly(value) {
+    return !!(value && value["__v_isReadonly"]);
+  }
+  // @__NO_SIDE_EFFECTS__
+  function isShallow(value) {
+    return !!(value && value["__v_isShallow"]);
+  }
+  // @__NO_SIDE_EFFECTS__
+  function isProxy(value) {
+    return value ? !!value["__v_raw"] : false;
+  }
+  // @__NO_SIDE_EFFECTS__
+  function toRaw(observed) {
+    const raw = observed && observed["__v_raw"];
+    return raw ? /* @__PURE__ */ toRaw(raw) : observed;
+  }
+  function markRaw(value) {
+    if (!hasOwn(value, "__v_skip") && Object.isExtensible(value)) {
+      def(value, "__v_skip", true);
+    }
+    return value;
+  }
+  var toReactive = (value) => isObject(value) ? /* @__PURE__ */ reactive(value) : value;
+  var toReadonly = (value) => isObject(value) ? /* @__PURE__ */ readonly(value) : value;
+  // @__NO_SIDE_EFFECTS__
+  function isRef(r) {
+    return r ? r["__v_isRef"] === true : false;
+  }
+  // @__NO_SIDE_EFFECTS__
+  function ref(value) {
+    return createRef(value, false);
+  }
+  function createRef(rawValue, shallow) {
+    if (/* @__PURE__ */ isRef(rawValue)) {
+      return rawValue;
+    }
+    return new RefImpl(rawValue, shallow);
+  }
+  var RefImpl = class {
+    constructor(value, isShallow2) {
+      this.dep = new Dep();
+      this["__v_isRef"] = true;
+      this["__v_isShallow"] = false;
+      this._rawValue = isShallow2 ? value : /* @__PURE__ */ toRaw(value);
+      this._value = isShallow2 ? value : toReactive(value);
+      this["__v_isShallow"] = isShallow2;
+    }
+    get value() {
+      if (true) {
+        this.dep.track({
+          target: this,
+          type: "get",
+          key: "value"
+        });
+      } else {
+        this.dep.track();
+      }
+      return this._value;
+    }
+    set value(newValue) {
+      const oldValue = this._rawValue;
+      const useDirectValue = this["__v_isShallow"] || /* @__PURE__ */ isShallow(newValue) || /* @__PURE__ */ isReadonly(newValue);
+      newValue = useDirectValue ? newValue : /* @__PURE__ */ toRaw(newValue);
+      if (hasChanged(newValue, oldValue)) {
+        this._rawValue = newValue;
+        this._value = useDirectValue ? newValue : toReactive(newValue);
+        if (true) {
+          this.dep.trigger({
+            target: this,
+            type: "set",
+            key: "value",
+            newValue,
+            oldValue
+          });
+        } else {
+          this.dep.trigger();
+        }
+      }
+    }
+  };
+  function unref(ref2) {
+    return /* @__PURE__ */ isRef(ref2) ? ref2.value : ref2;
+  }
+  var shallowUnwrapHandlers = {
+    get: (target2, key, receiver) => key === "__v_raw" ? target2 : unref(Reflect.get(target2, key, receiver)),
+    set: (target2, key, value, receiver) => {
+      const oldValue = target2[key];
+      if (/* @__PURE__ */ isRef(oldValue) && !/* @__PURE__ */ isRef(value)) {
+        oldValue.value = value;
+        return true;
+      } else {
+        return Reflect.set(target2, key, value, receiver);
+      }
+    }
+  };
+  function proxyRefs(objectWithRefs) {
+    return /* @__PURE__ */ isReactive(objectWithRefs) ? objectWithRefs : new Proxy(objectWithRefs, shallowUnwrapHandlers);
+  }
+  // @__NO_SIDE_EFFECTS__
+  function toRefs(object) {
+    if (!/* @__PURE__ */ isProxy(object)) {
+      warn(`toRefs() expects a reactive object but received a plain one.`);
+    }
+    const ret = isArray(object) ? new Array(object.length) : {};
+    for (const key in object) {
+      ret[key] = propertyToRef(object, key);
+    }
+    return ret;
+  }
+  var ObjectRefImpl = class {
+    constructor(_object, key, _defaultValue) {
+      this._object = _object;
+      this._defaultValue = _defaultValue;
+      this["__v_isRef"] = true;
+      this._value = void 0;
+      this._key = isSymbol(key) ? key : String(key);
+      this._raw = /* @__PURE__ */ toRaw(_object);
+      let shallow = true;
+      let obj = _object;
+      if (!isArray(_object) || isSymbol(this._key) || !isIntegerKey(this._key)) {
+        do {
+          shallow = !/* @__PURE__ */ isProxy(obj) || /* @__PURE__ */ isShallow(obj);
+        } while (shallow && (obj = obj["__v_raw"]));
+      }
+      this._shallow = shallow;
+    }
+    get value() {
+      let val = this._object[this._key];
+      if (this._shallow) {
+        val = unref(val);
+      }
+      return this._value = val === void 0 ? this._defaultValue : val;
+    }
+    set value(newVal) {
+      if (this._shallow && /* @__PURE__ */ isRef(this._raw[this._key])) {
+        const nestedRef = this._object[this._key];
+        if (/* @__PURE__ */ isRef(nestedRef)) {
+          nestedRef.value = newVal;
+          return;
+        }
+      }
+      this._object[this._key] = newVal;
+    }
+    get dep() {
+      return getDepFromReactive(this._raw, this._key);
+    }
+  };
+  var GetterRefImpl = class {
+    constructor(_getter) {
+      this._getter = _getter;
+      this["__v_isRef"] = true;
+      this["__v_isReadonly"] = true;
+      this._value = void 0;
+    }
+    get value() {
+      return this._value = this._getter();
+    }
+  };
+  // @__NO_SIDE_EFFECTS__
+  function toRef(source, key, defaultValue) {
+    if (/* @__PURE__ */ isRef(source)) {
+      return source;
+    } else if (isFunction(source)) {
+      return new GetterRefImpl(source);
+    } else if (isObject(source) && arguments.length > 1) {
+      return propertyToRef(source, key, defaultValue);
+    } else {
+      return /* @__PURE__ */ ref(source);
+    }
+  }
+  function propertyToRef(source, key, defaultValue) {
+    return new ObjectRefImpl(source, key, defaultValue);
+  }
+  var ComputedRefImpl = class {
+    constructor(fn, setter, isSSR) {
+      this.fn = fn;
+      this.setter = setter;
+      this._value = void 0;
+      this.dep = new Dep(this);
+      this.__v_isRef = true;
+      this.deps = void 0;
+      this.depsTail = void 0;
+      this.flags = 16;
+      this.globalVersion = globalVersion - 1;
+      this.next = void 0;
+      this.effect = this;
+      this["__v_isReadonly"] = !setter;
+      this.isSSR = isSSR;
+    }
+    /**
+     * @internal
+     */
+    notify() {
+      this.flags |= 16;
+      if (!(this.flags & 8) && // avoid infinite self recursion
+      activeSub !== this) {
+        batch(this, true);
+        return true;
+      } else if (true) ;
+    }
+    get value() {
+      const link = true ? this.dep.track({
+        target: this,
+        type: "get",
+        key: "value"
+      }) : this.dep.track();
+      refreshComputed(this);
+      if (link) {
+        link.version = this.dep.version;
+      }
+      return this._value;
+    }
+    set value(newValue) {
+      if (this.setter) {
+        this.setter(newValue);
+      } else if (true) {
+        warn("Write operation failed: computed value is readonly");
+      }
+    }
+  };
+  // @__NO_SIDE_EFFECTS__
+  function computed(getterOrOptions, debugOptions, isSSR = false) {
+    let getter;
+    let setter;
+    if (isFunction(getterOrOptions)) {
+      getter = getterOrOptions;
+    } else {
+      getter = getterOrOptions.get;
+      setter = getterOrOptions.set;
+    }
+    const cRef = new ComputedRefImpl(getter, setter, isSSR);
+    if (debugOptions && !isSSR) {
+      cRef.onTrack = debugOptions.onTrack;
+      cRef.onTrigger = debugOptions.onTrigger;
+    }
+    return cRef;
+  }
+  var INITIAL_WATCHER_VALUE = {};
+  var cleanupMap = /* @__PURE__ */ new WeakMap();
+  var activeWatcher = void 0;
+  function onWatcherCleanup(cleanupFn, failSilently = false, owner = activeWatcher) {
+    if (owner) {
+      let cleanups = cleanupMap.get(owner);
+      if (!cleanups) cleanupMap.set(owner, cleanups = []);
+      cleanups.push(cleanupFn);
+    } else if (!failSilently) {
+      warn(
+        `onWatcherCleanup() was called when there was no active watcher to associate with.`
+      );
+    }
+  }
+  function watch(source, cb, options = EMPTY_OBJ) {
+    const { immediate, deep, once, scheduler, augmentJob, call } = options;
+    const warnInvalidSource = (s) => {
+      (options.onWarn || warn)(
+        `Invalid watch source: `,
+        s,
+        `A watch source can only be a getter/effect function, a ref, a reactive object, or an array of these types.`
+      );
+    };
+    const reactiveGetter = (source2) => {
+      if (deep) return source2;
+      if (/* @__PURE__ */ isShallow(source2) || deep === false || deep === 0)
+        return traverse(source2, 1);
+      return traverse(source2);
+    };
+    let effect2;
+    let getter;
+    let cleanup;
+    let boundCleanup;
+    let forceTrigger = false;
+    let isMultiSource = false;
+    if (/* @__PURE__ */ isRef(source)) {
+      getter = () => source.value;
+      forceTrigger = /* @__PURE__ */ isShallow(source);
+    } else if (/* @__PURE__ */ isReactive(source)) {
+      getter = () => reactiveGetter(source);
+      forceTrigger = true;
+    } else if (isArray(source)) {
+      isMultiSource = true;
+      forceTrigger = source.some((s) => /* @__PURE__ */ isReactive(s) || /* @__PURE__ */ isShallow(s));
+      getter = () => source.map((s) => {
+        if (/* @__PURE__ */ isRef(s)) {
+          return s.value;
+        } else if (/* @__PURE__ */ isReactive(s)) {
+          return reactiveGetter(s);
+        } else if (isFunction(s)) {
+          return call ? call(s, 2) : s();
+        } else {
+          warnInvalidSource(s);
+        }
+      });
+    } else if (isFunction(source)) {
+      if (cb) {
+        getter = call ? () => call(source, 2) : source;
+      } else {
+        getter = () => {
+          if (cleanup) {
+            pauseTracking();
+            try {
+              cleanup();
+            } finally {
+              resetTracking();
+            }
+          }
+          const currentEffect = activeWatcher;
+          activeWatcher = effect2;
+          try {
+            return call ? call(source, 3, [boundCleanup]) : source(boundCleanup);
+          } finally {
+            activeWatcher = currentEffect;
+          }
+        };
+      }
+    } else {
+      getter = NOOP;
+      warnInvalidSource(source);
+    }
+    if (cb && deep) {
+      const baseGetter = getter;
+      const depth = deep === true ? Infinity : deep;
+      getter = () => traverse(baseGetter(), depth);
+    }
+    const scope = getCurrentScope();
+    const watchHandle = () => {
+      effect2.stop();
+      if (scope && scope.active) {
+        remove(scope.effects, effect2);
+      }
+    };
+    if (once && cb) {
+      const _cb = cb;
+      cb = (...args) => {
+        const res = _cb(...args);
+        watchHandle();
+        return res;
+      };
+    }
+    let oldValue = isMultiSource ? new Array(source.length).fill(INITIAL_WATCHER_VALUE) : INITIAL_WATCHER_VALUE;
+    const job = (immediateFirstRun) => {
+      if (!(effect2.flags & 1) || !effect2.dirty && !immediateFirstRun) {
+        return;
+      }
+      if (cb) {
+        const newValue = effect2.run();
+        if (immediateFirstRun || deep || forceTrigger || (isMultiSource ? newValue.some((v, i) => hasChanged(v, oldValue[i])) : hasChanged(newValue, oldValue))) {
+          if (cleanup) {
+            cleanup();
+          }
+          const currentWatcher = activeWatcher;
+          activeWatcher = effect2;
+          try {
+            const args = [
+              newValue,
+              // pass undefined as the old value when it's changed for the first time
+              oldValue === INITIAL_WATCHER_VALUE ? void 0 : isMultiSource && oldValue[0] === INITIAL_WATCHER_VALUE ? [] : oldValue,
+              boundCleanup
+            ];
+            oldValue = newValue;
+            call ? call(cb, 3, args) : (
+              // @ts-expect-error
+              cb(...args)
+            );
+          } finally {
+            activeWatcher = currentWatcher;
+          }
+        }
+      } else {
+        effect2.run();
+      }
+    };
+    if (augmentJob) {
+      augmentJob(job);
+    }
+    effect2 = new ReactiveEffect(getter);
+    effect2.scheduler = scheduler ? () => scheduler(job, false) : job;
+    boundCleanup = (fn) => onWatcherCleanup(fn, false, effect2);
+    cleanup = effect2.onStop = () => {
+      const cleanups = cleanupMap.get(effect2);
+      if (cleanups) {
+        if (call) {
+          call(cleanups, 4);
+        } else {
+          for (const cleanup2 of cleanups) cleanup2();
+        }
+        cleanupMap.delete(effect2);
+      }
+    };
+    if (true) {
+      effect2.onTrack = options.onTrack;
+      effect2.onTrigger = options.onTrigger;
+    }
+    if (cb) {
+      if (immediate) {
+        job(true);
+      } else {
+        oldValue = effect2.run();
+      }
+    } else if (scheduler) {
+      scheduler(job.bind(null, true), true);
+    } else {
+      effect2.run();
+    }
+    watchHandle.pause = effect2.pause.bind(effect2);
+    watchHandle.resume = effect2.resume.bind(effect2);
+    watchHandle.stop = watchHandle;
+    return watchHandle;
+  }
+  function traverse(value, depth = Infinity, seen) {
+    if (depth <= 0 || !isObject(value) || value["__v_skip"]) {
+      return value;
+    }
+    seen = seen || /* @__PURE__ */ new Map();
+    if ((seen.get(value) || 0) >= depth) {
+      return value;
+    }
+    seen.set(value, depth);
+    depth--;
+    if (/* @__PURE__ */ isRef(value)) {
+      traverse(value.value, depth, seen);
+    } else if (isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        traverse(value[i], depth, seen);
+      }
+    } else if (isSet(value) || isMap(value)) {
+      value.forEach((v) => {
+        traverse(v, depth, seen);
+      });
+    } else if (isPlainObject(value)) {
+      for (const key in value) {
+        traverse(value[key], depth, seen);
+      }
+      for (const key of Object.getOwnPropertySymbols(value)) {
+        if (Object.prototype.propertyIsEnumerable.call(value, key)) {
+          traverse(value[key], depth, seen);
+        }
+      }
+    }
+    return value;
+  }
+
+  // node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js
+  var stack = [];
+  function pushWarningContext(vnode) {
+    stack.push(vnode);
+  }
+  function popWarningContext() {
+    stack.pop();
+  }
+  var isWarning = false;
+  function warn$1(msg, ...args) {
+    if (isWarning) return;
+    isWarning = true;
+    pauseTracking();
+    const instance = stack.length ? stack[stack.length - 1].component : null;
+    const appWarnHandler = instance && instance.appContext.config.warnHandler;
+    const trace = getComponentTrace();
+    if (appWarnHandler) {
+      callWithErrorHandling(
+        appWarnHandler,
+        instance,
+        11,
+        [
+          // eslint-disable-next-line no-restricted-syntax
+          msg + args.map((a) => {
+            var _a25, _b;
+            return (_b = (_a25 = a.toString) == null ? void 0 : _a25.call(a)) != null ? _b : JSON.stringify(a);
+          }).join(""),
+          instance && instance.proxy,
+          trace.map(
+            ({ vnode }) => `at <${formatComponentName(instance, vnode.type)}>`
+          ).join("\n"),
+          trace
+        ]
+      );
+    } else {
+      const warnArgs = [`[Vue warn]: ${msg}`, ...args];
+      if (trace.length && // avoid spamming console during tests
+      true) {
+        warnArgs.push(`
+`, ...formatTrace(trace));
+      }
+      console.warn(...warnArgs);
+    }
+    resetTracking();
+    isWarning = false;
+  }
+  function getComponentTrace() {
+    let currentVNode = stack[stack.length - 1];
+    if (!currentVNode) {
+      return [];
+    }
+    const normalizedStack = [];
+    while (currentVNode) {
+      const last = normalizedStack[0];
+      if (last && last.vnode === currentVNode) {
+        last.recurseCount++;
+      } else {
+        normalizedStack.push({
+          vnode: currentVNode,
+          recurseCount: 0
+        });
+      }
+      const parentInstance = currentVNode.component && currentVNode.component.parent;
+      currentVNode = parentInstance && parentInstance.vnode;
+    }
+    return normalizedStack;
+  }
+  function formatTrace(trace) {
+    const logs = [];
+    trace.forEach((entry, i) => {
+      logs.push(...i === 0 ? [] : [`
+`], ...formatTraceEntry(entry));
+    });
+    return logs;
+  }
+  function formatTraceEntry({ vnode, recurseCount }) {
+    const postfix = recurseCount > 0 ? `... (${recurseCount} recursive calls)` : ``;
+    const isRoot = vnode.component ? vnode.component.parent == null : false;
+    const open2 = ` at <${formatComponentName(
+      vnode.component,
+      vnode.type,
+      isRoot
+    )}`;
+    const close = `>` + postfix;
+    return vnode.props ? [open2, ...formatProps(vnode.props), close] : [open2 + close];
+  }
+  function formatProps(props) {
+    const res = [];
+    const keys = Object.keys(props);
+    keys.slice(0, 3).forEach((key) => {
+      res.push(...formatProp(key, props[key]));
+    });
+    if (keys.length > 3) {
+      res.push(` ...`);
+    }
+    return res;
+  }
+  function formatProp(key, value, raw) {
+    if (isString(value)) {
+      value = JSON.stringify(value);
+      return raw ? value : [`${key}=${value}`];
+    } else if (typeof value === "number" || typeof value === "boolean" || value == null) {
+      return raw ? value : [`${key}=${value}`];
+    } else if (isRef(value)) {
+      value = formatProp(key, toRaw(value.value), true);
+      return raw ? value : [`${key}=Ref<`, value, `>`];
+    } else if (isFunction(value)) {
+      return [`${key}=fn${value.name ? `<${value.name}>` : ``}`];
+    } else {
+      value = toRaw(value);
+      return raw ? value : [`${key}=`, value];
+    }
+  }
+  var ErrorTypeStrings$1 = {
+    ["sp"]: "serverPrefetch hook",
+    ["bc"]: "beforeCreate hook",
+    ["c"]: "created hook",
+    ["bm"]: "beforeMount hook",
+    ["m"]: "mounted hook",
+    ["bu"]: "beforeUpdate hook",
+    ["u"]: "updated",
+    ["bum"]: "beforeUnmount hook",
+    ["um"]: "unmounted hook",
+    ["a"]: "activated hook",
+    ["da"]: "deactivated hook",
+    ["ec"]: "errorCaptured hook",
+    ["rtc"]: "renderTracked hook",
+    ["rtg"]: "renderTriggered hook",
+    [0]: "setup function",
+    [1]: "render function",
+    [2]: "watcher getter",
+    [3]: "watcher callback",
+    [4]: "watcher cleanup function",
+    [5]: "native event handler",
+    [6]: "component event handler",
+    [7]: "vnode hook",
+    [8]: "directive hook",
+    [9]: "transition hook",
+    [10]: "app errorHandler",
+    [11]: "app warnHandler",
+    [12]: "ref function",
+    [13]: "async component loader",
+    [14]: "scheduler flush",
+    [15]: "component update",
+    [16]: "app unmount cleanup function"
+  };
+  function callWithErrorHandling(fn, instance, type, args) {
+    try {
+      return args ? fn(...args) : fn();
+    } catch (err) {
+      handleError(err, instance, type);
+    }
+  }
+  function callWithAsyncErrorHandling(fn, instance, type, args) {
+    if (isFunction(fn)) {
+      const res = callWithErrorHandling(fn, instance, type, args);
+      if (res && isPromise(res)) {
+        res.catch((err) => {
+          handleError(err, instance, type);
+        });
+      }
+      return res;
+    }
+    if (isArray(fn)) {
+      const values = [];
+      for (let i = 0; i < fn.length; i++) {
+        values.push(callWithAsyncErrorHandling(fn[i], instance, type, args));
+      }
+      return values;
+    } else if (true) {
+      warn$1(
+        `Invalid value type passed to callWithAsyncErrorHandling(): ${typeof fn}`
+      );
+    }
+  }
+  function handleError(err, instance, type, throwInDev = true) {
+    const contextVNode = instance ? instance.vnode : null;
+    const { errorHandler, throwUnhandledErrorInProduction } = instance && instance.appContext.config || EMPTY_OBJ;
+    if (instance) {
+      let cur = instance.parent;
+      const exposedInstance = instance.proxy;
+      const errorInfo = true ? ErrorTypeStrings$1[type] : `https://vuejs.org/error-reference/#runtime-${type}`;
+      while (cur) {
+        const errorCapturedHooks = cur.ec;
+        if (errorCapturedHooks) {
+          for (let i = 0; i < errorCapturedHooks.length; i++) {
+            if (errorCapturedHooks[i](err, exposedInstance, errorInfo) === false) {
+              return;
+            }
+          }
+        }
+        cur = cur.parent;
+      }
+      if (errorHandler) {
+        pauseTracking();
+        callWithErrorHandling(errorHandler, null, 10, [
+          err,
+          exposedInstance,
+          errorInfo
+        ]);
+        resetTracking();
+        return;
+      }
+    }
+    logError(err, type, contextVNode, throwInDev, throwUnhandledErrorInProduction);
+  }
+  function logError(err, type, contextVNode, throwInDev = true, throwInProd = false) {
+    if (true) {
+      const info = ErrorTypeStrings$1[type];
+      if (contextVNode) {
+        pushWarningContext(contextVNode);
+      }
+      warn$1(`Unhandled error${info ? ` during execution of ${info}` : ``}`);
+      if (contextVNode) {
+        popWarningContext();
+      }
+      if (throwInDev) {
+        throw err;
+      } else {
+        console.error(err);
+      }
+    } else if (throwInProd) {
+      throw err;
+    } else {
+      console.error(err);
+    }
+  }
+  var queue = [];
+  var flushIndex = -1;
+  var pendingPostFlushCbs = [];
+  var activePostFlushCbs = null;
+  var postFlushIndex = 0;
+  var resolvedPromise = /* @__PURE__ */ Promise.resolve();
+  var currentFlushPromise = null;
+  var RECURSION_LIMIT = 100;
+  function nextTick(fn) {
+    const p = currentFlushPromise || resolvedPromise;
+    return fn ? p.then(this ? fn.bind(this) : fn) : p;
+  }
+  function findInsertionIndex(id) {
+    let start = flushIndex + 1;
+    let end = queue.length;
+    while (start < end) {
+      const middle = start + end >>> 1;
+      const middleJob = queue[middle];
+      const middleJobId = getId(middleJob);
+      if (middleJobId < id || middleJobId === id && middleJob.flags & 2) {
+        start = middle + 1;
+      } else {
+        end = middle;
+      }
+    }
+    return start;
+  }
+  function queueJob(job) {
+    if (!(job.flags & 1)) {
+      const jobId = getId(job);
+      const lastJob = queue[queue.length - 1];
+      if (!lastJob || // fast path when the job id is larger than the tail
+      !(job.flags & 2) && jobId >= getId(lastJob)) {
+        queue.push(job);
+      } else {
+        queue.splice(findInsertionIndex(jobId), 0, job);
+      }
+      job.flags |= 1;
+      queueFlush();
+    }
+  }
+  function queueFlush() {
+    if (!currentFlushPromise) {
+      currentFlushPromise = resolvedPromise.then(flushJobs);
+    }
+  }
+  function queuePostFlushCb(cb) {
+    if (!isArray(cb)) {
+      if (activePostFlushCbs && cb.id === -1) {
+        activePostFlushCbs.splice(postFlushIndex + 1, 0, cb);
+      } else if (!(cb.flags & 1)) {
+        pendingPostFlushCbs.push(cb);
+        cb.flags |= 1;
+      }
+    } else {
+      pendingPostFlushCbs.push(...cb);
+    }
+    queueFlush();
+  }
+  function flushPostFlushCbs(seen) {
+    if (pendingPostFlushCbs.length) {
+      const deduped = [...new Set(pendingPostFlushCbs)].sort(
+        (a, b) => getId(a) - getId(b)
+      );
+      pendingPostFlushCbs.length = 0;
+      if (activePostFlushCbs) {
+        activePostFlushCbs.push(...deduped);
+        return;
+      }
+      activePostFlushCbs = deduped;
+      if (true) {
+        seen = seen || /* @__PURE__ */ new Map();
+      }
+      for (postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++) {
+        const cb = activePostFlushCbs[postFlushIndex];
+        if (checkRecursiveUpdates(seen, cb)) {
+          continue;
+        }
+        if (cb.flags & 4) {
+          cb.flags &= -2;
+        }
+        if (!(cb.flags & 8)) cb();
+        cb.flags &= -2;
+      }
+      activePostFlushCbs = null;
+      postFlushIndex = 0;
+    }
+  }
+  var getId = (job) => job.id == null ? job.flags & 2 ? -1 : Infinity : job.id;
+  function flushJobs(seen) {
+    if (true) {
+      seen = seen || /* @__PURE__ */ new Map();
+    }
+    const check = true ? (job) => checkRecursiveUpdates(seen, job) : NOOP;
+    try {
+      for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
+        const job = queue[flushIndex];
+        if (job && !(job.flags & 8)) {
+          if (check(job)) {
+            continue;
+          }
+          if (job.flags & 4) {
+            job.flags &= ~1;
+          }
+          callWithErrorHandling(
+            job,
+            job.i,
+            job.i ? 15 : 14
+          );
+          if (!(job.flags & 4)) {
+            job.flags &= ~1;
+          }
+        }
+      }
+    } finally {
+      for (; flushIndex < queue.length; flushIndex++) {
+        const job = queue[flushIndex];
+        if (job) {
+          job.flags &= -2;
+        }
+      }
+      flushIndex = -1;
+      queue.length = 0;
+      flushPostFlushCbs(seen);
+      currentFlushPromise = null;
+      if (queue.length || pendingPostFlushCbs.length) {
+        flushJobs(seen);
+      }
+    }
+  }
+  function checkRecursiveUpdates(seen, fn) {
+    const count = seen.get(fn) || 0;
+    if (count > RECURSION_LIMIT) {
+      const instance = fn.i;
+      const componentName = instance && getComponentName(instance.type);
+      handleError(
+        `Maximum recursive updates exceeded${componentName ? ` in component <${componentName}>` : ``}. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.`,
+        null,
+        10
+      );
+      return true;
+    }
+    seen.set(fn, count + 1);
+    return false;
+  }
+  var isHmrUpdating = false;
+  var hmrDirtyComponents = /* @__PURE__ */ new Map();
+  if (true) {
+    getGlobalThis().__VUE_HMR_RUNTIME__ = {
+      createRecord: tryWrap(createRecord),
+      rerender: tryWrap(rerender),
+      reload: tryWrap(reload)
+    };
+  }
+  var map = /* @__PURE__ */ new Map();
+  function createRecord(id, initialDef) {
+    if (map.has(id)) {
+      return false;
+    }
+    map.set(id, {
+      initialDef: normalizeClassComponent(initialDef),
+      instances: /* @__PURE__ */ new Set()
+    });
+    return true;
+  }
+  function normalizeClassComponent(component) {
+    return isClassComponent(component) ? component.__vccOpts : component;
+  }
+  function rerender(id, newRender) {
+    const record = map.get(id);
+    if (!record) {
+      return;
+    }
+    record.initialDef.render = newRender;
+    [...record.instances].forEach((instance) => {
+      if (newRender) {
+        instance.render = newRender;
+        normalizeClassComponent(instance.type).render = newRender;
+      }
+      instance.renderCache = [];
+      isHmrUpdating = true;
+      if (!(instance.job.flags & 8)) {
+        instance.update();
+      }
+      isHmrUpdating = false;
+    });
+  }
+  function reload(id, newComp) {
+    const record = map.get(id);
+    if (!record) return;
+    newComp = normalizeClassComponent(newComp);
+    updateComponentDef(record.initialDef, newComp);
+    const instances = [...record.instances];
+    for (let i = 0; i < instances.length; i++) {
+      const instance = instances[i];
+      const oldComp = normalizeClassComponent(instance.type);
+      let dirtyInstances = hmrDirtyComponents.get(oldComp);
+      if (!dirtyInstances) {
+        if (oldComp !== record.initialDef) {
+          updateComponentDef(oldComp, newComp);
+        }
+        hmrDirtyComponents.set(oldComp, dirtyInstances = /* @__PURE__ */ new Set());
+      }
+      dirtyInstances.add(instance);
+      instance.appContext.propsCache.delete(instance.type);
+      instance.appContext.emitsCache.delete(instance.type);
+      instance.appContext.optionsCache.delete(instance.type);
+      if (instance.ceReload) {
+        dirtyInstances.add(instance);
+        instance.ceReload(newComp.styles);
+        dirtyInstances.delete(instance);
+      } else if (instance.parent) {
+        queueJob(() => {
+          if (!(instance.job.flags & 8)) {
+            isHmrUpdating = true;
+            instance.parent.update();
+            isHmrUpdating = false;
+            dirtyInstances.delete(instance);
+          }
+        });
+      } else if (instance.appContext.reload) {
+        instance.appContext.reload();
+      } else if (typeof window !== "undefined") {
+        window.location.reload();
+      } else {
+        console.warn(
+          "[HMR] Root or manually mounted instance modified. Full reload required."
+        );
+      }
+      if (instance.root.ce && instance !== instance.root) {
+        instance.root.ce._removeChildStyle(oldComp);
+      }
+    }
+    queuePostFlushCb(() => {
+      hmrDirtyComponents.clear();
+    });
+  }
+  function updateComponentDef(oldComp, newComp) {
+    extend(oldComp, newComp);
+    for (const key in oldComp) {
+      if (key !== "__file" && !(key in newComp)) {
+        delete oldComp[key];
+      }
+    }
+  }
+  function tryWrap(fn) {
+    return (id, arg) => {
+      try {
+        return fn(id, arg);
+      } catch (e) {
+        console.error(e);
+        console.warn(
+          `[HMR] Something went wrong during Vue component hot-reload. Full reload required.`
+        );
+      }
+    };
+  }
+  var currentRenderingInstance = null;
+  function inject(key, defaultValue, treatDefaultAsFactory = false) {
+    const instance = getCurrentInstance();
+    if (instance || currentApp) {
+      let provides = currentApp ? currentApp._context.provides : instance ? instance.parent == null || instance.ce ? instance.vnode.appContext && instance.vnode.appContext.provides : instance.parent.provides : void 0;
+      if (provides && key in provides) {
+        return provides[key];
+      } else if (arguments.length > 1) {
+        return treatDefaultAsFactory && isFunction(defaultValue) ? defaultValue.call(instance && instance.proxy) : defaultValue;
+      } else if (true) {
+        warn$1(`injection "${String(key)}" not found.`);
+      }
+    } else if (true) {
+      warn$1(`inject() can only be used inside setup() or functional components.`);
+    }
+  }
+  function hasInjectionContext() {
+    return !!(getCurrentInstance() || currentApp);
+  }
+  var ssrContextKey = /* @__PURE__ */ Symbol.for("v-scx");
+  var useSSRContext = () => {
+    {
+      const ctx = inject(ssrContextKey);
+      if (!ctx) {
+        warn$1(
+          `Server rendering context not provided. Make sure to only call useSSRContext() conditionally in the server build.`
+        );
+      }
+      return ctx;
+    }
+  };
+  function watch2(source, cb, options) {
+    if (!isFunction(cb)) {
+      warn$1(
+        `\`watch(fn, options?)\` signature has been moved to a separate API. Use \`watchEffect(fn, options?)\` instead. \`watch\` now only supports \`watch(source, cb, options?) signature.`
+      );
+    }
+    return doWatch(source, cb, options);
+  }
+  function doWatch(source, cb, options = EMPTY_OBJ) {
+    const { immediate, deep, flush, once } = options;
+    if (!cb) {
+      if (immediate !== void 0) {
+        warn$1(
+          `watch() "immediate" option is only respected when using the watch(source, callback, options?) signature.`
+        );
+      }
+      if (deep !== void 0) {
+        warn$1(
+          `watch() "deep" option is only respected when using the watch(source, callback, options?) signature.`
+        );
+      }
+      if (once !== void 0) {
+        warn$1(
+          `watch() "once" option is only respected when using the watch(source, callback, options?) signature.`
+        );
+      }
+    }
+    const baseWatchOptions = extend({}, options);
+    if (true) baseWatchOptions.onWarn = warn$1;
+    const runsImmediately = cb && immediate || !cb && flush !== "post";
+    let ssrCleanup;
+    if (isInSSRComponentSetup) {
+      if (flush === "sync") {
+        const ctx = useSSRContext();
+        ssrCleanup = ctx.__watcherHandles || (ctx.__watcherHandles = []);
+      } else if (!runsImmediately) {
+        const watchStopHandle = () => {
+        };
+        watchStopHandle.stop = NOOP;
+        watchStopHandle.resume = NOOP;
+        watchStopHandle.pause = NOOP;
+        return watchStopHandle;
+      }
+    }
+    const instance = currentInstance;
+    baseWatchOptions.call = (fn, type, args) => callWithAsyncErrorHandling(fn, instance, type, args);
+    let isPre = false;
+    if (flush === "post") {
+      baseWatchOptions.scheduler = (job) => {
+        queuePostRenderEffect(job, instance && instance.suspense);
+      };
+    } else if (flush !== "sync") {
+      isPre = true;
+      baseWatchOptions.scheduler = (job, isFirstRun) => {
+        if (isFirstRun) {
+          job();
+        } else {
+          queueJob(job);
+        }
+      };
+    }
+    baseWatchOptions.augmentJob = (job) => {
+      if (cb) {
+        job.flags |= 4;
+      }
+      if (isPre) {
+        job.flags |= 2;
+        if (instance) {
+          job.id = instance.uid;
+          job.i = instance;
+        }
+      }
+    };
+    const watchHandle = watch(source, cb, baseWatchOptions);
+    if (isInSSRComponentSetup) {
+      if (ssrCleanup) {
+        ssrCleanup.push(watchHandle);
+      } else if (runsImmediately) {
+        watchHandle();
+      }
+    }
+    return watchHandle;
+  }
+  function instanceWatch(source, value, options) {
+    const publicThis = this.proxy;
+    const getter = isString(source) ? source.includes(".") ? createPathGetter(publicThis, source) : () => publicThis[source] : source.bind(publicThis, publicThis);
+    let cb;
+    if (isFunction(value)) {
+      cb = value;
+    } else {
+      cb = value.handler;
+      options = value;
+    }
+    const reset = setCurrentInstance(this);
+    const res = doWatch(getter, cb.bind(publicThis), options);
+    reset();
+    return res;
+  }
+  function createPathGetter(ctx, path) {
+    const segments = path.split(".");
+    return () => {
+      let cur = ctx;
+      for (let i = 0; i < segments.length && cur; i++) {
+        cur = cur[segments[i]];
+      }
+      return cur;
+    };
+  }
+  var requestIdleCallback = getGlobalThis().requestIdleCallback || ((cb) => setTimeout(cb, 1));
+  var cancelIdleCallback = getGlobalThis().cancelIdleCallback || ((id) => clearTimeout(id));
+  function injectHook(type, hook2, target2 = currentInstance, prepend = false) {
+    if (target2) {
+      const hooks2 = target2[type] || (target2[type] = []);
+      const wrappedHook = hook2.__weh || (hook2.__weh = (...args) => {
+        pauseTracking();
+        const reset = setCurrentInstance(target2);
+        const res = callWithAsyncErrorHandling(hook2, target2, type, args);
+        reset();
+        resetTracking();
+        return res;
+      });
+      if (prepend) {
+        hooks2.unshift(wrappedHook);
+      } else {
+        hooks2.push(wrappedHook);
+      }
+      return wrappedHook;
+    } else if (true) {
+      const apiName = toHandlerKey(ErrorTypeStrings$1[type].replace(/ hook$/, ""));
+      warn$1(
+        `${apiName} is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.`
+      );
+    }
+  }
+  var createHook = (lifecycle) => (hook2, target2 = currentInstance) => {
+    if (!isInSSRComponentSetup || lifecycle === "sp") {
+      injectHook(lifecycle, (...args) => hook2(...args), target2);
+    }
+  };
+  var onBeforeMount = createHook("bm");
+  var onMounted = createHook("m");
+  var onBeforeUpdate = createHook(
+    "bu"
+  );
+  var onUpdated = createHook("u");
+  var onBeforeUnmount = createHook(
+    "bum"
+  );
+  var onUnmounted = createHook("um");
+  var onServerPrefetch = createHook(
+    "sp"
+  );
+  var onRenderTriggered = createHook("rtg");
+  var onRenderTracked = createHook("rtc");
+  var getPublicInstance = (i) => {
+    if (!i) return null;
+    if (isStatefulComponent(i)) return getComponentPublicInstance(i);
+    return getPublicInstance(i.parent);
+  };
+  var publicPropertiesMap = (
+    // Move PURE marker to new line to workaround compiler discarding it
+    // due to type annotation
+    /* @__PURE__ */ extend(/* @__PURE__ */ Object.create(null), {
+      $: (i) => i,
+      $el: (i) => i.vnode.el,
+      $data: (i) => i.data,
+      $props: (i) => true ? shallowReadonly(i.props) : i.props,
+      $attrs: (i) => true ? shallowReadonly(i.attrs) : i.attrs,
+      $slots: (i) => true ? shallowReadonly(i.slots) : i.slots,
+      $refs: (i) => true ? shallowReadonly(i.refs) : i.refs,
+      $parent: (i) => getPublicInstance(i.parent),
+      $root: (i) => getPublicInstance(i.root),
+      $host: (i) => i.ce,
+      $emit: (i) => i.emit,
+      $options: (i) => __VUE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type,
+      $forceUpdate: (i) => i.f || (i.f = () => {
+        queueJob(i.update);
+      }),
+      $nextTick: (i) => i.n || (i.n = nextTick.bind(i.proxy)),
+      $watch: (i) => __VUE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP
+    })
+  );
+  var isReservedPrefix = (key) => key === "_" || key === "$";
+  var hasSetupBinding = (state, key) => state !== EMPTY_OBJ && !state.__isScriptSetup && hasOwn(state, key);
+  var PublicInstanceProxyHandlers = {
+    get({ _: instance }, key) {
+      if (key === "__v_skip") {
+        return true;
+      }
+      const { ctx, setupState, data, props, accessCache, type, appContext } = instance;
+      if (key === "__isVue") {
+        return true;
+      }
+      if (key[0] !== "$") {
+        const n = accessCache[key];
+        if (n !== void 0) {
+          switch (n) {
+            case 1:
+              return setupState[key];
+            case 2:
+              return data[key];
+            case 4:
+              return ctx[key];
+            case 3:
+              return props[key];
+          }
+        } else if (hasSetupBinding(setupState, key)) {
+          accessCache[key] = 1;
+          return setupState[key];
+        } else if (__VUE_OPTIONS_API__ && data !== EMPTY_OBJ && hasOwn(data, key)) {
+          accessCache[key] = 2;
+          return data[key];
+        } else if (hasOwn(props, key)) {
+          accessCache[key] = 3;
+          return props[key];
+        } else if (ctx !== EMPTY_OBJ && hasOwn(ctx, key)) {
+          accessCache[key] = 4;
+          return ctx[key];
+        } else if (!__VUE_OPTIONS_API__ || shouldCacheAccess) {
+          accessCache[key] = 0;
+        }
+      }
+      const publicGetter = publicPropertiesMap[key];
+      let cssModule, globalProperties;
+      if (publicGetter) {
+        if (key === "$attrs") {
+          track(instance.attrs, "get", "");
+          markAttrsAccessed();
+        } else if (key === "$slots") {
+          track(instance, "get", key);
+        }
+        return publicGetter(instance);
+      } else if (
+        // css module (injected by vue-loader)
+        (cssModule = type.__cssModules) && (cssModule = cssModule[key])
+      ) {
+        return cssModule;
+      } else if (ctx !== EMPTY_OBJ && hasOwn(ctx, key)) {
+        accessCache[key] = 4;
+        return ctx[key];
+      } else if (
+        // global properties
+        globalProperties = appContext.config.globalProperties, hasOwn(globalProperties, key)
+      ) {
+        {
+          return globalProperties[key];
+        }
+      } else if (currentRenderingInstance && (!isString(key) || // #1091 avoid internal isRef/isVNode checks on component instance leading
+      // to infinite warning loop
+      key.indexOf("__v") !== 0)) {
+        if (data !== EMPTY_OBJ && isReservedPrefix(key[0]) && hasOwn(data, key)) {
+          warn$1(
+            `Property ${JSON.stringify(
+              key
+            )} must be accessed via $data because it starts with a reserved character ("$" or "_") and is not proxied on the render context.`
+          );
+        } else if (instance === currentRenderingInstance) {
+          warn$1(
+            `Property ${JSON.stringify(key)} was accessed during render but is not defined on instance.`
+          );
+        }
+      }
+    },
+    set({ _: instance }, key, value) {
+      const { data, setupState, ctx } = instance;
+      if (hasSetupBinding(setupState, key)) {
+        setupState[key] = value;
+        return true;
+      } else if (setupState.__isScriptSetup && hasOwn(setupState, key)) {
+        warn$1(`Cannot mutate <script setup> binding "${key}" from Options API.`);
+        return false;
+      } else if (__VUE_OPTIONS_API__ && data !== EMPTY_OBJ && hasOwn(data, key)) {
+        data[key] = value;
+        return true;
+      } else if (hasOwn(instance.props, key)) {
+        warn$1(`Attempting to mutate prop "${key}". Props are readonly.`);
+        return false;
+      }
+      if (key[0] === "$" && key.slice(1) in instance) {
+        warn$1(
+          `Attempting to mutate public property "${key}". Properties starting with $ are reserved and readonly.`
+        );
+        return false;
+      } else {
+        if (key in instance.appContext.config.globalProperties) {
+          Object.defineProperty(ctx, key, {
+            enumerable: true,
+            configurable: true,
+            value
+          });
+        } else {
+          ctx[key] = value;
+        }
+      }
+      return true;
+    },
+    has({
+      _: { data, setupState, accessCache, ctx, appContext, props, type }
+    }, key) {
+      let cssModules;
+      return !!(accessCache[key] || __VUE_OPTIONS_API__ && data !== EMPTY_OBJ && key[0] !== "$" && hasOwn(data, key) || hasSetupBinding(setupState, key) || hasOwn(props, key) || hasOwn(ctx, key) || hasOwn(publicPropertiesMap, key) || hasOwn(appContext.config.globalProperties, key) || (cssModules = type.__cssModules) && cssModules[key]);
+    },
+    defineProperty(target2, key, descriptor) {
+      if (descriptor.get != null) {
+        target2._.accessCache[key] = 0;
+      } else if (hasOwn(descriptor, "value")) {
+        this.set(target2, key, descriptor.value, null);
+      }
+      return Reflect.defineProperty(target2, key, descriptor);
+    }
+  };
+  if (true) {
+    PublicInstanceProxyHandlers.ownKeys = (target2) => {
+      warn$1(
+        `Avoid app logic that relies on enumerating keys on a component instance. The keys will be empty in production mode to avoid performance overhead.`
+      );
+      return Reflect.ownKeys(target2);
+    };
+  }
+  function normalizePropsOrEmits(props) {
+    return isArray(props) ? props.reduce(
+      (normalized, p) => (normalized[p] = null, normalized),
+      {}
+    ) : props;
+  }
+  var shouldCacheAccess = true;
+  function resolveMergedOptions(instance) {
+    const base = instance.type;
+    const { mixins, extends: extendsOptions } = base;
+    const {
+      mixins: globalMixins,
+      optionsCache: cache,
+      config: { optionMergeStrategies }
+    } = instance.appContext;
+    const cached = cache.get(base);
+    let resolved;
+    if (cached) {
+      resolved = cached;
+    } else if (!globalMixins.length && !mixins && !extendsOptions) {
+      {
+        resolved = base;
+      }
+    } else {
+      resolved = {};
+      if (globalMixins.length) {
+        globalMixins.forEach(
+          (m) => mergeOptions(resolved, m, optionMergeStrategies, true)
+        );
+      }
+      mergeOptions(resolved, base, optionMergeStrategies);
+    }
+    if (isObject(base)) {
+      cache.set(base, resolved);
+    }
+    return resolved;
+  }
+  function mergeOptions(to, from, strats, asMixin = false) {
+    const { mixins, extends: extendsOptions } = from;
+    if (extendsOptions) {
+      mergeOptions(to, extendsOptions, strats, true);
+    }
+    if (mixins) {
+      mixins.forEach(
+        (m) => mergeOptions(to, m, strats, true)
+      );
+    }
+    for (const key in from) {
+      if (asMixin && key === "expose") {
+        warn$1(
+          `"expose" option is ignored when declared in mixins or extends. It should only be declared in the base component itself.`
+        );
+      } else {
+        const strat = internalOptionMergeStrats[key] || strats && strats[key];
+        to[key] = strat ? strat(to[key], from[key]) : from[key];
+      }
+    }
+    return to;
+  }
+  var internalOptionMergeStrats = {
+    data: mergeDataFn,
+    props: mergeEmitsOrPropsOptions,
+    emits: mergeEmitsOrPropsOptions,
+    // objects
+    methods: mergeObjectOptions,
+    computed: mergeObjectOptions,
+    // lifecycle
+    beforeCreate: mergeAsArray,
+    created: mergeAsArray,
+    beforeMount: mergeAsArray,
+    mounted: mergeAsArray,
+    beforeUpdate: mergeAsArray,
+    updated: mergeAsArray,
+    beforeDestroy: mergeAsArray,
+    beforeUnmount: mergeAsArray,
+    destroyed: mergeAsArray,
+    unmounted: mergeAsArray,
+    activated: mergeAsArray,
+    deactivated: mergeAsArray,
+    errorCaptured: mergeAsArray,
+    serverPrefetch: mergeAsArray,
+    // assets
+    components: mergeObjectOptions,
+    directives: mergeObjectOptions,
+    // watch
+    watch: mergeWatchOptions,
+    // provide / inject
+    provide: mergeDataFn,
+    inject: mergeInject
+  };
+  function mergeDataFn(to, from) {
+    if (!from) {
+      return to;
+    }
+    if (!to) {
+      return from;
+    }
+    return function mergedDataFn() {
+      return extend(
+        isFunction(to) ? to.call(this, this) : to,
+        isFunction(from) ? from.call(this, this) : from
+      );
+    };
+  }
+  function mergeInject(to, from) {
+    return mergeObjectOptions(normalizeInject(to), normalizeInject(from));
+  }
+  function normalizeInject(raw) {
+    if (isArray(raw)) {
+      const res = {};
+      for (let i = 0; i < raw.length; i++) {
+        res[raw[i]] = raw[i];
+      }
+      return res;
+    }
+    return raw;
+  }
+  function mergeAsArray(to, from) {
+    return to ? [...new Set([].concat(to, from))] : from;
+  }
+  function mergeObjectOptions(to, from) {
+    return to ? extend(/* @__PURE__ */ Object.create(null), to, from) : from;
+  }
+  function mergeEmitsOrPropsOptions(to, from) {
+    if (to) {
+      if (isArray(to) && isArray(from)) {
+        return [.../* @__PURE__ */ new Set([...to, ...from])];
+      }
+      return extend(
+        /* @__PURE__ */ Object.create(null),
+        normalizePropsOrEmits(to),
+        normalizePropsOrEmits(from != null ? from : {})
+      );
+    } else {
+      return from;
+    }
+  }
+  function mergeWatchOptions(to, from) {
+    if (!to) return from;
+    if (!from) return to;
+    const merged = extend(/* @__PURE__ */ Object.create(null), to);
+    for (const key in from) {
+      merged[key] = mergeAsArray(to[key], from[key]);
+    }
+    return merged;
+  }
+  function createAppContext() {
+    return {
+      app: null,
+      config: {
+        isNativeTag: NO,
+        performance: false,
+        globalProperties: {},
+        optionMergeStrategies: {},
+        errorHandler: void 0,
+        warnHandler: void 0,
+        compilerOptions: {}
+      },
+      mixins: [],
+      components: {},
+      directives: {},
+      provides: /* @__PURE__ */ Object.create(null),
+      optionsCache: /* @__PURE__ */ new WeakMap(),
+      propsCache: /* @__PURE__ */ new WeakMap(),
+      emitsCache: /* @__PURE__ */ new WeakMap()
+    };
+  }
+  var currentApp = null;
+  var accessedAttrs = false;
+  function markAttrsAccessed() {
+    accessedAttrs = true;
+  }
+  var queuePostRenderEffect = queueEffectWithSuspense;
+  function queueEffectWithSuspense(fn, suspense) {
+    if (suspense && suspense.pendingBranch) {
+      if (isArray(fn)) {
+        suspense.effects.push(...fn);
+      } else {
+        suspense.effects.push(fn);
+      }
+    } else {
+      queuePostFlushCb(fn);
+    }
+  }
+  var emptyAppContext = createAppContext();
+  var currentInstance = null;
+  var getCurrentInstance = () => currentInstance || currentRenderingInstance;
+  var internalSetCurrentInstance;
+  var setInSSRSetupState;
+  {
+    const g = getGlobalThis();
+    const registerGlobalSetter = (key, setter) => {
+      let setters;
+      if (!(setters = g[key])) setters = g[key] = [];
+      setters.push(setter);
+      return (v) => {
+        if (setters.length > 1) setters.forEach((set) => set(v));
+        else setters[0](v);
+      };
+    };
+    internalSetCurrentInstance = registerGlobalSetter(
+      `__VUE_INSTANCE_SETTERS__`,
+      (v) => currentInstance = v
+    );
+    setInSSRSetupState = registerGlobalSetter(
+      `__VUE_SSR_SETTERS__`,
+      (v) => isInSSRComponentSetup = v
+    );
+  }
+  var setCurrentInstance = (instance) => {
+    const prev = currentInstance;
+    internalSetCurrentInstance(instance);
+    instance.scope.on();
+    return () => {
+      instance.scope.off();
+      internalSetCurrentInstance(prev);
+    };
+  };
+  function isStatefulComponent(instance) {
+    return instance.vnode.shapeFlag & 4;
+  }
+  var isInSSRComponentSetup = false;
+  function getComponentPublicInstance(instance) {
+    if (instance.exposed) {
+      return instance.exposeProxy || (instance.exposeProxy = new Proxy(proxyRefs(markRaw(instance.exposed)), {
+        get(target2, key) {
+          if (key in target2) {
+            return target2[key];
+          } else if (key in publicPropertiesMap) {
+            return publicPropertiesMap[key](instance);
+          }
+        },
+        has(target2, key) {
+          return key in target2 || key in publicPropertiesMap;
+        }
+      }));
+    } else {
+      return instance.proxy;
+    }
+  }
+  var classifyRE = /(?:^|[-_])\w/g;
+  var classify = (str) => str.replace(classifyRE, (c) => c.toUpperCase()).replace(/[-_]/g, "");
+  function getComponentName(Component, includeInferred = true) {
+    return isFunction(Component) ? Component.displayName || Component.name : Component.name || includeInferred && Component.__name;
+  }
+  function formatComponentName(instance, Component, isRoot = false) {
+    let name = getComponentName(Component);
+    if (!name && Component.__file) {
+      const match = Component.__file.match(/([^/\\]+)\.\w+$/);
+      if (match) {
+        name = match[1];
+      }
+    }
+    if (!name && instance) {
+      const inferFromRegistry = (registry) => {
+        for (const key in registry) {
+          if (registry[key] === Component) {
+            return key;
+          }
+        }
+      };
+      name = inferFromRegistry(instance.components) || instance.parent && inferFromRegistry(
+        instance.parent.type.components
+      ) || inferFromRegistry(instance.appContext.components);
+    }
+    return name ? classify(name) : isRoot ? `App` : `Anonymous`;
+  }
+  function isClassComponent(value) {
+    return isFunction(value) && "__vccOpts" in value;
+  }
+  var computed2 = (getterOrOptions, debugOptions) => {
+    const c = computed(getterOrOptions, debugOptions, isInSSRComponentSetup);
+    if (true) {
+      const i = getCurrentInstance();
+      if (i && i.appContext.config.warnRecursiveComputed) {
+        c._warnRecursive = true;
+      }
+    }
+    return c;
+  };
+  function initCustomFormatter() {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const vueStyle = { style: "color:#3ba776" };
+    const numberStyle = { style: "color:#1677ff" };
+    const stringStyle = { style: "color:#f5222d" };
+    const keywordStyle = { style: "color:#eb2f96" };
+    const formatter = {
+      __vue_custom_formatter: true,
+      header(obj) {
+        if (!isObject(obj)) {
+          return null;
+        }
+        if (obj.__isVue) {
+          return ["div", vueStyle, `VueInstance`];
+        } else if (isRef(obj)) {
+          pauseTracking();
+          const value = obj.value;
+          resetTracking();
+          return [
+            "div",
+            {},
+            ["span", vueStyle, genRefFlag(obj)],
+            "<",
+            formatValue(value),
+            `>`
+          ];
+        } else if (isReactive(obj)) {
+          return [
+            "div",
+            {},
+            ["span", vueStyle, isShallow(obj) ? "ShallowReactive" : "Reactive"],
+            "<",
+            formatValue(obj),
+            `>${isReadonly(obj) ? ` (readonly)` : ``}`
+          ];
+        } else if (isReadonly(obj)) {
+          return [
+            "div",
+            {},
+            ["span", vueStyle, isShallow(obj) ? "ShallowReadonly" : "Readonly"],
+            "<",
+            formatValue(obj),
+            ">"
+          ];
+        }
+        return null;
+      },
+      hasBody(obj) {
+        return obj && obj.__isVue;
+      },
+      body(obj) {
+        if (obj && obj.__isVue) {
+          return [
+            "div",
+            {},
+            ...formatInstance(obj.$)
+          ];
+        }
+      }
+    };
+    function formatInstance(instance) {
+      const blocks = [];
+      if (instance.type.props && instance.props) {
+        blocks.push(createInstanceBlock("props", toRaw(instance.props)));
+      }
+      if (instance.setupState !== EMPTY_OBJ) {
+        blocks.push(createInstanceBlock("setup", instance.setupState));
+      }
+      if (instance.data !== EMPTY_OBJ) {
+        blocks.push(createInstanceBlock("data", toRaw(instance.data)));
+      }
+      const computed3 = extractKeys(instance, "computed");
+      if (computed3) {
+        blocks.push(createInstanceBlock("computed", computed3));
+      }
+      const injected = extractKeys(instance, "inject");
+      if (injected) {
+        blocks.push(createInstanceBlock("injected", injected));
+      }
+      blocks.push([
+        "div",
+        {},
+        [
+          "span",
+          {
+            style: keywordStyle.style + ";opacity:0.66"
+          },
+          "$ (internal): "
+        ],
+        ["object", { object: instance }]
+      ]);
+      return blocks;
+    }
+    function createInstanceBlock(type, target2) {
+      target2 = extend({}, target2);
+      if (!Object.keys(target2).length) {
+        return ["span", {}];
+      }
+      return [
+        "div",
+        { style: "line-height:1.25em;margin-bottom:0.6em" },
+        [
+          "div",
+          {
+            style: "color:#476582"
+          },
+          type
+        ],
+        [
+          "div",
+          {
+            style: "padding-left:1.25em"
+          },
+          ...Object.keys(target2).map((key) => {
+            return [
+              "div",
+              {},
+              ["span", keywordStyle, key + ": "],
+              formatValue(target2[key], false)
+            ];
+          })
+        ]
+      ];
+    }
+    function formatValue(v, asRaw = true) {
+      if (typeof v === "number") {
+        return ["span", numberStyle, v];
+      } else if (typeof v === "string") {
+        return ["span", stringStyle, JSON.stringify(v)];
+      } else if (typeof v === "boolean") {
+        return ["span", keywordStyle, v];
+      } else if (isObject(v)) {
+        return ["object", { object: asRaw ? toRaw(v) : v }];
+      } else {
+        return ["span", stringStyle, String(v)];
+      }
+    }
+    function extractKeys(instance, type) {
+      const Comp = instance.type;
+      if (isFunction(Comp)) {
+        return;
+      }
+      const extracted = {};
+      for (const key in instance.ctx) {
+        if (isKeyOfType(Comp, key, type)) {
+          extracted[key] = instance.ctx[key];
+        }
+      }
+      return extracted;
+    }
+    function isKeyOfType(Comp, key, type) {
+      const opts = Comp[type];
+      if (isArray(opts) && opts.includes(key) || isObject(opts) && key in opts) {
+        return true;
+      }
+      if (Comp.extends && isKeyOfType(Comp.extends, key, type)) {
+        return true;
+      }
+      if (Comp.mixins && Comp.mixins.some((m) => isKeyOfType(m, key, type))) {
+        return true;
+      }
+    }
+    function genRefFlag(v) {
+      if (isShallow(v)) {
+        return `ShallowRef`;
+      }
+      if (v.effect) {
+        return `ComputedRef`;
+      }
+      return `Ref`;
+    }
+    if (window.devtoolsFormatters) {
+      window.devtoolsFormatters.push(formatter);
+    } else {
+      window.devtoolsFormatters = [formatter];
+    }
+  }
+
+  // node_modules/vue/dist/vue.runtime.esm-bundler.js
+  function initDev() {
+    {
+      initCustomFormatter();
+    }
+  }
+  if (true) {
+    initDev();
+  }
+
+  // node_modules/nostics/dist/index.mjs
+  function formatDiagnostic(diagnostic) {
+    const header = `[${diagnostic.name}] ${diagnostic.message}`;
+    const details = [];
+    if (diagnostic.fix) details.push(`fix: ${diagnostic.fix}`);
+    if (diagnostic.sources?.length) details.push(`sources: ${diagnostic.sources.join(", ")}`);
+    if (diagnostic.docs) details.push(`see: ${diagnostic.docs}`);
+    if (details.length === 0) return header;
+    return [header, ...details.map((detail, i) => {
+      return `${i < details.length - 1 ? "\u251C\u25B6" : "\u2570\u25B6"} ${detail}`;
+    })].join("\n");
+  }
+  function toValueWithArgs(valFn, ...args) {
+    return typeof valFn === "function" ? valFn(...args) : valFn;
+  }
+  // @__NO_SIDE_EFFECTS__
+  function createConsoleReporter({ method: defaultMethod = "warn", formatter = formatDiagnostic } = {}) {
+    return (diagnostic, { method = defaultMethod } = {}) => {
+      console[method](formatter(diagnostic));
+    };
+  }
+  var captureStackTrace = Error.captureStackTrace;
+  var Diagnostic = class Diagnostic2 extends Error {
+    /**
+    * @param init        structured initializer; `why` is required
+    * @param captureFrom V8 stack-cutoff frame. Defaults to {@link Diagnostic}
+    * so the top of the trace is the `new Diagnostic(...)` call site.
+    * `defineDiagnostics` passes its action method to strip its own frames too.
+    * Ignored on engines without `Error.captureStackTrace`.
+    */
+    constructor(init, captureFrom = Diagnostic2) {
+      super(init.why, { cause: init.cause });
+      __publicField(this, "name");
+      /**
+      * The diagnostic code, e.g. `MATH_E001`.
+      * Also appears as the `name` property.
+      */
+      __publicField(this, "code");
+      /**
+      * URL to extended documentation for this diagnostic code.
+      * Auto-generated from {@link DefineDiagnosticsOptions.docsBase}.
+      */
+      __publicField(this, "docs");
+      /**
+      * Optional actionable instructions on how to resolve the problem.
+      */
+      __publicField(this, "fix");
+      /**
+      * Locations in user code that contributed to this diagnostic, in
+      * `file:line:column` format. Relevant when the stack trace doesn't reflect
+      * the user's source (e.g. compilers, bundlers), otherwise redundant with the
+      * stack and should be omitted.
+      */
+      __publicField(this, "sources");
+      this.code = this.name = init.code;
+      this.fix = init.fix;
+      this.docs = init.docs;
+      this.sources = init.sources;
+      captureStackTrace?.(this, captureFrom);
+    }
+    /**
+    * Alias for {@link Error.message}: the reason this diagnostic was raised.
+    */
+    get why() {
+      return this.message;
+    }
+    /**
+    * Converts the diagnostic into a serializable structured object.
+    */
+    toJSON() {
+      return {
+        name: this.name,
+        why: this.why,
+        fix: this.fix,
+        docs: this.docs,
+        sources: this.sources,
+        cause: this.cause,
+        stack: this.stack
+      };
+    }
+  };
+  function deriveDocs(docsBase, code) {
+    return typeof docsBase === "string" ? `${docsBase}/${code.toLowerCase()}` : docsBase?.(code);
+  }
+  // @__NO_SIDE_EFFECTS__
+  function defineDiagnostics(options) {
+    const reporters = options.reporters ?? [];
+    const result = {};
+    const { docsBase } = options;
+    for (const code of Object.keys(options.codes)) {
+      const def2 = options.codes[code];
+      const docs = def2.docs === false ? void 0 : def2.docs || deriveDocs(docsBase, code);
+      const handle = (params = {}, reporterOptions = {}) => {
+        const diagnostic = new Diagnostic({
+          code,
+          why: toValueWithArgs(def2.why, params),
+          fix: toValueWithArgs(def2.fix, params),
+          docs,
+          cause: params.cause,
+          sources: params.sources
+        }, handle);
+        for (const reporter of reporters) reporter(diagnostic, reporterOptions);
+        return diagnostic;
+      };
+      result[code] = handle;
+    }
+    return result;
+  }
+
+  // node_modules/@vue/devtools-shared/dist/index.js
+  var __create = Object.create;
+  var __defProp2 = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __commonJSMin = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+      key = keys[i];
+      if (!__hasOwnProp.call(to, key) && key !== except) __defProp2(to, key, {
+        get: ((k) => from[k]).bind(null, key),
+        enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+      });
+    }
+    return to;
+  };
+  var __toESM = (mod, isNodeMode, target2) => (target2 = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp2(target2, "default", {
+    value: mod,
+    enumerable: true
+  }) : target2, mod));
+  var isBrowser = typeof navigator !== "undefined";
+  var target = typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : typeof global !== "undefined" ? global : {};
+  var isInChromePanel = typeof target.chrome !== "undefined" && !!target.chrome.devtools;
+  var isInIframe = isBrowser && target.self !== target.top;
+  var isInElectron = typeof navigator !== "undefined" && navigator.userAgent?.toLowerCase().includes("electron");
+  var isNuxtApp = typeof window !== "undefined" && !!window.__NUXT__;
+  var import_rfdc = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module2) => {
+    module2.exports = rfdc;
+    function copyBuffer(cur) {
+      if (cur instanceof Buffer) return Buffer.from(cur);
+      return new cur.constructor(cur.buffer.slice(), cur.byteOffset, cur.length);
+    }
+    function rfdc(opts) {
+      opts = opts || {};
+      if (opts.circles) return rfdcCircles(opts);
+      const constructorHandlers = /* @__PURE__ */ new Map();
+      constructorHandlers.set(Date, (o) => new Date(o));
+      constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)));
+      constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)));
+      if (opts.constructorHandlers) for (const handler2 of opts.constructorHandlers) constructorHandlers.set(handler2[0], handler2[1]);
+      let handler = null;
+      return opts.proto ? cloneProto : clone;
+      function cloneArray(a, fn) {
+        const keys = Object.keys(a);
+        const a2 = new Array(keys.length);
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          const cur = a[k];
+          if (typeof cur !== "object" || cur === null) a2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) a2[k] = handler(cur, fn);
+          else if (ArrayBuffer.isView(cur)) a2[k] = copyBuffer(cur);
+          else a2[k] = fn(cur);
+        }
+        return a2;
+      }
+      function clone(o) {
+        if (typeof o !== "object" || o === null) return o;
+        if (Array.isArray(o)) return cloneArray(o, clone);
+        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) return handler(o, clone);
+        const o2 = {};
+        for (const k in o) {
+          if (Object.hasOwnProperty.call(o, k) === false) continue;
+          const cur = o[k];
+          if (typeof cur !== "object" || cur === null) o2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) o2[k] = handler(cur, clone);
+          else if (ArrayBuffer.isView(cur)) o2[k] = copyBuffer(cur);
+          else o2[k] = clone(cur);
+        }
+        return o2;
+      }
+      function cloneProto(o) {
+        if (typeof o !== "object" || o === null) return o;
+        if (Array.isArray(o)) return cloneArray(o, cloneProto);
+        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) return handler(o, cloneProto);
+        const o2 = {};
+        for (const k in o) {
+          const cur = o[k];
+          if (typeof cur !== "object" || cur === null) o2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) o2[k] = handler(cur, cloneProto);
+          else if (ArrayBuffer.isView(cur)) o2[k] = copyBuffer(cur);
+          else o2[k] = cloneProto(cur);
+        }
+        return o2;
+      }
+    }
+    function rfdcCircles(opts) {
+      const refs = [];
+      const refsNew = [];
+      const constructorHandlers = /* @__PURE__ */ new Map();
+      constructorHandlers.set(Date, (o) => new Date(o));
+      constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)));
+      constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)));
+      if (opts.constructorHandlers) for (const handler2 of opts.constructorHandlers) constructorHandlers.set(handler2[0], handler2[1]);
+      let handler = null;
+      return opts.proto ? cloneProto : clone;
+      function cloneArray(a, fn) {
+        const keys = Object.keys(a);
+        const a2 = new Array(keys.length);
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          const cur = a[k];
+          if (typeof cur !== "object" || cur === null) a2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) a2[k] = handler(cur, fn);
+          else if (ArrayBuffer.isView(cur)) a2[k] = copyBuffer(cur);
+          else {
+            const index = refs.indexOf(cur);
+            if (index !== -1) a2[k] = refsNew[index];
+            else a2[k] = fn(cur);
+          }
+        }
+        return a2;
+      }
+      function clone(o) {
+        if (typeof o !== "object" || o === null) return o;
+        if (Array.isArray(o)) return cloneArray(o, clone);
+        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) return handler(o, clone);
+        const o2 = {};
+        refs.push(o);
+        refsNew.push(o2);
+        for (const k in o) {
+          if (Object.hasOwnProperty.call(o, k) === false) continue;
+          const cur = o[k];
+          if (typeof cur !== "object" || cur === null) o2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) o2[k] = handler(cur, clone);
+          else if (ArrayBuffer.isView(cur)) o2[k] = copyBuffer(cur);
+          else {
+            const i = refs.indexOf(cur);
+            if (i !== -1) o2[k] = refsNew[i];
+            else o2[k] = clone(cur);
+          }
+        }
+        refs.pop();
+        refsNew.pop();
+        return o2;
+      }
+      function cloneProto(o) {
+        if (typeof o !== "object" || o === null) return o;
+        if (Array.isArray(o)) return cloneArray(o, cloneProto);
+        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) return handler(o, cloneProto);
+        const o2 = {};
+        refs.push(o);
+        refsNew.push(o2);
+        for (const k in o) {
+          const cur = o[k];
+          if (typeof cur !== "object" || cur === null) o2[k] = cur;
+          else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) o2[k] = handler(cur, cloneProto);
+          else if (ArrayBuffer.isView(cur)) o2[k] = copyBuffer(cur);
+          else {
+            const i = refs.indexOf(cur);
+            if (i !== -1) o2[k] = refsNew[i];
+            else o2[k] = cloneProto(cur);
+          }
+        }
+        refs.pop();
+        refsNew.pop();
+        return o2;
+      }
+    }
+  })))(), 1);
+  var classifyRE2 = /(?:^|[-_/])(\w)/g;
+  function toUpper(_, c) {
+    return c ? c.toUpperCase() : "";
+  }
+  function classify2(str) {
+    return str && `${str}`.replace(classifyRE2, toUpper);
+  }
+  function basename(filename, ext) {
+    let normalizedFilename = filename.replace(/^[a-z]:/i, "").replace(/\\/g, "/");
+    if (normalizedFilename.endsWith(`index${ext}`)) normalizedFilename = normalizedFilename.replace(`/index${ext}`, ext);
+    const lastSlashIndex = normalizedFilename.lastIndexOf("/");
+    const baseNameWithExt = normalizedFilename.substring(lastSlashIndex + 1);
+    if (ext) {
+      const extIndex = baseNameWithExt.lastIndexOf(ext);
+      return baseNameWithExt.substring(0, extIndex);
+    }
+    return "";
+  }
+  var deepClone = (0, import_rfdc.default)({ circles: true });
+
+  // node_modules/perfect-debounce/dist/index.mjs
+  var DEBOUNCE_DEFAULTS = { trailing: true };
+  function debounce(fn, wait = 25, options = {}) {
+    options = {
+      ...DEBOUNCE_DEFAULTS,
+      ...options
+    };
+    if (!Number.isFinite(wait)) throw new TypeError("Expected `wait` to be a finite number");
+    let leadingValue;
+    let timeout;
+    let resolveList = [];
+    let currentPromise;
+    let trailingArgs;
+    const applyFn = (_this, args) => {
+      currentPromise = _applyPromised(fn, _this, args);
+      currentPromise.finally(() => {
+        currentPromise = null;
+        if (options.trailing && trailingArgs && !timeout) {
+          const promise = applyFn(_this, trailingArgs);
+          trailingArgs = null;
+          return promise;
+        }
+      });
+      return currentPromise;
+    };
+    const debounced = function(...args) {
+      if (options.trailing) trailingArgs = args;
+      if (currentPromise) return currentPromise;
+      return new Promise((resolve) => {
+        const shouldCallNow = !timeout && options.leading;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          timeout = null;
+          const promise = options.leading ? leadingValue : applyFn(this, args);
+          trailingArgs = null;
+          for (const _resolve of resolveList) _resolve(promise);
+          resolveList = [];
+        }, wait);
+        if (shouldCallNow) {
+          leadingValue = applyFn(this, args);
+          resolve(leadingValue);
+        } else resolveList.push(resolve);
+      });
+    };
+    const _clearTimeout = (timer) => {
+      if (timer) {
+        clearTimeout(timer);
+        timeout = null;
+      }
+    };
+    debounced.isPending = () => !!timeout;
+    debounced.cancel = () => {
+      _clearTimeout(timeout);
+      resolveList = [];
+      trailingArgs = null;
+    };
+    debounced.flush = () => {
+      _clearTimeout(timeout);
+      if (!trailingArgs || currentPromise) return;
+      const args = trailingArgs;
+      trailingArgs = null;
+      return applyFn(this, args);
+    };
+    return debounced;
+  }
+  async function _applyPromised(fn, _this, args) {
+    return await fn.apply(_this, args);
+  }
+
+  // node_modules/hookable/dist/index.mjs
+  function flatHooks(configHooks, hooks2 = {}, parentName) {
+    for (const key in configHooks) {
+      const subHook = configHooks[key];
+      const name = parentName ? `${parentName}:${key}` : key;
+      if (typeof subHook === "object" && subHook !== null) {
+        flatHooks(subHook, hooks2, name);
+      } else if (typeof subHook === "function") {
+        hooks2[name] = subHook;
+      }
+    }
+    return hooks2;
+  }
+  var defaultTask = { run: (function_) => function_() };
+  var _createTask = () => defaultTask;
+  var createTask = typeof console.createTask !== "undefined" ? console.createTask : _createTask;
+  function serialTaskCaller(hooks2, args) {
+    const name = args.shift();
+    const task = createTask(name);
+    return hooks2.reduce(
+      (promise, hookFunction) => promise.then(() => task.run(() => hookFunction(...args))),
+      Promise.resolve()
+    );
+  }
+  function parallelTaskCaller(hooks2, args) {
+    const name = args.shift();
+    const task = createTask(name);
+    return Promise.all(hooks2.map((hook2) => task.run(() => hook2(...args))));
+  }
+  function callEachWith(callbacks, arg0) {
+    for (const callback of [...callbacks]) {
+      callback(arg0);
+    }
+  }
+  var Hookable = class {
+    constructor() {
+      this._hooks = {};
+      this._before = void 0;
+      this._after = void 0;
+      this._deprecatedMessages = void 0;
+      this._deprecatedHooks = {};
+      this.hook = this.hook.bind(this);
+      this.callHook = this.callHook.bind(this);
+      this.callHookWith = this.callHookWith.bind(this);
+    }
+    hook(name, function_, options = {}) {
+      if (!name || typeof function_ !== "function") {
+        return () => {
+        };
+      }
+      const originalName = name;
+      let dep;
+      while (this._deprecatedHooks[name]) {
+        dep = this._deprecatedHooks[name];
+        name = dep.to;
+      }
+      if (dep && !options.allowDeprecated) {
+        let message = dep.message;
+        if (!message) {
+          message = `${originalName} hook has been deprecated` + (dep.to ? `, please use ${dep.to}` : "");
+        }
+        if (!this._deprecatedMessages) {
+          this._deprecatedMessages = /* @__PURE__ */ new Set();
+        }
+        if (!this._deprecatedMessages.has(message)) {
+          console.warn(message);
+          this._deprecatedMessages.add(message);
+        }
+      }
+      if (!function_.name) {
+        try {
+          Object.defineProperty(function_, "name", {
+            get: () => "_" + name.replace(/\W+/g, "_") + "_hook_cb",
+            configurable: true
+          });
+        } catch {
+        }
+      }
+      this._hooks[name] = this._hooks[name] || [];
+      this._hooks[name].push(function_);
+      return () => {
+        if (function_) {
+          this.removeHook(name, function_);
+          function_ = void 0;
+        }
+      };
+    }
+    hookOnce(name, function_) {
+      let _unreg;
+      let _function = (...arguments_) => {
+        if (typeof _unreg === "function") {
+          _unreg();
+        }
+        _unreg = void 0;
+        _function = void 0;
+        return function_(...arguments_);
+      };
+      _unreg = this.hook(name, _function);
+      return _unreg;
+    }
+    removeHook(name, function_) {
+      if (this._hooks[name]) {
+        const index = this._hooks[name].indexOf(function_);
+        if (index !== -1) {
+          this._hooks[name].splice(index, 1);
+        }
+        if (this._hooks[name].length === 0) {
+          delete this._hooks[name];
+        }
+      }
+    }
+    deprecateHook(name, deprecated) {
+      this._deprecatedHooks[name] = typeof deprecated === "string" ? { to: deprecated } : deprecated;
+      const _hooks = this._hooks[name] || [];
+      delete this._hooks[name];
+      for (const hook2 of _hooks) {
+        this.hook(name, hook2);
+      }
+    }
+    deprecateHooks(deprecatedHooks) {
+      Object.assign(this._deprecatedHooks, deprecatedHooks);
+      for (const name in deprecatedHooks) {
+        this.deprecateHook(name, deprecatedHooks[name]);
+      }
+    }
+    addHooks(configHooks) {
+      const hooks2 = flatHooks(configHooks);
+      const removeFns = Object.keys(hooks2).map(
+        (key) => this.hook(key, hooks2[key])
+      );
+      return () => {
+        for (const unreg of removeFns.splice(0, removeFns.length)) {
+          unreg();
+        }
+      };
+    }
+    removeHooks(configHooks) {
+      const hooks2 = flatHooks(configHooks);
+      for (const key in hooks2) {
+        this.removeHook(key, hooks2[key]);
+      }
+    }
+    removeAllHooks() {
+      for (const key in this._hooks) {
+        delete this._hooks[key];
+      }
+    }
+    callHook(name, ...arguments_) {
+      arguments_.unshift(name);
+      return this.callHookWith(serialTaskCaller, name, ...arguments_);
+    }
+    callHookParallel(name, ...arguments_) {
+      arguments_.unshift(name);
+      return this.callHookWith(parallelTaskCaller, name, ...arguments_);
+    }
+    callHookWith(caller, name, ...arguments_) {
+      const event = this._before || this._after ? { name, args: arguments_, context: {} } : void 0;
+      if (this._before) {
+        callEachWith(this._before, event);
+      }
+      const result = caller(
+        name in this._hooks ? [...this._hooks[name]] : [],
+        arguments_
+      );
+      if (result instanceof Promise) {
+        return result.finally(() => {
+          if (this._after && event) {
+            callEachWith(this._after, event);
+          }
+        });
+      }
+      if (this._after && event) {
+        callEachWith(this._after, event);
+      }
+      return result;
+    }
+    beforeEach(function_) {
+      this._before = this._before || [];
+      this._before.push(function_);
+      return () => {
+        if (this._before !== void 0) {
+          const index = this._before.indexOf(function_);
+          if (index !== -1) {
+            this._before.splice(index, 1);
+          }
+        }
+      };
+    }
+    afterEach(function_) {
+      this._after = this._after || [];
+      this._after.push(function_);
+      return () => {
+        if (this._after !== void 0) {
+          const index = this._after.indexOf(function_);
+          if (index !== -1) {
+            this._after.splice(index, 1);
+          }
+        }
+      };
+    }
+  };
+  function createHooks() {
+    return new Hookable();
+  }
+
+  // node_modules/@vue/devtools-kit/dist/index.js
+  var __create2 = Object.create;
+  var __defProp3 = Object.defineProperty;
+  var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames2 = Object.getOwnPropertyNames;
+  var __getProtoOf2 = Object.getPrototypeOf;
+  var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+  var __commonJSMin2 = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+  var __copyProps2 = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames2(from), i = 0, n = keys.length, key; i < n; i++) {
+      key = keys[i];
+      if (!__hasOwnProp2.call(to, key) && key !== except) __defProp3(to, key, {
+        get: ((k) => from[k]).bind(null, key),
+        enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable
+      });
+    }
+    return to;
+  };
+  var __toESM2 = (mod, isNodeMode, target2) => (target2 = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp3(target2, "default", {
+    value: mod,
+    enumerable: true
+  }) : target2, mod));
+  function getComponentTypeName(options) {
+    if (typeof options === "function") return options.displayName || options.name || options.__VUE_DEVTOOLS_COMPONENT_GUSSED_NAME__ || "";
+    const name = options.name || options._componentTag || options.__VUE_DEVTOOLS_COMPONENT_GUSSED_NAME__ || options.__name;
+    if (name === "index" && options.__file?.endsWith("index.vue")) return "";
+    return name;
+  }
+  function getComponentFileName(options) {
+    const file = options.__file;
+    if (file) return classify2(basename(file, ".vue"));
+  }
+  function saveComponentGussedName(instance, name) {
+    instance.type.__VUE_DEVTOOLS_COMPONENT_GUSSED_NAME__ = name;
+    return name;
+  }
+  function getAppRecord(instance) {
+    if (instance.__VUE_DEVTOOLS_NEXT_APP_RECORD__) return instance.__VUE_DEVTOOLS_NEXT_APP_RECORD__;
+    else if (instance.root) return instance.appContext.app.__VUE_DEVTOOLS_NEXT_APP_RECORD__;
+  }
+  function isFragment(instance) {
+    const subTreeType = instance.subTree?.type;
+    const appRecord = getAppRecord(instance);
+    if (appRecord) return appRecord?.types?.Fragment === subTreeType;
+    return false;
+  }
+  function getInstanceName(instance) {
+    const name = getComponentTypeName(instance?.type || {});
+    if (name) return name;
+    if (instance?.root === instance) return "Root";
+    for (const key in instance.parent?.type?.components) if (instance.parent.type.components[key] === instance?.type) return saveComponentGussedName(instance, key);
+    for (const key in instance.appContext?.components) if (instance.appContext.components[key] === instance?.type) return saveComponentGussedName(instance, key);
+    const fileName = getComponentFileName(instance?.type || {});
+    if (fileName) return fileName;
+    return "Anonymous Component";
+  }
+  function getUniqueComponentId(instance) {
+    return `${instance?.appContext?.app?.__VUE_DEVTOOLS_NEXT_APP_RECORD_ID__ ?? 0}:${instance === instance?.root ? "root" : instance.uid}`;
+  }
+  function getComponentInstance(appRecord, instanceId) {
+    instanceId = instanceId || `${appRecord.id}:root`;
+    return appRecord.instanceMap.get(instanceId) || appRecord.instanceMap.get(":root");
+  }
+  function createRect() {
+    const rect = {
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      get width() {
+        return rect.right - rect.left;
+      },
+      get height() {
+        return rect.bottom - rect.top;
+      }
+    };
+    return rect;
+  }
+  var range;
+  function getTextRect(node) {
+    if (!range) range = document.createRange();
+    range.selectNode(node);
+    return range.getBoundingClientRect();
+  }
+  function getFragmentRect(vnode) {
+    const rect = createRect();
+    if (!vnode.children) return rect;
+    for (let i = 0, l = vnode.children.length; i < l; i++) {
+      const childVnode = vnode.children[i];
+      let childRect;
+      if (childVnode.component) childRect = getComponentBoundingRect(childVnode.component);
+      else if (childVnode.el) {
+        const el = childVnode.el;
+        if (el.nodeType === 1 || el.getBoundingClientRect) childRect = el.getBoundingClientRect();
+        else if (el.nodeType === 3 && el.data.trim()) childRect = getTextRect(el);
+      }
+      if (childRect) mergeRects(rect, childRect);
+    }
+    return rect;
+  }
+  function mergeRects(a, b) {
+    if (!a.top || b.top < a.top) a.top = b.top;
+    if (!a.bottom || b.bottom > a.bottom) a.bottom = b.bottom;
+    if (!a.left || b.left < a.left) a.left = b.left;
+    if (!a.right || b.right > a.right) a.right = b.right;
+    return a;
+  }
+  var DEFAULT_RECT = {
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: 0,
+    height: 0
+  };
+  function getComponentBoundingRect(instance) {
+    const el = instance.subTree.el;
+    if (typeof window === "undefined") return DEFAULT_RECT;
+    if (isFragment(instance)) return getFragmentRect(instance.subTree);
+    else if (el?.nodeType === 1) return el?.getBoundingClientRect();
+    else if (instance.subTree.component) return getComponentBoundingRect(instance.subTree.component);
+    else return DEFAULT_RECT;
+  }
+  function getRootElementsFromComponentInstance(instance) {
+    if (isFragment(instance)) return getFragmentRootElements(instance.subTree);
+    if (!instance.subTree) return [];
+    return [instance.subTree.el];
+  }
+  function getFragmentRootElements(vnode) {
+    if (!vnode.children) return [];
+    const list = [];
+    vnode.children.forEach((childVnode) => {
+      if (childVnode.component) list.push(...getRootElementsFromComponentInstance(childVnode.component));
+      else if (childVnode?.el) list.push(childVnode.el);
+    });
+    return list;
+  }
+  var CONTAINER_ELEMENT_ID = "__vue-devtools-component-inspector__";
+  var CARD_ELEMENT_ID = "__vue-devtools-component-inspector__card__";
+  var COMPONENT_NAME_ELEMENT_ID = "__vue-devtools-component-inspector__name__";
+  var INDICATOR_ELEMENT_ID = "__vue-devtools-component-inspector__indicator__";
+  var containerStyles = {
+    display: "block",
+    zIndex: 2147483640,
+    position: "fixed",
+    backgroundColor: "#42b88325",
+    border: "1px solid #42b88350",
+    borderRadius: "5px",
+    transition: "all 0.1s ease-in",
+    pointerEvents: "none"
+  };
+  var cardStyles = {
+    fontFamily: "Arial, Helvetica, sans-serif",
+    padding: "5px 8px",
+    borderRadius: "4px",
+    textAlign: "left",
+    position: "absolute",
+    left: 0,
+    color: "#e9e9e9",
+    fontSize: "14px",
+    fontWeight: 600,
+    lineHeight: "24px",
+    backgroundColor: "#42b883",
+    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)"
+  };
+  var indicatorStyles = {
+    display: "inline-block",
+    fontWeight: 400,
+    fontStyle: "normal",
+    fontSize: "12px",
+    opacity: 0.7
+  };
+  function getContainerElement() {
+    return document.getElementById(CONTAINER_ELEMENT_ID);
+  }
+  function getCardElement() {
+    return document.getElementById(CARD_ELEMENT_ID);
+  }
+  function getIndicatorElement() {
+    return document.getElementById(INDICATOR_ELEMENT_ID);
+  }
+  function getNameElement() {
+    return document.getElementById(COMPONENT_NAME_ELEMENT_ID);
+  }
+  function getStyles(bounds) {
+    return {
+      left: `${Math.round(bounds.left * 100) / 100}px`,
+      top: `${Math.round(bounds.top * 100) / 100}px`,
+      width: `${Math.round(bounds.width * 100) / 100}px`,
+      height: `${Math.round(bounds.height * 100) / 100}px`
+    };
+  }
+  function create(options) {
+    const containerEl = document.createElement("div");
+    containerEl.id = options.elementId ?? CONTAINER_ELEMENT_ID;
+    Object.assign(containerEl.style, {
+      ...containerStyles,
+      ...getStyles(options.bounds),
+      ...options.style
+    });
+    const cardEl = document.createElement("span");
+    cardEl.id = CARD_ELEMENT_ID;
+    Object.assign(cardEl.style, {
+      ...cardStyles,
+      top: options.bounds.top < 35 ? 0 : "-35px"
+    });
+    const nameEl = document.createElement("span");
+    nameEl.id = COMPONENT_NAME_ELEMENT_ID;
+    nameEl.innerHTML = `&lt;${options.name}&gt;&nbsp;&nbsp;`;
+    const indicatorEl = document.createElement("i");
+    indicatorEl.id = INDICATOR_ELEMENT_ID;
+    indicatorEl.innerHTML = `${Math.round(options.bounds.width * 100) / 100} x ${Math.round(options.bounds.height * 100) / 100}`;
+    Object.assign(indicatorEl.style, indicatorStyles);
+    cardEl.appendChild(nameEl);
+    cardEl.appendChild(indicatorEl);
+    containerEl.appendChild(cardEl);
+    document.body.appendChild(containerEl);
+    return containerEl;
+  }
+  function update(options) {
+    const containerEl = getContainerElement();
+    const cardEl = getCardElement();
+    const nameEl = getNameElement();
+    const indicatorEl = getIndicatorElement();
+    if (containerEl) {
+      Object.assign(containerEl.style, {
+        ...containerStyles,
+        ...getStyles(options.bounds)
+      });
+      Object.assign(cardEl.style, { top: options.bounds.top < 35 ? 0 : "-35px" });
+      nameEl.innerHTML = `&lt;${options.name}&gt;&nbsp;&nbsp;`;
+      indicatorEl.innerHTML = `${Math.round(options.bounds.width * 100) / 100} x ${Math.round(options.bounds.height * 100) / 100}`;
+    }
+  }
+  function highlight(instance) {
+    const bounds = getComponentBoundingRect(instance);
+    if (!bounds.width && !bounds.height) return;
+    const name = getInstanceName(instance);
+    getContainerElement() ? update({
+      bounds,
+      name
+    }) : create({
+      bounds,
+      name
+    });
+  }
+  function unhighlight() {
+    const el = getContainerElement();
+    if (el) el.style.display = "none";
+  }
+  var inspectInstance = null;
+  function inspectFn(e) {
+    const target2 = e.target;
+    if (target2) {
+      const instance = target2.__vueParentComponent;
+      if (instance) {
+        inspectInstance = instance;
+        if (instance.vnode.el) {
+          const bounds = getComponentBoundingRect(instance);
+          const name = getInstanceName(instance);
+          getContainerElement() ? update({
+            bounds,
+            name
+          }) : create({
+            bounds,
+            name
+          });
+        }
+      }
+    }
+  }
+  function selectComponentFn(e, cb) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inspectInstance) cb(getUniqueComponentId(inspectInstance));
+  }
+  var inspectComponentHighLighterSelectFn = null;
+  function cancelInspectComponentHighLighter() {
+    unhighlight();
+    window.removeEventListener("mouseover", inspectFn);
+    window.removeEventListener("click", inspectComponentHighLighterSelectFn, true);
+    inspectComponentHighLighterSelectFn = null;
+  }
+  function inspectComponentHighLighter() {
+    window.addEventListener("mouseover", inspectFn);
+    return new Promise((resolve) => {
+      function onSelect(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        selectComponentFn(e, (id) => {
+          window.removeEventListener("click", onSelect, true);
+          inspectComponentHighLighterSelectFn = null;
+          window.removeEventListener("mouseover", inspectFn);
+          const el = getContainerElement();
+          if (el) el.style.display = "none";
+          resolve(JSON.stringify({ id }));
+        });
+      }
+      inspectComponentHighLighterSelectFn = onSelect;
+      window.addEventListener("click", onSelect, true);
+    });
+  }
+  function scrollToComponent(options) {
+    const instance = getComponentInstance(activeAppRecord.value, options.id);
+    if (instance) {
+      const [el] = getRootElementsFromComponentInstance(instance);
+      if (typeof el.scrollIntoView === "function") el.scrollIntoView({ behavior: "smooth" });
+      else {
+        const bounds = getComponentBoundingRect(instance);
+        const scrollTarget = document.createElement("div");
+        const styles = {
+          ...getStyles(bounds),
+          position: "absolute"
+        };
+        Object.assign(scrollTarget.style, styles);
+        document.body.appendChild(scrollTarget);
+        scrollTarget.scrollIntoView({ behavior: "smooth" });
+        setTimeout(() => {
+          document.body.removeChild(scrollTarget);
+        }, 2e3);
+      }
+      setTimeout(() => {
+        const bounds = getComponentBoundingRect(instance);
+        if (bounds.width || bounds.height) {
+          const name = getInstanceName(instance);
+          const el2 = getContainerElement();
+          el2 ? update({
+            ...options,
+            name,
+            bounds
+          }) : create({
+            ...options,
+            name,
+            bounds
+          });
+          setTimeout(() => {
+            if (el2) el2.style.display = "none";
+          }, 1500);
+        }
+      }, 1200);
+    }
+  }
+  var _a;
+  (_a = target).__VUE_DEVTOOLS_COMPONENT_INSPECTOR_ENABLED__ ?? (_a.__VUE_DEVTOOLS_COMPONENT_INSPECTOR_ENABLED__ = true);
+  function waitForInspectorInit(cb) {
+    let total = 0;
+    const timer = setInterval(() => {
+      if (target.__VUE_INSPECTOR__) {
+        clearInterval(timer);
+        total += 30;
+        cb();
+      }
+      if (total >= 5e3) clearInterval(timer);
+    }, 30);
+  }
+  function setupInspector() {
+    const inspector = target.__VUE_INSPECTOR__;
+    const _openInEditor = inspector.openInEditor;
+    inspector.openInEditor = async (...params) => {
+      inspector.disable();
+      _openInEditor(...params);
+    };
+  }
+  function getComponentInspector() {
+    return new Promise((resolve) => {
+      function setup() {
+        setupInspector();
+        resolve(target.__VUE_INSPECTOR__);
+      }
+      if (!target.__VUE_INSPECTOR__) waitForInspectorInit(() => {
+        setup();
+      });
+      else setup();
+    });
+  }
+  var ReactiveFlags = /* @__PURE__ */ (function(ReactiveFlags2) {
+    ReactiveFlags2["SKIP"] = "__v_skip";
+    ReactiveFlags2["IS_REACTIVE"] = "__v_isReactive";
+    ReactiveFlags2["IS_READONLY"] = "__v_isReadonly";
+    ReactiveFlags2["IS_SHALLOW"] = "__v_isShallow";
+    ReactiveFlags2["RAW"] = "__v_raw";
+    return ReactiveFlags2;
+  })({});
+  function isReadonly2(value) {
+    return !!(value && value[ReactiveFlags.IS_READONLY]);
+  }
+  function isReactive$1(value) {
+    if (isReadonly2(value)) return isReactive$1(value[ReactiveFlags.RAW]);
+    return !!(value && value[ReactiveFlags.IS_REACTIVE]);
+  }
+  function isRef$1(r) {
+    return !!(r && r.__v_isRef === true);
+  }
+  function toRaw$1(observed) {
+    const raw = observed && observed[ReactiveFlags.RAW];
+    return raw ? toRaw$1(raw) : observed;
+  }
+  var StateEditor = class {
+    constructor() {
+      this.refEditor = new RefStateEditor();
+    }
+    set(object, path, value, cb) {
+      const sections = Array.isArray(path) ? path : path.split(".");
+      while (sections.length > 1) {
+        const section = sections.shift();
+        if (object instanceof Map) object = object.get(section);
+        else if (object instanceof Set) object = Array.from(object.values())[section];
+        else object = object[section];
+        if (this.refEditor.isRef(object)) object = this.refEditor.get(object);
+      }
+      const field = sections[0];
+      const item = this.refEditor.get(object)[field];
+      if (cb) cb(object, field, value);
+      else if (this.refEditor.isRef(item)) this.refEditor.set(item, value);
+      else object[field] = value;
+    }
+    get(object, path) {
+      const sections = Array.isArray(path) ? path : path.split(".");
+      for (let i = 0; i < sections.length; i++) {
+        if (object instanceof Map) object = object.get(sections[i]);
+        else object = object[sections[i]];
+        if (this.refEditor.isRef(object)) object = this.refEditor.get(object);
+        if (!object) return void 0;
+      }
+      return object;
+    }
+    has(object, path, parent = false) {
+      if (typeof object === "undefined") return false;
+      const sections = Array.isArray(path) ? path.slice() : path.split(".");
+      const size = !parent ? 1 : 2;
+      while (object && sections.length > size) {
+        const section = sections.shift();
+        object = object[section];
+        if (this.refEditor.isRef(object)) object = this.refEditor.get(object);
+      }
+      return object != null && Object.prototype.hasOwnProperty.call(object, sections[0]);
+    }
+    createDefaultSetCallback(state) {
+      return (object, field, value) => {
+        if (state.remove || state.newKey) if (Array.isArray(object)) object.splice(field, 1);
+        else if (toRaw$1(object) instanceof Map) object.delete(field);
+        else if (toRaw$1(object) instanceof Set) object.delete(Array.from(object.values())[field]);
+        else Reflect.deleteProperty(object, field);
+        if (!state.remove) {
+          const target2 = object[state.newKey || field];
+          if (this.refEditor.isRef(target2)) this.refEditor.set(target2, value);
+          else if (toRaw$1(object) instanceof Map) object.set(state.newKey || field, value);
+          else if (toRaw$1(object) instanceof Set) object.add(value);
+          else object[state.newKey || field] = value;
+        }
+      };
+    }
+  };
+  var RefStateEditor = class {
+    set(ref2, value) {
+      if (isRef$1(ref2)) ref2.value = value;
+      else {
+        if (ref2 instanceof Set && Array.isArray(value)) {
+          ref2.clear();
+          value.forEach((v) => ref2.add(v));
+          return;
+        }
+        const currentKeys = Object.keys(value);
+        if (ref2 instanceof Map) {
+          const previousKeysSet2 = new Set(ref2.keys());
+          currentKeys.forEach((key) => {
+            ref2.set(key, Reflect.get(value, key));
+            previousKeysSet2.delete(key);
+          });
+          previousKeysSet2.forEach((key) => ref2.delete(key));
+          return;
+        }
+        const previousKeysSet = new Set(Object.keys(ref2));
+        currentKeys.forEach((key) => {
+          Reflect.set(ref2, key, Reflect.get(value, key));
+          previousKeysSet.delete(key);
+        });
+        previousKeysSet.forEach((key) => Reflect.deleteProperty(ref2, key));
+      }
+    }
+    get(ref2) {
+      return isRef$1(ref2) ? ref2.value : ref2;
+    }
+    isRef(ref2) {
+      return isRef$1(ref2) || isReactive$1(ref2);
+    }
+  };
+  var stateEditor = new StateEditor();
+  var TIMELINE_LAYERS_STATE_STORAGE_ID = "__VUE_DEVTOOLS_KIT_TIMELINE_LAYERS_STATE__";
+  function getTimelineLayersStateFromStorage() {
+    if (typeof window === "undefined" || !isBrowser || typeof localStorage === "undefined" || localStorage === null) return {
+      recordingState: false,
+      mouseEventEnabled: false,
+      keyboardEventEnabled: false,
+      componentEventEnabled: false,
+      performanceEventEnabled: false,
+      selected: ""
+    };
+    const state = typeof localStorage.getItem !== "undefined" ? localStorage.getItem(TIMELINE_LAYERS_STATE_STORAGE_ID) : null;
+    return state ? JSON.parse(state) : {
+      recordingState: false,
+      mouseEventEnabled: false,
+      keyboardEventEnabled: false,
+      componentEventEnabled: false,
+      performanceEventEnabled: false,
+      selected: ""
+    };
+  }
+  var _a2;
+  (_a2 = target).__VUE_DEVTOOLS_KIT_TIMELINE_LAYERS ?? (_a2.__VUE_DEVTOOLS_KIT_TIMELINE_LAYERS = []);
+  var devtoolsTimelineLayers = new Proxy(target.__VUE_DEVTOOLS_KIT_TIMELINE_LAYERS, { get(target2, prop, receiver) {
+    return Reflect.get(target2, prop, receiver);
+  } });
+  function addTimelineLayer(options, descriptor) {
+    devtoolsState.timelineLayersState[descriptor.id] = false;
+    devtoolsTimelineLayers.push({
+      ...options,
+      descriptorId: descriptor.id,
+      appRecord: getAppRecord(descriptor.app)
+    });
+  }
+  var _a3;
+  (_a3 = target).__VUE_DEVTOOLS_KIT_INSPECTOR__ ?? (_a3.__VUE_DEVTOOLS_KIT_INSPECTOR__ = []);
+  var devtoolsInspector = new Proxy(target.__VUE_DEVTOOLS_KIT_INSPECTOR__, { get(target2, prop, receiver) {
+    return Reflect.get(target2, prop, receiver);
+  } });
+  var callInspectorUpdatedHook = debounce(() => {
+    devtoolsContext.hooks.callHook(DevToolsMessagingHookKeys.SEND_INSPECTOR_TO_CLIENT, getActiveInspectors());
+  });
+  function addInspector(inspector, descriptor) {
+    devtoolsInspector.push({
+      options: inspector,
+      descriptor,
+      treeFilterPlaceholder: inspector.treeFilterPlaceholder ?? "Search tree...",
+      stateFilterPlaceholder: inspector.stateFilterPlaceholder ?? "Search state...",
+      treeFilter: "",
+      selectedNodeId: "",
+      appRecord: getAppRecord(descriptor.app)
+    });
+    callInspectorUpdatedHook();
+  }
+  function getActiveInspectors() {
+    return devtoolsInspector.filter((inspector) => inspector.descriptor.app === activeAppRecord.value.app).filter((inspector) => inspector.descriptor.id !== "components").map((inspector) => {
+      const descriptor = inspector.descriptor;
+      const options = inspector.options;
+      return {
+        id: options.id,
+        label: options.label,
+        logo: descriptor.logo,
+        icon: `custom-ic-baseline-${options?.icon?.replace(/_/g, "-")}`,
+        packageName: descriptor.packageName,
+        homepage: descriptor.homepage,
+        pluginId: descriptor.id
+      };
+    });
+  }
+  function getInspector(id, app) {
+    return devtoolsInspector.find((inspector) => inspector.options.id === id && (app ? inspector.descriptor.app === app : true));
+  }
+  var DevToolsV6PluginAPIHookKeys = /* @__PURE__ */ (function(DevToolsV6PluginAPIHookKeys2) {
+    DevToolsV6PluginAPIHookKeys2["VISIT_COMPONENT_TREE"] = "visitComponentTree";
+    DevToolsV6PluginAPIHookKeys2["INSPECT_COMPONENT"] = "inspectComponent";
+    DevToolsV6PluginAPIHookKeys2["EDIT_COMPONENT_STATE"] = "editComponentState";
+    DevToolsV6PluginAPIHookKeys2["GET_INSPECTOR_TREE"] = "getInspectorTree";
+    DevToolsV6PluginAPIHookKeys2["GET_INSPECTOR_STATE"] = "getInspectorState";
+    DevToolsV6PluginAPIHookKeys2["EDIT_INSPECTOR_STATE"] = "editInspectorState";
+    DevToolsV6PluginAPIHookKeys2["INSPECT_TIMELINE_EVENT"] = "inspectTimelineEvent";
+    DevToolsV6PluginAPIHookKeys2["TIMELINE_CLEARED"] = "timelineCleared";
+    DevToolsV6PluginAPIHookKeys2["SET_PLUGIN_SETTINGS"] = "setPluginSettings";
+    return DevToolsV6PluginAPIHookKeys2;
+  })({});
+  var DevToolsContextHookKeys = /* @__PURE__ */ (function(DevToolsContextHookKeys2) {
+    DevToolsContextHookKeys2["ADD_INSPECTOR"] = "addInspector";
+    DevToolsContextHookKeys2["SEND_INSPECTOR_TREE"] = "sendInspectorTree";
+    DevToolsContextHookKeys2["SEND_INSPECTOR_STATE"] = "sendInspectorState";
+    DevToolsContextHookKeys2["CUSTOM_INSPECTOR_SELECT_NODE"] = "customInspectorSelectNode";
+    DevToolsContextHookKeys2["TIMELINE_LAYER_ADDED"] = "timelineLayerAdded";
+    DevToolsContextHookKeys2["TIMELINE_EVENT_ADDED"] = "timelineEventAdded";
+    DevToolsContextHookKeys2["GET_COMPONENT_INSTANCES"] = "getComponentInstances";
+    DevToolsContextHookKeys2["GET_COMPONENT_BOUNDS"] = "getComponentBounds";
+    DevToolsContextHookKeys2["GET_COMPONENT_NAME"] = "getComponentName";
+    DevToolsContextHookKeys2["COMPONENT_HIGHLIGHT"] = "componentHighlight";
+    DevToolsContextHookKeys2["COMPONENT_UNHIGHLIGHT"] = "componentUnhighlight";
+    return DevToolsContextHookKeys2;
+  })({});
+  var DevToolsMessagingHookKeys = /* @__PURE__ */ (function(DevToolsMessagingHookKeys2) {
+    DevToolsMessagingHookKeys2["SEND_INSPECTOR_TREE_TO_CLIENT"] = "sendInspectorTreeToClient";
+    DevToolsMessagingHookKeys2["SEND_INSPECTOR_STATE_TO_CLIENT"] = "sendInspectorStateToClient";
+    DevToolsMessagingHookKeys2["SEND_TIMELINE_EVENT_TO_CLIENT"] = "sendTimelineEventToClient";
+    DevToolsMessagingHookKeys2["SEND_INSPECTOR_TO_CLIENT"] = "sendInspectorToClient";
+    DevToolsMessagingHookKeys2["SEND_ACTIVE_APP_UNMOUNTED_TO_CLIENT"] = "sendActiveAppUpdatedToClient";
+    DevToolsMessagingHookKeys2["DEVTOOLS_STATE_UPDATED"] = "devtoolsStateUpdated";
+    DevToolsMessagingHookKeys2["DEVTOOLS_CONNECTED_UPDATED"] = "devtoolsConnectedUpdated";
+    DevToolsMessagingHookKeys2["ROUTER_INFO_UPDATED"] = "routerInfoUpdated";
+    return DevToolsMessagingHookKeys2;
+  })({});
+  function createDevToolsCtxHooks() {
+    const hooks2 = createHooks();
+    hooks2.hook(DevToolsContextHookKeys.ADD_INSPECTOR, ({ inspector, plugin }) => {
+      addInspector(inspector, plugin.descriptor);
+    });
+    const debounceSendInspectorTree = debounce(async ({ inspectorId, plugin }) => {
+      if (!inspectorId || !plugin?.descriptor?.app || devtoolsState.highPerfModeEnabled) return;
+      const inspector = getInspector(inspectorId, plugin.descriptor.app);
+      const _payload = {
+        app: plugin.descriptor.app,
+        inspectorId,
+        filter: inspector?.treeFilter || "",
+        rootNodes: []
+      };
+      await new Promise((resolve) => {
+        hooks2.callHookWith(async (callbacks) => {
+          await Promise.all(callbacks.map((cb) => cb(_payload)));
+          resolve();
+        }, DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_TREE);
+      });
+      hooks2.callHookWith(async (callbacks) => {
+        await Promise.all(callbacks.map((cb) => cb({
+          inspectorId,
+          rootNodes: _payload.rootNodes
+        })));
+      }, DevToolsMessagingHookKeys.SEND_INSPECTOR_TREE_TO_CLIENT);
+    }, 120);
+    hooks2.hook(DevToolsContextHookKeys.SEND_INSPECTOR_TREE, debounceSendInspectorTree);
+    const debounceSendInspectorState = debounce(async ({ inspectorId, plugin }) => {
+      if (!inspectorId || !plugin?.descriptor?.app || devtoolsState.highPerfModeEnabled) return;
+      const inspector = getInspector(inspectorId, plugin.descriptor.app);
+      const _payload = {
+        app: plugin.descriptor.app,
+        inspectorId,
+        nodeId: inspector?.selectedNodeId || "",
+        state: null
+      };
+      const ctx = { currentTab: `custom-inspector:${inspectorId}` };
+      if (_payload.nodeId) await new Promise((resolve) => {
+        hooks2.callHookWith(async (callbacks) => {
+          await Promise.all(callbacks.map((cb) => cb(_payload, ctx)));
+          resolve();
+        }, DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_STATE);
+      });
+      hooks2.callHookWith(async (callbacks) => {
+        await Promise.all(callbacks.map((cb) => cb({
+          inspectorId,
+          nodeId: _payload.nodeId,
+          state: _payload.state
+        })));
+      }, DevToolsMessagingHookKeys.SEND_INSPECTOR_STATE_TO_CLIENT);
+    }, 120);
+    hooks2.hook(DevToolsContextHookKeys.SEND_INSPECTOR_STATE, debounceSendInspectorState);
+    hooks2.hook(DevToolsContextHookKeys.CUSTOM_INSPECTOR_SELECT_NODE, ({ inspectorId, nodeId, plugin }) => {
+      const inspector = getInspector(inspectorId, plugin.descriptor.app);
+      if (!inspector) return;
+      inspector.selectedNodeId = nodeId;
+    });
+    hooks2.hook(DevToolsContextHookKeys.TIMELINE_LAYER_ADDED, ({ options, plugin }) => {
+      addTimelineLayer(options, plugin.descriptor);
+    });
+    hooks2.hook(DevToolsContextHookKeys.TIMELINE_EVENT_ADDED, ({ options, plugin }) => {
+      if (devtoolsState.highPerfModeEnabled || !devtoolsState.timelineLayersState?.[plugin.descriptor.id] && ![
+        "performance",
+        "component-event",
+        "keyboard",
+        "mouse"
+      ].includes(options.layerId)) return;
+      hooks2.callHookWith(async (callbacks) => {
+        await Promise.all(callbacks.map((cb) => cb(options)));
+      }, DevToolsMessagingHookKeys.SEND_TIMELINE_EVENT_TO_CLIENT);
+    });
+    hooks2.hook(DevToolsContextHookKeys.GET_COMPONENT_INSTANCES, async ({ app }) => {
+      const appRecord = app.__VUE_DEVTOOLS_NEXT_APP_RECORD__;
+      if (!appRecord) return null;
+      const appId = appRecord.id.toString();
+      return [...appRecord.instanceMap].filter(([key]) => key.split(":")[0] === appId).map(([, instance]) => instance);
+    });
+    hooks2.hook(DevToolsContextHookKeys.GET_COMPONENT_BOUNDS, async ({ instance }) => {
+      return getComponentBoundingRect(instance);
+    });
+    hooks2.hook(DevToolsContextHookKeys.GET_COMPONENT_NAME, ({ instance }) => {
+      return getInstanceName(instance);
+    });
+    hooks2.hook(DevToolsContextHookKeys.COMPONENT_HIGHLIGHT, ({ uid }) => {
+      const instance = activeAppRecord.value.instanceMap.get(uid);
+      if (instance) highlight(instance);
+    });
+    hooks2.hook(DevToolsContextHookKeys.COMPONENT_UNHIGHLIGHT, () => {
+      unhighlight();
+    });
+    return hooks2;
+  }
+  var _a4;
+  (_a4 = target).__VUE_DEVTOOLS_KIT_APP_RECORDS__ ?? (_a4.__VUE_DEVTOOLS_KIT_APP_RECORDS__ = []);
+  var _a5;
+  (_a5 = target).__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__ ?? (_a5.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__ = {});
+  var _a6;
+  (_a6 = target).__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD_ID__ ?? (_a6.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD_ID__ = "");
+  var _a7;
+  (_a7 = target).__VUE_DEVTOOLS_KIT_CUSTOM_TABS__ ?? (_a7.__VUE_DEVTOOLS_KIT_CUSTOM_TABS__ = []);
+  var _a8;
+  (_a8 = target).__VUE_DEVTOOLS_KIT_CUSTOM_COMMANDS__ ?? (_a8.__VUE_DEVTOOLS_KIT_CUSTOM_COMMANDS__ = []);
+  var STATE_KEY = "__VUE_DEVTOOLS_KIT_GLOBAL_STATE__";
+  function initStateFactory() {
+    return {
+      connected: false,
+      clientConnected: false,
+      vitePluginDetected: true,
+      appRecords: [],
+      activeAppRecordId: "",
+      tabs: [],
+      commands: [],
+      highPerfModeEnabled: true,
+      devtoolsClientDetected: {},
+      perfUniqueGroupId: 0,
+      timelineLayersState: getTimelineLayersStateFromStorage()
+    };
+  }
+  var _a9;
+  (_a9 = target)[STATE_KEY] ?? (_a9[STATE_KEY] = initStateFactory());
+  var callStateUpdatedHook = debounce((state) => {
+    devtoolsContext.hooks.callHook(DevToolsMessagingHookKeys.DEVTOOLS_STATE_UPDATED, { state });
+  });
+  var callConnectedUpdatedHook = debounce((state, oldState) => {
+    devtoolsContext.hooks.callHook(DevToolsMessagingHookKeys.DEVTOOLS_CONNECTED_UPDATED, {
+      state,
+      oldState
+    });
+  });
+  var devtoolsAppRecords = new Proxy(target.__VUE_DEVTOOLS_KIT_APP_RECORDS__, { get(_target, prop, receiver) {
+    if (prop === "value") return target.__VUE_DEVTOOLS_KIT_APP_RECORDS__;
+    return target.__VUE_DEVTOOLS_KIT_APP_RECORDS__[prop];
+  } });
+  var activeAppRecord = new Proxy(target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__, { get(_target, prop, receiver) {
+    if (prop === "value") return target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__;
+    else if (prop === "id") return target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD_ID__;
+    return target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__[prop];
+  } });
+  function updateAllStates() {
+    callStateUpdatedHook({
+      ...target[STATE_KEY],
+      appRecords: devtoolsAppRecords.value,
+      activeAppRecordId: activeAppRecord.id,
+      tabs: target.__VUE_DEVTOOLS_KIT_CUSTOM_TABS__,
+      commands: target.__VUE_DEVTOOLS_KIT_CUSTOM_COMMANDS__
+    });
+  }
+  function setActiveAppRecord(app) {
+    target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD__ = app;
+    updateAllStates();
+  }
+  function setActiveAppRecordId(id) {
+    target.__VUE_DEVTOOLS_KIT_ACTIVE_APP_RECORD_ID__ = id;
+    updateAllStates();
+  }
+  var devtoolsState = new Proxy(target[STATE_KEY], {
+    get(target$3, property) {
+      if (property === "appRecords") return devtoolsAppRecords;
+      else if (property === "activeAppRecordId") return activeAppRecord.id;
+      else if (property === "tabs") return target.__VUE_DEVTOOLS_KIT_CUSTOM_TABS__;
+      else if (property === "commands") return target.__VUE_DEVTOOLS_KIT_CUSTOM_COMMANDS__;
+      return target[STATE_KEY][property];
+    },
+    deleteProperty(target2, property) {
+      delete target2[property];
+      return true;
+    },
+    set(target$4, property, value) {
+      target$4[property] = value;
+      target[STATE_KEY][property] = value;
+      return true;
+    }
+  });
+  function openInEditor(options = {}) {
+    const { file, host, baseUrl = window.location.origin, line = 0, column = 0 } = options;
+    if (file) {
+      if (host === "chrome-extension") {
+        const fileName = file.replace(/\\/g, "\\\\");
+        const _baseUrl = window.VUE_DEVTOOLS_CONFIG?.openInEditorHost ?? "/";
+        fetch(`${_baseUrl}__open-in-editor?file=${encodeURI(file)}`).then((response) => {
+          if (!response.ok) {
+            const msg = `Opening component ${fileName} failed`;
+            console.log(`%c${msg}`, "color:red");
+          }
+        });
+      } else if (devtoolsState.vitePluginDetected) {
+        const _baseUrl = target.__VUE_DEVTOOLS_OPEN_IN_EDITOR_BASE_URL__ ?? baseUrl;
+        target.__VUE_INSPECTOR__.openInEditor(_baseUrl, file, line, column);
+      }
+    }
+  }
+  var _a10;
+  (_a10 = target).__VUE_DEVTOOLS_KIT_PLUGIN_BUFFER__ ?? (_a10.__VUE_DEVTOOLS_KIT_PLUGIN_BUFFER__ = []);
+  var devtoolsPluginBuffer = new Proxy(target.__VUE_DEVTOOLS_KIT_PLUGIN_BUFFER__, { get(target2, prop, receiver) {
+    return Reflect.get(target2, prop, receiver);
+  } });
+  function _getSettings(settings) {
+    const _settings = {};
+    Object.keys(settings).forEach((key) => {
+      _settings[key] = settings[key].defaultValue;
+    });
+    return _settings;
+  }
+  function getPluginLocalKey(pluginId) {
+    return `__VUE_DEVTOOLS_NEXT_PLUGIN_SETTINGS__${pluginId}__`;
+  }
+  function getPluginSettingsOptions(pluginId) {
+    return (devtoolsPluginBuffer.find((item) => item[0].id === pluginId && !!item[0]?.settings)?.[0] ?? null)?.settings ?? null;
+  }
+  function getPluginSettings(pluginId, fallbackValue) {
+    const localKey = getPluginLocalKey(pluginId);
+    if (localKey) {
+      const localSettings = localStorage.getItem(localKey);
+      if (localSettings) return JSON.parse(localSettings);
+    }
+    if (pluginId) return _getSettings((devtoolsPluginBuffer.find((item) => item[0].id === pluginId)?.[0] ?? null)?.settings ?? {});
+    return _getSettings(fallbackValue);
+  }
+  function initPluginSettings(pluginId, settings) {
+    const localKey = getPluginLocalKey(pluginId);
+    if (!localStorage.getItem(localKey)) localStorage.setItem(localKey, JSON.stringify(_getSettings(settings)));
+  }
+  function setPluginSettings(pluginId, key, value) {
+    const localKey = getPluginLocalKey(pluginId);
+    const localSettings = localStorage.getItem(localKey);
+    const parsedLocalSettings = JSON.parse(localSettings || "{}");
+    const updated = {
+      ...parsedLocalSettings,
+      [key]: value
+    };
+    localStorage.setItem(localKey, JSON.stringify(updated));
+    devtoolsContext.hooks.callHookWith((callbacks) => {
+      callbacks.forEach((cb) => cb({
+        pluginId,
+        key,
+        oldValue: parsedLocalSettings[key],
+        newValue: value,
+        settings: updated
+      }));
+    }, DevToolsV6PluginAPIHookKeys.SET_PLUGIN_SETTINGS);
+  }
+  var DevToolsHooks = /* @__PURE__ */ (function(DevToolsHooks2) {
+    DevToolsHooks2["APP_INIT"] = "app:init";
+    DevToolsHooks2["APP_UNMOUNT"] = "app:unmount";
+    DevToolsHooks2["COMPONENT_UPDATED"] = "component:updated";
+    DevToolsHooks2["COMPONENT_ADDED"] = "component:added";
+    DevToolsHooks2["COMPONENT_REMOVED"] = "component:removed";
+    DevToolsHooks2["COMPONENT_EMIT"] = "component:emit";
+    DevToolsHooks2["PERFORMANCE_START"] = "perf:start";
+    DevToolsHooks2["PERFORMANCE_END"] = "perf:end";
+    DevToolsHooks2["ADD_ROUTE"] = "router:add-route";
+    DevToolsHooks2["REMOVE_ROUTE"] = "router:remove-route";
+    DevToolsHooks2["RENDER_TRACKED"] = "render:tracked";
+    DevToolsHooks2["RENDER_TRIGGERED"] = "render:triggered";
+    DevToolsHooks2["APP_CONNECTED"] = "app:connected";
+    DevToolsHooks2["SETUP_DEVTOOLS_PLUGIN"] = "devtools-plugin:setup";
+    return DevToolsHooks2;
+  })({});
+  var _a11;
+  var devtoolsHooks = (_a11 = target).__VUE_DEVTOOLS_HOOK ?? (_a11.__VUE_DEVTOOLS_HOOK = createHooks());
+  var on = {
+    vueAppInit(fn) {
+      devtoolsHooks.hook(DevToolsHooks.APP_INIT, fn);
+    },
+    vueAppUnmount(fn) {
+      devtoolsHooks.hook(DevToolsHooks.APP_UNMOUNT, fn);
+    },
+    vueAppConnected(fn) {
+      devtoolsHooks.hook(DevToolsHooks.APP_CONNECTED, fn);
+    },
+    componentAdded(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.COMPONENT_ADDED, fn);
+    },
+    componentEmit(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.COMPONENT_EMIT, fn);
+    },
+    componentUpdated(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.COMPONENT_UPDATED, fn);
+    },
+    componentRemoved(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.COMPONENT_REMOVED, fn);
+    },
+    setupDevtoolsPlugin(fn) {
+      devtoolsHooks.hook(DevToolsHooks.SETUP_DEVTOOLS_PLUGIN, fn);
+    },
+    perfStart(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.PERFORMANCE_START, fn);
+    },
+    perfEnd(fn) {
+      return devtoolsHooks.hook(DevToolsHooks.PERFORMANCE_END, fn);
+    }
+  };
+  var hook = {
+    on,
+    setupDevToolsPlugin(pluginDescriptor, setupFn) {
+      return devtoolsHooks.callHook(DevToolsHooks.SETUP_DEVTOOLS_PLUGIN, pluginDescriptor, setupFn);
+    }
+  };
+  var DevToolsV6PluginAPI = class {
+    constructor({ plugin, ctx }) {
+      this.hooks = ctx.hooks;
+      this.plugin = plugin;
+    }
+    get on() {
+      return {
+        visitComponentTree: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.VISIT_COMPONENT_TREE, handler);
+        },
+        inspectComponent: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.INSPECT_COMPONENT, handler);
+        },
+        editComponentState: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.EDIT_COMPONENT_STATE, handler);
+        },
+        getInspectorTree: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_TREE, handler);
+        },
+        getInspectorState: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_STATE, handler);
+        },
+        editInspectorState: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.EDIT_INSPECTOR_STATE, handler);
+        },
+        inspectTimelineEvent: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.INSPECT_TIMELINE_EVENT, handler);
+        },
+        timelineCleared: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.TIMELINE_CLEARED, handler);
+        },
+        setPluginSettings: (handler) => {
+          this.hooks.hook(DevToolsV6PluginAPIHookKeys.SET_PLUGIN_SETTINGS, handler);
+        }
+      };
+    }
+    notifyComponentUpdate(instance) {
+      if (devtoolsState.highPerfModeEnabled) return;
+      const inspector = getActiveInspectors().find((i) => i.packageName === this.plugin.descriptor.packageName);
+      if (inspector?.id) {
+        if (instance) {
+          const args = [
+            instance.appContext.app,
+            instance.uid,
+            instance.parent?.uid,
+            instance
+          ];
+          devtoolsHooks.callHook(DevToolsHooks.COMPONENT_UPDATED, ...args);
+        } else devtoolsHooks.callHook(DevToolsHooks.COMPONENT_UPDATED);
+        this.hooks.callHook(DevToolsContextHookKeys.SEND_INSPECTOR_STATE, {
+          inspectorId: inspector.id,
+          plugin: this.plugin
+        });
+      }
+    }
+    addInspector(options) {
+      this.hooks.callHook(DevToolsContextHookKeys.ADD_INSPECTOR, {
+        inspector: options,
+        plugin: this.plugin
+      });
+      if (this.plugin.descriptor.settings) initPluginSettings(options.id, this.plugin.descriptor.settings);
+    }
+    sendInspectorTree(inspectorId) {
+      if (devtoolsState.highPerfModeEnabled) return;
+      this.hooks.callHook(DevToolsContextHookKeys.SEND_INSPECTOR_TREE, {
+        inspectorId,
+        plugin: this.plugin
+      });
+    }
+    sendInspectorState(inspectorId) {
+      if (devtoolsState.highPerfModeEnabled) return;
+      this.hooks.callHook(DevToolsContextHookKeys.SEND_INSPECTOR_STATE, {
+        inspectorId,
+        plugin: this.plugin
+      });
+    }
+    selectInspectorNode(inspectorId, nodeId) {
+      this.hooks.callHook(DevToolsContextHookKeys.CUSTOM_INSPECTOR_SELECT_NODE, {
+        inspectorId,
+        nodeId,
+        plugin: this.plugin
+      });
+    }
+    visitComponentTree(payload) {
+      return this.hooks.callHook(DevToolsV6PluginAPIHookKeys.VISIT_COMPONENT_TREE, payload);
+    }
+    now() {
+      if (devtoolsState.highPerfModeEnabled) return 0;
+      return Date.now();
+    }
+    addTimelineLayer(options) {
+      this.hooks.callHook(DevToolsContextHookKeys.TIMELINE_LAYER_ADDED, {
+        options,
+        plugin: this.plugin
+      });
+    }
+    addTimelineEvent(options) {
+      if (devtoolsState.highPerfModeEnabled) return;
+      this.hooks.callHook(DevToolsContextHookKeys.TIMELINE_EVENT_ADDED, {
+        options,
+        plugin: this.plugin
+      });
+    }
+    getSettings(pluginId) {
+      return getPluginSettings(pluginId ?? this.plugin.descriptor.id, this.plugin.descriptor.settings);
+    }
+    getComponentInstances(app) {
+      return this.hooks.callHook(DevToolsContextHookKeys.GET_COMPONENT_INSTANCES, { app });
+    }
+    getComponentBounds(instance) {
+      return this.hooks.callHook(DevToolsContextHookKeys.GET_COMPONENT_BOUNDS, { instance });
+    }
+    getComponentName(instance) {
+      return this.hooks.callHook(DevToolsContextHookKeys.GET_COMPONENT_NAME, { instance });
+    }
+    highlightElement(instance) {
+      const uid = instance.__VUE_DEVTOOLS_NEXT_UID__;
+      return this.hooks.callHook(DevToolsContextHookKeys.COMPONENT_HIGHLIGHT, { uid });
+    }
+    unhighlightElement() {
+      return this.hooks.callHook(DevToolsContextHookKeys.COMPONENT_UNHIGHLIGHT);
+    }
+  };
+  var DevToolsPluginAPI = DevToolsV6PluginAPI;
+  var UNDEFINED = "__vue_devtool_undefined__";
+  var INFINITY = "__vue_devtool_infinity__";
+  var NEGATIVE_INFINITY = "__vue_devtool_negative_infinity__";
+  var NAN = "__vue_devtool_nan__";
+  var tokenMap = {
+    [UNDEFINED]: "undefined",
+    [NAN]: "NaN",
+    [INFINITY]: "Infinity",
+    [NEGATIVE_INFINITY]: "-Infinity"
+  };
+  var reversedTokenMap = Object.entries(tokenMap).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {});
+  var _a12;
+  (_a12 = target).__VUE_DEVTOOLS_KIT__REGISTERED_PLUGIN_APPS__ ?? (_a12.__VUE_DEVTOOLS_KIT__REGISTERED_PLUGIN_APPS__ = /* @__PURE__ */ new Set());
+  function setupDevToolsPlugin(pluginDescriptor, setupFn) {
+    return hook.setupDevToolsPlugin(pluginDescriptor, setupFn);
+  }
+  function callDevToolsPluginSetupFn(plugin, app) {
+    const [pluginDescriptor, setupFn] = plugin;
+    if (pluginDescriptor.app !== app) return;
+    const api = new DevToolsPluginAPI({
+      plugin: {
+        setupFn,
+        descriptor: pluginDescriptor
+      },
+      ctx: devtoolsContext
+    });
+    if (pluginDescriptor.packageName === "vuex") api.on.editInspectorState((payload) => {
+      api.sendInspectorState(payload.inspectorId);
+    });
+    setupFn(api);
+  }
+  function registerDevToolsPlugin(app, options) {
+    if (target.__VUE_DEVTOOLS_KIT__REGISTERED_PLUGIN_APPS__.has(app)) return;
+    if (devtoolsState.highPerfModeEnabled && !options?.inspectingComponent) return;
+    target.__VUE_DEVTOOLS_KIT__REGISTERED_PLUGIN_APPS__.add(app);
+    devtoolsPluginBuffer.forEach((plugin) => {
+      callDevToolsPluginSetupFn(plugin, app);
+    });
+  }
+  var ROUTER_KEY = "__VUE_DEVTOOLS_ROUTER__";
+  var ROUTER_INFO_KEY = "__VUE_DEVTOOLS_ROUTER_INFO__";
+  var _a13;
+  (_a13 = target)[ROUTER_INFO_KEY] ?? (_a13[ROUTER_INFO_KEY] = {
+    currentRoute: null,
+    routes: []
+  });
+  var _a14;
+  (_a14 = target)[ROUTER_KEY] ?? (_a14[ROUTER_KEY] = {});
+  var devtoolsRouterInfo = new Proxy(target[ROUTER_INFO_KEY], { get(target$1, property) {
+    return target[ROUTER_INFO_KEY][property];
+  } });
+  var devtoolsRouter = new Proxy(target[ROUTER_KEY], { get(target$2, property) {
+    if (property === "value") return target[ROUTER_KEY];
+  } });
+  function getRoutes(router2) {
+    const routesMap = /* @__PURE__ */ new Map();
+    return (router2?.getRoutes() || []).filter((i) => !routesMap.has(i.path) && routesMap.set(i.path, 1));
+  }
+  function filterRoutes(routes) {
+    return routes.map((item) => {
+      let { path, name, children, meta } = item;
+      if (children?.length) children = filterRoutes(children);
+      return {
+        path,
+        name,
+        children,
+        meta
+      };
+    });
+  }
+  function filterCurrentRoute(route) {
+    if (route) {
+      const { fullPath, hash, href, path, name, matched, params, query } = route;
+      return {
+        fullPath,
+        hash,
+        href,
+        path,
+        name,
+        params,
+        query,
+        matched: filterRoutes(matched)
+      };
+    }
+    return route;
+  }
+  function normalizeRouterInfo(appRecord, activeAppRecord2) {
+    function init() {
+      const router2 = appRecord.app?.config.globalProperties.$router;
+      const currentRoute = filterCurrentRoute(router2?.currentRoute.value);
+      const routes = filterRoutes(getRoutes(router2));
+      const c = console.warn;
+      console.warn = () => {
+      };
+      target[ROUTER_INFO_KEY] = {
+        currentRoute: currentRoute ? deepClone(currentRoute) : {},
+        routes: deepClone(routes)
+      };
+      target[ROUTER_KEY] = router2;
+      console.warn = c;
+    }
+    init();
+    hook.on.componentUpdated(debounce(() => {
+      if (activeAppRecord2.value?.app !== appRecord.app) return;
+      init();
+      if (devtoolsState.highPerfModeEnabled) return;
+      devtoolsContext.hooks.callHook(DevToolsMessagingHookKeys.ROUTER_INFO_UPDATED, { state: target[ROUTER_INFO_KEY] });
+    }, 200));
+  }
+  function createDevToolsApi(hooks2) {
+    return {
+      async getInspectorTree(payload) {
+        const _payload = {
+          ...payload,
+          app: activeAppRecord.value.app,
+          rootNodes: []
+        };
+        await new Promise((resolve) => {
+          hooks2.callHookWith(async (callbacks) => {
+            await Promise.all(callbacks.map((cb) => cb(_payload)));
+            resolve();
+          }, DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_TREE);
+        });
+        return _payload.rootNodes;
+      },
+      async getInspectorState(payload) {
+        const _payload = {
+          ...payload,
+          app: activeAppRecord.value.app,
+          state: null
+        };
+        const ctx = { currentTab: `custom-inspector:${payload.inspectorId}` };
+        await new Promise((resolve) => {
+          hooks2.callHookWith(async (callbacks) => {
+            await Promise.all(callbacks.map((cb) => cb(_payload, ctx)));
+            resolve();
+          }, DevToolsV6PluginAPIHookKeys.GET_INSPECTOR_STATE);
+        });
+        return _payload.state;
+      },
+      editInspectorState(payload) {
+        const stateEditor2 = new StateEditor();
+        const _payload = {
+          ...payload,
+          app: activeAppRecord.value.app,
+          set: (obj, path = payload.path, value = payload.state.value, cb) => {
+            stateEditor2.set(obj, path, value, cb || stateEditor2.createDefaultSetCallback(payload.state));
+          }
+        };
+        hooks2.callHookWith((callbacks) => {
+          callbacks.forEach((cb) => cb(_payload));
+        }, DevToolsV6PluginAPIHookKeys.EDIT_INSPECTOR_STATE);
+      },
+      sendInspectorState(inspectorId) {
+        const inspector = getInspector(inspectorId);
+        hooks2.callHook(DevToolsContextHookKeys.SEND_INSPECTOR_STATE, {
+          inspectorId,
+          plugin: {
+            descriptor: inspector.descriptor,
+            setupFn: () => ({})
+          }
+        });
+      },
+      inspectComponentInspector() {
+        return inspectComponentHighLighter();
+      },
+      cancelInspectComponentInspector() {
+        return cancelInspectComponentHighLighter();
+      },
+      getComponentRenderCode(id) {
+        const instance = getComponentInstance(activeAppRecord.value, id);
+        if (instance) return !(typeof instance?.type === "function") ? instance.render.toString() : instance.type.toString();
+      },
+      scrollToComponent(id) {
+        return scrollToComponent({ id });
+      },
+      openInEditor,
+      getVueInspector: getComponentInspector,
+      toggleApp(id, options) {
+        const appRecord = devtoolsAppRecords.value.find((record) => record.id === id);
+        if (appRecord) {
+          setActiveAppRecordId(id);
+          setActiveAppRecord(appRecord);
+          normalizeRouterInfo(appRecord, activeAppRecord);
+          callInspectorUpdatedHook();
+          registerDevToolsPlugin(appRecord.app, options);
+        }
+      },
+      inspectDOM(instanceId) {
+        const instance = getComponentInstance(activeAppRecord.value, instanceId);
+        if (instance) {
+          const [el] = getRootElementsFromComponentInstance(instance);
+          if (el) target.__VUE_DEVTOOLS_INSPECT_DOM_TARGET__ = el;
+        }
+      },
+      updatePluginSettings(pluginId, key, value) {
+        setPluginSettings(pluginId, key, value);
+      },
+      getPluginSettings(pluginId) {
+        return {
+          options: getPluginSettingsOptions(pluginId),
+          values: getPluginSettings(pluginId)
+        };
+      }
+    };
+  }
+  var _a15;
+  (_a15 = target).__VUE_DEVTOOLS_ENV__ ?? (_a15.__VUE_DEVTOOLS_ENV__ = { vitePluginDetected: false });
+  var hooks = createDevToolsCtxHooks();
+  var _a16;
+  (_a16 = target).__VUE_DEVTOOLS_KIT_CONTEXT__ ?? (_a16.__VUE_DEVTOOLS_KIT_CONTEXT__ = {
+    hooks,
+    get state() {
+      return {
+        ...devtoolsState,
+        activeAppRecordId: activeAppRecord.id,
+        activeAppRecord: activeAppRecord.value,
+        appRecords: devtoolsAppRecords.value
+      };
+    },
+    api: createDevToolsApi(hooks)
+  });
+  var devtoolsContext = target.__VUE_DEVTOOLS_KIT_CONTEXT__;
+  var require_speakingurl$1 = /* @__PURE__ */ __commonJSMin2(((exports, module2) => {
+    (function(root) {
+      "use strict";
+      var charMap = {
+        "\xC0": "A",
+        "\xC1": "A",
+        "\xC2": "A",
+        "\xC3": "A",
+        "\xC4": "Ae",
+        "\xC5": "A",
+        "\xC6": "AE",
+        "\xC7": "C",
+        "\xC8": "E",
+        "\xC9": "E",
+        "\xCA": "E",
+        "\xCB": "E",
+        "\xCC": "I",
+        "\xCD": "I",
+        "\xCE": "I",
+        "\xCF": "I",
+        "\xD0": "D",
+        "\xD1": "N",
+        "\xD2": "O",
+        "\xD3": "O",
+        "\xD4": "O",
+        "\xD5": "O",
+        "\xD6": "Oe",
+        "\u0150": "O",
+        "\xD8": "O",
+        "\xD9": "U",
+        "\xDA": "U",
+        "\xDB": "U",
+        "\xDC": "Ue",
+        "\u0170": "U",
+        "\xDD": "Y",
+        "\xDE": "TH",
+        "\xDF": "ss",
+        "\xE0": "a",
+        "\xE1": "a",
+        "\xE2": "a",
+        "\xE3": "a",
+        "\xE4": "ae",
+        "\xE5": "a",
+        "\xE6": "ae",
+        "\xE7": "c",
+        "\xE8": "e",
+        "\xE9": "e",
+        "\xEA": "e",
+        "\xEB": "e",
+        "\xEC": "i",
+        "\xED": "i",
+        "\xEE": "i",
+        "\xEF": "i",
+        "\xF0": "d",
+        "\xF1": "n",
+        "\xF2": "o",
+        "\xF3": "o",
+        "\xF4": "o",
+        "\xF5": "o",
+        "\xF6": "oe",
+        "\u0151": "o",
+        "\xF8": "o",
+        "\xF9": "u",
+        "\xFA": "u",
+        "\xFB": "u",
+        "\xFC": "ue",
+        "\u0171": "u",
+        "\xFD": "y",
+        "\xFE": "th",
+        "\xFF": "y",
+        "\u1E9E": "SS",
+        "\u0627": "a",
+        "\u0623": "a",
+        "\u0625": "i",
+        "\u0622": "aa",
+        "\u0624": "u",
+        "\u0626": "e",
+        "\u0621": "a",
+        "\u0628": "b",
+        "\u062A": "t",
+        "\u062B": "th",
+        "\u062C": "j",
+        "\u062D": "h",
+        "\u062E": "kh",
+        "\u062F": "d",
+        "\u0630": "th",
+        "\u0631": "r",
+        "\u0632": "z",
+        "\u0633": "s",
+        "\u0634": "sh",
+        "\u0635": "s",
+        "\u0636": "dh",
+        "\u0637": "t",
+        "\u0638": "z",
+        "\u0639": "a",
+        "\u063A": "gh",
+        "\u0641": "f",
+        "\u0642": "q",
+        "\u0643": "k",
+        "\u0644": "l",
+        "\u0645": "m",
+        "\u0646": "n",
+        "\u0647": "h",
+        "\u0648": "w",
+        "\u064A": "y",
+        "\u0649": "a",
+        "\u0629": "h",
+        "\uFEFB": "la",
+        "\uFEF7": "laa",
+        "\uFEF9": "lai",
+        "\uFEF5": "laa",
+        "\u06AF": "g",
+        "\u0686": "ch",
+        "\u067E": "p",
+        "\u0698": "zh",
+        "\u06A9": "k",
+        "\u06CC": "y",
+        "\u064E": "a",
+        "\u064B": "an",
+        "\u0650": "e",
+        "\u064D": "en",
+        "\u064F": "u",
+        "\u064C": "on",
+        "\u0652": "",
+        "\u0660": "0",
+        "\u0661": "1",
+        "\u0662": "2",
+        "\u0663": "3",
+        "\u0664": "4",
+        "\u0665": "5",
+        "\u0666": "6",
+        "\u0667": "7",
+        "\u0668": "8",
+        "\u0669": "9",
+        "\u06F0": "0",
+        "\u06F1": "1",
+        "\u06F2": "2",
+        "\u06F3": "3",
+        "\u06F4": "4",
+        "\u06F5": "5",
+        "\u06F6": "6",
+        "\u06F7": "7",
+        "\u06F8": "8",
+        "\u06F9": "9",
+        "\u1000": "k",
+        "\u1001": "kh",
+        "\u1002": "g",
+        "\u1003": "ga",
+        "\u1004": "ng",
+        "\u1005": "s",
+        "\u1006": "sa",
+        "\u1007": "z",
+        "\u1005\u103B": "za",
+        "\u100A": "ny",
+        "\u100B": "t",
+        "\u100C": "ta",
+        "\u100D": "d",
+        "\u100E": "da",
+        "\u100F": "na",
+        "\u1010": "t",
+        "\u1011": "ta",
+        "\u1012": "d",
+        "\u1013": "da",
+        "\u1014": "n",
+        "\u1015": "p",
+        "\u1016": "pa",
+        "\u1017": "b",
+        "\u1018": "ba",
+        "\u1019": "m",
+        "\u101A": "y",
+        "\u101B": "ya",
+        "\u101C": "l",
+        "\u101D": "w",
+        "\u101E": "th",
+        "\u101F": "h",
+        "\u1020": "la",
+        "\u1021": "a",
+        "\u103C": "y",
+        "\u103B": "ya",
+        "\u103D": "w",
+        "\u103C\u103D": "yw",
+        "\u103B\u103D": "ywa",
+        "\u103E": "h",
+        "\u1027": "e",
+        "\u104F": "-e",
+        "\u1023": "i",
+        "\u1024": "-i",
+        "\u1009": "u",
+        "\u1026": "-u",
+        "\u1029": "aw",
+        "\u101E\u103C\u1031\u102C": "aw",
+        "\u102A": "aw",
+        "\u1040": "0",
+        "\u1041": "1",
+        "\u1042": "2",
+        "\u1043": "3",
+        "\u1044": "4",
+        "\u1045": "5",
+        "\u1046": "6",
+        "\u1047": "7",
+        "\u1048": "8",
+        "\u1049": "9",
+        "\u1039": "",
+        "\u1037": "",
+        "\u1038": "",
+        "\u010D": "c",
+        "\u010F": "d",
+        "\u011B": "e",
+        "\u0148": "n",
+        "\u0159": "r",
+        "\u0161": "s",
+        "\u0165": "t",
+        "\u016F": "u",
+        "\u017E": "z",
+        "\u010C": "C",
+        "\u010E": "D",
+        "\u011A": "E",
+        "\u0147": "N",
+        "\u0158": "R",
+        "\u0160": "S",
+        "\u0164": "T",
+        "\u016E": "U",
+        "\u017D": "Z",
+        "\u0780": "h",
+        "\u0781": "sh",
+        "\u0782": "n",
+        "\u0783": "r",
+        "\u0784": "b",
+        "\u0785": "lh",
+        "\u0786": "k",
+        "\u0787": "a",
+        "\u0788": "v",
+        "\u0789": "m",
+        "\u078A": "f",
+        "\u078B": "dh",
+        "\u078C": "th",
+        "\u078D": "l",
+        "\u078E": "g",
+        "\u078F": "gn",
+        "\u0790": "s",
+        "\u0791": "d",
+        "\u0792": "z",
+        "\u0793": "t",
+        "\u0794": "y",
+        "\u0795": "p",
+        "\u0796": "j",
+        "\u0797": "ch",
+        "\u0798": "tt",
+        "\u0799": "hh",
+        "\u079A": "kh",
+        "\u079B": "th",
+        "\u079C": "z",
+        "\u079D": "sh",
+        "\u079E": "s",
+        "\u079F": "d",
+        "\u07A0": "t",
+        "\u07A1": "z",
+        "\u07A2": "a",
+        "\u07A3": "gh",
+        "\u07A4": "q",
+        "\u07A5": "w",
+        "\u07A6": "a",
+        "\u07A7": "aa",
+        "\u07A8": "i",
+        "\u07A9": "ee",
+        "\u07AA": "u",
+        "\u07AB": "oo",
+        "\u07AC": "e",
+        "\u07AD": "ey",
+        "\u07AE": "o",
+        "\u07AF": "oa",
+        "\u07B0": "",
+        "\u10D0": "a",
+        "\u10D1": "b",
+        "\u10D2": "g",
+        "\u10D3": "d",
+        "\u10D4": "e",
+        "\u10D5": "v",
+        "\u10D6": "z",
+        "\u10D7": "t",
+        "\u10D8": "i",
+        "\u10D9": "k",
+        "\u10DA": "l",
+        "\u10DB": "m",
+        "\u10DC": "n",
+        "\u10DD": "o",
+        "\u10DE": "p",
+        "\u10DF": "zh",
+        "\u10E0": "r",
+        "\u10E1": "s",
+        "\u10E2": "t",
+        "\u10E3": "u",
+        "\u10E4": "p",
+        "\u10E5": "k",
+        "\u10E6": "gh",
+        "\u10E7": "q",
+        "\u10E8": "sh",
+        "\u10E9": "ch",
+        "\u10EA": "ts",
+        "\u10EB": "dz",
+        "\u10EC": "ts",
+        "\u10ED": "ch",
+        "\u10EE": "kh",
+        "\u10EF": "j",
+        "\u10F0": "h",
+        "\u03B1": "a",
+        "\u03B2": "v",
+        "\u03B3": "g",
+        "\u03B4": "d",
+        "\u03B5": "e",
+        "\u03B6": "z",
+        "\u03B7": "i",
+        "\u03B8": "th",
+        "\u03B9": "i",
+        "\u03BA": "k",
+        "\u03BB": "l",
+        "\u03BC": "m",
+        "\u03BD": "n",
+        "\u03BE": "ks",
+        "\u03BF": "o",
+        "\u03C0": "p",
+        "\u03C1": "r",
+        "\u03C3": "s",
+        "\u03C4": "t",
+        "\u03C5": "y",
+        "\u03C6": "f",
+        "\u03C7": "x",
+        "\u03C8": "ps",
+        "\u03C9": "o",
+        "\u03AC": "a",
+        "\u03AD": "e",
+        "\u03AF": "i",
+        "\u03CC": "o",
+        "\u03CD": "y",
+        "\u03AE": "i",
+        "\u03CE": "o",
+        "\u03C2": "s",
+        "\u03CA": "i",
+        "\u03B0": "y",
+        "\u03CB": "y",
+        "\u0390": "i",
+        "\u0391": "A",
+        "\u0392": "B",
+        "\u0393": "G",
+        "\u0394": "D",
+        "\u0395": "E",
+        "\u0396": "Z",
+        "\u0397": "I",
+        "\u0398": "TH",
+        "\u0399": "I",
+        "\u039A": "K",
+        "\u039B": "L",
+        "\u039C": "M",
+        "\u039D": "N",
+        "\u039E": "KS",
+        "\u039F": "O",
+        "\u03A0": "P",
+        "\u03A1": "R",
+        "\u03A3": "S",
+        "\u03A4": "T",
+        "\u03A5": "Y",
+        "\u03A6": "F",
+        "\u03A7": "X",
+        "\u03A8": "PS",
+        "\u03A9": "O",
+        "\u0386": "A",
+        "\u0388": "E",
+        "\u038A": "I",
+        "\u038C": "O",
+        "\u038E": "Y",
+        "\u0389": "I",
+        "\u038F": "O",
+        "\u03AA": "I",
+        "\u03AB": "Y",
+        "\u0101": "a",
+        "\u0113": "e",
+        "\u0123": "g",
+        "\u012B": "i",
+        "\u0137": "k",
+        "\u013C": "l",
+        "\u0146": "n",
+        "\u016B": "u",
+        "\u0100": "A",
+        "\u0112": "E",
+        "\u0122": "G",
+        "\u012A": "I",
+        "\u0136": "k",
+        "\u013B": "L",
+        "\u0145": "N",
+        "\u016A": "U",
+        "\u040C": "Kj",
+        "\u045C": "kj",
+        "\u0409": "Lj",
+        "\u0459": "lj",
+        "\u040A": "Nj",
+        "\u045A": "nj",
+        "\u0422\u0441": "Ts",
+        "\u0442\u0441": "ts",
+        "\u0105": "a",
+        "\u0107": "c",
+        "\u0119": "e",
+        "\u0142": "l",
+        "\u0144": "n",
+        "\u015B": "s",
+        "\u017A": "z",
+        "\u017C": "z",
+        "\u0104": "A",
+        "\u0106": "C",
+        "\u0118": "E",
+        "\u0141": "L",
+        "\u0143": "N",
+        "\u015A": "S",
+        "\u0179": "Z",
+        "\u017B": "Z",
+        "\u0404": "Ye",
+        "\u0406": "I",
+        "\u0407": "Yi",
+        "\u0490": "G",
+        "\u0454": "ye",
+        "\u0456": "i",
+        "\u0457": "yi",
+        "\u0491": "g",
+        "\u0103": "a",
+        "\u0102": "A",
+        "\u0219": "s",
+        "\u0218": "S",
+        "\u021B": "t",
+        "\u021A": "T",
+        "\u0163": "t",
+        "\u0162": "T",
+        "\u0430": "a",
+        "\u0431": "b",
+        "\u0432": "v",
+        "\u0433": "g",
+        "\u0434": "d",
+        "\u0435": "e",
+        "\u0451": "yo",
+        "\u0436": "zh",
+        "\u0437": "z",
+        "\u0438": "i",
+        "\u0439": "i",
+        "\u043A": "k",
+        "\u043B": "l",
+        "\u043C": "m",
+        "\u043D": "n",
+        "\u043E": "o",
+        "\u043F": "p",
+        "\u0440": "r",
+        "\u0441": "s",
+        "\u0442": "t",
+        "\u0443": "u",
+        "\u0444": "f",
+        "\u0445": "kh",
+        "\u0446": "c",
+        "\u0447": "ch",
+        "\u0448": "sh",
+        "\u0449": "sh",
+        "\u044A": "",
+        "\u044B": "y",
+        "\u044C": "",
+        "\u044D": "e",
+        "\u044E": "yu",
+        "\u044F": "ya",
+        "\u0410": "A",
+        "\u0411": "B",
+        "\u0412": "V",
+        "\u0413": "G",
+        "\u0414": "D",
+        "\u0415": "E",
+        "\u0401": "Yo",
+        "\u0416": "Zh",
+        "\u0417": "Z",
+        "\u0418": "I",
+        "\u0419": "I",
+        "\u041A": "K",
+        "\u041B": "L",
+        "\u041C": "M",
+        "\u041D": "N",
+        "\u041E": "O",
+        "\u041F": "P",
+        "\u0420": "R",
+        "\u0421": "S",
+        "\u0422": "T",
+        "\u0423": "U",
+        "\u0424": "F",
+        "\u0425": "Kh",
+        "\u0426": "C",
+        "\u0427": "Ch",
+        "\u0428": "Sh",
+        "\u0429": "Sh",
+        "\u042A": "",
+        "\u042B": "Y",
+        "\u042C": "",
+        "\u042D": "E",
+        "\u042E": "Yu",
+        "\u042F": "Ya",
+        "\u0452": "dj",
+        "\u0458": "j",
+        "\u045B": "c",
+        "\u045F": "dz",
+        "\u0402": "Dj",
+        "\u0408": "j",
+        "\u040B": "C",
+        "\u040F": "Dz",
+        "\u013E": "l",
+        "\u013A": "l",
+        "\u0155": "r",
+        "\u013D": "L",
+        "\u0139": "L",
+        "\u0154": "R",
+        "\u015F": "s",
+        "\u015E": "S",
+        "\u0131": "i",
+        "\u0130": "I",
+        "\u011F": "g",
+        "\u011E": "G",
+        "\u1EA3": "a",
+        "\u1EA2": "A",
+        "\u1EB3": "a",
+        "\u1EB2": "A",
+        "\u1EA9": "a",
+        "\u1EA8": "A",
+        "\u0111": "d",
+        "\u0110": "D",
+        "\u1EB9": "e",
+        "\u1EB8": "E",
+        "\u1EBD": "e",
+        "\u1EBC": "E",
+        "\u1EBB": "e",
+        "\u1EBA": "E",
+        "\u1EBF": "e",
+        "\u1EBE": "E",
+        "\u1EC1": "e",
+        "\u1EC0": "E",
+        "\u1EC7": "e",
+        "\u1EC6": "E",
+        "\u1EC5": "e",
+        "\u1EC4": "E",
+        "\u1EC3": "e",
+        "\u1EC2": "E",
+        "\u1ECF": "o",
+        "\u1ECD": "o",
+        "\u1ECC": "o",
+        "\u1ED1": "o",
+        "\u1ED0": "O",
+        "\u1ED3": "o",
+        "\u1ED2": "O",
+        "\u1ED5": "o",
+        "\u1ED4": "O",
+        "\u1ED9": "o",
+        "\u1ED8": "O",
+        "\u1ED7": "o",
+        "\u1ED6": "O",
+        "\u01A1": "o",
+        "\u01A0": "O",
+        "\u1EDB": "o",
+        "\u1EDA": "O",
+        "\u1EDD": "o",
+        "\u1EDC": "O",
+        "\u1EE3": "o",
+        "\u1EE2": "O",
+        "\u1EE1": "o",
+        "\u1EE0": "O",
+        "\u1EDE": "o",
+        "\u1EDF": "o",
+        "\u1ECB": "i",
+        "\u1ECA": "I",
+        "\u0129": "i",
+        "\u0128": "I",
+        "\u1EC9": "i",
+        "\u1EC8": "i",
+        "\u1EE7": "u",
+        "\u1EE6": "U",
+        "\u1EE5": "u",
+        "\u1EE4": "U",
+        "\u0169": "u",
+        "\u0168": "U",
+        "\u01B0": "u",
+        "\u01AF": "U",
+        "\u1EE9": "u",
+        "\u1EE8": "U",
+        "\u1EEB": "u",
+        "\u1EEA": "U",
+        "\u1EF1": "u",
+        "\u1EF0": "U",
+        "\u1EEF": "u",
+        "\u1EEE": "U",
+        "\u1EED": "u",
+        "\u1EEC": "\u01B0",
+        "\u1EF7": "y",
+        "\u1EF6": "y",
+        "\u1EF3": "y",
+        "\u1EF2": "Y",
+        "\u1EF5": "y",
+        "\u1EF4": "Y",
+        "\u1EF9": "y",
+        "\u1EF8": "Y",
+        "\u1EA1": "a",
+        "\u1EA0": "A",
+        "\u1EA5": "a",
+        "\u1EA4": "A",
+        "\u1EA7": "a",
+        "\u1EA6": "A",
+        "\u1EAD": "a",
+        "\u1EAC": "A",
+        "\u1EAB": "a",
+        "\u1EAA": "A",
+        "\u1EAF": "a",
+        "\u1EAE": "A",
+        "\u1EB1": "a",
+        "\u1EB0": "A",
+        "\u1EB7": "a",
+        "\u1EB6": "A",
+        "\u1EB5": "a",
+        "\u1EB4": "A",
+        "\u24EA": "0",
+        "\u2460": "1",
+        "\u2461": "2",
+        "\u2462": "3",
+        "\u2463": "4",
+        "\u2464": "5",
+        "\u2465": "6",
+        "\u2466": "7",
+        "\u2467": "8",
+        "\u2468": "9",
+        "\u2469": "10",
+        "\u246A": "11",
+        "\u246B": "12",
+        "\u246C": "13",
+        "\u246D": "14",
+        "\u246E": "15",
+        "\u246F": "16",
+        "\u2470": "17",
+        "\u2471": "18",
+        "\u2472": "18",
+        "\u2473": "18",
+        "\u24F5": "1",
+        "\u24F6": "2",
+        "\u24F7": "3",
+        "\u24F8": "4",
+        "\u24F9": "5",
+        "\u24FA": "6",
+        "\u24FB": "7",
+        "\u24FC": "8",
+        "\u24FD": "9",
+        "\u24FE": "10",
+        "\u24FF": "0",
+        "\u24EB": "11",
+        "\u24EC": "12",
+        "\u24ED": "13",
+        "\u24EE": "14",
+        "\u24EF": "15",
+        "\u24F0": "16",
+        "\u24F1": "17",
+        "\u24F2": "18",
+        "\u24F3": "19",
+        "\u24F4": "20",
+        "\u24B6": "A",
+        "\u24B7": "B",
+        "\u24B8": "C",
+        "\u24B9": "D",
+        "\u24BA": "E",
+        "\u24BB": "F",
+        "\u24BC": "G",
+        "\u24BD": "H",
+        "\u24BE": "I",
+        "\u24BF": "J",
+        "\u24C0": "K",
+        "\u24C1": "L",
+        "\u24C2": "M",
+        "\u24C3": "N",
+        "\u24C4": "O",
+        "\u24C5": "P",
+        "\u24C6": "Q",
+        "\u24C7": "R",
+        "\u24C8": "S",
+        "\u24C9": "T",
+        "\u24CA": "U",
+        "\u24CB": "V",
+        "\u24CC": "W",
+        "\u24CD": "X",
+        "\u24CE": "Y",
+        "\u24CF": "Z",
+        "\u24D0": "a",
+        "\u24D1": "b",
+        "\u24D2": "c",
+        "\u24D3": "d",
+        "\u24D4": "e",
+        "\u24D5": "f",
+        "\u24D6": "g",
+        "\u24D7": "h",
+        "\u24D8": "i",
+        "\u24D9": "j",
+        "\u24DA": "k",
+        "\u24DB": "l",
+        "\u24DC": "m",
+        "\u24DD": "n",
+        "\u24DE": "o",
+        "\u24DF": "p",
+        "\u24E0": "q",
+        "\u24E1": "r",
+        "\u24E2": "s",
+        "\u24E3": "t",
+        "\u24E4": "u",
+        "\u24E6": "v",
+        "\u24E5": "w",
+        "\u24E7": "x",
+        "\u24E8": "y",
+        "\u24E9": "z",
+        "\u201C": '"',
+        "\u201D": '"',
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u2202": "d",
+        "\u0192": "f",
+        "\u2122": "(TM)",
+        "\xA9": "(C)",
+        "\u0153": "oe",
+        "\u0152": "OE",
+        "\xAE": "(R)",
+        "\u2020": "+",
+        "\u2120": "(SM)",
+        "\u2026": "...",
+        "\u02DA": "o",
+        "\xBA": "o",
+        "\xAA": "a",
+        "\u2022": "*",
+        "\u104A": ",",
+        "\u104B": ".",
+        "$": "USD",
+        "\u20AC": "EUR",
+        "\u20A2": "BRN",
+        "\u20A3": "FRF",
+        "\xA3": "GBP",
+        "\u20A4": "ITL",
+        "\u20A6": "NGN",
+        "\u20A7": "ESP",
+        "\u20A9": "KRW",
+        "\u20AA": "ILS",
+        "\u20AB": "VND",
+        "\u20AD": "LAK",
+        "\u20AE": "MNT",
+        "\u20AF": "GRD",
+        "\u20B1": "ARS",
+        "\u20B2": "PYG",
+        "\u20B3": "ARA",
+        "\u20B4": "UAH",
+        "\u20B5": "GHS",
+        "\xA2": "cent",
+        "\xA5": "CNY",
+        "\u5143": "CNY",
+        "\u5186": "YEN",
+        "\uFDFC": "IRR",
+        "\u20A0": "EWE",
+        "\u0E3F": "THB",
+        "\u20A8": "INR",
+        "\u20B9": "INR",
+        "\u20B0": "PF",
+        "\u20BA": "TRY",
+        "\u060B": "AFN",
+        "\u20BC": "AZN",
+        "\u043B\u0432": "BGN",
+        "\u17DB": "KHR",
+        "\u20A1": "CRC",
+        "\u20B8": "KZT",
+        "\u0434\u0435\u043D": "MKD",
+        "z\u0142": "PLN",
+        "\u20BD": "RUB",
+        "\u20BE": "GEL"
+      };
+      var lookAheadCharArray = ["\u103A", "\u07B0"];
+      var diatricMap = {
+        "\u102C": "a",
+        "\u102B": "a",
+        "\u1031": "e",
+        "\u1032": "e",
+        "\u102D": "i",
+        "\u102E": "i",
+        "\u102D\u102F": "o",
+        "\u102F": "u",
+        "\u1030": "u",
+        "\u1031\u102B\u1004\u103A": "aung",
+        "\u1031\u102C": "aw",
+        "\u1031\u102C\u103A": "aw",
+        "\u1031\u102B": "aw",
+        "\u1031\u102B\u103A": "aw",
+        "\u103A": "\u103A",
+        "\u1000\u103A": "et",
+        "\u102D\u102F\u1000\u103A": "aik",
+        "\u1031\u102C\u1000\u103A": "auk",
+        "\u1004\u103A": "in",
+        "\u102D\u102F\u1004\u103A": "aing",
+        "\u1031\u102C\u1004\u103A": "aung",
+        "\u1005\u103A": "it",
+        "\u100A\u103A": "i",
+        "\u1010\u103A": "at",
+        "\u102D\u1010\u103A": "eik",
+        "\u102F\u1010\u103A": "ok",
+        "\u103D\u1010\u103A": "ut",
+        "\u1031\u1010\u103A": "it",
+        "\u1012\u103A": "d",
+        "\u102D\u102F\u1012\u103A": "ok",
+        "\u102F\u1012\u103A": "ait",
+        "\u1014\u103A": "an",
+        "\u102C\u1014\u103A": "an",
+        "\u102D\u1014\u103A": "ein",
+        "\u102F\u1014\u103A": "on",
+        "\u103D\u1014\u103A": "un",
+        "\u1015\u103A": "at",
+        "\u102D\u1015\u103A": "eik",
+        "\u102F\u1015\u103A": "ok",
+        "\u103D\u1015\u103A": "ut",
+        "\u1014\u103A\u102F\u1015\u103A": "nub",
+        "\u1019\u103A": "an",
+        "\u102D\u1019\u103A": "ein",
+        "\u102F\u1019\u103A": "on",
+        "\u103D\u1019\u103A": "un",
+        "\u101A\u103A": "e",
+        "\u102D\u102F\u101C\u103A": "ol",
+        "\u1009\u103A": "in",
+        "\u1036": "an",
+        "\u102D\u1036": "ein",
+        "\u102F\u1036": "on",
+        "\u07A6\u0787\u07B0": "ah",
+        "\u07A6\u0781\u07B0": "ah"
+      };
+      var langCharMap = {
+        "en": {},
+        "az": {
+          "\xE7": "c",
+          "\u0259": "e",
+          "\u011F": "g",
+          "\u0131": "i",
+          "\xF6": "o",
+          "\u015F": "s",
+          "\xFC": "u",
+          "\xC7": "C",
+          "\u018F": "E",
+          "\u011E": "G",
+          "\u0130": "I",
+          "\xD6": "O",
+          "\u015E": "S",
+          "\xDC": "U"
+        },
+        "cs": {
+          "\u010D": "c",
+          "\u010F": "d",
+          "\u011B": "e",
+          "\u0148": "n",
+          "\u0159": "r",
+          "\u0161": "s",
+          "\u0165": "t",
+          "\u016F": "u",
+          "\u017E": "z",
+          "\u010C": "C",
+          "\u010E": "D",
+          "\u011A": "E",
+          "\u0147": "N",
+          "\u0158": "R",
+          "\u0160": "S",
+          "\u0164": "T",
+          "\u016E": "U",
+          "\u017D": "Z"
+        },
+        "fi": {
+          "\xE4": "a",
+          "\xC4": "A",
+          "\xF6": "o",
+          "\xD6": "O"
+        },
+        "hu": {
+          "\xE4": "a",
+          "\xC4": "A",
+          "\xF6": "o",
+          "\xD6": "O",
+          "\xFC": "u",
+          "\xDC": "U",
+          "\u0171": "u",
+          "\u0170": "U"
+        },
+        "lt": {
+          "\u0105": "a",
+          "\u010D": "c",
+          "\u0119": "e",
+          "\u0117": "e",
+          "\u012F": "i",
+          "\u0161": "s",
+          "\u0173": "u",
+          "\u016B": "u",
+          "\u017E": "z",
+          "\u0104": "A",
+          "\u010C": "C",
+          "\u0118": "E",
+          "\u0116": "E",
+          "\u012E": "I",
+          "\u0160": "S",
+          "\u0172": "U",
+          "\u016A": "U"
+        },
+        "lv": {
+          "\u0101": "a",
+          "\u010D": "c",
+          "\u0113": "e",
+          "\u0123": "g",
+          "\u012B": "i",
+          "\u0137": "k",
+          "\u013C": "l",
+          "\u0146": "n",
+          "\u0161": "s",
+          "\u016B": "u",
+          "\u017E": "z",
+          "\u0100": "A",
+          "\u010C": "C",
+          "\u0112": "E",
+          "\u0122": "G",
+          "\u012A": "i",
+          "\u0136": "k",
+          "\u013B": "L",
+          "\u0145": "N",
+          "\u0160": "S",
+          "\u016A": "u",
+          "\u017D": "Z"
+        },
+        "pl": {
+          "\u0105": "a",
+          "\u0107": "c",
+          "\u0119": "e",
+          "\u0142": "l",
+          "\u0144": "n",
+          "\xF3": "o",
+          "\u015B": "s",
+          "\u017A": "z",
+          "\u017C": "z",
+          "\u0104": "A",
+          "\u0106": "C",
+          "\u0118": "e",
+          "\u0141": "L",
+          "\u0143": "N",
+          "\xD3": "O",
+          "\u015A": "S",
+          "\u0179": "Z",
+          "\u017B": "Z"
+        },
+        "sv": {
+          "\xE4": "a",
+          "\xC4": "A",
+          "\xF6": "o",
+          "\xD6": "O"
+        },
+        "sk": {
+          "\xE4": "a",
+          "\xC4": "A"
+        },
+        "sr": {
+          "\u0459": "lj",
+          "\u045A": "nj",
+          "\u0409": "Lj",
+          "\u040A": "Nj",
+          "\u0111": "dj",
+          "\u0110": "Dj"
+        },
+        "tr": {
+          "\xDC": "U",
+          "\xD6": "O",
+          "\xFC": "u",
+          "\xF6": "o"
+        }
+      };
+      var symbolMap = {
+        "ar": {
+          "\u2206": "delta",
+          "\u221E": "la-nihaya",
+          "\u2665": "hob",
+          "&": "wa",
+          "|": "aw",
+          "<": "aqal-men",
+          ">": "akbar-men",
+          "\u2211": "majmou",
+          "\xA4": "omla"
+        },
+        "az": {},
+        "ca": {
+          "\u2206": "delta",
+          "\u221E": "infinit",
+          "\u2665": "amor",
+          "&": "i",
+          "|": "o",
+          "<": "menys que",
+          ">": "mes que",
+          "\u2211": "suma dels",
+          "\xA4": "moneda"
+        },
+        "cs": {
+          "\u2206": "delta",
+          "\u221E": "nekonecno",
+          "\u2665": "laska",
+          "&": "a",
+          "|": "nebo",
+          "<": "mensi nez",
+          ">": "vetsi nez",
+          "\u2211": "soucet",
+          "\xA4": "mena"
+        },
+        "de": {
+          "\u2206": "delta",
+          "\u221E": "unendlich",
+          "\u2665": "Liebe",
+          "&": "und",
+          "|": "oder",
+          "<": "kleiner als",
+          ">": "groesser als",
+          "\u2211": "Summe von",
+          "\xA4": "Waehrung"
+        },
+        "dv": {
+          "\u2206": "delta",
+          "\u221E": "kolunulaa",
+          "\u2665": "loabi",
+          "&": "aai",
+          "|": "noonee",
+          "<": "ah vure kuda",
+          ">": "ah vure bodu",
+          "\u2211": "jumula",
+          "\xA4": "faisaa"
+        },
+        "en": {
+          "\u2206": "delta",
+          "\u221E": "infinity",
+          "\u2665": "love",
+          "&": "and",
+          "|": "or",
+          "<": "less than",
+          ">": "greater than",
+          "\u2211": "sum",
+          "\xA4": "currency"
+        },
+        "es": {
+          "\u2206": "delta",
+          "\u221E": "infinito",
+          "\u2665": "amor",
+          "&": "y",
+          "|": "u",
+          "<": "menos que",
+          ">": "mas que",
+          "\u2211": "suma de los",
+          "\xA4": "moneda"
+        },
+        "fa": {
+          "\u2206": "delta",
+          "\u221E": "bi-nahayat",
+          "\u2665": "eshgh",
+          "&": "va",
+          "|": "ya",
+          "<": "kamtar-az",
+          ">": "bishtar-az",
+          "\u2211": "majmooe",
+          "\xA4": "vahed"
+        },
+        "fi": {
+          "\u2206": "delta",
+          "\u221E": "aarettomyys",
+          "\u2665": "rakkaus",
+          "&": "ja",
+          "|": "tai",
+          "<": "pienempi kuin",
+          ">": "suurempi kuin",
+          "\u2211": "summa",
+          "\xA4": "valuutta"
+        },
+        "fr": {
+          "\u2206": "delta",
+          "\u221E": "infiniment",
+          "\u2665": "Amour",
+          "&": "et",
+          "|": "ou",
+          "<": "moins que",
+          ">": "superieure a",
+          "\u2211": "somme des",
+          "\xA4": "monnaie"
+        },
+        "ge": {
+          "\u2206": "delta",
+          "\u221E": "usasruloba",
+          "\u2665": "siqvaruli",
+          "&": "da",
+          "|": "an",
+          "<": "naklebi",
+          ">": "meti",
+          "\u2211": "jami",
+          "\xA4": "valuta"
+        },
+        "gr": {},
+        "hu": {
+          "\u2206": "delta",
+          "\u221E": "vegtelen",
+          "\u2665": "szerelem",
+          "&": "es",
+          "|": "vagy",
+          "<": "kisebb mint",
+          ">": "nagyobb mint",
+          "\u2211": "szumma",
+          "\xA4": "penznem"
+        },
+        "it": {
+          "\u2206": "delta",
+          "\u221E": "infinito",
+          "\u2665": "amore",
+          "&": "e",
+          "|": "o",
+          "<": "minore di",
+          ">": "maggiore di",
+          "\u2211": "somma",
+          "\xA4": "moneta"
+        },
+        "lt": {
+          "\u2206": "delta",
+          "\u221E": "begalybe",
+          "\u2665": "meile",
+          "&": "ir",
+          "|": "ar",
+          "<": "maziau nei",
+          ">": "daugiau nei",
+          "\u2211": "suma",
+          "\xA4": "valiuta"
+        },
+        "lv": {
+          "\u2206": "delta",
+          "\u221E": "bezgaliba",
+          "\u2665": "milestiba",
+          "&": "un",
+          "|": "vai",
+          "<": "mazak neka",
+          ">": "lielaks neka",
+          "\u2211": "summa",
+          "\xA4": "valuta"
+        },
+        "my": {
+          "\u2206": "kwahkhyaet",
+          "\u221E": "asaonasme",
+          "\u2665": "akhyait",
+          "&": "nhin",
+          "|": "tho",
+          "<": "ngethaw",
+          ">": "kyithaw",
+          "\u2211": "paungld",
+          "\xA4": "ngwekye"
+        },
+        "mk": {},
+        "nl": {
+          "\u2206": "delta",
+          "\u221E": "oneindig",
+          "\u2665": "liefde",
+          "&": "en",
+          "|": "of",
+          "<": "kleiner dan",
+          ">": "groter dan",
+          "\u2211": "som",
+          "\xA4": "valuta"
+        },
+        "pl": {
+          "\u2206": "delta",
+          "\u221E": "nieskonczonosc",
+          "\u2665": "milosc",
+          "&": "i",
+          "|": "lub",
+          "<": "mniejsze niz",
+          ">": "wieksze niz",
+          "\u2211": "suma",
+          "\xA4": "waluta"
+        },
+        "pt": {
+          "\u2206": "delta",
+          "\u221E": "infinito",
+          "\u2665": "amor",
+          "&": "e",
+          "|": "ou",
+          "<": "menor que",
+          ">": "maior que",
+          "\u2211": "soma",
+          "\xA4": "moeda"
+        },
+        "ro": {
+          "\u2206": "delta",
+          "\u221E": "infinit",
+          "\u2665": "dragoste",
+          "&": "si",
+          "|": "sau",
+          "<": "mai mic ca",
+          ">": "mai mare ca",
+          "\u2211": "suma",
+          "\xA4": "valuta"
+        },
+        "ru": {
+          "\u2206": "delta",
+          "\u221E": "beskonechno",
+          "\u2665": "lubov",
+          "&": "i",
+          "|": "ili",
+          "<": "menshe",
+          ">": "bolshe",
+          "\u2211": "summa",
+          "\xA4": "valjuta"
+        },
+        "sk": {
+          "\u2206": "delta",
+          "\u221E": "nekonecno",
+          "\u2665": "laska",
+          "&": "a",
+          "|": "alebo",
+          "<": "menej ako",
+          ">": "viac ako",
+          "\u2211": "sucet",
+          "\xA4": "mena"
+        },
+        "sr": {},
+        "tr": {
+          "\u2206": "delta",
+          "\u221E": "sonsuzluk",
+          "\u2665": "ask",
+          "&": "ve",
+          "|": "veya",
+          "<": "kucuktur",
+          ">": "buyuktur",
+          "\u2211": "toplam",
+          "\xA4": "para birimi"
+        },
+        "uk": {
+          "\u2206": "delta",
+          "\u221E": "bezkinechnist",
+          "\u2665": "lubov",
+          "&": "i",
+          "|": "abo",
+          "<": "menshe",
+          ">": "bilshe",
+          "\u2211": "suma",
+          "\xA4": "valjuta"
+        },
+        "vn": {
+          "\u2206": "delta",
+          "\u221E": "vo cuc",
+          "\u2665": "yeu",
+          "&": "va",
+          "|": "hoac",
+          "<": "nho hon",
+          ">": "lon hon",
+          "\u2211": "tong",
+          "\xA4": "tien te"
+        }
+      };
+      var uricChars = [
+        ";",
+        "?",
+        ":",
+        "@",
+        "&",
+        "=",
+        "+",
+        "$",
+        ",",
+        "/"
+      ].join("");
+      var uricNoSlashChars = [
+        ";",
+        "?",
+        ":",
+        "@",
+        "&",
+        "=",
+        "+",
+        "$",
+        ","
+      ].join("");
+      var markChars = [
+        ".",
+        "!",
+        "~",
+        "*",
+        "'",
+        "(",
+        ")"
+      ].join("");
+      var getSlug = function getSlug2(input, opts) {
+        var separator = "-";
+        var result = "";
+        var diatricString = "";
+        var convertSymbols = true;
+        var customReplacements = {};
+        var maintainCase;
+        var titleCase;
+        var truncate;
+        var uricFlag;
+        var uricNoSlashFlag;
+        var markFlag;
+        var symbol;
+        var langChar;
+        var lucky;
+        var i;
+        var ch;
+        var l;
+        var lastCharWasSymbol;
+        var lastCharWasDiatric;
+        var allowedChars = "";
+        if (typeof input !== "string") return "";
+        if (typeof opts === "string") separator = opts;
+        symbol = symbolMap.en;
+        langChar = langCharMap.en;
+        if (typeof opts === "object") {
+          maintainCase = opts.maintainCase || false;
+          customReplacements = opts.custom && typeof opts.custom === "object" ? opts.custom : customReplacements;
+          truncate = +opts.truncate > 1 && opts.truncate || false;
+          uricFlag = opts.uric || false;
+          uricNoSlashFlag = opts.uricNoSlash || false;
+          markFlag = opts.mark || false;
+          convertSymbols = opts.symbols === false || opts.lang === false ? false : true;
+          separator = opts.separator || separator;
+          if (uricFlag) allowedChars += uricChars;
+          if (uricNoSlashFlag) allowedChars += uricNoSlashChars;
+          if (markFlag) allowedChars += markChars;
+          symbol = opts.lang && symbolMap[opts.lang] && convertSymbols ? symbolMap[opts.lang] : convertSymbols ? symbolMap.en : {};
+          langChar = opts.lang && langCharMap[opts.lang] ? langCharMap[opts.lang] : opts.lang === false || opts.lang === true ? {} : langCharMap.en;
+          if (opts.titleCase && typeof opts.titleCase.length === "number" && Array.prototype.toString.call(opts.titleCase)) {
+            opts.titleCase.forEach(function(v) {
+              customReplacements[v + ""] = v + "";
+            });
+            titleCase = true;
+          } else titleCase = !!opts.titleCase;
+          if (opts.custom && typeof opts.custom.length === "number" && Array.prototype.toString.call(opts.custom)) opts.custom.forEach(function(v) {
+            customReplacements[v + ""] = v + "";
+          });
+          Object.keys(customReplacements).forEach(function(v) {
+            var r;
+            if (v.length > 1) r = new RegExp("\\b" + escapeChars(v) + "\\b", "gi");
+            else r = new RegExp(escapeChars(v), "gi");
+            input = input.replace(r, customReplacements[v]);
+          });
+          for (ch in customReplacements) allowedChars += ch;
+        }
+        allowedChars += separator;
+        allowedChars = escapeChars(allowedChars);
+        input = input.replace(/(^\s+|\s+$)/g, "");
+        lastCharWasSymbol = false;
+        lastCharWasDiatric = false;
+        for (i = 0, l = input.length; i < l; i++) {
+          ch = input[i];
+          if (isReplacedCustomChar(ch, customReplacements)) lastCharWasSymbol = false;
+          else if (langChar[ch]) {
+            ch = lastCharWasSymbol && langChar[ch].match(/[A-Za-z0-9]/) ? " " + langChar[ch] : langChar[ch];
+            lastCharWasSymbol = false;
+          } else if (ch in charMap) {
+            if (i + 1 < l && lookAheadCharArray.indexOf(input[i + 1]) >= 0) {
+              diatricString += ch;
+              ch = "";
+            } else if (lastCharWasDiatric === true) {
+              ch = diatricMap[diatricString] + charMap[ch];
+              diatricString = "";
+            } else ch = lastCharWasSymbol && charMap[ch].match(/[A-Za-z0-9]/) ? " " + charMap[ch] : charMap[ch];
+            lastCharWasSymbol = false;
+            lastCharWasDiatric = false;
+          } else if (ch in diatricMap) {
+            diatricString += ch;
+            ch = "";
+            if (i === l - 1) ch = diatricMap[diatricString];
+            lastCharWasDiatric = true;
+          } else if (symbol[ch] && !(uricFlag && uricChars.indexOf(ch) !== -1) && !(uricNoSlashFlag && uricNoSlashChars.indexOf(ch) !== -1)) {
+            ch = lastCharWasSymbol || result.substr(-1).match(/[A-Za-z0-9]/) ? separator + symbol[ch] : symbol[ch];
+            ch += input[i + 1] !== void 0 && input[i + 1].match(/[A-Za-z0-9]/) ? separator : "";
+            lastCharWasSymbol = true;
+          } else {
+            if (lastCharWasDiatric === true) {
+              ch = diatricMap[diatricString] + ch;
+              diatricString = "";
+              lastCharWasDiatric = false;
+            } else if (lastCharWasSymbol && (/[A-Za-z0-9]/.test(ch) || result.substr(-1).match(/A-Za-z0-9]/))) ch = " " + ch;
+            lastCharWasSymbol = false;
+          }
+          result += ch.replace(new RegExp("[^\\w\\s" + allowedChars + "_-]", "g"), separator);
+        }
+        if (titleCase) result = result.replace(/(\w)(\S*)/g, function(_, i2, r) {
+          var j = i2.toUpperCase() + (r !== null ? r : "");
+          return Object.keys(customReplacements).indexOf(j.toLowerCase()) < 0 ? j : j.toLowerCase();
+        });
+        result = result.replace(/\s+/g, separator).replace(new RegExp("\\" + separator + "+", "g"), separator).replace(new RegExp("(^\\" + separator + "+|\\" + separator + "+$)", "g"), "");
+        if (truncate && result.length > truncate) {
+          lucky = result.charAt(truncate) === separator;
+          result = result.slice(0, truncate);
+          if (!lucky) result = result.slice(0, result.lastIndexOf(separator));
+        }
+        if (!maintainCase && !titleCase) result = result.toLowerCase();
+        return result;
+      };
+      var createSlug = function createSlug2(opts) {
+        return function getSlugWithConfig(input) {
+          return getSlug(input, opts);
+        };
+      };
+      var escapeChars = function escapeChars2(input) {
+        return input.replace(/[-\\^$*+?.()|[\]{}\/]/g, "\\$&");
+      };
+      var isReplacedCustomChar = function(ch, customReplacements) {
+        for (var c in customReplacements) if (customReplacements[c] === ch) return true;
+      };
+      if (typeof module2 !== "undefined" && module2.exports) {
+        module2.exports = getSlug;
+        module2.exports.createSlug = createSlug;
+      } else if (typeof define !== "undefined" && define.amd) define([], function() {
+        return getSlug;
+      });
+      else try {
+        if (root.getSlug || root.createSlug) throw "speakingurl: globals exists /(getSlug|createSlug)/";
+        else {
+          root.getSlug = getSlug;
+          root.createSlug = createSlug;
+        }
+      } catch (e) {
+      }
+    })(exports);
+  }));
+  var import_speakingurl = /* @__PURE__ */ __toESM2((/* @__PURE__ */ __commonJSMin2(((exports, module2) => {
+    module2.exports = require_speakingurl$1();
+  })))(), 1);
+  var _a17;
+  var appRecordInfo = (_a17 = target).__VUE_DEVTOOLS_NEXT_APP_RECORD_INFO__ ?? (_a17.__VUE_DEVTOOLS_NEXT_APP_RECORD_INFO__ = {
+    id: 0,
+    appIds: /* @__PURE__ */ new Set()
+  });
+  function toggleHighPerfMode(state) {
+    devtoolsState.highPerfModeEnabled = state ?? !devtoolsState.highPerfModeEnabled;
+    if (!state && activeAppRecord.value) registerDevToolsPlugin(activeAppRecord.value.app);
+  }
+  function updateDevToolsClientDetected(params) {
+    devtoolsState.devtoolsClientDetected = {
+      ...devtoolsState.devtoolsClientDetected,
+      ...params
+    };
+    toggleHighPerfMode(!Object.values(devtoolsState.devtoolsClientDetected).some(Boolean));
+  }
+  var _a18;
+  (_a18 = target).__VUE_DEVTOOLS_UPDATE_CLIENT_DETECTED__ ?? (_a18.__VUE_DEVTOOLS_UPDATE_CLIENT_DETECTED__ = updateDevToolsClientDetected);
+  var DoubleIndexedKV = class {
+    constructor() {
+      this.keyToValue = /* @__PURE__ */ new Map();
+      this.valueToKey = /* @__PURE__ */ new Map();
+    }
+    set(key, value) {
+      this.keyToValue.set(key, value);
+      this.valueToKey.set(value, key);
+    }
+    getByKey(key) {
+      return this.keyToValue.get(key);
+    }
+    getByValue(value) {
+      return this.valueToKey.get(value);
+    }
+    clear() {
+      this.keyToValue.clear();
+      this.valueToKey.clear();
+    }
+  };
+  var Registry = class {
+    constructor(generateIdentifier) {
+      this.generateIdentifier = generateIdentifier;
+      this.kv = new DoubleIndexedKV();
+    }
+    register(value, identifier) {
+      if (this.kv.getByValue(value)) return;
+      if (!identifier) identifier = this.generateIdentifier(value);
+      this.kv.set(identifier, value);
+    }
+    clear() {
+      this.kv.clear();
+    }
+    getIdentifier(value) {
+      return this.kv.getByValue(value);
+    }
+    getValue(identifier) {
+      return this.kv.getByKey(identifier);
+    }
+  };
+  var ClassRegistry = class extends Registry {
+    constructor() {
+      super((c) => c.name);
+      this.classToAllowedProps = /* @__PURE__ */ new Map();
+    }
+    register(value, options) {
+      if (typeof options === "object") {
+        if (options.allowProps) this.classToAllowedProps.set(value, options.allowProps);
+        super.register(value, options.identifier);
+      } else super.register(value, options);
+    }
+    getAllowedProps(value) {
+      return this.classToAllowedProps.get(value);
+    }
+  };
+  function valuesOfObj(record) {
+    if ("values" in Object) return Object.values(record);
+    const values = [];
+    for (const key in record) if (record.hasOwnProperty(key)) values.push(record[key]);
+    return values;
+  }
+  function find(record, predicate) {
+    const values = valuesOfObj(record);
+    if ("find" in values) return values.find(predicate);
+    const valuesNotNever = values;
+    for (let i = 0; i < valuesNotNever.length; i++) {
+      const value = valuesNotNever[i];
+      if (predicate(value)) return value;
+    }
+  }
+  function forEach(record, run) {
+    Object.entries(record).forEach(([key, value]) => run(value, key));
+  }
+  function includes(arr, value) {
+    return arr.indexOf(value) !== -1;
+  }
+  function findArr(record, predicate) {
+    for (let i = 0; i < record.length; i++) {
+      const value = record[i];
+      if (predicate(value)) return value;
+    }
+  }
+  var CustomTransformerRegistry = class {
+    constructor() {
+      this.transfomers = {};
+    }
+    register(transformer) {
+      this.transfomers[transformer.name] = transformer;
+    }
+    findApplicable(v) {
+      return find(this.transfomers, (transformer) => transformer.isApplicable(v));
+    }
+    findByName(name) {
+      return this.transfomers[name];
+    }
+  };
+  var getType$1 = (payload) => Object.prototype.toString.call(payload).slice(8, -1);
+  var isUndefined$1 = (payload) => typeof payload === "undefined";
+  var isNull$1 = (payload) => payload === null;
+  var isPlainObject$2 = (payload) => {
+    if (typeof payload !== "object" || payload === null) return false;
+    if (payload === Object.prototype) return false;
+    if (Object.getPrototypeOf(payload) === null) return true;
+    return Object.getPrototypeOf(payload) === Object.prototype;
+  };
+  var isEmptyObject = (payload) => isPlainObject$2(payload) && Object.keys(payload).length === 0;
+  var isArray$2 = (payload) => Array.isArray(payload);
+  var isString2 = (payload) => typeof payload === "string";
+  var isNumber = (payload) => typeof payload === "number" && !isNaN(payload);
+  var isBoolean = (payload) => typeof payload === "boolean";
+  var isRegExp2 = (payload) => payload instanceof RegExp;
+  var isMap2 = (payload) => payload instanceof Map;
+  var isSet2 = (payload) => payload instanceof Set;
+  var isSymbol2 = (payload) => getType$1(payload) === "Symbol";
+  var isDate = (payload) => payload instanceof Date && !isNaN(payload.valueOf());
+  var isError = (payload) => payload instanceof Error;
+  var isNaNValue = (payload) => typeof payload === "number" && isNaN(payload);
+  var isPrimitive = (payload) => isBoolean(payload) || isNull$1(payload) || isUndefined$1(payload) || isNumber(payload) || isString2(payload) || isSymbol2(payload);
+  var isBigint = (payload) => typeof payload === "bigint";
+  var isInfinite = (payload) => payload === Infinity || payload === -Infinity;
+  var isTypedArray = (payload) => ArrayBuffer.isView(payload) && !(payload instanceof DataView);
+  var isURL = (payload) => payload instanceof URL;
+  var escapeKey = (key) => key.replace(/\./g, "\\.");
+  var stringifyPath = (path) => path.map(String).map(escapeKey).join(".");
+  var parsePath = (string) => {
+    const result = [];
+    let segment = "";
+    for (let i = 0; i < string.length; i++) {
+      let char = string.charAt(i);
+      if (char === "\\" && string.charAt(i + 1) === ".") {
+        segment += ".";
+        i++;
+        continue;
+      }
+      if (char === ".") {
+        result.push(segment);
+        segment = "";
+        continue;
+      }
+      segment += char;
+    }
+    const lastSegment = segment;
+    result.push(lastSegment);
+    return result;
+  };
+  function simpleTransformation(isApplicable, annotation, transform, untransform) {
+    return {
+      isApplicable,
+      annotation,
+      transform,
+      untransform
+    };
+  }
+  var simpleRules = [
+    simpleTransformation(isUndefined$1, "undefined", () => null, () => void 0),
+    simpleTransformation(isBigint, "bigint", (v) => v.toString(), (v) => {
+      if (typeof BigInt !== "undefined") return BigInt(v);
+      console.error("Please add a BigInt polyfill.");
+      return v;
+    }),
+    simpleTransformation(isDate, "Date", (v) => v.toISOString(), (v) => new Date(v)),
+    simpleTransformation(isError, "Error", (v, superJson) => {
+      const baseError = {
+        name: v.name,
+        message: v.message
+      };
+      superJson.allowedErrorProps.forEach((prop) => {
+        baseError[prop] = v[prop];
+      });
+      return baseError;
+    }, (v, superJson) => {
+      const e = new Error(v.message);
+      e.name = v.name;
+      e.stack = v.stack;
+      superJson.allowedErrorProps.forEach((prop) => {
+        e[prop] = v[prop];
+      });
+      return e;
+    }),
+    simpleTransformation(isRegExp2, "regexp", (v) => "" + v, (regex) => {
+      const body = regex.slice(1, regex.lastIndexOf("/"));
+      const flags = regex.slice(regex.lastIndexOf("/") + 1);
+      return new RegExp(body, flags);
+    }),
+    simpleTransformation(isSet2, "set", (v) => [...v.values()], (v) => new Set(v)),
+    simpleTransformation(isMap2, "map", (v) => [...v.entries()], (v) => new Map(v)),
+    simpleTransformation((v) => isNaNValue(v) || isInfinite(v), "number", (v) => {
+      if (isNaNValue(v)) return "NaN";
+      if (v > 0) return "Infinity";
+      else return "-Infinity";
+    }, Number),
+    simpleTransformation((v) => v === 0 && 1 / v === -Infinity, "number", () => {
+      return "-0";
+    }, Number),
+    simpleTransformation(isURL, "URL", (v) => v.toString(), (v) => new URL(v))
+  ];
+  function compositeTransformation(isApplicable, annotation, transform, untransform) {
+    return {
+      isApplicable,
+      annotation,
+      transform,
+      untransform
+    };
+  }
+  var symbolRule = compositeTransformation((s, superJson) => {
+    if (isSymbol2(s)) return !!superJson.symbolRegistry.getIdentifier(s);
+    return false;
+  }, (s, superJson) => {
+    return ["symbol", superJson.symbolRegistry.getIdentifier(s)];
+  }, (v) => v.description, (_, a, superJson) => {
+    const value = superJson.symbolRegistry.getValue(a[1]);
+    if (!value) throw new Error("Trying to deserialize unknown symbol");
+    return value;
+  });
+  var constructorToName = [
+    Int8Array,
+    Uint8Array,
+    Int16Array,
+    Uint16Array,
+    Int32Array,
+    Uint32Array,
+    Float32Array,
+    Float64Array,
+    Uint8ClampedArray
+  ].reduce((obj, ctor) => {
+    obj[ctor.name] = ctor;
+    return obj;
+  }, {});
+  var typedArrayRule = compositeTransformation(isTypedArray, (v) => ["typed-array", v.constructor.name], (v) => [...v], (v, a) => {
+    const ctor = constructorToName[a[1]];
+    if (!ctor) throw new Error("Trying to deserialize unknown typed array");
+    return new ctor(v);
+  });
+  function isInstanceOfRegisteredClass(potentialClass, superJson) {
+    if (potentialClass?.constructor) return !!superJson.classRegistry.getIdentifier(potentialClass.constructor);
+    return false;
+  }
+  var classRule = compositeTransformation(isInstanceOfRegisteredClass, (clazz, superJson) => {
+    return ["class", superJson.classRegistry.getIdentifier(clazz.constructor)];
+  }, (clazz, superJson) => {
+    const allowedProps = superJson.classRegistry.getAllowedProps(clazz.constructor);
+    if (!allowedProps) return { ...clazz };
+    const result = {};
+    allowedProps.forEach((prop) => {
+      result[prop] = clazz[prop];
+    });
+    return result;
+  }, (v, a, superJson) => {
+    const clazz = superJson.classRegistry.getValue(a[1]);
+    if (!clazz) throw new Error(`Trying to deserialize unknown class '${a[1]}' - check https://github.com/blitz-js/superjson/issues/116#issuecomment-773996564`);
+    return Object.assign(Object.create(clazz.prototype), v);
+  });
+  var customRule = compositeTransformation((value, superJson) => {
+    return !!superJson.customTransformerRegistry.findApplicable(value);
+  }, (value, superJson) => {
+    return ["custom", superJson.customTransformerRegistry.findApplicable(value).name];
+  }, (value, superJson) => {
+    return superJson.customTransformerRegistry.findApplicable(value).serialize(value);
+  }, (v, a, superJson) => {
+    const transformer = superJson.customTransformerRegistry.findByName(a[1]);
+    if (!transformer) throw new Error("Trying to deserialize unknown custom value");
+    return transformer.deserialize(v);
+  });
+  var compositeRules = [
+    classRule,
+    symbolRule,
+    customRule,
+    typedArrayRule
+  ];
+  var transformValue = (value, superJson) => {
+    const applicableCompositeRule = findArr(compositeRules, (rule) => rule.isApplicable(value, superJson));
+    if (applicableCompositeRule) return {
+      value: applicableCompositeRule.transform(value, superJson),
+      type: applicableCompositeRule.annotation(value, superJson)
+    };
+    const applicableSimpleRule = findArr(simpleRules, (rule) => rule.isApplicable(value, superJson));
+    if (applicableSimpleRule) return {
+      value: applicableSimpleRule.transform(value, superJson),
+      type: applicableSimpleRule.annotation
+    };
+  };
+  var simpleRulesByAnnotation = {};
+  simpleRules.forEach((rule) => {
+    simpleRulesByAnnotation[rule.annotation] = rule;
+  });
+  var untransformValue = (json, type, superJson) => {
+    if (isArray$2(type)) switch (type[0]) {
+      case "symbol":
+        return symbolRule.untransform(json, type, superJson);
+      case "class":
+        return classRule.untransform(json, type, superJson);
+      case "custom":
+        return customRule.untransform(json, type, superJson);
+      case "typed-array":
+        return typedArrayRule.untransform(json, type, superJson);
+      default:
+        throw new Error("Unknown transformation: " + type);
+    }
+    else {
+      const transformation = simpleRulesByAnnotation[type];
+      if (!transformation) throw new Error("Unknown transformation: " + type);
+      return transformation.untransform(json, superJson);
+    }
+  };
+  var getNthKey = (value, n) => {
+    if (n > value.size) throw new Error("index out of bounds");
+    const keys = value.keys();
+    while (n > 0) {
+      keys.next();
+      n--;
+    }
+    return keys.next().value;
+  };
+  function validatePath(path) {
+    if (includes(path, "__proto__")) throw new Error("__proto__ is not allowed as a property");
+    if (includes(path, "prototype")) throw new Error("prototype is not allowed as a property");
+    if (includes(path, "constructor")) throw new Error("constructor is not allowed as a property");
+  }
+  var getDeep = (object, path) => {
+    validatePath(path);
+    for (let i = 0; i < path.length; i++) {
+      const key = path[i];
+      if (isSet2(object)) object = getNthKey(object, +key);
+      else if (isMap2(object)) {
+        const row = +key;
+        const type = +path[++i] === 0 ? "key" : "value";
+        const keyOfRow = getNthKey(object, row);
+        switch (type) {
+          case "key":
+            object = keyOfRow;
+            break;
+          case "value":
+            object = object.get(keyOfRow);
+            break;
+        }
+      } else object = object[key];
+    }
+    return object;
+  };
+  var setDeep = (object, path, mapper) => {
+    validatePath(path);
+    if (path.length === 0) return mapper(object);
+    let parent = object;
+    for (let i = 0; i < path.length - 1; i++) {
+      const key = path[i];
+      if (isArray$2(parent)) {
+        const index = +key;
+        parent = parent[index];
+      } else if (isPlainObject$2(parent)) parent = parent[key];
+      else if (isSet2(parent)) {
+        const row = +key;
+        parent = getNthKey(parent, row);
+      } else if (isMap2(parent)) {
+        if (i === path.length - 2) break;
+        const row = +key;
+        const type = +path[++i] === 0 ? "key" : "value";
+        const keyOfRow = getNthKey(parent, row);
+        switch (type) {
+          case "key":
+            parent = keyOfRow;
+            break;
+          case "value":
+            parent = parent.get(keyOfRow);
+            break;
+        }
+      }
+    }
+    const lastKey = path[path.length - 1];
+    if (isArray$2(parent)) parent[+lastKey] = mapper(parent[+lastKey]);
+    else if (isPlainObject$2(parent)) parent[lastKey] = mapper(parent[lastKey]);
+    if (isSet2(parent)) {
+      const oldValue = getNthKey(parent, +lastKey);
+      const newValue = mapper(oldValue);
+      if (oldValue !== newValue) {
+        parent.delete(oldValue);
+        parent.add(newValue);
+      }
+    }
+    if (isMap2(parent)) {
+      const row = +path[path.length - 2];
+      const keyToRow = getNthKey(parent, row);
+      switch (+lastKey === 0 ? "key" : "value") {
+        case "key": {
+          const newKey = mapper(keyToRow);
+          parent.set(newKey, parent.get(keyToRow));
+          if (newKey !== keyToRow) parent.delete(keyToRow);
+          break;
+        }
+        case "value":
+          parent.set(keyToRow, mapper(parent.get(keyToRow)));
+          break;
+      }
+    }
+    return object;
+  };
+  function traverse2(tree, walker2, origin = []) {
+    if (!tree) return;
+    if (!isArray$2(tree)) {
+      forEach(tree, (subtree, key) => traverse2(subtree, walker2, [...origin, ...parsePath(key)]));
+      return;
+    }
+    const [nodeValue, children] = tree;
+    if (children) forEach(children, (child, key) => {
+      traverse2(child, walker2, [...origin, ...parsePath(key)]);
+    });
+    walker2(nodeValue, origin);
+  }
+  function applyValueAnnotations(plain, annotations, superJson) {
+    traverse2(annotations, (type, path) => {
+      plain = setDeep(plain, path, (v) => untransformValue(v, type, superJson));
+    });
+    return plain;
+  }
+  function applyReferentialEqualityAnnotations(plain, annotations) {
+    function apply2(identicalPaths, path) {
+      const object = getDeep(plain, parsePath(path));
+      identicalPaths.map(parsePath).forEach((identicalObjectPath) => {
+        plain = setDeep(plain, identicalObjectPath, () => object);
+      });
+    }
+    if (isArray$2(annotations)) {
+      const [root, other] = annotations;
+      root.forEach((identicalPath) => {
+        plain = setDeep(plain, parsePath(identicalPath), () => plain);
+      });
+      if (other) forEach(other, apply2);
+    } else forEach(annotations, apply2);
+    return plain;
+  }
+  var isDeep = (object, superJson) => isPlainObject$2(object) || isArray$2(object) || isMap2(object) || isSet2(object) || isInstanceOfRegisteredClass(object, superJson);
+  function addIdentity(object, path, identities) {
+    const existingSet = identities.get(object);
+    if (existingSet) existingSet.push(path);
+    else identities.set(object, [path]);
+  }
+  function generateReferentialEqualityAnnotations(identitites, dedupe) {
+    const result = {};
+    let rootEqualityPaths = void 0;
+    identitites.forEach((paths) => {
+      if (paths.length <= 1) return;
+      if (!dedupe) paths = paths.map((path) => path.map(String)).sort((a, b) => a.length - b.length);
+      const [representativePath, ...identicalPaths] = paths;
+      if (representativePath.length === 0) rootEqualityPaths = identicalPaths.map(stringifyPath);
+      else result[stringifyPath(representativePath)] = identicalPaths.map(stringifyPath);
+    });
+    if (rootEqualityPaths) if (isEmptyObject(result)) return [rootEqualityPaths];
+    else return [rootEqualityPaths, result];
+    else return isEmptyObject(result) ? void 0 : result;
+  }
+  var walker = (object, identities, superJson, dedupe, path = [], objectsInThisPath = [], seenObjects = /* @__PURE__ */ new Map()) => {
+    const primitive = isPrimitive(object);
+    if (!primitive) {
+      addIdentity(object, path, identities);
+      const seen = seenObjects.get(object);
+      if (seen) return dedupe ? { transformedValue: null } : seen;
+    }
+    if (!isDeep(object, superJson)) {
+      const transformed2 = transformValue(object, superJson);
+      const result2 = transformed2 ? {
+        transformedValue: transformed2.value,
+        annotations: [transformed2.type]
+      } : { transformedValue: object };
+      if (!primitive) seenObjects.set(object, result2);
+      return result2;
+    }
+    if (includes(objectsInThisPath, object)) return { transformedValue: null };
+    const transformationResult = transformValue(object, superJson);
+    const transformed = transformationResult?.value ?? object;
+    const transformedValue = isArray$2(transformed) ? [] : {};
+    const innerAnnotations = {};
+    forEach(transformed, (value, index) => {
+      if (index === "__proto__" || index === "constructor" || index === "prototype") throw new Error(`Detected property ${index}. This is a prototype pollution risk, please remove it from your object.`);
+      const recursiveResult = walker(value, identities, superJson, dedupe, [...path, index], [...objectsInThisPath, object], seenObjects);
+      transformedValue[index] = recursiveResult.transformedValue;
+      if (isArray$2(recursiveResult.annotations)) innerAnnotations[index] = recursiveResult.annotations;
+      else if (isPlainObject$2(recursiveResult.annotations)) forEach(recursiveResult.annotations, (tree, key) => {
+        innerAnnotations[escapeKey(index) + "." + key] = tree;
+      });
+    });
+    const result = isEmptyObject(innerAnnotations) ? {
+      transformedValue,
+      annotations: !!transformationResult ? [transformationResult.type] : void 0
+    } : {
+      transformedValue,
+      annotations: !!transformationResult ? [transformationResult.type, innerAnnotations] : innerAnnotations
+    };
+    if (!primitive) seenObjects.set(object, result);
+    return result;
+  };
+  function getType(payload) {
+    return Object.prototype.toString.call(payload).slice(8, -1);
+  }
+  function isArray$1(payload) {
+    return getType(payload) === "Array";
+  }
+  function isPlainObject$1(payload) {
+    if (getType(payload) !== "Object") return false;
+    const prototype = Object.getPrototypeOf(payload);
+    return !!prototype && prototype.constructor === Object && prototype === Object.prototype;
+  }
+  function isNull(payload) {
+    return getType(payload) === "Null";
+  }
+  function isOneOf(a, b, c, d, e) {
+    return (value) => a(value) || b(value) || !!c && c(value) || !!d && d(value) || !!e && e(value);
+  }
+  function isUndefined(payload) {
+    return getType(payload) === "Undefined";
+  }
+  isOneOf(isNull, isUndefined);
+  function assignProp(carry, key, newVal, originalObject, includeNonenumerable) {
+    const propType = {}.propertyIsEnumerable.call(originalObject, key) ? "enumerable" : "nonenumerable";
+    if (propType === "enumerable") carry[key] = newVal;
+    if (includeNonenumerable && propType === "nonenumerable") Object.defineProperty(carry, key, {
+      value: newVal,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    });
+  }
+  function copy(target2, options = {}) {
+    if (isArray$1(target2)) return target2.map((item) => copy(item, options));
+    if (!isPlainObject$1(target2)) return target2;
+    const props = Object.getOwnPropertyNames(target2);
+    const symbols = Object.getOwnPropertySymbols(target2);
+    return [...props, ...symbols].reduce((carry, key) => {
+      if (isArray$1(options.props) && !options.props.includes(key)) return carry;
+      const val = target2[key];
+      assignProp(carry, key, copy(val, options), target2, options.nonenumerable);
+      return carry;
+    }, {});
+  }
+  var SuperJSON = class {
+    /**
+    * @param dedupeReferentialEqualities  If true, SuperJSON will make sure only one instance of referentially equal objects are serialized and the rest are replaced with `null`.
+    */
+    constructor({ dedupe = false } = {}) {
+      this.classRegistry = new ClassRegistry();
+      this.symbolRegistry = new Registry((s) => s.description ?? "");
+      this.customTransformerRegistry = new CustomTransformerRegistry();
+      this.allowedErrorProps = [];
+      this.dedupe = dedupe;
+    }
+    serialize(object) {
+      const identities = /* @__PURE__ */ new Map();
+      const output = walker(object, identities, this, this.dedupe);
+      const res = { json: output.transformedValue };
+      if (output.annotations) res.meta = {
+        ...res.meta,
+        values: output.annotations
+      };
+      const equalityAnnotations = generateReferentialEqualityAnnotations(identities, this.dedupe);
+      if (equalityAnnotations) res.meta = {
+        ...res.meta,
+        referentialEqualities: equalityAnnotations
+      };
+      return res;
+    }
+    deserialize(payload) {
+      const { json, meta } = payload;
+      let result = copy(json);
+      if (meta?.values) result = applyValueAnnotations(result, meta.values, this);
+      if (meta?.referentialEqualities) result = applyReferentialEqualityAnnotations(result, meta.referentialEqualities);
+      return result;
+    }
+    stringify(object) {
+      return JSON.stringify(this.serialize(object));
+    }
+    parse(string) {
+      return this.deserialize(JSON.parse(string));
+    }
+    registerClass(v, options) {
+      this.classRegistry.register(v, options);
+    }
+    registerSymbol(v, identifier) {
+      this.symbolRegistry.register(v, identifier);
+    }
+    registerCustom(transformer, name) {
+      this.customTransformerRegistry.register({
+        name,
+        ...transformer
+      });
+    }
+    allowErrorProps(...props) {
+      this.allowedErrorProps.push(...props);
+    }
+  };
+  SuperJSON.defaultInstance = new SuperJSON();
+  SuperJSON.serialize = SuperJSON.defaultInstance.serialize.bind(SuperJSON.defaultInstance);
+  SuperJSON.deserialize = SuperJSON.defaultInstance.deserialize.bind(SuperJSON.defaultInstance);
+  SuperJSON.stringify = SuperJSON.defaultInstance.stringify.bind(SuperJSON.defaultInstance);
+  SuperJSON.parse = SuperJSON.defaultInstance.parse.bind(SuperJSON.defaultInstance);
+  SuperJSON.registerClass = SuperJSON.defaultInstance.registerClass.bind(SuperJSON.defaultInstance);
+  SuperJSON.registerSymbol = SuperJSON.defaultInstance.registerSymbol.bind(SuperJSON.defaultInstance);
+  SuperJSON.registerCustom = SuperJSON.defaultInstance.registerCustom.bind(SuperJSON.defaultInstance);
+  SuperJSON.allowErrorProps = SuperJSON.defaultInstance.allowErrorProps.bind(SuperJSON.defaultInstance);
+  SuperJSON.serialize;
+  SuperJSON.deserialize;
+  SuperJSON.stringify;
+  SuperJSON.parse;
+  SuperJSON.registerClass;
+  SuperJSON.registerCustom;
+  SuperJSON.registerSymbol;
+  SuperJSON.allowErrorProps;
+  var _a19;
+  (_a19 = target).__VUE_DEVTOOLS_KIT_MESSAGE_CHANNELS__ ?? (_a19.__VUE_DEVTOOLS_KIT_MESSAGE_CHANNELS__ = []);
+  var _a20;
+  (_a20 = target).__VUE_DEVTOOLS_KIT_RPC_CLIENT__ ?? (_a20.__VUE_DEVTOOLS_KIT_RPC_CLIENT__ = null);
+  var _a21;
+  (_a21 = target).__VUE_DEVTOOLS_KIT_RPC_SERVER__ ?? (_a21.__VUE_DEVTOOLS_KIT_RPC_SERVER__ = null);
+  var _a22;
+  (_a22 = target).__VUE_DEVTOOLS_KIT_VITE_RPC_CLIENT__ ?? (_a22.__VUE_DEVTOOLS_KIT_VITE_RPC_CLIENT__ = null);
+  var _a23;
+  (_a23 = target).__VUE_DEVTOOLS_KIT_VITE_RPC_SERVER__ ?? (_a23.__VUE_DEVTOOLS_KIT_VITE_RPC_SERVER__ = null);
+  var _a24;
+  (_a24 = target).__VUE_DEVTOOLS_KIT_BROADCAST_RPC_SERVER__ ?? (_a24.__VUE_DEVTOOLS_KIT_BROADCAST_RPC_SERVER__ = null);
+  var MAX_SERIALIZED_SIZE = 2 * 1024 * 1024;
+
+  // node_modules/pinia/dist/pinia.js
+  var IS_CLIENT = typeof window !== "undefined";
+  var diagnostics = /* @__PURE__ */ defineDiagnostics({
+    reporters: [/* @__PURE__ */ createConsoleReporter()],
+    codes: {
+      PINIA_R1001: {
+        why: 'Directly pass all stores to "mapStores()" without putting them in an array. This will fail in production.',
+        fix: "Replace mapStores([useAuthStore, useCartStore]) with mapStores(useAuthStore, useCartStore).",
+        docs: "https://pinia.vuejs.org/cookbook/options-api.html#Giving-access-to-the-whole-store"
+      },
+      PINIA_R1002: {
+        why: (p) => `A getter cannot have the same name as another state property. Found "${p.name}" in store "${p.id}".`,
+        fix: "Rename either the getter or the state property.",
+        docs: "https://pinia.vuejs.org/core-concepts/getters.html#Accessing-other-getters"
+      },
+      PINIA_R1003: {
+        why: (p) => `The "state" must be a plain object. Found in store "${p.id}".`,
+        fix: "Return a plain object, e.g. avoid state: () => new MyClass().",
+        docs: "https://pinia.vuejs.org/core-concepts/state.html#State"
+      },
+      PINIA_R1004: {
+        why: "Pinia instance not found in context. This falls back to the global activePinia, which exposes you to cross-request pollution on the server.",
+        fix: '"useStore()" is a composable and follows the same rules: call it at the top of setup() (or another composable), or pass the pinia instance explicitly when used outside of a component.',
+        docs: "https://pinia.vuejs.org/ssr/#Using-the-store-outside-of-setup-"
+      },
+      PINIA_R1005: {
+        why: (p) => `The store id changed from "${p.from}" to "${p.to}", forcing a reload.`,
+        docs: "https://pinia.vuejs.org/cookbook/hot-module-replacement.html#HMR-Hot-Module-Replacement-"
+      },
+      PINIA_R1006: {
+        why: (p) => `Property "${p.key}" of store "${p.id}" is not reactive (not a ref, reactive object, or shallowRef), so storeToRefs() ignores it.`,
+        fix: "If it should be reactive state, wrap it with ref(), reactive(), or shallowRef(). If it is an intentional non-reactive property, wrap it with markRaw() so storeToRefs() skips it explicitly.",
+        docs: "https://pinia.vuejs.org/core-concepts/plugins.html#Adding-new-external-properties"
+      },
+      PINIA_R1007: {
+        why: (p) => `The same callback was passed to "$subscribe()" of store "${p.id}" more than once. Subscriptions are deduplicated, so the duplicate is ignored.`,
+        fix: "Subscribe each callback only once. If you need to resubscribe, call the returned function to remove the previous subscription first, or create a new function.",
+        docs: "https://pinia.vuejs.org/core-concepts/state.html#Subscribing-to-the-state"
+      }
+    }
+  });
+  var activePinia;
+  var setActivePinia = (pinia2) => activePinia = pinia2;
+  var piniaSymbol = true ? /* @__PURE__ */ Symbol("pinia") : (
+    /* istanbul ignore next */
+    /* @__PURE__ */ Symbol()
+  );
+  function isPlainObject2(o) {
+    return o && typeof o === "object" && Object.prototype.toString.call(o) === "[object Object]" && typeof o.toJSON !== "function";
+  }
+  var _global = /* @__PURE__ */ (() => typeof window === "object" && window.window === window ? window : typeof self === "object" && self.self === self ? self : typeof global === "object" && global.global === global ? global : typeof globalThis === "object" ? globalThis : { HTMLElement: null })();
+  function bom(blob, { autoBom = false } = {}) {
+    if (autoBom && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(blob.type)) return new Blob([String.fromCharCode(65279), blob], { type: blob.type });
+    return blob;
+  }
+  function download(url, name, opts) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "blob";
+    xhr.onload = function() {
+      saveAs(xhr.response, name, opts);
+    };
+    xhr.onerror = function() {
+      console.error("could not download file");
+    };
+    xhr.send();
+  }
+  function corsEnabled(url) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("HEAD", url, false);
+    try {
+      xhr.send();
+    } catch (e) {
+    }
+    return xhr.status >= 200 && xhr.status <= 299;
+  }
+  function click(node) {
+    try {
+      node.dispatchEvent(new MouseEvent("click"));
+    } catch (e) {
+      const evt = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        detail: 0,
+        screenX: 80,
+        screenY: 20,
+        clientX: 80,
+        clientY: 20,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        metaKey: false,
+        button: 0,
+        relatedTarget: null
+      });
+      node.dispatchEvent(evt);
+    }
+  }
+  var _navigator = typeof navigator === "object" ? navigator : { userAgent: "" };
+  var isMacOSWebView = /* @__PURE__ */ (() => /Macintosh/.test(_navigator.userAgent) && /AppleWebKit/.test(_navigator.userAgent) && !/Safari/.test(_navigator.userAgent))();
+  var saveAs = !IS_CLIENT ? () => {
+  } : typeof HTMLAnchorElement !== "undefined" && "download" in HTMLAnchorElement.prototype && !isMacOSWebView ? downloadSaveAs : "msSaveOrOpenBlob" in _navigator ? msSaveAs : fileSaverSaveAs;
+  function downloadSaveAs(blob, name = "download", opts) {
+    const a = document.createElement("a");
+    a.download = name;
+    a.rel = "noopener";
+    if (typeof blob === "string") {
+      a.href = blob;
+      if (a.origin !== location.origin) if (corsEnabled(a.href)) download(blob, name, opts);
+      else {
+        a.target = "_blank";
+        click(a);
+      }
+      else click(a);
+    } else {
+      a.href = URL.createObjectURL(blob);
+      setTimeout(function() {
+        URL.revokeObjectURL(a.href);
+      }, 4e4);
+      setTimeout(function() {
+        click(a);
+      }, 0);
+    }
+  }
+  function msSaveAs(blob, name = "download", opts) {
+    if (typeof blob === "string") if (corsEnabled(blob)) download(blob, name, opts);
+    else {
+      const a = document.createElement("a");
+      a.href = blob;
+      a.target = "_blank";
+      setTimeout(function() {
+        click(a);
+      });
+    }
+    else navigator.msSaveOrOpenBlob(bom(blob, opts), name);
+  }
+  function fileSaverSaveAs(blob, name, opts, popup) {
+    popup = popup || open("", "_blank");
+    if (popup) popup.document.title = popup.document.body.innerText = "downloading...";
+    if (typeof blob === "string") return download(blob, name, opts);
+    const force = blob.type === "application/octet-stream";
+    const isSafari = /constructor/i.test(String(_global.HTMLElement)) || "safari" in _global;
+    const isChromeIOS = /CriOS\/[\d]+/.test(navigator.userAgent);
+    if ((isChromeIOS || force && isSafari || isMacOSWebView) && typeof FileReader !== "undefined") {
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        let url = reader.result;
+        if (typeof url !== "string") {
+          popup = null;
+          throw new Error("Wrong reader.result type");
+        }
+        url = isChromeIOS ? url : url.replace(/^data:[^;]*;/, "data:attachment/file;");
+        if (popup) popup.location.href = url;
+        else location.assign(url);
+        popup = null;
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      const url = URL.createObjectURL(blob);
+      if (popup) popup.location.assign(url);
+      else location.href = url;
+      popup = null;
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 4e4);
+    }
+  }
+  function toastMessage(message, type) {
+    const piniaMessage = "\u{1F34D} " + message;
+    if (type === "error") console.error(piniaMessage);
+    else if (type === "warn") console.warn(piniaMessage);
+    else console.debug(piniaMessage);
+  }
+  function isPinia(o) {
+    return "_a" in o && "install" in o;
+  }
+  function isWritableComputed(store, key) {
+    const rawProp = toRaw(store)[key];
+    return isRef(rawProp) && !isReadonly(rawProp);
+  }
+  function checkClipboardAccess() {
+    if (!("clipboard" in navigator)) {
+      toastMessage(`Your browser doesn't support the Clipboard API`, "error");
+      return true;
+    }
+  }
+  function checkNotFocusedError(error) {
+    if (error instanceof Error && error.message.toLowerCase().includes("document is not focused")) {
+      toastMessage('You need to activate the "Emulate a focused page" setting in the "Rendering" panel of devtools.', "warn");
+      return true;
+    }
+    return false;
+  }
+  async function actionGlobalCopyState(pinia2) {
+    if (checkClipboardAccess()) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(pinia2.state.value));
+      toastMessage("Global state copied to clipboard.");
+    } catch (error) {
+      if (checkNotFocusedError(error)) return;
+      toastMessage(`Failed to serialize the state. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  async function actionGlobalPasteState(pinia2) {
+    if (checkClipboardAccess()) return;
+    try {
+      loadStoresState(pinia2, JSON.parse(await navigator.clipboard.readText()));
+      toastMessage("Global state pasted from clipboard.");
+    } catch (error) {
+      if (checkNotFocusedError(error)) return;
+      toastMessage(`Failed to deserialize the state from clipboard. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  async function actionGlobalSaveState(pinia2) {
+    try {
+      saveAs(new Blob([JSON.stringify(pinia2.state.value)], { type: "text/plain;charset=utf-8" }), "pinia-state.json");
+    } catch (error) {
+      toastMessage(`Failed to export the state as JSON. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  var fileInput;
+  function getFileOpener() {
+    if (!fileInput) {
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".json";
+    }
+    function openFile() {
+      return new Promise((resolve, reject) => {
+        fileInput.onchange = async () => {
+          const files = fileInput.files;
+          if (!files) return resolve(null);
+          const file = files.item(0);
+          if (!file) return resolve(null);
+          return resolve({
+            text: await file.text(),
+            file
+          });
+        };
+        fileInput.oncancel = () => resolve(null);
+        fileInput.onerror = reject;
+        fileInput.click();
+      });
+    }
+    return openFile;
+  }
+  async function actionGlobalOpenStateFile(pinia2) {
+    try {
+      const result = await getFileOpener()();
+      if (!result) return;
+      const { text, file } = result;
+      loadStoresState(pinia2, JSON.parse(text));
+      toastMessage(`Global state imported from "${file.name}".`);
+    } catch (error) {
+      toastMessage(`Failed to import the state from JSON. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  function loadStoresState(pinia2, state) {
+    for (const key in state) {
+      const storeState = pinia2.state.value[key];
+      if (storeState) Object.assign(storeState, state[key]);
+      else pinia2.state.value[key] = state[key];
+    }
+  }
+  function formatDisplay(display) {
+    return { _custom: { display } };
+  }
+  var PINIA_ROOT_LABEL = "\u{1F34D} Pinia (root)";
+  var PINIA_ROOT_ID = "_root";
+  function formatStoreForInspectorTree(store) {
+    return isPinia(store) ? {
+      id: PINIA_ROOT_ID,
+      label: PINIA_ROOT_LABEL
+    } : {
+      id: store.$id,
+      label: store.$id
+    };
+  }
+  function formatStoreForInspectorState(store) {
+    if (isPinia(store)) {
+      const storeNames = Array.from(store._s.keys());
+      const storeMap = store._s;
+      return {
+        state: storeNames.map((storeId) => ({
+          editable: true,
+          key: storeId,
+          value: store.state.value[storeId]
+        })),
+        getters: storeNames.filter((id) => storeMap.get(id)._getters).map((id) => {
+          const store2 = storeMap.get(id);
+          return {
+            editable: false,
+            key: id,
+            value: store2._getters.reduce((getters, key) => {
+              getters[key] = store2[key];
+              return getters;
+            }, {})
+          };
+        })
+      };
+    }
+    const state = { state: Object.keys(store.$state).map((key) => ({
+      editable: true,
+      key,
+      value: store.$state[key]
+    })) };
+    if (store._getters && store._getters.length) state.getters = store._getters.map((getterName) => ({
+      editable: isWritableComputed(store, getterName),
+      key: getterName,
+      value: store[getterName]
+    }));
+    if (store._customProperties.size) state.customProperties = Array.from(store._customProperties).map((key) => ({
+      editable: true,
+      key,
+      value: store[key]
+    }));
+    return state;
+  }
+  function formatEventData(events) {
+    if (!events) return {};
+    if (Array.isArray(events)) return events.reduce((data, event) => {
+      data.keys.push(event.key);
+      data.operations.push(event.type);
+      data.oldValue[event.key] = event.oldValue;
+      data.newValue[event.key] = event.newValue;
+      return data;
+    }, {
+      oldValue: {},
+      keys: [],
+      operations: [],
+      newValue: {}
+    });
+    else return {
+      operation: formatDisplay(events.type),
+      key: formatDisplay(events.key),
+      oldValue: events.oldValue,
+      newValue: events.newValue
+    };
+  }
+  function formatMutationType(type) {
+    switch (type) {
+      case "direct":
+        return "mutation";
+      case "patch function":
+        return "$patch";
+      case "patch object":
+        return "$patch";
+      default:
+        return "unknown";
+    }
+  }
+  var isTimelineActive = true;
+  var componentStateTypes = [];
+  var MUTATIONS_LAYER_ID = "pinia:mutations";
+  var INSPECTOR_ID = "pinia";
+  var { assign: assign$1 } = Object;
+  var getStoreType = (id) => "\u{1F34D} " + id;
+  function registerPiniaDevtools(app, pinia2) {
+    setupDevToolsPlugin({
+      id: "dev.esm.pinia",
+      label: "Pinia \u{1F34D}",
+      logo: "https://pinia.vuejs.org/logo.svg",
+      packageName: "pinia",
+      homepage: "https://pinia.vuejs.org",
+      componentStateTypes,
+      app
+    }, (api) => {
+      if (typeof api.now !== "function") toastMessage("You seem to be using an outdated version of Vue Devtools. Are you still using the Beta release instead of the stable one? You can find the links at https://devtools.vuejs.org/guide/installation.html.");
+      api.addTimelineLayer({
+        id: MUTATIONS_LAYER_ID,
+        label: `Pinia \u{1F34D}`,
+        color: 15064968
+      });
+      api.addInspector({
+        id: INSPECTOR_ID,
+        label: "Pinia \u{1F34D}",
+        icon: "storage",
+        treeFilterPlaceholder: "Search stores",
+        actions: [
+          {
+            icon: "content_copy",
+            action: () => {
+              actionGlobalCopyState(pinia2);
+            },
+            tooltip: "Serialize and copy the state"
+          },
+          {
+            icon: "content_paste",
+            action: async () => {
+              await actionGlobalPasteState(pinia2);
+              api.sendInspectorTree(INSPECTOR_ID);
+              api.sendInspectorState(INSPECTOR_ID);
+            },
+            tooltip: "Replace the state with the content of your clipboard"
+          },
+          {
+            icon: "save",
+            action: () => {
+              actionGlobalSaveState(pinia2);
+            },
+            tooltip: "Save the state as a JSON file"
+          },
+          {
+            icon: "folder_open",
+            action: async () => {
+              await actionGlobalOpenStateFile(pinia2);
+              api.sendInspectorTree(INSPECTOR_ID);
+              api.sendInspectorState(INSPECTOR_ID);
+            },
+            tooltip: "Import the state from a JSON file"
+          }
+        ],
+        nodeActions: [{
+          icon: "restore",
+          tooltip: 'Reset the state (with "$reset")',
+          action: (nodeId) => {
+            const store = pinia2._s.get(nodeId);
+            if (!store) toastMessage(`Cannot reset "${nodeId}" store because it wasn't found.`, "warn");
+            else if (typeof store.$reset !== "function") toastMessage(`Cannot reset "${nodeId}" store because it doesn't have a "$reset" method implemented.`, "warn");
+            else {
+              store.$reset();
+              toastMessage(`Store "${nodeId}" reset.`);
+            }
+          }
+        }]
+      });
+      api.on.inspectComponent((payload) => {
+        const proxy = payload.componentInstance && payload.componentInstance.proxy;
+        if (proxy && proxy._pStores) {
+          const piniaStores = payload.componentInstance.proxy._pStores;
+          Object.values(piniaStores).forEach((store) => {
+            payload.instanceData.state.push({
+              type: getStoreType(store.$id),
+              key: "state",
+              editable: true,
+              value: store._isOptionsAPI ? { _custom: {
+                value: toRaw(store.$state),
+                actions: [{
+                  icon: "restore",
+                  tooltip: "Reset the state of this store",
+                  action: () => store.$reset()
+                }]
+              } } : Object.keys(store.$state).reduce((state, key) => {
+                state[key] = store.$state[key];
+                return state;
+              }, {})
+            });
+            if (store._getters && store._getters.length) payload.instanceData.state.push({
+              type: getStoreType(store.$id),
+              key: "getters",
+              editable: false,
+              value: store._getters.reduce((getters, key) => {
+                try {
+                  getters[key] = store[key];
+                } catch (error) {
+                  getters[key] = error;
+                }
+                return getters;
+              }, {})
+            });
+          });
+        }
+      });
+      api.on.getInspectorTree((payload) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          let stores = [pinia2];
+          stores = stores.concat(Array.from(pinia2._s.values()));
+          payload.rootNodes = (payload.filter ? stores.filter((store) => "$id" in store ? store.$id.toLowerCase().includes(payload.filter.toLowerCase()) : PINIA_ROOT_LABEL.toLowerCase().includes(payload.filter.toLowerCase())) : stores).map(formatStoreForInspectorTree);
+        }
+      });
+      globalThis.$pinia = pinia2;
+      api.on.getInspectorState((payload) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          const inspectedStore = payload.nodeId === "_root" ? pinia2 : pinia2._s.get(payload.nodeId);
+          if (!inspectedStore) return;
+          if (inspectedStore) {
+            if (payload.nodeId !== "_root") globalThis.$store = toRaw(inspectedStore);
+            payload.state = formatStoreForInspectorState(inspectedStore);
+          }
+        }
+      });
+      api.on.editInspectorState((payload) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          const inspectedStore = payload.nodeId === "_root" ? pinia2 : pinia2._s.get(payload.nodeId);
+          if (!inspectedStore) return toastMessage(`store "${payload.nodeId}" not found`, "error");
+          const { path } = payload;
+          if (!isPinia(inspectedStore)) {
+            if (path.length !== 1 || !inspectedStore._customProperties.has(path[0]) && !isWritableComputed(inspectedStore, path[0]) || path[0] in inspectedStore.$state) path.unshift("$state");
+          } else path.unshift("state");
+          isTimelineActive = false;
+          payload.set(inspectedStore, path, payload.state.value);
+          isTimelineActive = true;
+        }
+      });
+      api.on.editComponentState((payload) => {
+        if (payload.type.startsWith("\u{1F34D}")) {
+          const storeId = payload.type.replace(/^🍍\s*/, "");
+          const store = pinia2._s.get(storeId);
+          if (!store) return toastMessage(`store "${storeId}" not found`, "error");
+          const { path } = payload;
+          if (path[0] !== "state") return toastMessage(`Invalid path for store "${storeId}":
+${path}
+Only state can be modified.`);
+          path[0] = "$state";
+          isTimelineActive = false;
+          payload.set(store, path, payload.state.value);
+          isTimelineActive = true;
+        }
+      });
+    });
+  }
+  function addStoreToDevtools(app, store) {
+    if (!componentStateTypes.includes(getStoreType(store.$id))) componentStateTypes.push(getStoreType(store.$id));
+    setupDevToolsPlugin({
+      id: "dev.esm.pinia",
+      label: "Pinia \u{1F34D}",
+      logo: "https://pinia.vuejs.org/logo.svg",
+      packageName: "pinia",
+      homepage: "https://pinia.vuejs.org",
+      componentStateTypes,
+      app,
+      settings: { logStoreChanges: {
+        label: "Notify about new/deleted stores",
+        type: "boolean",
+        defaultValue: true
+      } }
+    }, (api) => {
+      const now = typeof api.now === "function" ? api.now.bind(api) : Date.now;
+      store.$onAction(({ after, onError, name, args }) => {
+        const groupId = runningActionId++;
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: {
+            time: now(),
+            title: "\u{1F6EB} " + name,
+            subtitle: "start",
+            data: {
+              store: formatDisplay(store.$id),
+              action: formatDisplay(name),
+              args
+            },
+            groupId
+          }
+        });
+        after((result) => {
+          activeAction = void 0;
+          api.addTimelineEvent({
+            layerId: MUTATIONS_LAYER_ID,
+            event: {
+              time: now(),
+              title: "\u{1F6EC} " + name,
+              subtitle: "end",
+              data: {
+                store: formatDisplay(store.$id),
+                action: formatDisplay(name),
+                args,
+                result
+              },
+              groupId
+            }
+          });
+        });
+        onError((error) => {
+          activeAction = void 0;
+          api.addTimelineEvent({
+            layerId: MUTATIONS_LAYER_ID,
+            event: {
+              time: now(),
+              logType: "error",
+              title: "\u{1F4A5} " + name,
+              subtitle: "end",
+              data: {
+                store: formatDisplay(store.$id),
+                action: formatDisplay(name),
+                args,
+                error
+              },
+              groupId
+            }
+          });
+        });
+      }, true);
+      store._customProperties.forEach((name) => {
+        watch2(() => unref(store[name]), (newValue, oldValue) => {
+          api.notifyComponentUpdate();
+          api.sendInspectorState(INSPECTOR_ID);
+          if (isTimelineActive) api.addTimelineEvent({
+            layerId: MUTATIONS_LAYER_ID,
+            event: {
+              time: now(),
+              title: "Change",
+              subtitle: name,
+              data: {
+                newValue,
+                oldValue
+              },
+              groupId: activeAction
+            }
+          });
+        }, { deep: true });
+      });
+      store.$subscribe(({ events, type }, state) => {
+        api.notifyComponentUpdate();
+        api.sendInspectorState(INSPECTOR_ID);
+        if (!isTimelineActive) return;
+        const eventData = {
+          time: now(),
+          title: formatMutationType(type),
+          data: assign$1({ store: formatDisplay(store.$id) }, formatEventData(events)),
+          groupId: activeAction
+        };
+        if (type === "patch function") eventData.subtitle = "\u2935\uFE0F";
+        else if (type === "patch object") eventData.subtitle = "\u{1F9E9}";
+        else if (events && !Array.isArray(events)) eventData.subtitle = events.type;
+        if (events) eventData.data["rawEvent(s)"] = { _custom: {
+          display: "DebuggerEvent",
+          type: "object",
+          tooltip: "raw DebuggerEvent[]",
+          value: events
+        } };
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: eventData
+        });
+      }, {
+        detached: true,
+        flush: "sync"
+      });
+      const hotUpdate = store._hotUpdate;
+      store._hotUpdate = markRaw((newStore) => {
+        hotUpdate(newStore);
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: {
+            time: now(),
+            title: "\u{1F525} " + store.$id,
+            subtitle: "HMR update",
+            data: {
+              store: formatDisplay(store.$id),
+              info: formatDisplay(`HMR update`)
+            }
+          }
+        });
+        api.notifyComponentUpdate();
+        api.sendInspectorTree(INSPECTOR_ID);
+        api.sendInspectorState(INSPECTOR_ID);
+      });
+      const { $dispose } = store;
+      store.$dispose = () => {
+        $dispose();
+        api.notifyComponentUpdate();
+        api.sendInspectorTree(INSPECTOR_ID);
+        api.sendInspectorState(INSPECTOR_ID);
+        api.getSettings().logStoreChanges && toastMessage(`Disposed "${store.$id}" store \u{1F5D1}`);
+      };
+      api.notifyComponentUpdate();
+      api.sendInspectorTree(INSPECTOR_ID);
+      api.sendInspectorState(INSPECTOR_ID);
+      api.getSettings().logStoreChanges && toastMessage(`"${store.$id}" store installed \u{1F195}`);
+    });
+  }
+  var runningActionId = 0;
+  var activeAction;
+  function patchActionForGrouping(store, actionNames, wrapWithProxy) {
+    const actions = actionNames.reduce((storeActions, actionName) => {
+      storeActions[actionName] = toRaw(store)[actionName];
+      return storeActions;
+    }, {});
+    for (const actionName in actions) store[actionName] = function() {
+      const _actionId = runningActionId;
+      const trackedStore = wrapWithProxy ? new Proxy(store, {
+        get(...args) {
+          activeAction = _actionId;
+          return Reflect.get(...args);
+        },
+        set(...args) {
+          activeAction = _actionId;
+          return Reflect.set(...args);
+        }
+      }) : store;
+      activeAction = _actionId;
+      const retValue = actions[actionName].apply(trackedStore, arguments);
+      activeAction = void 0;
+      return retValue;
+    };
+  }
+  function devtoolsPlugin({ app, store, options }) {
+    if (store.$id.startsWith("__hot:")) return;
+    store._isOptionsAPI = !!options.state;
+    if (!store._p._testing) {
+      patchActionForGrouping(store, Object.keys(options.actions), store._isOptionsAPI);
+      const originalHotUpdate = store._hotUpdate;
+      toRaw(store)._hotUpdate = function(newStore) {
+        originalHotUpdate.apply(this, arguments);
+        patchActionForGrouping(store, Object.keys(newStore._hmrPayload.actions), !!store._isOptionsAPI);
+      };
+    }
+    addStoreToDevtools(app, store);
+  }
+  function createPinia() {
+    const scope = effectScope(true);
+    const state = scope.run(() => ref({}));
+    let _p = [];
+    let toBeInstalled = [];
+    const pinia2 = markRaw({
+      install(app) {
+        setActivePinia(pinia2);
+        pinia2._a = app;
+        app.provide(piniaSymbol, pinia2);
+        app.config.globalProperties.$pinia = pinia2;
+        if (IS_CLIENT) registerPiniaDevtools(app, pinia2);
+        toBeInstalled.forEach((plugin) => _p.push(plugin));
+        toBeInstalled = [];
+      },
+      use(plugin) {
+        if (!this._a) toBeInstalled.push(plugin);
+        else _p.push(plugin);
+        return this;
+      },
+      _p,
+      _a: null,
+      _e: scope,
+      _s: /* @__PURE__ */ new Map(),
+      state
+    });
+    if (IS_CLIENT && typeof Proxy !== "undefined") pinia2.use(devtoolsPlugin);
+    return pinia2;
+  }
+  function patchObject(newState, oldState) {
+    for (const key in oldState) {
+      const subPatch = oldState[key];
+      if (!(key in newState)) continue;
+      const targetValue = newState[key];
+      if (isPlainObject2(targetValue) && isPlainObject2(subPatch) && !isRef(subPatch) && !isReactive(subPatch)) newState[key] = patchObject(targetValue, subPatch);
+      else newState[key] = subPatch;
+    }
+    return newState;
+  }
+  var noop = () => {
+  };
+  function addSubscription(subscriptions, callback, detached, onCleanup = noop) {
+    subscriptions.add(callback);
+    const removeSubscription = () => {
+      subscriptions.delete(callback) && onCleanup();
+    };
+    if (!detached && getCurrentScope()) onScopeDispose(removeSubscription);
+    return removeSubscription;
+  }
+  function triggerSubscriptions(subscriptions, ...args) {
+    subscriptions.forEach((callback) => {
+      callback(...args);
+    });
+  }
+  var fallbackRunWithContext = (fn) => fn();
+  var ACTION_MARKER = /* @__PURE__ */ Symbol();
+  var ACTION_NAME = /* @__PURE__ */ Symbol();
+  function mergeReactiveObjects(target2, patchToApply) {
+    if (target2 instanceof Map && patchToApply instanceof Map) patchToApply.forEach((value, key) => target2.set(key, value));
+    else if (target2 instanceof Set && patchToApply instanceof Set) patchToApply.forEach(target2.add, target2);
+    for (const key in patchToApply) {
+      if (!Object.hasOwn(patchToApply, key)) continue;
+      const subPatch = patchToApply[key];
+      const targetValue = target2[key];
+      if (isPlainObject2(targetValue) && isPlainObject2(subPatch) && Object.hasOwn(target2, key) && !isRef(subPatch) && !isReactive(subPatch)) target2[key] = mergeReactiveObjects(targetValue, subPatch);
+      else target2[key] = subPatch;
+    }
+    return target2;
+  }
+  var skipHydrateSymbol = true ? /* @__PURE__ */ Symbol("pinia:skipHydration") : (
+    /* istanbul ignore next */
+    /* @__PURE__ */ Symbol()
+  );
+  function shouldHydrate(obj) {
+    return !obj || typeof obj !== "object" || !Object.hasOwn(obj, skipHydrateSymbol);
+  }
+  var { assign } = Object;
+  function isComputed(o) {
+    return !!(isRef(o) && o.effect);
+  }
+  function createOptionsStore(id, options, pinia2, hot) {
+    const { state, actions, getters } = options;
+    const initialState = pinia2.state.value[id];
+    let store;
+    function setup() {
+      if (!initialState && !hot)
+        pinia2.state.value[id] = state ? state() : {};
+      const localState = hot ? toRefs(ref(state ? state() : {}).value) : toRefs(pinia2.state.value[id]);
+      return assign(localState, actions, Object.keys(getters || {}).reduce((computedGetters, name) => {
+        if (name in localState) diagnostics.PINIA_R1002({
+          name,
+          id
+        });
+        computedGetters[name] = markRaw(computed2(() => {
+          setActivePinia(pinia2);
+          const store2 = pinia2._s.get(id);
+          return getters[name].call(store2, store2);
+        }));
+        return computedGetters;
+      }, {}));
+    }
+    store = createSetupStore(id, setup, options, pinia2, hot, true);
+    return store;
+  }
+  function createSetupStore($id, setup, options = {}, pinia2, hot, isOptionsStore) {
+    let scope;
+    const optionsForPlugin = assign({ actions: {} }, options);
+    if (!pinia2._e.active) throw new Error("Pinia destroyed");
+    const $subscribeOptions = { deep: true };
+    if (true) $subscribeOptions.onTrigger = (event) => {
+      if (isListening) debuggerEvents = event;
+      else if (isListening === false && !store._hotUpdating)
+        if (Array.isArray(debuggerEvents)) debuggerEvents.push(event);
+        else console.error("\u{1F34D} debuggerEvents should be an array. This is most likely an internal Pinia bug.");
+    };
+    let isListening;
+    let isSyncListening;
+    let subscriptions = /* @__PURE__ */ new Set();
+    let actionSubscriptions = /* @__PURE__ */ new Set();
+    let debuggerEvents;
+    const initialState = pinia2.state.value[$id];
+    if (!isOptionsStore && !initialState && !hot)
+      pinia2.state.value[$id] = {};
+    const hotState = /* @__PURE__ */ ref({});
+    let activeListener;
+    function $patch(partialStateOrMutator) {
+      let subscriptionMutation;
+      isListening = isSyncListening = false;
+      if (true) debuggerEvents = [];
+      if (typeof partialStateOrMutator === "function") {
+        partialStateOrMutator(pinia2.state.value[$id]);
+        subscriptionMutation = {
+          type: "patch function",
+          storeId: $id,
+          events: debuggerEvents
+        };
+      } else {
+        mergeReactiveObjects(pinia2.state.value[$id], partialStateOrMutator);
+        subscriptionMutation = {
+          type: "patch object",
+          payload: partialStateOrMutator,
+          storeId: $id,
+          events: debuggerEvents
+        };
+      }
+      const myListenerId = activeListener = /* @__PURE__ */ Symbol();
+      nextTick().then(() => {
+        if (activeListener === myListenerId) isListening = true;
+      });
+      isSyncListening = true;
+      triggerSubscriptions(subscriptions, subscriptionMutation, pinia2.state.value[$id]);
+    }
+    const $reset = isOptionsStore ? function $reset2() {
+      const { state } = options;
+      const newState = state ? state() : {};
+      this.$patch(($state) => {
+        assign($state, newState);
+      });
+    } : true ? () => {
+      throw new Error(`\u{1F34D}: Store "${$id}" is built using the setup syntax and does not implement $reset().`);
+    } : noop;
+    function $dispose() {
+      scope.stop();
+      subscriptions.clear();
+      actionSubscriptions.clear();
+      pinia2._s.delete($id);
+    }
+    const action = (fn, name = "") => {
+      if (ACTION_MARKER in fn) {
+        fn[ACTION_NAME] = name;
+        return fn;
+      }
+      const wrappedAction = function() {
+        setActivePinia(pinia2);
+        const args = Array.from(arguments);
+        const afterCallbackSet = /* @__PURE__ */ new Set();
+        const onErrorCallbackSet = /* @__PURE__ */ new Set();
+        function after(callback) {
+          afterCallbackSet.add(callback);
+        }
+        function onError(callback) {
+          onErrorCallbackSet.add(callback);
+        }
+        triggerSubscriptions(actionSubscriptions, {
+          args,
+          name: wrappedAction[ACTION_NAME],
+          store,
+          after,
+          onError
+        });
+        let ret;
+        try {
+          ret = fn.apply(this && this.$id === $id ? this : store, args);
+        } catch (error) {
+          triggerSubscriptions(onErrorCallbackSet, error);
+          throw error;
+        }
+        if (ret instanceof Promise) return ret.then((value) => {
+          triggerSubscriptions(afterCallbackSet, value);
+          return value;
+        }).catch((error) => {
+          triggerSubscriptions(onErrorCallbackSet, error);
+          return Promise.reject(error);
+        });
+        triggerSubscriptions(afterCallbackSet, ret);
+        return ret;
+      };
+      wrappedAction[ACTION_MARKER] = true;
+      wrappedAction[ACTION_NAME] = name;
+      return wrappedAction;
+    };
+    const _hmrPayload = /* @__PURE__ */ markRaw({
+      actions: {},
+      getters: {},
+      state: [],
+      hotState
+    });
+    const partialStore = {
+      _p: pinia2,
+      $id,
+      $onAction: addSubscription.bind(null, actionSubscriptions),
+      $patch,
+      $reset,
+      $subscribe(callback, options2 = {}) {
+        if (subscriptions.has(callback)) {
+          if (true) diagnostics.PINIA_R1007({ id: $id });
+          return noop;
+        }
+        const removeSubscription = addSubscription(subscriptions, callback, options2.detached, () => stopWatcher());
+        const stopWatcher = scope.run(() => watch2(() => pinia2.state.value[$id], (state) => {
+          if (options2.flush === "sync" ? isSyncListening : isListening) callback({
+            storeId: $id,
+            type: "direct",
+            events: debuggerEvents
+          }, state);
+        }, assign({}, $subscribeOptions, options2)));
+        return removeSubscription;
+      },
+      $dispose
+    };
+    const store = reactive(true ? assign({
+      _hmrPayload,
+      _customProperties: markRaw(/* @__PURE__ */ new Set())
+    }, partialStore) : partialStore);
+    pinia2._s.set($id, store);
+    const setupStore = (pinia2._a && pinia2._a.runWithContext || fallbackRunWithContext)(() => pinia2._e.run(() => (scope = effectScope()).run(() => setup({ action }))));
+    for (const key in setupStore) {
+      const prop = setupStore[key];
+      if (isRef(prop) && !isComputed(prop) || isReactive(prop)) {
+        if (hot) hotState.value[key] = toRef(setupStore, key);
+        else if (!isOptionsStore) {
+          if (initialState && shouldHydrate(prop)) if (isRef(prop)) prop.value = initialState[key];
+          else mergeReactiveObjects(prop, initialState[key]);
+          pinia2.state.value[$id][key] = prop;
+        }
+        if (true) _hmrPayload.state.push(key);
+      } else if (typeof prop === "function") {
+        setupStore[key] = hot ? prop : action(prop, key);
+        if (true) _hmrPayload.actions[key] = prop;
+        optionsForPlugin.actions[key] = prop;
+      } else if (true) {
+        if (isComputed(prop)) {
+          _hmrPayload.getters[key] = isOptionsStore ? options.getters[key] : prop;
+          if (IS_CLIENT) (setupStore._getters || (setupStore._getters = markRaw([]))).push(key);
+        }
+      }
+    }
+    assign(store, setupStore);
+    assign(toRaw(store), setupStore);
+    Object.defineProperty(store, "$state", {
+      get: () => hot ? hotState.value : pinia2.state.value[$id],
+      set: (state) => {
+        if (hot) throw new Error("cannot set hotState");
+        $patch(($state) => {
+          assign($state, state);
+        });
+      }
+    });
+    if (true) store._hotUpdate = markRaw((newStore) => {
+      store._hotUpdating = true;
+      newStore._hmrPayload.state.forEach((stateKey) => {
+        if (stateKey in store.$state) {
+          const newStateTarget = newStore.$state[stateKey];
+          const oldStateSource = store.$state[stateKey];
+          if (isOptionsStore && typeof newStateTarget === "object" && isPlainObject2(newStateTarget) && isPlainObject2(oldStateSource)) patchObject(newStateTarget, oldStateSource);
+          else newStore.$state[stateKey] = oldStateSource;
+        }
+        store[stateKey] = toRef(newStore.$state, stateKey);
+      });
+      Object.keys(store.$state).forEach((stateKey) => {
+        if (!(stateKey in newStore.$state)) delete store[stateKey];
+      });
+      isListening = false;
+      isSyncListening = false;
+      pinia2.state.value[$id] = toRef(newStore._hmrPayload, "hotState");
+      isSyncListening = true;
+      nextTick().then(() => {
+        isListening = true;
+      });
+      for (const actionName in newStore._hmrPayload.actions) {
+        const actionFn = newStore[actionName];
+        store[actionName] = action(actionFn, actionName);
+      }
+      for (const getterName in newStore._hmrPayload.getters) {
+        const getter = newStore._hmrPayload.getters[getterName];
+        const getterValue = isOptionsStore ? computed2(() => {
+          setActivePinia(pinia2);
+          return getter.call(store, store);
+        }) : getter;
+        store[getterName] = getterValue;
+      }
+      Object.keys(store._hmrPayload.getters).forEach((key) => {
+        if (!(key in newStore._hmrPayload.getters)) delete store[key];
+      });
+      Object.keys(store._hmrPayload.actions).forEach((key) => {
+        if (!(key in newStore._hmrPayload.actions)) delete store[key];
+      });
+      store._hmrPayload = newStore._hmrPayload;
+      store._getters = newStore._getters;
+      store._hotUpdating = false;
+    });
+    if (IS_CLIENT) {
+      const nonEnumerable = {
+        writable: true,
+        configurable: true,
+        enumerable: false
+      };
+      [
+        "_p",
+        "_hmrPayload",
+        "_getters",
+        "_customProperties"
+      ].forEach((p) => {
+        Object.defineProperty(store, p, assign({ value: store[p] }, nonEnumerable));
+      });
+    }
+    pinia2._p.forEach((extender) => {
+      const extensions = scope.run(() => extender({
+        store,
+        app: pinia2._a,
+        pinia: pinia2,
+        options: optionsForPlugin
+      }));
+      if (IS_CLIENT) Object.keys(extensions || {}).forEach((key) => store._customProperties.add(key));
+      if (true) for (const key in extensions) {
+        const value = extensions[key];
+        if (typeof value === "object" && !isRef(value) && !isReactive(value) && !value?.__v_skip) diagnostics.PINIA_R1006({
+          key,
+          id: $id
+        });
+      }
+      assign(store, extensions);
+    });
+    if (store.$state && typeof store.$state === "object" && typeof store.$state.constructor === "function" && !store.$state.constructor.toString().includes("[native code]")) diagnostics.PINIA_R1003({ id: store.$id });
+    if (initialState && isOptionsStore && options.hydrate) options.hydrate(store.$state, initialState);
+    isListening = true;
+    isSyncListening = true;
+    return store;
+  }
+  // @__NO_SIDE_EFFECTS__
+  function defineStore(id, setup, setupOptions) {
+    let options;
+    const isSetupStore = typeof setup === "function";
+    options = isSetupStore ? setupOptions : setup;
+    function useStore(pinia2, hot) {
+      const hasContext = hasInjectionContext();
+      pinia2 = (false ? null : pinia2) || (hasContext ? inject(piniaSymbol, null) : null);
+      if (pinia2) setActivePinia(pinia2);
+      if (!activePinia) throw new Error('[\u{1F34D}]: "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?\nSee https://pinia.vuejs.org/core-concepts/outside-component-usage.html for help.\nThis will fail in production.');
+      pinia2 = activePinia;
+      if (!pinia2._s.has(id)) {
+        if (isSetupStore) createSetupStore(id, setup, options, pinia2);
+        else createOptionsStore(id, options, pinia2);
+        if (true) useStore._pinia = pinia2;
+      }
+      const store = pinia2._s.get(id);
+      if (hot) {
+        const hotId = "__hot:" + id;
+        const newStore = isSetupStore ? createSetupStore(hotId, setup, options, pinia2, true) : createOptionsStore(hotId, assign({}, options), pinia2, true);
+        hot._hotUpdate(newStore);
+        delete pinia2.state.value[hotId];
+        pinia2._s.delete(hotId);
+      }
+      if (IS_CLIENT) {
+        const currentInstance2 = getCurrentInstance();
+        if (currentInstance2 && currentInstance2.proxy && !hot) {
+          const vm = currentInstance2.proxy;
+          const cache = "_pStores" in vm ? vm._pStores : vm._pStores = {};
+          cache[id] = store;
+        }
+      }
+      return store;
+    }
+    useStore.$id = id;
+    return useStore;
+  }
+
+  // src/atelier-crm.ts
+  function formatarMoeda(valor) {
+    return (valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  function formatarData(isoStr) {
+    if (!isoStr) return "-";
+    const d = new Date(isoStr);
+    return d.toLocaleDateString("pt-BR");
+  }
+  function mostrarToast(mensagem) {
+    const toast = document.getElementById("toast");
+    toast.textContent = mensagem;
+    toast.classList.add("mostrar");
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => toast.classList.remove("mostrar"), 2800);
+  }
+  function mostrarLoading(msg = "Aguarde...") {
+    document.getElementById("loadingTexto").textContent = msg;
+    document.getElementById("loadingOverlay").classList.add("ativo");
+  }
+  function esconderLoading() {
+    document.getElementById("loadingOverlay").classList.remove("ativo");
+  }
+  function abrirModal(htmlConteudo) {
+    document.getElementById("modalCaixa").innerHTML = htmlConteudo;
+    document.getElementById("modalOverlay").classList.add("aberto");
+  }
+  function fecharModal() {
+    const overlay = document.getElementById("modalOverlay");
+    overlay.classList.remove("aberto");
+    setTimeout(() => {
+      if (!overlay.classList.contains("aberto")) {
+        document.getElementById("modalCaixa").innerHTML = "";
+      }
+    }, 300);
+  }
+  function classeStatus(status) {
+    const mapa = {
+      "disponivel": "disponivel",
+      "dispon\xEDvel": "disponivel",
+      "vendida": "vendida",
+      "reservada": "reservada",
+      "em exposicao": "exposicao",
+      "em exposi\xE7\xE3o": "exposicao"
+    };
+    return mapa[status] || "disponivel";
+  }
+  function rotuloStatus(status) {
+    const mapa = {
+      "disponivel": "Dispon\xEDvel",
+      "dispon\xEDvel": "Dispon\xEDvel",
+      "vendida": "Vendida",
+      "reservada": "Reservada",
+      "em exposicao": "Em Exposi\xE7\xE3o",
+      "em exposi\xE7\xE3o": "Em Exposi\xE7\xE3o"
+    };
+    return mapa[status] || status;
+  }
+  function gerarImagemPlaceholder(cor, emoji) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+    <rect width="400" height="400" fill="${cor}"/>
+    <text x="50%" y="50%" font-size="130" text-anchor="middle" dominant-baseline="central">${emoji}</text>
+  </svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+  function calcularObrasPorMes(obras) {
+    const agora = /* @__PURE__ */ new Date();
+    const meses = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+      meses.push({ ano: d.getFullYear(), mes: d.getMonth(), rotulo: d.toLocaleDateString("pt-BR", { month: "short" }), total: 0 });
+    }
+    obras.forEach((obra) => {
+      const d = new Date(obra.dataCadastro || obra.criadoEm);
+      const alvo = meses.find((m) => m.ano === d.getFullYear() && m.mes === d.getMonth());
+      if (alvo) alvo.total++;
+    });
+    return meses;
+  }
+  function gerarGraficoSVG(dadosMeses) {
+    const largura = 480;
+    const altura = 180;
+    const margemBase = 28;
+    const margemTopo = 20;
+    const larguraBarra = 36;
+    const espacamento = (largura - margemBase) / dadosMeses.length;
+    const maiorValor = Math.max(1, ...dadosMeses.map((m) => m.total));
+    const alturaUtil = altura - margemBase - margemTopo;
+    let barrasSvg = "";
+    dadosMeses.forEach((m, i) => {
+      const alturaBarra = m.total / maiorValor * alturaUtil;
+      const x = i * espacamento + (espacamento - larguraBarra) / 2;
+      const y = altura - margemBase - alturaBarra;
+      barrasSvg += `
+      <rect class="barra-grafico" x="${x}" y="${y}" width="${larguraBarra}" height="${Math.max(alturaBarra, 2)}" rx="4"></rect>
+      <text class="grafico-valor" x="${x + larguraBarra / 2}" y="${y - 6}" text-anchor="middle">${m.total}</text>
+      <text class="grafico-label" x="${x + larguraBarra / 2}" y="${altura - 8}" text-anchor="middle">${m.rotulo}</text>
+    `;
+    });
+    return `
+    <svg class="grafico-svg" viewBox="0 0 ${largura} ${altura}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gr\xE1fico de obras criadas por m\xEAs">
+      <line x1="0" y1="${altura - margemBase}" x2="${largura}" y2="${altura - margemBase}" stroke="var(--border)" stroke-width="1"></line>
+      ${barrasSvg}
+    </svg>
+  `;
+  }
+  function calcularTecnicaMaisComum(obras) {
+    if (!obras.length) return [];
+    const contagem = {};
+    obras.forEach((o) => {
+      if (o.tecnica) {
+        contagem[o.tecnica] = (contagem[o.tecnica] || 0) + 1;
+      }
+    });
+    const total = obras.length;
+    return Object.entries(contagem).map(([tecnica, quantidade]) => ({ tecnica, quantidade, porcentagem: quantidade / total * 100 })).sort((a, b) => b.quantidade - a.quantidade).slice(0, 5);
+  }
+  function calcularCrescimentoMensal(obras) {
+    if (!obras.length) return 0;
+    const agora = /* @__PURE__ */ new Date();
+    const esteMes = agora.getMonth();
+    const esteAno = agora.getFullYear();
+    const mesAnterior = esteMes === 0 ? 11 : esteMes - 1;
+    const anoAnterior = esteMes === 0 ? esteAno - 1 : esteAno;
+    const obrasEsteMes = obras.filter((o) => {
+      const data = new Date(o.dataCadastro || o.criadoEm);
+      return data.getMonth() === esteMes && data.getFullYear() === esteAno;
+    }).length;
+    const obrasMesAnterior = obras.filter((o) => {
+      const data = new Date(o.dataCadastro || o.criadoEm);
+      return data.getMonth() === mesAnterior && data.getFullYear() === anoAnterior;
+    }).length;
+    if (obrasMesAnterior === 0) return obrasEsteMes > 0 ? 100 : 0;
+    return (obrasEsteMes - obrasMesAnterior) / obrasMesAnterior * 100;
+  }
+  function renderizarViewPlaceholder({ titulo, subtitulo, icone, colecao, dataStore: dataStore2, colunas, renderLinha, textoBotao }) {
+    const itens = dataStore2.listar(colecao);
+    const tabelaHtml = itens.length ? `
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr>${colunas.map((c) => `<th>${c}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${itens.map(renderLinha).join("")}
+        </tbody>
+      </table>
+    </div>
+  ` : `
+    <div class="tabela-wrapper">
+      <div class="estado-vazio">
+        <div class="icone-vazio">${icone}</div>
+        <p>Nenhum registro em "${titulo}" ainda.</p>
+      </div>
+    </div>
+  `;
+    return `
+    <div class="view-cabecalho">
+      <div>
+        <h2>${titulo}</h2>
+        <p class="subtitulo">${subtitulo}</p>
+      </div>
+      <button class="btn-primario" data-abrir-modal="${colecao}">\u271A ${textoBotao}</button>
+    </div>
+    ${tabelaHtml}
+  `;
+  }
+  function capitalizarTexto(texto) {
+    if (!texto) return "-";
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
+  function classeStatusVenda(status) {
+    const mapa = { "pendente": "pendente", "paga": "paga", "cancelada": "cancelada", "negociacao": "negociacao", "em negocia\xE7\xE3o": "negociacao", "em negocia\xE7\xF5es": "negociacao" };
+    return mapa[status] || "pendente";
+  }
+  function rotuloStatusVenda(status) {
+    const mapa = { "pendente": "Pendente", "paga": "Paga", "cancelada": "Cancelada", "negociacao": "Negocia\xE7\xE3o", "em negocia\xE7\xE3o": "Em Negocia\xE7\xE3o", "em negocia\xE7\xF5es": "Em Negocia\xE7\xE3o" };
+    return mapa[status] || status;
+  }
+  function gerarQRCodeDataUrl(texto) {
+    const tamanho = 200;
+    const canvas = document.createElement("canvas");
+    canvas.width = tamanho;
+    canvas.height = tamanho;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, tamanho, tamanho);
+    ctx.fillStyle = "black";
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("QR", tamanho / 2, tamanho / 2 - 10);
+    ctx.fillText(texto.length > 20 ? texto.slice(0, 20) + "..." : texto, tamanho / 2, tamanho / 2 + 20);
+    return canvas.toDataURL();
+  }
+  function definicaoFormulario(colecao, dataStore2) {
+    const campos = {
+      obras: [
+        { tipo: "text", nome: "titulo", rotulo: "T\xEDtulo *", obrigatorio: true },
+        { tipo: "select", nome: "tecnica", rotulo: "T\xE9cnica *", opcoes: ["\xF3leo", "aquarela", "escultura", "outra"], obrigatorio: true },
+        { tipo: "number", nome: "ano", rotulo: "Ano" },
+        { tipo: "dimensoes", nome: "dimensoes", rotulo: "Dimens\xF5es (cm)" },
+        { tipo: "textarea", nome: "descricao", rotulo: "Descri\xE7\xE3o" },
+        { tipo: "number", nome: "preco", rotulo: "Pre\xE7o (R$) *", obrigatorio: true },
+        { tipo: "select", nome: "status", rotulo: "Status", opcoes: ["dispon\xEDvel", "reservada", "vendida", "em exposi\xE7\xE3o"] },
+        { tipo: "text", nome: "serie", rotulo: "S\xE9rie" },
+        { tipo: "file", nome: "imagem", rotulo: "Imagem" }
+      ],
+      clientes: [
+        { tipo: "text", nome: "nome", rotulo: "Nome *", obrigatorio: true },
+        { tipo: "email", nome: "email", rotulo: "E-mail" },
+        { tipo: "tel", nome: "telefone", rotulo: "Telefone" },
+        { tipo: "text", nome: "endereco", rotulo: "Endere\xE7o" },
+        { tipo: "textarea", nome: "notas", rotulo: "Notas" }
+      ],
+      vendas: [
+        { tipo: "select", nome: "obraId", rotulo: "Obra *", opcoes: (dataStore2.listar("obras") || []).filter((o) => o.status !== "vendida").map((o) => ({ valor: o.id, rotulo: o.titulo })), obrigatorio: true },
+        { tipo: "select", nome: "clienteId", rotulo: "Cliente *", opcoes: (dataStore2.listar("clientes") || []).map((c) => ({ valor: c.id, rotulo: c.nome })), obrigatorio: true },
+        { tipo: "number", nome: "valorTotal", rotulo: "Valor Total *", obrigatorio: true },
+        { tipo: "select", nome: "formaPagamento", rotulo: "Forma de Pagamento", opcoes: ["\xE0 vista", "cart\xE3o", "boleto", "pix", "transfer\xEAncia", "parcelado"] },
+        { tipo: "select", nome: "status", rotulo: "Status", opcoes: ["pendente", "paga", "cancelada", "em negocia\xE7\xE3o"] }
+      ],
+      certificados: [
+        { tipo: "select", nome: "obraId", rotulo: "Obra *", opcoes: (dataStore2.listar("obras") || []).map((o) => ({ valor: o.id, rotulo: o.titulo })), obrigatorio: true },
+        { tipo: "select", nome: "edicaoTipo", rotulo: "Tipo de Edi\xE7\xE3o", opcoes: ["unica", "edicao_limitada", "prova_de_artista", "reproducao"] },
+        { tipo: "text", nome: "local", rotulo: "Local de Cria\xE7\xE3o" }
+      ]
+    };
+    return campos[colecao] || [];
+  }
+  function montarCampoHtml(campo) {
+    const req = campo.obrigatorio ? " required" : "";
+    if (campo.tipo === "select") {
+      const opcoesHtml = (campo.opcoes || []).map((o) => {
+        const v = typeof o === "object" ? o.valor : o;
+        const r = typeof o === "object" ? o.rotulo : o;
+        return `<option value="${v}">${r}</option>`;
+      }).join("");
+      return `<div class="campo-form"><label>${campo.rotulo}</label><select id="campo_${campo.nome}"${req}>${opcoesHtml}</select></div>`;
+    }
+    if (campo.tipo === "textarea") {
+      return `<div class="campo-form"><label>${campo.rotulo}</label><textarea id="campo_${campo.nome}"${req}></textarea></div>`;
+    }
+    if (campo.tipo === "dimensoes") {
+      return `<div class="campo-form"><label>${campo.rotulo}</label><div class="form-linha">
+      <input type="number" id="campoAltura" placeholder="Altura">
+      <input type="number" id="campoLargura" placeholder="Largura">
+      <input type="number" id="campoProfundidade" placeholder="Profundidade">
+    </div></div>`;
+    }
+    if (campo.tipo === "file") {
+      return `<div class="campo-form"><label>${campo.rotulo}</label><input type="file" id="campo_${campo.nome}" accept="image/*"${req}></div>`;
+    }
+    return `<div class="campo-form"><label>${campo.rotulo}</label><input type="${campo.tipo}" id="campo_${campo.nome}"${req}></div>`;
+  }
+  function abrirModalNovoItem(colecao, dataStore2, router2) {
+    const campos = definicaoFormulario(colecao, dataStore2);
+    abrirModal(`
+    <h3>Novo ${colecao.charAt(0).toUpperCase() + colecao.slice(1)}</h3>
+    <form id="formGenerico">
+      ${campos.map(montarCampoHtml).join("")}
+      <div class="modal-acoes">
+        <button type="button" class="btn-secundario" id="btnCancelarGenerico">Cancelar</button>
+        <button type="submit" class="btn-primario">Salvar</button>
+      </div>
+    </form>
+  `);
+    document.getElementById("btnCancelarGenerico").addEventListener("click", fecharModal);
+    document.getElementById("formGenerico").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const dados = {};
+      campos.forEach((c) => {
+        if (c.tipo === "dimensoes") {
+          dados.altura = Number(document.getElementById("campoAltura")?.value) || 0;
+          dados.largura = Number(document.getElementById("campoLargura")?.value) || 0;
+          dados.profundidade = Number(document.getElementById("campoProfundidade")?.value) || 0;
+        } else if (c.tipo === "file") {
+        } else {
+          dados[c.nome] = document.getElementById("campo_" + c.nome)?.value || "";
+        }
+      });
+      dataStore2.adicionar(colecao, dados);
+      mostrarToast(`${colecao.charAt(0).toUpperCase() + colecao.slice(1)} cadastrado com sucesso!`);
+      fecharModal();
+      router2.navegar(colecao);
+    });
+  }
+  var DataStore = class {
+    constructor() {
+      this.chave = "atelier_crm_dados";
+      this.dados = this.carregar();
+      let migrou = false;
+      ["materiais", "fornecedores", "consumos", "contatosProfissionais", "interacoes", "eventos"].forEach((n) => {
+        if (!this.dados[n]) {
+          this.dados[n] = [];
+          migrou = true;
+        }
+      });
+      if (this.dados.config && !this.dados.config.precificador) {
+        this.dados.config.precificador = { valorHora: 60, multiplicadorExperiencia: 1.5, metaMensal: 1e4, metaAnual: 12e4, metaInicio: (/* @__PURE__ */ new Date()).toISOString().slice(0, 7) };
+        migrou = true;
+      }
+      if (!this.dados.entradasDiario) {
+        this.dados.entradasDiario = [];
+        migrou = true;
+      }
+      if (!this.dados.etapasProcesso) {
+        this.dados.etapasProcesso = [];
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.idioma === void 0) {
+        this.dados.config.idioma = "pt-BR";
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.altoContraste === void 0) {
+        this.dados.config.altoContraste = false;
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.tamanhoFonte === void 0) {
+        this.dados.config.tamanhoFonte = "medio";
+        migrou = true;
+      }
+      if (this.dados.config && !this.dados.config.precificadorRegras) {
+        this.dados.config.precificadorRegras = [];
+        migrou = true;
+      }
+      if (this.dados.config && !this.dados.config.moedaPadrao) {
+        this.dados.config.moedaPadrao = "BRL";
+        migrou = true;
+      }
+      if (this.dados.config && !this.dados.config.taxasCambio) {
+        this.dados.config.taxasCambio = { USD: 5, EUR: 5.5, GBP: 6.3 };
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.pin === void 0) {
+        this.dados.config.pin = "";
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.autoLock === void 0) {
+        this.dados.config.autoLock = false;
+        migrou = true;
+      }
+      if (this.dados.config && this.dados.config.tourCompleted === void 0) {
+        this.dados.config.tourCompleted = false;
+        migrou = true;
+      }
+      if (!this.dados.portais) {
+        this.dados.portais = [];
+        migrou = true;
+      }
+      if (this.dados.encomendas && this.dados.encomendas.length > 0 && !this.dados.encomendas[0].atualizacoes) {
+        this.dados.encomendas.forEach((e) => {
+          e.atualizacoes = e.atualizacoes || [];
+          e.valor = e.valor || 0;
+          e.imagens = e.imagens || [];
+          e.criadoEm = e.criadoEm || (/* @__PURE__ */ new Date()).toISOString();
+        });
+        migrou = true;
+      }
+      if (this.dados.obras && this.dados.obras.length > 0 && !this.dados.obras[0].imagens) {
+        this.dados.obras.forEach((o) => {
+          o.imagens = [];
+          if (o.imagem && !o.imagem.includes("svg+xml")) {
+            o.imagens.push(o.imagem);
+            o.imagemDestacada = o.imagem;
+          }
+        });
+        migrou = true;
+      }
+      if (migrou) this.salvar();
+    }
+    estruturaPadrao() {
+      return {
+        obras: [],
+        clientes: [],
+        vendas: [],
+        certificados: [],
+        referencias: [],
+        encomendas: [],
+        exposicoes: [],
+        transacoes: [],
+        materiais: [],
+        fornecedores: [],
+        consumos: [],
+        contatosProfissionais: [],
+        interacoes: [],
+        eventos: [],
+        entradasDiario: [],
+        etapasProcesso: [],
+        portais: [],
+        config: {
+          artista: { nome: "Meu Ateli\xEA", email: "", telefone: "", assinatura: "" },
+          tema: "classico",
+          contadorRecibos: {},
+          contadorPropostas: {},
+          contadorCertificados: {},
+          textoGarantia: "Este documento certifica a autenticidade da obra descrita acima, de autoria exclusiva do artista identificado neste recibo. A obra \xE9 entregue em perfeito estado de conserva\xE7\xE3o, livre de quaisquer \xF4nus. Reprodu\xE7\xE3o, c\xF3pias ou uso comercial da imagem sem autoriza\xE7\xE3o expressa do artista s\xE3o vedados.",
+          precificador: {
+            valorHora: 60,
+            multiplicadorExperiencia: 1.5,
+            metaMensal: 1e4,
+            metaAnual: 12e4,
+            metaInicio: (/* @__PURE__ */ new Date()).toISOString().slice(0, 7)
+          },
+          idioma: "pt-BR",
+          altoContraste: false,
+          tamanhoFonte: "medio",
+          pin: "",
+          autoLock: false,
+          tourCompleted: false
+        }
+      };
+    }
+    carregar() {
+      const bruto = localStorage.getItem(this.chave);
+      if (bruto) {
+        try {
+          return JSON.parse(bruto);
+        } catch (e) {
+          console.error("Erro ao ler dados salvos, recriando estrutura.", e);
+        }
+      }
+      const dadosIniciais = this.estruturaPadrao();
+      this.dados = dadosIniciais;
+      this.popularExemplos();
+      this.salvar();
+      return this.dados;
+    }
+    salvar() {
+      try {
+        localStorage.setItem(this.chave, JSON.stringify(this.dados));
+      } catch (e) {
+        if (e.name === "QuotaExceededError" || e.code === 22) {
+          mostrarToast("Armazenamento local cheio. Exporte um backup e limpe dados antigos para continuar salvando.", "erro");
+        } else {
+          mostrarToast("Erro ao salvar dados: " + e.message, "erro");
+        }
+      }
+    }
+    listar(colecao) {
+      return this.dados[colecao] || [];
+    }
+    adicionar(colecao, item) {
+      item.id = "id_" + Date.now() + "_" + Math.floor(Math.random() * 1e3);
+      item.criadoEm = item.criadoEm || (/* @__PURE__ */ new Date()).toISOString();
+      this.dados[colecao].push(item);
+      this.salvar();
+      return item;
+    }
+    atualizar(colecao, id, novosCampos) {
+      const item = this.dados[colecao].find((i) => i.id === id);
+      if (item) {
+        Object.assign(item, novosCampos);
+        this.salvar();
+      }
+      return item;
+    }
+    remover(colecao, id) {
+      this.dados[colecao] = this.dados[colecao].filter((i) => i.id !== id);
+      this.salvar();
+    }
+    buscarPorId(colecao, id) {
+      return this.dados[colecao].find((i) => i.id === id);
+    }
+    popularExemplos() {
+      const agora = /* @__PURE__ */ new Date();
+      const mesesAtras = (n) => {
+        const d = new Date(agora);
+        d.setMonth(d.getMonth() - n);
+        return d.toISOString();
+      };
+      this.dados.obras = [
+        { id: "obra_ex_1", titulo: "Marinha ao Entardecer", tecnica: "\xF3leo", dimensoes: { altura: 60, largura: 80, profundidade: 0 }, ano: 2024, descricao: "Estudo de luz sobre o mar ao entardecer, com pinceladas soltas capturando o movimento das ondas e o reflexo dourado do sol.", preco: 3200, status: "dispon\xEDvel", imagem: gerarImagemPlaceholder("#d97757", "\u{1F305}"), dataCadastro: mesesAtras(1), criadoEm: mesesAtras(1), serie: "Paisagens Marinhas", custoMateriais: 420, horasTrabalho: 28, historicoPrecos: [{ preco: 2800, data: "2025-06-01", motivo: "Ajuste inicial" }, { preco: 3200, data: "2025-09-15", motivo: "Reajuste por demanda" }], imagens: [gerarImagemPlaceholder("#d97757", "\u{1F305}"), gerarImagemPlaceholder("#e8a060", "\u{1F30A}")], imagemDestacada: gerarImagemPlaceholder("#d97757", "\u{1F305}") },
+        { id: "obra_ex_2", titulo: "Autorretrato em Ocre", tecnica: "\xF3leo", dimensoes: { altura: 50, largura: 40, profundidade: 0 }, ano: 2023, descricao: "Autorretrato em tons terrosos, explorando contrastes de luz e sombra sobre o rosto.", preco: 2100, status: "vendida", imagem: gerarImagemPlaceholder("#8b5e3c", "\u{1F9D1}\u200D\u{1F3A8}"), dataCadastro: mesesAtras(5), criadoEm: mesesAtras(5), serie: "", custoMateriais: 180, horasTrabalho: 16, historicoPrecos: [{ preco: 1500, data: "2024-10-01", motivo: "Pre\xE7o inicial" }, { preco: 1800, data: "2025-02-10", motivo: "Ajuste" }, { preco: 2100, data: "2025-06-20", motivo: "Valoriza\xE7\xE3o" }], imagens: [gerarImagemPlaceholder("#8b5e3c", "\u{1F9D1}\u200D\u{1F3A8}")], imagemDestacada: gerarImagemPlaceholder("#8b5e3c", "\u{1F9D1}\u200D\u{1F3A8}") },
+        { id: "obra_ex_3", titulo: "Jardim das Aquarelas", tecnica: "aquarela", dimensoes: { altura: 30, largura: 40, profundidade: 0 }, ano: 2024, descricao: "Composi\xE7\xE3o floral em t\xE9cnica \xFAmida sobre \xFAmido, valorizando a transpar\xEAncia da aquarela.", preco: 850, status: "reservada", imagem: gerarImagemPlaceholder("#e8a0bf", "\u{1F338}"), dataCadastro: mesesAtras(2), criadoEm: mesesAtras(2), serie: "Jardins", custoMateriais: 90, horasTrabalho: 8, imagens: [gerarImagemPlaceholder("#e8a0bf", "\u{1F338}")], imagemDestacada: gerarImagemPlaceholder("#e8a0bf", "\u{1F338}") },
+        { id: "obra_ex_4", titulo: "Ip\xEA Amarelo", tecnica: "aquarela", dimensoes: { altura: 25, largura: 35, profundidade: 0 }, ano: 2025, descricao: "Estudo r\xE1pido de um ip\xEA florido, feito em plein air durante o in\xEDcio da primavera.", preco: 620, status: "em exposi\xE7\xE3o", imagem: gerarImagemPlaceholder("#f2c14e", "\u{1F33C}"), dataCadastro: mesesAtras(0), criadoEm: mesesAtras(0), serie: "Jardins", custoMateriais: 70, horasTrabalho: 6, imagens: [gerarImagemPlaceholder("#f2c14e", "\u{1F33C}")], imagemDestacada: gerarImagemPlaceholder("#f2c14e", "\u{1F33C}") },
+        { id: "obra_ex_5", titulo: "Forma em Repouso", tecnica: "escultura", dimensoes: { altura: 45, largura: 22, profundidade: 20 }, ano: 2023, descricao: "Escultura em bronze fundido, explorando curvas org\xE2nicas e o equil\xEDbrio entre volume e vazio.", preco: 5400, status: "dispon\xEDvel", imagem: gerarImagemPlaceholder("#7a7a7a", "\u{1F5FF}"), dataCadastro: mesesAtras(4), criadoEm: mesesAtras(4), serie: "", custoMateriais: 1200, horasTrabalho: 60, historicoPrecos: [{ preco: 4800, data: "2024-08-01", motivo: "Pre\xE7o inicial" }, { preco: 5400, data: "2025-03-10", motivo: "Reajuste anual" }], imagens: [gerarImagemPlaceholder("#7a7a7a", "\u{1F5FF}")], imagemDestacada: gerarImagemPlaceholder("#7a7a7a", "\u{1F5FF}") }
+      ];
+      this.dados.clientes = [
+        { id: "cli_ex_1", nome: "Fernanda Alc\xE2ntara", email: "fernanda@exemplo.com", telefone: "(21) 99999-0001", endereco: "Rua das Palmeiras, 120 - Rio Bonito/RJ", notas: "Colecionadora frequente, prefere obras em aquarela com temas florais.", tags: ["colecionadora", "aquarela"], aquisicoes: 1, criadoEm: mesesAtras(3) },
+        { id: "cli_ex_2", nome: "Ricardo Bittencourt", email: "ricardo.bit@exemplo.com", telefone: "(21) 98888-0002", endereco: "Av. Atl\xE2ntica, 500 - Rio de Janeiro/RJ", notas: "Interessado em esculturas para decora\xE7\xE3o de escrit\xF3rio.", tags: ["interessado", "escultura"], aquisicoes: 0, criadoEm: mesesAtras(1) }
+      ];
+      this.dados.vendas = [
+        { id: "venda_ex_1", numeroRecibo: "REC-" + agora.getFullYear() + "-001", obraId: "obra_ex_3", clienteId: "cli_ex_1", precoFinal: 850, valorTotal: 850, data: mesesAtras(2), dataVenda: mesesAtras(2), formaPagamento: "\xE0 vista", status: "paga", criadoEm: mesesAtras(2) }
+      ];
+      this.dados.config.contadorRecibos[agora.getFullYear()] = 1;
+      this.dados.encomendas = [
+        { id: "enc_ex_1", clienteNome: "Fernanda Alc\xE2ntara", clienteEmail: "fernanda@exemplo.com", clienteTelefone: "(21) 99999-0001", descricao: "Retrato em aquarela 40x60cm \u2014 jardim particular", prazo: new Date(agora.getFullYear(), agora.getMonth() + 2, 15).toISOString(), status: "em_andamento", valor: 1200, atualizacoes: [{ data: new Date(agora.getFullYear(), agora.getMonth(), 10).toISOString(), status: "criado", mensagem: "Pedido recebido, aguardando refer\xEAncias fotogr\xE1ficas." }, { data: new Date(agora.getFullYear(), agora.getMonth(), 18).toISOString(), status: "em_andamento", mensagem: "Esbo\xE7o inicial aprovado. Iniciando camadas de cor." }], imagens: [], criadoEm: mesesAtras(0) },
+        { id: "enc_ex_2", clienteNome: "Ricardo Bittencourt", clienteEmail: "ricardo.bit@exemplo.com", clienteTelefone: "(21) 98888-0002", descricao: "Escultura em bronze 35cm \u2014 figura abstrata", prazo: new Date(agora.getFullYear(), agora.getMonth() + 4, 1).toISOString(), status: "criado", valor: 3500, atualizacoes: [{ data: new Date(agora.getFullYear(), agora.getMonth(), 5).toISOString(), status: "criado", mensagem: "Pedido registrado. Or\xE7amento aprovado." }], imagens: [], criadoEm: mesesAtras(0) }
+      ];
+      this.dados.portais = [];
+      this.dados.certificados = [
+        { id: "cert_ex_1", numeroSerie: "ART-" + agora.getFullYear() + "-001", obraId: "obra_ex_3", tituloObra: "Jardim das Aquarelas", tecnica: "aquarela", dimensoesTexto: "30 x 40 cm", ano: 2024, edicaoTipo: "unica", edicaoAtual: null, edicaoTotal: null, local: "Rio Bonito/RJ", dataEmissao: mesesAtras(2), imagem: gerarImagemPlaceholder("#e8a0bf", "\u{1F338}"), criadoEm: mesesAtras(2) }
+      ];
+      this.dados.config.contadorCertificados[agora.getFullYear()] = 1;
+      this.dados.referencias = [
+        { id: "ref_ex_1", tipo: "imagem", imagem: gerarImagemPlaceholder("#ffcda3", "\u{1F305}"), titulo: "Paleta de p\xF4r do sol", nota: "", url: "", tags: ["cor", "laranja", "quente"], categoria: "cor", obraVinculada: "obra_ex_1", criadoEm: mesesAtras(2) },
+        { id: "ref_ex_2", tipo: "nota", imagem: "", titulo: "Ideia para s\xE9rie floral", nota: "Explorar aquarela \xFAmida sobre \xFAmido com flores tropicais...", url: "", tags: ["aquarela", "jardim", "ideia"], categoria: "\xE9poca", obraVinculada: "obra_ex_3", criadoEm: mesesAtras(3) },
+        { id: "ref_ex_3", tipo: "link", imagem: "", titulo: "Refer\xEAncia de luz - pintura impressionista", nota: "", url: "https://upload.wikimedia.org/wikipedia/commons/6/62/Claude_Monet%2C_Impression%2C_soleil_levant.jpg", tags: ["artista", "luz", "impressionismo"], categoria: "artista", obraVinculada: "", criadoEm: mesesAtras(4) }
+      ];
+      const hoje = /* @__PURE__ */ new Date();
+      const dia = (n) => {
+        const d = new Date(hoje);
+        d.setDate(d.getDate() - n);
+        return d.toISOString();
+      };
+      const diaStr = (n) => {
+        const d = new Date(hoje);
+        d.setDate(d.getDate() - n);
+        return d.toISOString().slice(0, 10);
+      };
+      this.dados.entradasDiario = [
+        { id: "dia_ex_7", data: dia(7), humor: 4, oQueTrabalhou: "<p>Finalizei a camada de velatura...</p>", obrasTrabalhadas: ["obra_ex_1"], fotos: [], horasTrabalhadas: 4.5, bloqueios: "", avancos: "Velatura do c\xE9u conclu\xEDda com sucesso", descobertas: "Misturar um toque de alizarim crimson no azul ultramar d\xE1 um violeta sutil incr\xEDvel para as nuvens", criadoEm: dia(7) },
+        { id: "dia_ex_6", data: dia(6), humor: 3, oQueTrabalhou: "<p>Dia de organiza\xE7\xE3o do ateli\xEA...</p>", obrasTrabalhadas: ["obra_ex_4"], fotos: [], horasTrabalhadas: 3, bloqueios: "Dificuldade em capturar a luz...", avancos: "A organiza\xE7\xE3o trouxe clareza mental.", descobertas: "Usar m\xE1scara l\xEDquida nos brancos...", criadoEm: dia(6) },
+        { id: "dia_ex_5", data: dia(5), humor: 5, oQueTrabalhou: '<p>Dia intenso na "Forma em Repouso"...</p>', obrasTrabalhadas: ["obra_ex_5"], fotos: [], horasTrabalhadas: 7, bloqueios: "", avancos: "P\xE1tina verde alcan\xE7ou o tom ideal!", descobertas: "Aplicar a p\xE1tina com pincel de cerdas macias...", criadoEm: dia(5) },
+        { id: "dia_ex_4", data: dia(4), humor: 2, oQueTrabalhou: "<p>Dia frustrante. A tela grande...</p>", obrasTrabalhadas: [], fotos: [], horasTrabalhadas: 2, bloqueios: "Chassis empenado por causa da chuva.", avancos: "", descobertas: "Preciso comprar um desumidificador...", criadoEm: dia(4) },
+        { id: "dia_ex_3", data: dia(3), humor: 4, oQueTrabalhou: '<p>Voltei para a aquarela "Jardim das Aquarelas"...</p>', obrasTrabalhadas: ["obra_ex_3"], fotos: [], horasTrabalhadas: 5, bloqueios: "", avancos: "Cliente visitou o ateli\xEA...", descobertas: "Misturar violeta de cobalto com siena natural...", criadoEm: dia(3) },
+        { id: "dia_ex_2", data: dia(2), humor: 1, oQueTrabalhou: "<p>Dia administrativo...</p>", obrasTrabalhadas: [], fotos: [], horasTrabalhadas: 1.5, bloqueios: "Bloqueio criativo total.", avancos: "Pelo menos a papelada est\xE1 em dia.", descobertas: "Dias administrativos s\xE3o necess\xE1rios...", criadoEm: dia(2) },
+        { id: "dia_ex_1", data: dia(1), humor: 5, oQueTrabalhou: "<p>Dia mais produtivo da semana...</p>", obrasTrabalhadas: ["obra_ex_4"], fotos: [], horasTrabalhadas: 8, bloqueios: "", avancos: "Ip\xEA Amarelo finalizado!", descobertas: "Usar um palito de dentes para respingar...", criadoEm: dia(1) }
+      ];
+      this.dados.etapasProcesso = [
+        { id: "proc_ex_1", obraId: "obra_ex_4", etapas: [
+          { id: "etp_1", titulo: "Sketch inicial", data: diaStr(14), descricao: "Desenho a l\xE1pis...", notasTecnicas: "L\xE1pis 2B, papel Canson 180g", foto: "", videoLink: "" },
+          { id: "etp_2", titulo: "Estudo de cor", data: diaStr(12), descricao: "Paleta restrita...", notasTecnicas: "Aquarela Windsor & Newton", foto: "", videoLink: "" },
+          { id: "etp_3", titulo: "Primeira camada (fundos)", data: diaStr(10), descricao: "Lavagem \xFAmida...", notasTecnicas: "Pincel chato n\xBA 14", foto: "", videoLink: "" },
+          { id: "etp_4", titulo: "Camadas intermedi\xE1rias", data: diaStr(7), descricao: "Constru\xE7\xE3o das formas...", notasTecnicas: "Pincel redondo n\xBA 6", foto: "", videoLink: "" },
+          { id: "etp_5", titulo: "Detalhamento", data: diaStr(4), descricao: "Detalhes finos...", notasTecnicas: "Pincel liner n\xBA 1", foto: "", videoLink: "" },
+          { id: "etp_6", titulo: "Finaliza\xE7\xE3o", data: diaStr(1), descricao: "Assinatura e ajustes finais...", notasTecnicas: "Caneta nanquim", foto: "", videoLink: "" }
+        ], criadoEm: dia(14) },
+        { id: "proc_ex_2", obraId: "obra_ex_1", etapas: [
+          { id: "etp_2_1", titulo: "Sketch inicial", data: diaStr(45), descricao: "Composi\xE7\xE3o em carv\xE3o...", notasTecnicas: "Carv\xE3o vegetal", foto: "", videoLink: "" },
+          { id: "etp_2_2", titulo: "Imprimatura", data: diaStr(42), descricao: "Camada fina de acr\xEDlico...", notasTecnicas: "Acr\xEDlico transparente", foto: "", videoLink: "" },
+          { id: "etp_2_3", titulo: "Primeira camada a \xF3leo", data: diaStr(38), descricao: "Manchas grossas...", notasTecnicas: "\xD3leo Windsor & Newton", foto: "", videoLink: "" },
+          { id: "etp_2_4", titulo: "Velaturas", data: diaStr(25), descricao: "Camadas finas...", notasTecnicas: "Meio de velatura em gel", foto: "", videoLink: "" },
+          { id: "etp_2_5", titulo: "Detalhamento das ondas", data: diaStr(15), descricao: "Estudo das espumas...", notasTecnicas: "Pincel redondo n\xBA 4", foto: "", videoLink: "" }
+        ], criadoEm: dia(45) }
+      ];
+      this.dados.transacoes = [
+        { id: "trans_ex_1", tipo: "entrada", descricao: "Venda - Jardim das Aquarelas", valor: 850, data: mesesAtras(2), criadoEm: mesesAtras(2) },
+        { id: "trans_ex_2", tipo: "saida", descricao: "Compra de materiais", valor: 220, data: mesesAtras(1), criadoEm: mesesAtras(1) }
+      ];
+      this.dados.materiais = [
+        { id: "mat_1", nome: "Tinta \xD3leo Azul Ultramar", categoria: "tintas", subcategoria: "\xF3leo", marca: "Windsor & Newton", quantidade: 500, unidade: "ml", quantidadeMinima: 100, local: "Prateleira A3", dataAquisicao: "2025-01-15", validade: "2027-01-15", precoUnitario: 45, foto: "", notas: "Tom indispens\xE1vel para c\xE9us e \xE1guas" },
+        { id: "mat_2", nome: "Tela de Algod\xE3o 50\xD770", categoria: "superficies", subcategoria: "tela", marca: "Atlantis", quantidade: 8, unidade: "un", quantidadeMinima: 3, local: "Cavalete 2", dataAquisicao: "2025-03-10", validade: "", precoUnitario: 38, foto: "", notas: "Tela tripla priming" },
+        { id: "mat_3", nome: "Pincel Chato N\xBA 12", categoria: "ferramentas", subcategoria: "pincel", marca: "Tigre", quantidade: 5, unidade: "un", quantidadeMinima: 2, local: "Porta-pinc\xE9is", dataAquisicao: "2025-02-20", validade: "", precoUnitario: 22, foto: "", notas: "Cerdas sint\xE9ticas" },
+        { id: "mat_4", nome: "Papel Aquarela 300g A3", categoria: "superficies", subcategoria: "papel", marca: "Canson", quantidade: 15, unidade: "un", quantidadeMinima: 5, local: "Gaveta B1", dataAquisicao: "2025-04-05", validade: "", precoUnitario: 12, foto: "", notas: "Granula\xE7\xE3o m\xE9dia" },
+        { id: "mat_5", nome: "Tinta Acr\xEDlica Dourada", categoria: "tintas", subcategoria: "acr\xEDlico", marca: "Acrilex", quantidade: 200, unidade: "ml", quantidadeMinima: 50, local: "Prateleira A1", dataAquisicao: "2025-05-01", validade: "2026-05-01", precoUnitario: 18, foto: "", notas: "Acabamento met\xE1lico" },
+        { id: "mat_6", nome: "Moldura Cl\xE1ssica 30\xD740", categoria: "molduras", subcategoria: "cl\xE1ssica", marca: "Molduraz", quantidade: 2, unidade: "un", quantidadeMinima: 4, local: "Dep\xF3sito", dataAquisicao: "2025-06-10", validade: "", precoUnitario: 65, foto: "", notas: "\xE2\x9A\xA0\xEF\xB8\x8F ABAIXO DO M\xCDNIMO \u2014 repor urgente!" }
+      ];
+      this.dados.fornecedores = [
+        { id: "forn_1", nome: "Casa do Artista", contato: "(11) 99999-0001", email: "vendas@casaartista.com.br", especialidade: "Tintas e pinc\xE9is", avaliacao: 4, notas: "Bom prazo de entrega.", historicoCompras: [{ data: "2025-01-15", valor: 320, itens: "Tintas diversas" }] },
+        { id: "forn_2", nome: "Telas & Molduras Ltda", contato: "(21) 98888-0002", email: "pedidos@telasmolduras.com", especialidade: "Telas, pap\xE9is e molduras", avaliacao: 5, notas: "Qualidade excepcional.", historicoCompras: [{ data: "2025-02-20", valor: 450, itens: "Telas 50\xD770" }] }
+      ];
+      this.dados.consumos = [
+        { id: "cons_1", materialId: "mat_1", obraId: "obra_ex_1", quantidade: 120, data: "2025-06-10", notas: "Camada de fundo do c\xE9u" },
+        { id: "cons_2", materialId: "mat_1", obraId: "obra_ex_1", quantidade: 80, data: "2025-06-12", notas: "Reflexos do mar" },
+        { id: "cons_3", materialId: "mat_2", obraId: "obra_ex_1", quantidade: 1, data: "2025-06-05", notas: "Suporte da obra" }
+      ];
+      this.dados.contatosProfissionais = [
+        { id: "cont_ex_1", nome: "Ana Lu\xEDsa Martins", categoria: "galerista", instituicao: "Galeria Martins & Associados", cargo: "Diretora", contato: "(11) 99999-1001", email: "ana@martinsgaleria.com.br", nivelRelacionamento: 4, ultimoContato: "2025-08-10", estagio: "em_conversa" },
+        { id: "cont_ex_2", nome: "Dr. Ricardo Tavares", categoria: "curador", instituicao: "Museu de Arte Moderna - SP", cargo: "Curador-Chefe", contato: "(11) 98888-2002", email: "rtavares@mam.org.br", nivelRelacionamento: 2, ultimoContato: "2025-09-05", estagio: "primeira_aproximacao" },
+        { id: "cont_ex_3", nome: "Carla Bergman", categoria: "critico", instituicao: "Arte & Cr\xEDtica Magazine", cargo: "Editora de Arte", contato: "(21) 97777-3003", email: "carla@artecriticamag.com.br", nivelRelacionamento: 1, ultimoContato: "2025-09-20", estagio: "novo_contato" },
+        { id: "cont_ex_4", nome: "Felipe Nogueira", categoria: "artista", instituicao: "Coletivo Atelier Aberto", cargo: "Artista Pl\xE1stico", contato: "(31) 96666-4004", email: "felipe@coletivoatelier.com.br", nivelRelacionamento: 5, ultimoContato: "2025-09-28", estagio: "colaboracao_consolidada" },
+        { id: "cont_ex_5", nome: "Marta Silveira", categoria: "colecionador", cargo: "Colecionadora", contato: "(21) 95555-5005", email: "marta.silveira@email.com", nivelRelacionamento: 3, ultimoContato: "2025-09-15", estagio: "parceria_ativa", vip: true }
+      ];
+      this.dados.interacoes = [
+        { id: "int_ex_1", contatoId: "cont_ex_1", data: "2025-08-10", tipo: "reuniao", resumo: "Primeira reuni\xE3o presencial...", sentimento: "positivo", followUp: true, followUpNotas: "Enviar fotos", anexos: [] },
+        { id: "int_ex_2", contatoId: "cont_ex_1", data: "2025-09-01", tipo: "email", resumo: "Envio de portf\xF3lio...", sentimento: "positivo", followUp: false, followUpNotas: "", anexos: [] },
+        { id: "int_ex_3", contatoId: "cont_ex_4", data: "2025-09-28", tipo: "visita", resumo: "Visita ao ateli\xEA do Felipe...", sentimento: "positivo", followUp: true, followUpNotas: "Definir cronograma", anexos: [] }
+      ];
+      this.dados.eventos = [
+        { id: "evt_ex_1", nome: "SP-Arte 2026", tipo: "feira", dataInscricao: "2025-10-01", dataEvento: "2026-04-15", dataFim: "2026-04-19", status: "inscrito", resultado: "", investimento: 3500, retorno: 0, documentacao: ["Portfolio.pdf", "Release"], obrasEnviadas: ["obra_ex_1", "obra_ex_5"], notas: "Maior feira de arte da Am\xE9rica Latina." },
+        { id: "evt_ex_2", nome: "Edital Funarte Artes Visuais 2026", tipo: "edital", dataInscricao: "2025-11-15", dataEvento: "2026-06-01", dataFim: "2026-12-31", status: "pesquisando", investimento: 0, retorno: 0, documentacao: [], obrasEnviadas: [], notas: "Edital federal para circula\xE7\xE3o de exposi\xE7\xE3o." }
+      ];
+    }
+    exportarBackup() {
+      mostrarLoading("Exportando backup...");
+      const conteudo = JSON.stringify(this.dados, null, 2);
+      const blob = new Blob([conteudo], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      a.href = url;
+      a.download = `atelier-crm-backup-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      esconderLoading();
+      this.salvarHistoricoExport("completo", this.dados);
+    }
+    exportarColecao(nomeColecao) {
+      if (!this.dados[nomeColecao]) {
+        console.error("Cole\xE7\xE3o n\xE3o encontrada:", nomeColecao);
+        return false;
+      }
+      const dadosExport = { [nomeColecao]: this.dados[nomeColecao], exportadoEm: (/* @__PURE__ */ new Date()).toISOString(), versao: "1.0" };
+      const conteudo = JSON.stringify(dadosExport, null, 2);
+      const blob = new Blob([conteudo], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      a.href = url;
+      a.download = `atelier-crm-${nomeColecao}-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.salvarHistoricoExport(nomeColecao, dadosExport);
+      return true;
+    }
+    salvarHistoricoExport(tipo, dados) {
+      const historico = JSON.parse(localStorage.getItem("atelier-export-history") || "[]");
+      historico.unshift({ tipo, data: (/* @__PURE__ */ new Date()).toISOString(), tamanho: JSON.stringify(dados).length });
+      if (historico.length > 10) historico.pop();
+      localStorage.setItem("atelier-export-history", JSON.stringify(historico));
+    }
+    obterHistoricoExport() {
+      return JSON.parse(localStorage.getItem("atelier-export-history") || "[]");
+    }
+    importarBackup(jsonTexto) {
+      try {
+        const novosDados = JSON.parse(jsonTexto);
+        if (typeof novosDados !== "object" || novosDados === null) throw new Error("Formato inv\xE1lido: esperado objeto");
+        const colecoesEsperadas = ["obras", "clientes", "vendas", "certificados", "referencias", "pedidos", "exposicoes", "transacoes", "materiais", "fornecedores", "consumicoes", "contatos", "interacoes", "eventos", "diario", "processos", "config"];
+        const isBackupCompleto = colecoesEsperadas.some((c) => c in novosDados);
+        if (isBackupCompleto) {
+          this.dados = novosDados;
+        } else {
+          Object.keys(novosDados).forEach((chave) => {
+            if (chave !== "exportadoEm" && chave !== "versao") this.dados[chave] = novosDados[chave];
+          });
+        }
+        this.salvar();
+        return { sucesso: true, tipo: isBackupCompleto ? "completo" : "parcial" };
+      } catch (e) {
+        return { sucesso: false, erro: e.message };
+      }
+    }
+    previewImport(jsonTexto) {
+      try {
+        const dados = JSON.parse(jsonTexto);
+        const preview = { valido: true, tipo: "completo", colecoes: [] };
+        const colecoesEsperadas = ["obras", "clientes", "vendas", "certificados", "referencias", "pedidos", "exposicoes", "transacoes", "materiais", "fornecedores", "consumicoes", "contatos", "interacoes", "eventos", "diario", "processos", "config"];
+        if (colecoesEsperadas.some((c) => c in dados)) {
+          preview.colecoes = colecoesEsperadas.filter((c) => c in dados).map((c) => ({ nome: c, quantidade: Array.isArray(dados[c]) ? dados[c].length : Object.keys(dados[c]).length }));
+        } else {
+          preview.tipo = "parcial";
+          preview.colecoes = Object.keys(dados).filter((k) => k !== "exportadoEm" && k !== "versao").map((k) => ({ nome: k, quantidade: Array.isArray(dados[k]) ? dados[k].length : Object.keys(dados[k]).length }));
+        }
+        return preview;
+      } catch (e) {
+        return { valido: false, erro: e.message };
+      }
+    }
+  };
+  var EventBus = class {
+    constructor() {
+      this._eventos = {};
+    }
+    on(evento, callback) {
+      if (!this._eventos[evento]) this._eventos[evento] = [];
+      this._eventos[evento].push(callback);
+      return () => this.off(evento, callback);
+    }
+    off(evento, callback) {
+      if (!this._eventos[evento]) return;
+      this._eventos[evento] = this._eventos[evento].filter((cb) => cb !== callback);
+    }
+    emitir(evento, ...args) {
+      (this._eventos[evento] || []).forEach((cb) => cb(...args));
+    }
+  };
+  var ActivityLogger = class {
+    constructor() {
+      this.atividades = this.carregarAtividades();
+    }
+    carregarAtividades() {
+      try {
+        const salvas = localStorage.getItem("atelier-activities");
+        return salvas ? JSON.parse(salvas) : [];
+      } catch {
+        return [];
+      }
+    }
+    salvarAtividades() {
+      localStorage.setItem("atelier-activities", JSON.stringify(this.atividades.slice(0, 50)));
+    }
+    registrar(tipo, titulo, detalhes, badge = "atualizacao") {
+      const atividade = { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), tipo, titulo, detalhes, timestamp: /* @__PURE__ */ new Date(), badge };
+      this.atividades.unshift(atividade);
+      this.salvarAtividades();
+      eventBus.emitir("nova-atividade", atividade);
+    }
+    obterRecentes(limite = 10) {
+      return this.atividades.slice(0, limite);
+    }
+    limpar() {
+      this.atividades = [];
+      this.salvarAtividades();
+    }
+    formatarTempo(data) {
+      const agora = /* @__PURE__ */ new Date();
+      const diff = agora.getTime() - data.getTime();
+      const minutos = Math.floor(diff / 6e4);
+      const horas = Math.floor(diff / 36e5);
+      const dias = Math.floor(diff / 864e5);
+      if (minutos < 1) return "Agora mesmo";
+      if (minutos < 60) return `${minutos} min atr\xE1s`;
+      if (horas < 24) return `${horas}h atr\xE1s`;
+      if (dias < 7) return `${dias}d atr\xE1s`;
+      return data.toLocaleDateString("pt-BR");
+    }
+    obterIcone(tipo) {
+      const icones = { criacao: "\u2728", atualizacao: "\u270F\uFE0F", exclusao: "\u{1F5D1}\uFE0F", venda: "\u{1F4B0}", favorita: "\u2B50", export: "\u{1F4C4}", import: "\u{1F4E5}", status: "\u{1F4DD}" };
+      return icones[tipo] || "\u{1F4CC}";
+    }
+  };
+  var ThemeEngine = class {
+    constructor(dataStore2) {
+      this.dataStore = dataStore2;
+      this.temaAtual = this.dataStore.dados.config.tema || "classico";
+    }
+    inicializar() {
+      this.aplicarTema(this.temaAtual);
+      const seletor = document.getElementById("seletorTema");
+      if (seletor) {
+        seletor.value = this.temaAtual;
+        seletor.addEventListener("change", (e) => this.aplicarTema(e.target.value));
+      }
+      if (this.dataStore.dados.config.altoContraste) {
+        document.body.setAttribute("data-high-contrast", "true");
+      }
+      document.body.setAttribute("data-font-size", this.dataStore.dados.config.tamanhoFonte || "medio");
+      const idioma = this.dataStore.dados.config.idioma || "pt-BR";
+      if (window.AtelierCRMTranslations) {
+        window.AtelierCRMTranslations.locale = idioma;
+      }
+    }
+    aplicarTema(nomeTema) {
+      document.body.setAttribute("data-tema", nomeTema);
+      this.temaAtual = nomeTema;
+      this.dataStore.dados.config.tema = nomeTema;
+      this.dataStore.salvar();
+    }
+  };
+  var Router = class {
+    constructor(dataStore2) {
+      this.dataStore = dataStore2;
+      this.viewAtual = "dashboard";
+      this.container = document.getElementById("viewPrincipal");
+      this.rotas = {
+        dashboard: { rotulo: "Dashboard", icone: "\u{1F4CA}", render: () => dashboardView.render(), aposRender: () => dashboardView.aposRenderizar() },
+        portal: { rotulo: "Portal", icone: "\u{1F517}", render: () => portalView.render(), aposRender: () => portalView.aposRenderizar(), oculta: true },
+        catalogo: { rotulo: "Cat\xE1logo", icone: "\u{1F5BC}\uFE0F", render: () => catalogoView.render(), aposRender: () => catalogoView.aposRenderizar() },
+        clientes: { rotulo: "Clientes", icone: "\u{1F464}", render: () => clientesView.render(), aposRender: () => clientesView.aposRenderizar() },
+        vendas: { rotulo: "Vendas", icone: "\u{1F4B0}", render: () => vendasView.render(), aposRender: () => vendasView.aposRenderizar() },
+        certificados: { rotulo: "Certificados", icone: "\u{1F4DC}", render: () => certificadosView.render(), aposRender: () => certificadosView.aposRenderizar() },
+        referencias: { rotulo: "Refer\xEAncias", icone: "\u{1F4DA}", render: () => referenciasView.render(), aposRender: () => referenciasView.aposRenderizar() },
+        encomendas: { rotulo: "Encomendas", icone: "\u{1F4E6}", render: () => encomendasView.render(), aposRender: () => encomendasView.aposRenderizar() },
+        exposicoes: { rotulo: "Exposi\xE7\xF5es", icone: "\u{1F3DB}\uFE0F", render: () => exposicoesView.render(), aposRender: () => exposicoesView.aposRenderizar() },
+        galeriaVirtual: { rotulo: "Galeria Virtual", icone: "\u{1F97D}", render: () => galeriaVirtualView.render(), aposRender: () => galeriaVirtualView.aposRenderizar() },
+        precificador: { rotulo: "Precificador", icone: "\u{1F48E}", render: () => precificadorView.render(), aposRender: () => precificadorView.aposRenderizar() },
+        atelier: { rotulo: "Atelier", icone: "\u{1F527}", render: () => atelierView.render(), aposRender: () => atelierView.aposRenderizar() },
+        diario: { rotulo: "Di\xE1rio", icone: "\u{1F4D6}", render: () => diarioView.render(), aposRender: () => diarioView.aposRenderizar() },
+        rede: { rotulo: "Rede", icone: "\u{1F91D}", render: () => redeView.render(), aposRender: () => redeView.aposRenderizar() },
+        financeiro: { rotulo: "Financeiro", icone: "\u{1F4C8}", render: () => financeiroView.render(), aposRender: () => financeiroView.aposRenderizar() },
+        configuracoes: { rotulo: "Configura\xE7\xF5es", icone: "\u2699\uFE0F", render: () => configuracoesView.render(), aposRender: () => configuracoesView.aposRenderizar() },
+        exportar: { rotulo: "Exportar/Importar", icone: "\u{1F4E6}", render: () => exportImportView.render(), aposRender: () => exportImportView.aposRenderizar() }
+      };
+    }
+    montarSidebar() {
+      const navLista = document.getElementById("navLista");
+      navLista.innerHTML = "";
+      Object.entries(this.rotas).forEach(([chave, rota]) => {
+        if (rota.oculta) return;
+        const li = document.createElement("li");
+        li.className = "nav-item" + (chave === this.viewAtual ? " ativo" : "");
+        li.dataset.rota = chave;
+        li.innerHTML = `<span class="icone">${rota.icone}</span><span class="rotulo">${rota.rotulo}</span>`;
+        li.addEventListener("click", () => this.navegar(chave));
+        navLista.appendChild(li);
+      });
+    }
+    navegar(chave) {
+      if (!this.rotas[chave]) return;
+      this.viewAtual = chave;
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.classList.toggle("ativo", item.dataset.rota === chave);
+      });
+      this.container.innerHTML = this.rotas[chave].render();
+      if (typeof this.rotas[chave].aposRender === "function") {
+        this.rotas[chave].aposRender();
+      }
+      if (window.innerWidth <= 860) {
+        document.getElementById("sidebar").classList.add("colapsada");
+      }
+      this.container.scrollTop = 0;
+    }
+    inicializar() {
+      this.montarSidebar();
+      this.navegar("dashboard");
+    }
+  };
+  var BaseView = class _BaseView {
+    constructor(dataStore2, router2) {
+      if (new.target === _BaseView) throw new Error("BaseView n\xE3o pode ser instanciada diretamente");
+      this.dataStore = dataStore2;
+      this.router = router2;
+      this._bindCache = {};
+    }
+    removerListeners() {
+      Object.values(this._bindCache).forEach(({ el, handler, type }) => {
+        try {
+          el.removeEventListener(type, handler);
+        } catch (e) {
+        }
+      });
+      this._bindCache = {};
+    }
+    rerenderizar() {
+      const c = document.getElementById("viewPrincipal");
+      if (c) {
+        this.removerListeners();
+        c.innerHTML = this.render();
+        this.aposRenderizar();
+      }
+    }
+    destruir() {
+      this.removerListeners();
+    }
+    render() {
+      return "";
+    }
+    aposRenderizar() {
+      this.removerListeners();
+    }
+  };
+  var DashboardView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.charts = {};
+      this.widgetOrdem = this.carregarOrdemWidgets();
+      this.widgetsDisponiveis = [
+        { id: "producao", rotulo: "Produ\xE7\xE3o Mensal", icone: "\u{1F4C8}", visivel: true },
+        { id: "tecnicas", rotulo: "T\xE9cnicas", icone: "\u{1F3A8}", visivel: true },
+        { id: "receita", rotulo: "Receita", icone: "\u{1F4B0}", visivel: true },
+        { id: "previsao", rotulo: "Previs\xE3o de Faturamento", icone: "\u{1F52E}", visivel: true },
+        { id: "notificacoes", rotulo: "Notifica\xE7\xF5es Inteligentes", icone: "\u{1F514}", visivel: true },
+        { id: "metas", rotulo: "Metas Financeiras", icone: "\u{1F3AF}", visivel: true },
+        { id: "recentes", rotulo: "Obras Recentes", icone: "\u{1F5BC}\uFE0F", visivel: true },
+        { id: "atividades", rotulo: "Atividades", icone: "\u{1F4CB}", visivel: true },
+        { id: "dica", rotulo: "Dica do Dia", icone: "\u{1F4A1}", visivel: true }
+      ];
+    }
+    carregarOrdemWidgets() {
+      try {
+        const salvo = localStorage.getItem("atelier_dashboard_widgets");
+        return salvo ? JSON.parse(salvo) : null;
+      } catch {
+        return null;
+      }
+    }
+    salvarOrdemWidgets() {
+      localStorage.setItem("atelier_dashboard_widgets", JSON.stringify(this.widgetOrdem));
+    }
+    obterWidgetsOrdenados() {
+      const padrao = this.widgetsDisponiveis.filter((w) => w.visivel).map((w) => w.id);
+      if (!this.widgetOrdem || this.widgetOrdem.length === 0) return padrao;
+      const ordenados = this.widgetOrdem.filter((id) => padrao.includes(id));
+      const novos = padrao.filter((id) => !this.widgetOrdem.includes(id));
+      return [...ordenados, ...novos];
+    }
+    render() {
+      const obras = obraStore().items;
+      const vendas = vendaStore().items;
+      const clientes = clienteStore().items;
+      const materiais = this.dataStore.listar("materiais");
+      const eventos = this.dataStore.listar("eventos");
+      const vendidas = obras.filter((o) => o.status === "vendida");
+      const emEstoque = obras.filter((o) => o.status !== "vendida");
+      const valorAcervo = emEstoque.reduce((soma, o) => soma + (Number(o.preco) || 0), 0);
+      const valorVendido = vendas.reduce((soma, v) => soma + (Number(v.valorTotal || v.valor) || 0), 0);
+      const ticketMedio = vendas.length > 0 ? valorVendido / vendas.length : 0;
+      const crescimentoMensal = calcularCrescimentoMensal(obras);
+      const obrasFavoritas = obras.filter((o) => o.favorita).length;
+      const hoje = /* @__PURE__ */ new Date();
+      const mesAtual = hoje.getMonth();
+      const anoAtual = hoje.getFullYear();
+      const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
+      const anoPassado = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+      const vendasMes = vendas.filter((v) => {
+        const d = new Date(v.dataVenda || v.data || v.criadoEm);
+        return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+      });
+      const vendasMesPassado = vendas.filter((v) => {
+        const d = new Date(v.dataVenda || v.data || v.criadoEm);
+        return d.getMonth() === mesPassado && d.getFullYear() === anoPassado;
+      });
+      const receitaMes = vendasMes.reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+      const receitaMesPassado = vendasMesPassado.reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+      const variacaoReceita = receitaMesPassado > 0 ? (receitaMes - receitaMesPassado) / receitaMesPassado * 100 : 0;
+      const obrasMes = obras.filter((o) => {
+        const d = new Date(o.dataCadastro || o.criadoEm);
+        return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+      }).length;
+      const obrasMesPassado = obras.filter((o) => {
+        const d = new Date(o.dataCadastro || o.criadoEm);
+        return d.getMonth() === mesPassado && d.getFullYear() === anoPassado;
+      }).length;
+      const variacaoObras = obrasMesPassado > 0 ? (obrasMes - obrasMesPassado) / obrasMesPassado * 100 : 0;
+      const kpis = [
+        { rotulo: "Total de Obras", valor: obras.length, tendencia: crescimentoMensal, icone: "\u{1F5BC}\uFE0F", cor: "#2563eb", sparkline: this.gerarSparkline(obras, "criacao"), variacao: obras.length > 0 ? variacaoObras : null },
+        { rotulo: "Obras Vendidas", valor: vendidas.length, sub: `${obras.length > 0 ? (vendidas.length / obras.length * 100).toFixed(1) : 0}% do total`, icone: "\u2705", cor: "#16a34a", sparkline: "" },
+        { rotulo: "Valor do Acervo", valor: formatarMoeda(valorAcervo), sub: `Ticket m\xE9dio: ${formatarMoeda(ticketMedio)}`, icone: "\u{1F4B0}", cor: "#d97706", sparkline: "" },
+        { rotulo: "Total Vendido", valor: formatarMoeda(valorVendido), sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + " este m\xEAs" : vendas.length + " venda(s)"}`, icone: "\u{1F4CA}", cor: "#7c3aed", sparkline: this.gerarSparkline(vendas, "receita"), variacao: variacaoReceita },
+        { rotulo: "Clientes", valor: clientes.length, sub: `${this.contarClientesAtivos(clientes)} ativos`, icone: "\u{1F465}", cor: "#0891b2", sparkline: "" },
+        { rotulo: "Favoritas", valor: obrasFavoritas, sub: "\u2B50 obras marcadas", icone: "\u2B50", cor: "#dc2626", sparkline: "" }
+      ];
+      const widgetsVisiveis = this.obterWidgetsOrdenados();
+      const ordemIds = this.widgetOrdem || widgetsVisiveis;
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Dashboard</h2>
+          <p class="subtitulo">Vis\xE3o geral do seu ateli\xEA \xB7 ${hoje.toLocaleDateString("pt-BR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+        </div>
+        <div class="dashboard-acoes">
+          <button class="btn-gradient" id="btnDownloadDashboard" title="Baixar dashboard como imagem">\u{1F4F8} Exportar</button>
+          <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets">\u2699\uFE0F</button>
+          <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados">\u{1F504}</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid stagger-in">
+        ${kpis.map((k) => `
+          <div class="kpi-card" style="--kpi-cor: ${k.cor}">
+            <div class="kpi-icone">${k.icone}</div>
+            <div class="kpi-conteudo">
+              <div class="kpi-rotulo">${k.rotulo}</div>
+              <div class="kpi-valor">${k.valor}</div>
+              ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ""}
+              ${k.variacao !== null && k.variacao !== void 0 ? `<div class="kpi-variacao ${k.variacao >= 0 ? "positiva" : "negativa"}">${k.variacao >= 0 ? "\u2191" : "\u2193"} ${Math.abs(k.variacao).toFixed(1)}% vs m\xEAs anterior</div>` : ""}
+            </div>
+            ${k.sparkline ? `<div class="kpi-sparkline">${k.sparkline}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="widgets-toolbar">
+        <span class="widgets-toolbar-dica">\u{1F4A1} Arraste os widgets para reordenar. Clique em \u2699\uFE0F para mostrar/ocultar.</span>
+      </div>
+
+      <div class="widgets-grid" id="widgetsGrid">
+        ${widgetsVisiveis.map((id) => {
+        const w = this.widgetsDisponiveis.find((x) => x.id === id);
+        if (!w) return "";
+        return `
+            <div class="widget-card glass-premium" data-widget="${id}" draggable="true">
+              <div class="widget-header">
+                <span class="widget-drag-handle">\u283F</span>
+                <h3 class="widget-titulo">${w.icone} ${w.rotulo}</h3>
+              </div>
+              <div class="widget-body" id="widgetBody_${id}">
+                ${this.renderizarWidget(id)}
+              </div>
+            </div>
+          `;
+      }).join("")}
+      </div>
+
+      <div class="painel atalhos-rodape">
+        <h3>\u26A1 Atalhos r\xE1pidos</h3>
+        <div class="atalhos-rapidos">
+          <button class="btn-gradient" id="btnAtalhoNovaObra">\u271A Nova Obra</button>
+          <button class="btn-ghost" id="btnAtalhoVenda">\u271A Nova Venda</button>
+          <button class="btn-ghost" id="btnAtalhoRecibo">\u{1F9FE} Gerar Recibo</button>
+          <button class="btn-ghost" id="btnAtalhoClientes">\u{1F464} Gerenciar Clientes</button>
+        </div>
+      </div>
+
+      ${this.renderModalConfig()}
+    `;
+    }
+    renderizarWidget(id) {
+      switch (id) {
+        case "producao":
+          return this.renderWidgetProducao();
+        case "tecnicas":
+          return this.renderWidgetTecnicas();
+        case "receita":
+          return this.renderWidgetReceita();
+        case "previsao":
+          return this.renderWidgetPrevisao();
+        case "notificacoes":
+          return this.renderWidgetNotificacoes();
+        case "metas":
+          return this.renderWidgetMetas();
+        case "recentes":
+          return this.renderWidgetRecentes();
+        case "atividades":
+          return this.renderWidgetAtividades();
+        case "dica":
+          return this.renderWidgetDica();
+        default:
+          return "<p>Widget n\xE3o encontrado.</p>";
+      }
+    }
+    renderModalConfig() {
+      return `
+      <div class="widget-config-overlay" id="widgetConfigOverlay" style="display:none">
+        <div class="widget-config-modal">
+          <h3>\u2699\uFE0F Configurar Widgets</h3>
+          <p class="texto-ajuda">Marque/desmarque os widgets para mostrar no dashboard. Arraste para reordenar.</p>
+          <div class="widget-config-lista" id="widgetConfigLista">
+            ${this.widgetsDisponiveis.map((w) => `
+              <label class="widget-config-item">
+                <input type="checkbox" data-wconfig="${w.id}" ${w.visivel ? "checked" : ""}>
+                <span>${w.icone} ${w.rotulo}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="modal-acoes">
+            <button class="btn-secundario" id="btnFecharConfigWidgets">Fechar</button>
+            <button class="btn-primario" id="btnSalvarConfigWidgets">Salvar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    /* ---- Sparkline ---- */
+    gerarSparkline(itens, tipo) {
+      if (!itens || itens.length === 0) return "";
+      const pontos = [];
+      const hoje = /* @__PURE__ */ new Date();
+      for (let i = 5; i >= 0; i--) {
+        const alvo = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+        const count = itens.filter((item) => {
+          const d = new Date(item.dataCadastro || item.criadoEm || item.data || item.dataVenda);
+          if (tipo === "receita") {
+            return d.getMonth() === alvo.getMonth() && d.getFullYear() === alvo.getFullYear() && d <= hoje;
+          }
+          return d.getMonth() === alvo.getMonth() && d.getFullYear() === alvo.getFullYear();
+        }).length;
+        if (tipo === "receita") {
+          const total = itens.filter((item) => {
+            const d = new Date(item.dataCadastro || item.criadoEm || item.data || item.dataVenda);
+            return d.getMonth() === alvo.getMonth() && d.getFullYear() === alvo.getFullYear() && d <= hoje;
+          }).reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+          pontos.push(total);
+        } else {
+          pontos.push(count);
+        }
+      }
+      if (pontos.every((p) => p === 0)) return "";
+      const max = Math.max(...pontos, 1);
+      const w = 80, h = 30;
+      const pts = pontos.map((p, i) => `${i / (pontos.length - 1) * w},${h - p / max * h}`).join(" ");
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="var(--kpi-cor)" stroke-width="2" points="${pts}"/></svg>`;
+    }
+    contarClientesAtivos(clientes) {
+      const tresMeses = /* @__PURE__ */ new Date();
+      tresMeses.setMonth(tresMeses.getMonth() - 3);
+      return clientes.filter((c) => c.criadoEm && new Date(c.criadoEm) >= tresMeses).length;
+    }
+    /* ---- Widget: Produção Mensal ---- */
+    renderWidgetProducao() {
+      return '<canvas id="chartProducao" height="180"></canvas>';
+    }
+    /* ---- Widget: Técnicas ---- */
+    renderWidgetTecnicas() {
+      return '<canvas id="chartTecnicas" height="180"></canvas>';
+    }
+    /* ---- Widget: Receita ---- */
+    renderWidgetReceita() {
+      return '<canvas id="chartReceita" height="180"></canvas>';
+    }
+    /* ---- Widget: Previsão de Faturamento ---- */
+    renderWidgetPrevisao() {
+      const vendas = vendaStore().items;
+      const dados = this.calcularPrevisao(vendas);
+      return `
+      <div class="previsao-container">
+        <div class="previsao-valor-atual">
+          <span class="previsao-rotulo">Faturamento nos \xFAltimos 6 meses</span>
+          <span class="previsao-numero">${formatarMoeda(dados.total6M)}</span>
+        </div>
+        <div class="previsao-barra-container">
+          <div class="previsao-barra-item">
+            <span>M\xE9dia mensal</span>
+            <span class="previsao-numero-peq">${formatarMoeda(dados.mediaMensal)}</span>
+          </div>
+          <div class="previsao-barra-item">
+            <span>Proje\xE7\xE3o pr\xF3ximos 6 meses</span>
+            <span class="previsao-numero-peq ${dados.tendencia > 0 ? "positiva" : "negativa"}">${formatarMoeda(Math.abs(dados.projecao6M))} ${dados.tendencia > 0 ? "\u{1F4C8}" : "\u{1F4C9}"}</span>
+          </div>
+        </div>
+        <div class="previsao-detalhe">
+          <span class="texto-ajuda">Baseado em regress\xE3o linear simples sobre os \xFAltimos meses</span>
+          ${dados.tendencia > 0 ? `<span class="tag-status disponivel">Tend\xEAncia positiva \u{1F4C8}</span>` : `<span class="tag-status vendida">Tend\xEAncia negativa \u{1F4C9}</span>`}
+        </div>
+        <canvas id="chartPrevisao" height="120"></canvas>
+      </div>
+    `;
+    }
+    calcularPrevisao(vendas) {
+      const meses = [];
+      const hoje = /* @__PURE__ */ new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+        const total = vendas.filter((v) => {
+          const dataV = new Date(v.dataVenda || v.data || v.criadoEm);
+          return dataV.getMonth() === d.getMonth() && dataV.getFullYear() === d.getFullYear();
+        }).reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+        meses.push({ mes: d, total });
+      }
+      const total6M = meses.reduce((s, m) => s + m.total, 0);
+      const mediaMensal = total6M / meses.length;
+      const n = meses.length;
+      const xMean = (n - 1) / 2;
+      const yMean = total6M / n;
+      let num = 0, den = 0;
+      meses.forEach((m, i) => {
+        num += (i - xMean) * (m.total - yMean);
+        den += (i - xMean) * (i - xMean);
+      });
+      const inclinacao = den !== 0 ? num / den : 0;
+      const intercept = yMean - inclinacao * xMean;
+      let projecao6M = 0;
+      for (let i = 0; i < 6; i++) {
+        projecao6M += Math.max(0, inclinacao * (n + i) + intercept);
+      }
+      return { total6M, mediaMensal, inclinacao, intercept, projecao6M, tendencia: inclinacao, meses };
+    }
+    /* ---- Widget: Notificações Inteligentes ---- */
+    renderWidgetNotificacoes() {
+      const materiais = this.dataStore.listar("materiais");
+      const clientes = clienteStore().items;
+      const eventos = this.dataStore.listar("eventos");
+      const obras = obraStore().items;
+      const hoje = /* @__PURE__ */ new Date();
+      const notificacoes = [];
+      materiais.forEach((m) => {
+        if (m.quantidade <= m.quantidadeMinima) {
+          notificacoes.push({ tipo: "estoque", gravidade: m.quantidade <= (m.quantidadeMinima || 0) / 2 ? "alta" : "media", icone: "\u26A0\uFE0F", mensagem: `"${m.nome}" est\xE1 com estoque cr\xEDtico (${m.quantidade} ${m.unidade || "un"})`, acao: "Ir para Atelier", rota: "atelier" });
+        }
+      });
+      clientes.forEach((c) => {
+        if (c.ultimoContato || c.criadoEm) {
+          const dataRef = c.ultimoContato || c.criadoEm;
+          const dias = Math.floor((hoje - new Date(dataRef)) / 864e5);
+          if (dias > 60) {
+            notificacoes.push({ tipo: "cliente", gravidade: dias > 180 ? "alta" : "media", icone: "\u{1F464}", mensagem: `"${c.nome}" sem contato h\xE1 ${dias} dias`, acao: "Ver cliente", rota: "clientes" });
+          }
+        }
+      });
+      eventos.forEach((e) => {
+        if (e.dataEvento) {
+          const dias = Math.floor((new Date(e.dataEvento) - hoje) / 864e5);
+          if (dias > 0 && dias <= 60) {
+            notificacoes.push({ tipo: "evento", gravidade: dias <= 15 ? "alta" : "media", icone: "\u{1F4C5}", mensagem: `"${e.nome}" em ${dias} dias (${e.status})`, acao: "Ver eventos", rota: "exposicoes" });
+          }
+        }
+      });
+      obras.forEach((o) => {
+        if (o.historicoPrecos && o.historicoPrecos.length > 1) {
+          const ultimo = o.historicoPrecos[o.historicoPrecos.length - 1];
+          const penultimo = o.historicoPrecos[o.historicoPrecos.length - 2];
+          if (ultimo.preco < penultimo.preco) {
+            notificacoes.push({ tipo: "preco", gravidade: "media", icone: "\u{1F3F7}\uFE0F", mensagem: `"${o.titulo}" teve redu\xE7\xE3o de pre\xE7o (${formatarMoeda(penultimo.preco)} \u2192 ${formatarMoeda(ultimo.preco)})`, acao: "Ver obra", rota: "catalogo" });
+          }
+        }
+      });
+      if (notificacoes.length === 0) {
+        return '<div class="estado-vazio"><div class="icone-vazio">\u2705</div><p>Tudo em ordem! Nenhuma notifica\xE7\xE3o pendente.</p></div>';
+      }
+      return `
+      <div class="notificacoes-lista">
+        ${notificacoes.sort((a, b) => a.gravidade === "alta" ? -1 : 1).slice(0, 8).map((n) => `
+          <div class="notificacao-item notificacao-${n.gravidade}">
+            <span class="notificacao-icone">${n.icone}</span>
+            <span class="notificacao-msg">${n.mensagem}</span>
+            <button class="btn-miniatura notificacao-acao" data-rota="${n.rota}">${n.acao}</button>
+          </div>
+        `).join("")}
+        ${notificacoes.length > 8 ? `<p class="texto-ajuda">+${notificacoes.length - 8} notifica\xE7\xF5es</p>` : ""}
+      </div>
+    `;
+    }
+    /* ---- Widget: Metas Financeiras ---- */
+    renderWidgetMetas() {
+      const config = configStore();
+      const prec = config.precificador || {};
+      const metaMensal = prec.metaMensal || 1e4;
+      const metaAnual = prec.metaAnual || 12e4;
+      const vendas = vendaStore().items;
+      const hoje = /* @__PURE__ */ new Date();
+      const faturamentoMes = vendas.filter((v) => {
+        const d = new Date(v.dataVenda || v.data || v.criadoEm);
+        return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
+      }).reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+      const faturamentoAno = vendas.filter((v) => {
+        const d = new Date(v.dataVenda || v.data || v.criadoEm);
+        return d.getFullYear() === hoje.getFullYear();
+      }).reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+      const pctMes = Math.min(100, faturamentoMes / metaMensal * 100);
+      const pctAno = Math.min(100, faturamentoAno / metaAnual * 100);
+      const diasRestantes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate() - hoje.getDate() + 1;
+      const metaDiaria = diasRestantes > 0 ? Math.max(0, (metaMensal - faturamentoMes) / diasRestantes) : 0;
+      return `
+      <div class="metas-container">
+        <div class="meta-card">
+          <div class="meta-header">
+            <span>Meta Mensal</span>
+            <span>${formatarMoeda(faturamentoMes)} / ${formatarMoeda(metaMensal)}</span>
+          </div>
+          <div class="meta-barra"><div class="meta-barra-preenchimento" style="width:${pctMes}%"></div></div>
+          <div class="meta-footer">
+            <span>${pctMes.toFixed(1)}% conclu\xEDdo</span>
+            <span class="${pctMes >= 100 ? "positiva" : ""}">${pctMes >= 100 ? "\u2705 Meta atingida!" : `Faltam ${formatarMoeda(metaMensal - faturamentoMes)}`}</span>
+          </div>
+          ${pctMes < 100 ? `<div class="meta-diaria">\u{1F3AF} Meta di\xE1ria necess\xE1ria: ${formatarMoeda(metaDiaria)}/dia (${diasRestantes} dias restantes)</div>` : ""}
+        </div>
+        <div class="meta-card">
+          <div class="meta-header">
+            <span>Meta Anual</span>
+            <span>${formatarMoeda(faturamentoAno)} / ${formatarMoeda(metaAnual)}</span>
+          </div>
+          <div class="meta-barra"><div class="meta-barra-preenchimento anual" style="width:${pctAno}%"></div></div>
+          <div class="meta-footer">
+            <span>${pctAno.toFixed(1)}% conclu\xEDdo</span>
+            <span class="${pctAno >= 100 ? "positiva" : ""}">${pctAno >= 100 ? "\u2705 Parab\xE9ns!" : `Faltam ${formatarMoeda(metaAnual - faturamentoAno)}`}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    /* ---- Widget: Obras Recentes ---- */
+    renderWidgetRecentes() {
+      const obras = obraStore().items;
+      const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
+      if (recentes.length === 0) {
+        return '<div class="estado-vazio"><div class="icone-vazio">\u{1F5BC}\uFE0F</div><p>Nenhuma obra cadastrada ainda.</p></div>';
+      }
+      return `
+      <ul class="lista-obras-recentes stagger-in">
+        ${recentes.map((o) => {
+        const imgSrc = o.imagemDestacada || o.imagens && o.imagens[0] || o.imagem || "";
+        return `
+            <li class="item-obra-recente">
+              <div class="thumb-obra">${imgSrc ? `<img src="${imgSrc}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : "\u{1F5BC}\uFE0F"}</div>
+              <div class="info-obra-recente">
+                <div class="nome">${o.titulo}</div>
+                <div class="meta">${o.tecnica || ""} \xB7 ${formatarData(o.dataCadastro || o.criadoEm)}</div>
+              </div>
+              <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
+            </li>
+          `;
+      }).join("")}
+      </ul>
+    `;
+    }
+    /* ---- Widget: Atividades ---- */
+    renderWidgetAtividades() {
+      const recentes = activityLogger.obterRecentes(8);
+      if (recentes.length === 0) {
+        return '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>';
+      }
+      return `
+      <div class="activity-feed">
+        ${recentes.map((a) => `
+          <div class="activity-item">
+            <div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div>
+            <div class="activity-detalhes">
+              <div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div>
+              <div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    }
+    /* ---- Widget: Dica do Dia ---- */
+    renderWidgetDica() {
+      const dica = obterDicaDoDia() || "Reserve 15 minutos ao final do dia para registrar seu progresso no Di\xE1rio Criativo.";
+      return `<div class="dica-card"><div class="dica-icone">\u{1F4A1}</div><div class="dica-texto"><p>${dica}</p><span class="texto-ajuda">Dica do dia \xB7 Atualiza automaticamente</span></div></div>`;
+    }
+    /* ---- Lifecycle ---- */
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      document.getElementById("btnAtualizarDashboard")?.addEventListener("click", () => this.rerenderizar());
+      document.getElementById("btnDownloadDashboard")?.addEventListener("click", () => {
+        if (typeof html2canvas === "undefined") {
+          mostrarToast("Biblioteca de captura indispon\xEDvel.");
+          return;
+        }
+        mostrarToast("Gerando imagem do dashboard...");
+        const el = document.getElementById("viewPrincipal").querySelector(".kpi-grid")?.parentElement || document.getElementById("viewPrincipal");
+        html2canvas(el, { backgroundColor: getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#ffffff", scale: 2, useCORS: true, logging: false }).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = `dashboard-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+          mostrarToast("Dashboard exportado!");
+        }).catch(() => mostrarToast("Erro ao gerar imagem."));
+      });
+      document.getElementById("btnAtalhoNovaObra")?.addEventListener("click", () => {
+        this.router.navegar("catalogo");
+        setTimeout(() => eventBus.emitir("abrir-nova-obra"), 200);
+      });
+      document.getElementById("btnAtalhoVenda")?.addEventListener("click", () => {
+        this.router.navegar("vendas");
+        setTimeout(() => eventBus.emitir("abrir-nova-venda"), 200);
+      });
+      document.getElementById("btnAtalhoRecibo")?.addEventListener("click", () => eventBus.emitir("abrir-recibo-rapido"));
+      document.getElementById("btnAtalhoClientes")?.addEventListener("click", () => this.router.navegar("clientes"));
+      container.addEventListener("click", (e) => {
+        const notifBtn = e.target.closest(".notificacao-acao");
+        if (notifBtn && notifBtn.dataset.rota) {
+          this.router.navegar(notifBtn.dataset.rota);
+          return;
+        }
+      });
+      this.initDragDrop();
+      this.initConfigModal();
+      this.initCharts();
+    }
+    initCharts() {
+      if (typeof Chart === "undefined") {
+        document.querySelectorAll('[id^="chart"]').forEach((el) => {
+          if (el.tagName === "CANVAS") {
+            el.parentElement.innerHTML = '<p class="texto-ajuda">Gr\xE1fico indispon\xEDvel (Chart.js n\xE3o carregou).</p>';
+          }
+        });
+        return;
+      }
+      Object.values(this.charts).forEach((c) => {
+        try {
+          c.destroy();
+        } catch (e) {
+        }
+      });
+      this.charts = {};
+      const obras = obraStore().items;
+      const vendas = vendaStore().items;
+      const hoje = /* @__PURE__ */ new Date();
+      const ctxColors = ["#2563eb", "#16a34a", "#d97706", "#7c3aed", "#dc2626", "#0891b2", "#ca8a04", "#be185d"];
+      const prodCanvas = document.getElementById("chartProducao");
+      if (prodCanvas) {
+        const meses = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+          const total = obras.filter((o) => {
+            const dataO = new Date(o.dataCadastro || o.criadoEm);
+            return dataO.getMonth() === d.getMonth() && dataO.getFullYear() === d.getFullYear();
+          }).length;
+          meses.push({ rotulo: d.toLocaleDateString("pt-BR", { month: "short" }), total });
+        }
+        this.charts.producao = new Chart(prodCanvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: meses.map((m) => m.rotulo),
+            datasets: [{ label: "Obras criadas", data: meses.map((m) => m.total), backgroundColor: ctxColors, borderRadius: 4 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          }
+        });
+      }
+      const tecCanvas = document.getElementById("chartTecnicas");
+      if (tecCanvas) {
+        const contagem = {};
+        obras.forEach((o) => {
+          if (o.tecnica) contagem[o.tecnica] = (contagem[o.tecnica] || 0) + 1;
+        });
+        const labels = Object.keys(contagem);
+        const data = Object.values(contagem);
+        this.charts.tecnicas = new Chart(tecCanvas.getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels,
+            datasets: [{ data, backgroundColor: ctxColors, borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right", labels: { boxWidth: 12, padding: 8 } } } }
+        });
+      }
+      const recCanvas = document.getElementById("chartReceita");
+      if (recCanvas) {
+        const meses = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+          const total = vendas.filter((v) => {
+            const dataV = new Date(v.dataVenda || v.data || v.criadoEm);
+            return dataV.getMonth() === d.getMonth() && dataV.getFullYear() === d.getFullYear();
+          }).reduce((s, v) => s + Number(v.valorTotal || v.valor || 0), 0);
+          meses.push({ rotulo: d.toLocaleDateString("pt-BR", { month: "short" }), total });
+        }
+        this.charts.receita = new Chart(recCanvas.getContext("2d"), {
+          type: "line",
+          data: {
+            labels: meses.map((m) => m.rotulo),
+            datasets: [{ label: "Receita", data: meses.map((m) => m.total), borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,0.1)", fill: true, tension: 0.4, pointRadius: 4 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { callback: (v) => "R$" + v.toLocaleString("pt-BR") } } }
+          }
+        });
+      }
+      const prevCanvas = document.getElementById("chartPrevisao");
+      if (prevCanvas) {
+        const dados = this.calcularPrevisao(vendas);
+        const meses = dados.meses.map((m) => m.mes.toLocaleDateString("pt-BR", { month: "short" }));
+        const reais = dados.meses.map((m) => m.total);
+        const projetados = [];
+        for (let i = 0; i < 6; i++) {
+          projetados.push(Math.max(0, dados.inclinacao * (dados.meses.length + i) + dados.intercept));
+        }
+        const labelsProj = [...meses, ...Array.from({ length: 6 }, (_, i) => `+${i + 1}m`)];
+        this.charts.previsao = new Chart(prevCanvas.getContext("2d"), {
+          type: "line",
+          data: {
+            labels: labelsProj,
+            datasets: [
+              { label: "Realizado", data: [...reais, ...Array(6).fill(null)], borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.1)", fill: true, tension: 0.4, pointRadius: 4 },
+              { label: "Projetado", data: [...Array(meses.length).fill(null), ...projetados], borderColor: "#d97706", borderDash: [5, 5], tension: 0.4, pointRadius: 3, pointStyle: "circle" }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom", labels: { boxWidth: 12, padding: 8 } } },
+            scales: { y: { beginAtZero: true, ticks: { callback: (v) => "R$" + Math.round(v).toLocaleString("pt-BR") } } }
+          }
+        });
+      }
+    }
+    initDragDrop() {
+      const grid = document.getElementById("widgetsGrid");
+      if (!grid) return;
+      let dragging = null;
+      grid.addEventListener("dragstart", (e) => {
+        const card = e.target.closest(".widget-card");
+        if (!card) return;
+        dragging = card;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+      grid.addEventListener("dragend", (e) => {
+        const card = e.target.closest(".widget-card");
+        if (card) card.classList.remove("dragging");
+        dragging = null;
+      });
+      grid.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        const target2 = e.target.closest(".widget-card");
+        if (!target2 || target2 === dragging) return;
+        const rect = target2.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+          grid.insertBefore(dragging, target2);
+        } else {
+          grid.insertBefore(dragging, target2.nextSibling);
+        }
+      });
+      grid.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const ids = Array.from(grid.querySelectorAll(".widget-card")).map((el) => el.dataset.widget);
+        this.widgetOrdem = ids;
+        this.salvarOrdemWidgets();
+      });
+    }
+    initConfigModal() {
+      const btnConfig = document.getElementById("btnConfigWidgets");
+      const overlay = document.getElementById("widgetConfigOverlay");
+      if (!btnConfig || !overlay) return;
+      btnConfig.addEventListener("click", () => {
+        overlay.style.display = "flex";
+      });
+      document.getElementById("btnFecharConfigWidgets")?.addEventListener("click", () => {
+        overlay.style.display = "none";
+      });
+      document.getElementById("btnSalvarConfigWidgets")?.addEventListener("click", () => {
+        overlay.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+          const w = this.widgetsDisponiveis.find((x) => x.id === cb.dataset.wconfig);
+          if (w) w.visivel = cb.checked;
+        });
+        this.salvarOrdemWidgets();
+        overlay.style.display = "none";
+        this.rerenderizar();
+      });
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.style.display = "none";
+      });
+    }
+    destruir() {
+      Object.values(this.charts).forEach((c) => {
+        try {
+          c.destroy();
+        } catch (e) {
+        }
+      });
+      this.charts = {};
+      super.destruir();
+    }
+  };
+  var CatalogoView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.modo = "grid";
+      this.filtros = { busca: "", tecnica: "", status: "", ano: "", precoMin: "", precoMax: "", ordenar: "recentes" };
+      this.filtroRapido = "";
+      this.filtrosSalvos = [];
+      this.selecionados = /* @__PURE__ */ new Set();
+      this.imagensFormAtual = [];
+      this.imagemDestacadaAtual = null;
+      this.modoComparacao = false;
+      this.idsComparacao = [];
+      eventBus.on("abrir-nova-obra", () => this.abrirFormulario());
+    }
+    obrasFiltradas() {
+      const f = this.filtros;
+      let obras = obraStore().items;
+      if (f.busca) {
+        const termo = f.busca.toLowerCase();
+        obras = obras.filter(
+          (o) => (o.titulo || "").toLowerCase().includes(termo) || (o.descricao || "").toLowerCase().includes(termo) || (o.serie || "").toLowerCase().includes(termo)
+        );
+      }
+      if (f.tecnica) obras = obras.filter((o) => o.tecnica === f.tecnica);
+      if (f.status) obras = obras.filter((o) => classeStatus(o.status) === classeStatus(f.status));
+      if (f.ano) obras = obras.filter((o) => String(o.ano) === String(f.ano));
+      if (f.precoMin !== "") obras = obras.filter((o) => Number(o.preco || 0) >= Number(f.precoMin));
+      if (f.precoMax !== "") obras = obras.filter((o) => Number(o.preco || 0) <= Number(f.precoMax));
+      if (this.filtroRapido === "favoritas") obras = obras.filter((o) => o.favorita);
+      return [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm || 0) - new Date(a.dataCadastro || a.criadoEm || 0));
+    }
+    anosDisponiveis() {
+      const anos = [...new Set(obraStore().items.map((o) => o.ano).filter(Boolean))];
+      return anos.sort((a, b) => b - a);
+    }
+    render() {
+      const obras = this.obrasFiltradas();
+      const anos = this.anosDisponiveis();
+      const conteudoLista = obras.length ? this.modo === "grid" ? this.renderGrid(obras) : this.renderLista(obras) : this.renderEstadoVazio();
+      const filtrosAtivos = Object.entries(this.filtros).filter(([k, v]) => v !== "" && k !== "ordenar").length + (this.filtroRapido ? 1 : 0);
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Cat\xE1logo de Obras</h2>
+          <p class="subtitulo">${obras.length} obra${obras.length === 1 ? "" : "s"} encontrada${obras.length === 1 ? "" : "s"}${filtrosAtivos > 0 ? `<span class="filtros-ativo-badge">\xB7 ${filtrosAtivos} filtro${filtrosAtivos > 1 ? "s" : ""} ativo${filtrosAtivos > 1 ? "s" : ""}</span>` : ""}</p>
+        </div>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk">
+            <input type="checkbox" id="selectAll" ${this.selecionados.size === obras.length && obras.length > 0 ? "checked" : ""}>
+            <label for="selectAll">Selecionar todos</label>
+          </div>
+          <button class="btn-secundario" id="btnComparar" title="Comparar obras selecionadas" ${this.selecionados.size < 2 ? "disabled" : ""}>\u{1F4CA} Comparar</button>
+          <button class="btn-secundario" id="btnImportacaoLote" title="Importar m\xFAltiplas obras">\u{1F4F8} Importar</button>
+          <div class="toggle-visualizacao">
+            <button id="btnModoGrid" class="${this.modo === "grid" ? "ativo" : ""}" title="Visualiza\xE7\xE3o em grid">\u2630 Grid</button>
+            <button id="btnModoLista" class="${this.modo === "lista" ? "ativo" : ""}" title="Visualiza\xE7\xE3o em lista">\u2630 Lista</button>
+          </div>
+        </div>
+      </div>
+
+      ${this.selecionados.size > 0 ? this.renderBarraBulk() : ""}
+
+      ${this.renderFiltros(anos)}
+
+      <div class="catalogo-acoes-rapidas">
+        <button class="btn-ghost" id="btnNovaObraRapida">\u2795 Nova Obra</button>
+        <button class="btn-ghost" id="btnSlideshowTodas">\u25B6 Slideshow Geral</button>
+        <button class="btn-ghost" id="btnExportarTodas">\u{1F4E5} Exportar Tudo</button>
+      </div>
+
+      ${conteudoLista}
+
+      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra">\u2795</button>
+    `;
+    }
+    renderEstadoVazio() {
+      return `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio">
+          <div class="icone-vazio">\u{1F5BC}\uFE0F</div>
+          <p>Nenhuma obra encontrada com os filtros atuais.</p>
+          <p class="texto-ajuda">Tente limpar os filtros ou cadastrar uma nova obra.</p>
+        </div>
+      </div>
+    `;
+    }
+    renderBarraBulk() {
+      return `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} obra${this.selecionados.size === 1 ? "" : "s"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkMarcarFavorita">\u2B50 Favoritar</button>
+          <button class="btn-secundario" id="bulkDesmarcarFavorita">\u2606 Desfavoritar</button>
+          <button class="btn-secundario" id="bulkMudarStatus">\u{1F4DD} Mudar Status</button>
+          <button class="btn-secundario" id="bulkExportar">\u{1F4CA} Exportar</button>
+          <button class="btn-secundario" id="bulkExportarPDF">\u{1F4C4} Cat\xE1logo PDF</button>
+          <button class="btn-secundario btn-danger" id="bulkExcluir">\u{1F5D1} Excluir</button>
+          <button class="btn-secundario" id="bulkCancelar">\u2715 Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    renderFiltros(anos) {
+      return `
+      <div class="catalogo-filtros">
+        <div class="campo-filtro busca">
+          <label>Buscar</label>
+          <input type="text" id="filtroBusca" placeholder="T\xEDtulo, descri\xE7\xE3o, s\xE9rie..." value="${this.filtros.busca}" data-tooltip="Busca inteligente: t\xEDtulo, descri\xE7\xE3o, s\xE9rie">
+        </div>
+        <div class="campo-filtro">
+          <label>T\xE9cnica</label>
+          <select id="filtroTecnica">
+            <option value="">Todas</option>
+            <option value="\xF3leo" ${this.filtros.tecnica === "\xF3leo" ? "selected" : ""}>\xD3leo</option>
+            <option value="aquarela" ${this.filtros.tecnica === "aquarela" ? "selected" : ""}>Aquarela</option>
+            <option value="escultura" ${this.filtros.tecnica === "escultura" ? "selected" : ""}>Escultura</option>
+            <option value="outra" ${this.filtros.tecnica === "outra" ? "selected" : ""}>Outra</option>
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Status</label>
+          <select id="filtroStatus">
+            <option value="">Todos</option>
+            <option value="dispon\xEDvel" ${this.filtros.status === "dispon\xEDvel" ? "selected" : ""}>Dispon\xEDvel</option>
+            <option value="reservada" ${this.filtros.status === "reservada" ? "selected" : ""}>Reservada</option>
+            <option value="vendida" ${this.filtros.status === "vendida" ? "selected" : ""}>Vendida</option>
+            <option value="em exposi\xE7\xE3o" ${this.filtros.status === "em exposi\xE7\xE3o" ? "selected" : ""}>Em Exposi\xE7\xE3o</option>
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Ano</label>
+          <select id="filtroAno">
+            <option value="">Todos</option>
+            ${anos.map((a) => `<option value="${a}" ${String(this.filtros.ano) === String(a) ? "selected" : ""}>${a}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Faixa de pre\xE7o (R$)</label>
+          <div class="faixa-preco">
+            <input type="number" id="filtroPrecoMin" placeholder="M\xEDn." value="${this.filtros.precoMin}">
+            <span>\u2014</span>
+            <input type="number" id="filtroPrecoMax" placeholder="M\xE1x." value="${this.filtros.precoMax}">
+          </div>
+        </div>
+        <div class="campo-filtro">
+          <label>Ordenar por</label>
+          <select id="filtroOrdenar">
+            <option value="recentes" ${this.filtros.ordenar === "recentes" ? "selected" : ""}>Mais recentes</option>
+            <option value="antigas" ${this.filtros.ordenar === "antigas" ? "selected" : ""}>Mais antigas</option>
+            <option value="preco-asc" ${this.filtros.ordenar === "preco-asc" ? "selected" : ""}>Pre\xE7o: menor \u2192 maior</option>
+            <option value="preco-desc" ${this.filtros.ordenar === "preco-desc" ? "selected" : ""}>Pre\xE7o: maior \u2192 menor</option>
+            <option value="titulo" ${this.filtros.ordenar === "titulo" ? "selected" : ""}>T\xEDtulo A-Z</option>
+            <option value="ano-desc" ${this.filtros.ordenar === "ano-desc" ? "selected" : ""}>Ano: mais recente</option>
+          </select>
+        </div>
+        <button class="btn-secundario" id="btnLimparFiltros">Limpar filtros</button>
+        <button class="btn-secundario" id="btnSalvarFiltro" title="Salvar filtro atual">\u{1F4BE} Salvar</button>
+      </div>
+
+      <div class="filtros-rapidos">
+        <span class="rotulo-filtros">Filtros r\xE1pidos:</span>
+        <button class="chip-filtro ${this.filtroRapido === "disponiveis" ? "ativo" : ""}" data-filtro="disponiveis">\u{1F7E2} Dispon\xEDveis</button>
+        <button class="chip-filtro ${this.filtroRapido === "vendidas" ? "ativo" : ""}" data-filtro="vendidas">\u{1F7E1} Vendidas</button>
+        <button class="chip-filtro ${this.filtroRapido === "recentes" ? "ativo" : ""}" data-filtro="recentes">\u{1F4C5} Este m\xEAs</button>
+        <button class="chip-filtro ${this.filtroRapido === "favoritas" ? "ativo" : ""}" data-filtro="favoritas">\u2B50 Favoritas</button>
+      </div>
+
+      ${this.filtrosSalvos.length > 0 ? `
+      <div class="filtros-salvos">
+        <span class="rotulo-filtros">Filtros salvos:</span>
+        ${this.filtrosSalvos.map((f, i) => `
+          <button class="chip-filtro-salvo" data-indice="${i}" title="${f.descricao}">${f.nome}</button>
+        `).join("")}
+      </div>
+      ` : ""}
+    `;
+    }
+    renderGrid(obras) {
+      return `
+      <div class="grid-obras stagger-in">
+        ${obras.map((o) => `
+          <div class="card-obra ${o.favorita ? "favorita" : ""} ${this.selecionados.has(o.id) ? "selecionada" : ""}">
+            <div class="checkbox-bulk">
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? "checked" : ""}>
+            </div>
+            ${o.favorita ? '<div class="badge-favorita">\u2B50</div>' : ""}
+            <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
+              <img class="imagem-obra lazy-img" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+              ${o.imagens && o.imagens.length > 1 ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ""}
+              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria">\u25B6</button>
+            </div>
+            <div class="corpo-card-obra" data-abrir-ficha="${o.id}">
+              <div class="titulo-obra">${o.titulo}</div>
+              <div class="meta-obra">${capitalizarTexto(o.tecnica)} \xB7 ${this.formatarDimensoes(o.dimensoes)}</div>
+              <div class="rodape-card-obra">
+                <span class="preco-obra">${formatarMoeda(o.preco)}</span>
+                <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
+              </div>
+            </div>
+            <div class="acoes-card-obra">
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}">${o.favorita ? "\u2605" : "\u2606"}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o">\u{1F4CA}</button>
+              <button data-editar-obra="${o.id}">\u270E Editar</button>
+              <button class="btn-excluir-obra" data-excluir-obra="${o.id}">\u{1F5D1} Excluir</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    }
+    renderLista(obras) {
+      return `
+      <div class="lista-obras-wrapper stagger-in">
+        ${obras.map((o) => `
+          <div class="linha-obra-lista ${o.favorita ? "favorita" : ""} ${this.selecionados.has(o.id) ? "selecionada" : ""}">
+            <div class="checkbox-bulk-lista">
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? "checked" : ""}>
+            </div>
+            ${o.favorita ? '<span class="icone-favorita-lista">\u2B50</span>' : ""}
+            <img class="thumb-lista lazy-img" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+            <div class="info-lista" data-abrir-ficha="${o.id}">
+              <div class="titulo-obra">${o.titulo}</div>
+              <div class="meta-obra">${capitalizarTexto(o.tecnica)} \xB7 ${this.formatarDimensoes(o.dimensoes)} \xB7 ${o.ano || "-"}</div>
+            </div>
+            <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
+            <span class="preco-lista">${formatarMoeda(o.preco)}</span>
+            <div class="acoes-lista">
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}">${o.favorita ? "\u2605" : "\u2606"}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o">\u{1F4CA}</button>
+              <button data-editar-obra="${o.id}">\u270E</button>
+              <button data-excluir-obra="${o.id}">\u{1F5D1}</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    }
+    obterImagem(obra) {
+      return obra.imagemDestacada || obra.imagens && obra.imagens[0] || obra.imagem || gerarImagemPlaceholder("#cccccc", "\u{1F5BC}\uFE0F");
+    }
+    formatarDimensoes(dim) {
+      if (!dim || !dim.altura && !dim.largura && !dim.profundidade) return "-";
+      const partes = [dim.altura, dim.largura, dim.profundidade].filter((v) => v && Number(v) > 0);
+      return partes.length ? `${partes.join(" x ")} cm` : "-";
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      const btnGrid = document.getElementById("btnModoGrid");
+      const btnLista = document.getElementById("btnModoLista");
+      if (btnGrid) btnGrid.addEventListener("click", () => {
+        this.modo = "grid";
+        this.rerenderizar();
+      });
+      if (btnLista) btnLista.addEventListener("click", () => {
+        this.modo = "lista";
+        this.rerenderizar();
+      });
+      const campoBusca = document.getElementById("filtroBusca");
+      if (campoBusca) campoBusca.addEventListener("input", (e) => {
+        this.filtros.busca = e.target.value;
+        this.rerenderizar(true);
+      });
+      ["filtroTecnica", "filtroStatus", "filtroAno", "filtroPrecoMin", "filtroPrecoMax"].forEach((idCampo) => {
+        const el = document.getElementById(idCampo);
+        if (!el) return;
+        const chave = { filtroTecnica: "tecnica", filtroStatus: "status", filtroAno: "ano", filtroPrecoMin: "precoMin", filtroPrecoMax: "precoMax" }[idCampo];
+        el.addEventListener("change", (e) => {
+          this.filtros[chave] = e.target.value;
+          this.rerenderizar();
+        });
+      });
+      const ordenarEl = document.getElementById("filtroOrdenar");
+      if (ordenarEl) ordenarEl.addEventListener("change", (e) => {
+        this.filtros.ordenar = e.target.value;
+        this.rerenderizar();
+      });
+      const btnLimpar = document.getElementById("btnLimparFiltros");
+      if (btnLimpar) btnLimpar.addEventListener("click", () => {
+        this.filtros = { busca: "", tecnica: "", status: "", ano: "", precoMin: "", precoMax: "", ordenar: "recentes" };
+        this.filtroRapido = "";
+        this.rerenderizar();
+      });
+      container.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+          e.preventDefault();
+          this.obrasFiltradas().forEach((o) => this.selecionados.add(o.id));
+          this.rerenderizar();
+          return;
+        }
+        if (e.key === "Escape" && this.selecionados.size > 0) {
+          this.selecionados.clear();
+          this.rerenderizar();
+        }
+      });
+      let ultimoClickIdx = -1;
+      container.addEventListener("click", (e) => {
+        const cb = e.target.closest(".checkbox-item");
+        if (cb && e.shiftKey) {
+          e.preventDefault();
+          const obrasRange = this.obrasFiltradas();
+          const atualIdx = obrasRange.findIndex((o) => o.id === cb.dataset.id);
+          if (ultimoClickIdx >= 0 && atualIdx >= 0) {
+            const [inicio, fim] = ultimoClickIdx <= atualIdx ? [ultimoClickIdx, atualIdx] : [atualIdx, ultimoClickIdx];
+            for (let i = inicio; i <= fim; i++) {
+              this.selecionados.add(obrasRange[i].id);
+            }
+            this.rerenderizar();
+          }
+          ultimoClickIdx = atualIdx;
+        } else if (cb) {
+          const obrasRange = this.obrasFiltradas();
+          ultimoClickIdx = obrasRange.findIndex((o) => o.id === cb.dataset.id);
+        }
+      });
+      const btnComparar = document.getElementById("btnComparar");
+      if (btnComparar) btnComparar.addEventListener("click", () => this.abrirComparacao(Array.from(this.selecionados)));
+      const selectAll = document.getElementById("selectAll");
+      if (selectAll) {
+        selectAll.addEventListener("change", (e) => {
+          const obras = this.obrasFiltradas();
+          if (e.target.checked) {
+            obras.forEach((o) => this.selecionados.add(o.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkMarcarFavorita")?.addEventListener("click", () => this.bulkAcao("favoritar"));
+      document.getElementById("bulkDesmarcarFavorita")?.addEventListener("click", () => this.bulkAcao("desfavoritar"));
+      document.getElementById("bulkMudarStatus")?.addEventListener("click", () => this.bulkAcao("mudarStatus"));
+      document.getElementById("bulkExportar")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkExportarPDF")?.addEventListener("click", () => this.bulkAcao("exportarPDF"));
+      document.getElementById("bulkExcluir")?.addEventListener("click", () => this.bulkAcao("excluir"));
+      document.getElementById("bulkCancelar")?.addEventListener("click", () => {
+        this.selecionados.clear();
+        this.rerenderizar();
+      });
+      document.getElementById("btnImportacaoLote")?.addEventListener("click", () => this.abrirImportacaoLote());
+      document.getElementById("btnNovaObraRapida")?.addEventListener("click", () => this.abrirFormulario());
+      document.getElementById("btnSlideshowTodas")?.addEventListener("click", () => {
+        const obras = this.obrasFiltradas();
+        if (obras.length === 0) {
+          mostrarToast("Nenhuma obra para exibir.");
+          return;
+        }
+        const imagens = obras.map((o) => ({ src: this.obterImagem(o), legenda: `${o.titulo} \xB7 ${formatarMoeda(o.preco)}` }));
+        abrirLightbox(imagens, 0);
+      });
+      document.getElementById("btnExportarTodas")?.addEventListener("click", () => {
+        const ids = this.obrasFiltradas().map((o) => o.id);
+        if (ids.length === 0) {
+          mostrarToast("Nenhuma obra para exportar.");
+          return;
+        }
+        this.exportarObrasJSON(ids);
+      });
+      const fab = document.getElementById("fabNovaObra");
+      if (fab) fab.addEventListener("click", () => this.abrirFormulario());
+      const delegHandler = (e) => {
+        const alvoImg = e.target.closest(".imagem-card-wrapper img, .thumb-lista");
+        const alvoFicha = e.target.closest("[data-abrir-ficha]");
+        const alvoEditar = e.target.closest("[data-editar-obra]");
+        const alvoExcluir = e.target.closest("[data-excluir-obra]");
+        const alvoComparar = e.target.closest("[data-comparar-obra]");
+        const alvoSlideshow = e.target.closest("[data-slideshow]");
+        const alvoChipRapido = e.target.closest("[data-filtro]");
+        const alvoChipSalvo = e.target.closest("[data-indice]");
+        if (alvoEditar) {
+          this.abrirFormulario(alvoEditar.dataset.editarObra);
+          return;
+        }
+        if (alvoExcluir) {
+          this.excluirObra(alvoExcluir.dataset.excluirObra);
+          return;
+        }
+        if (alvoComparar) {
+          this.adicionarComparacao(alvoComparar.dataset.compararObra);
+          return;
+        }
+        if (alvoSlideshow) {
+          e.stopPropagation();
+          this.abrirSlideshow(alvoSlideshow.dataset.slideshow);
+          return;
+        }
+        if (alvoImg) {
+          e.stopPropagation();
+          const id = alvoImg.closest("[data-abrir-ficha]")?.dataset?.abrirFicha;
+          if (id) this.abrirSlideshow(id);
+          return;
+        }
+        if (alvoChipRapido) {
+          const f = alvoChipRapido.dataset.filtro;
+          this.filtroRapido = this.filtroRapido === f ? "" : f;
+          this.aplicarFiltroRapido();
+          this.rerenderizar();
+          return;
+        }
+        if (alvoChipSalvo) {
+          this.carregarFiltroSalvo(parseInt(alvoChipSalvo.dataset.indice));
+          return;
+        }
+        if (alvoFicha) {
+          this.abrirFichaTecnica(alvoFicha.dataset.abrirFicha);
+          return;
+        }
+      };
+      container.addEventListener("click", delegHandler);
+      this._bindCache["delegCatalogo"] = { el: container, handler: delegHandler, type: "click" };
+      const btnSalvarFiltro = document.getElementById("btnSalvarFiltro");
+      if (btnSalvarFiltro) btnSalvarFiltro.addEventListener("click", () => this.salvarFiltroAtual());
+    }
+    aplicarFiltroRapido() {
+      const agora = /* @__PURE__ */ new Date();
+      switch (this.filtroRapido) {
+        case "disponiveis":
+          this.filtros.status = "dispon\xEDvel";
+          break;
+        case "vendidas":
+          this.filtros.status = "vendida";
+          this.filtroRapido = "vendidas";
+          break;
+        case "recentes":
+          this.filtros.status = "";
+          this.filtros.ano = String(agora.getFullYear());
+          break;
+        case "favoritas":
+          break;
+        default:
+          break;
+      }
+    }
+    salvarFiltroAtual() {
+      const nome = prompt("Nome para este filtro:");
+      if (!nome) return;
+      this.filtrosSalvos.push({ nome, descricao: Object.entries(this.filtros).map(([k, v]) => v ? `${k}:${v}` : "").filter(Boolean).join(", "), filtros: { ...this.filtros } });
+      this.rerenderizar();
+    }
+    carregarFiltroSalvo(indice) {
+      const salvo = this.filtrosSalvos[indice];
+      if (salvo) {
+        this.filtros = { ...salvo.filtros };
+        this.rerenderizar();
+      }
+    }
+    rerenderizar(manterFoco = false) {
+      const container = document.getElementById("viewPrincipal");
+      const idFocoAtual = manterFoco ? document.activeElement.id : null;
+      container.innerHTML = this.render();
+      this.aposRenderizar();
+      if (idFocoAtual) {
+        const el = document.getElementById(idFocoAtual);
+        if (el) {
+          el.focus();
+          const v = el.value;
+          el.value = "";
+          el.value = v;
+        }
+      }
+    }
+    bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "favoritar":
+          ids.forEach((id) => {
+            const obra = obraStore().porId(id);
+            if (obra) {
+              obra.favorita = true;
+              obraStore().atualizar(id, obra);
+            }
+          });
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} favoritada${ids.length === 1 ? "" : "s"}`);
+          break;
+        case "desfavoritar":
+          ids.forEach((id) => {
+            const obra = obraStore().porId(id);
+            if (obra) {
+              obra.favorita = false;
+              obraStore().atualizar(id, obra);
+            }
+          });
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} desfavoritada${ids.length === 1 ? "" : "s"}`);
+          break;
+        case "mudarStatus":
+          abrirModal(`
+          <h3>Mudar Status em Lote</h3>
+          <div class="campo-form">
+            <label>Novo Status</label>
+            <select id="novoStatusBulk">
+              <option value="dispon\xEDvel">Dispon\xEDvel</option>
+              <option value="reservada">Reservada</option>
+              <option value="vendida">Vendida</option>
+              <option value="em exposi\xE7\xE3o">Em Exposi\xE7\xE3o</option>
+            </select>
+          </div>
+          <div class="modal-acoes">
+            <button class="btn-primario" id="btnConfirmarStatus">Confirmar</button>
+            <button class="btn-secundario" id="btnCancelarStatus">Cancelar</button>
+          </div>
+        `);
+          document.getElementById("btnConfirmarStatus").addEventListener("click", () => {
+            const novoStatus = document.getElementById("novoStatusBulk").value;
+            ids.forEach((id) => {
+              const obra = obraStore().porId(id);
+              if (obra) {
+                obra.status = novoStatus;
+                obraStore().atualizar(id, obra);
+              }
+            });
+            mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} atualizada${ids.length === 1 ? "" : "s"}`);
+            this.selecionados.clear();
+            fecharModal();
+            this.rerenderizar();
+          });
+          document.getElementById("btnCancelarStatus").addEventListener("click", () => fecharModal());
+          return;
+        case "exportar":
+          this.exportarObrasJSON(ids);
+          break;
+        case "exportarPDF":
+          this.exportarCatalogoPDF(ids);
+          break;
+        case "excluir":
+          if (!confirm(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? "" : "s"}? Esta a\xE7\xE3o n\xE3o pode ser desfeita.`)) return;
+          ids.forEach((id) => obraStore().remover(id));
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} exclu\xEDda${ids.length === 1 ? "" : "s"}`);
+          break;
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
+    }
+    exportarObrasJSON(ids) {
+      const obrasParaExportar = ids.map((id) => obraStore().porId(id)).filter(Boolean);
+      const dadosExport = { obras: obrasParaExportar, exportadoEm: (/* @__PURE__ */ new Date()).toISOString(), versao: "1.0" };
+      const blob = new Blob([JSON.stringify(dadosExport, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      a.href = url;
+      a.download = `atelier-crm-obras-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} exportada${ids.length === 1 ? "" : "s"}`);
+    }
+    exportarCatalogoPDF(ids) {
+      if (!window.jspdf) {
+        mostrarToast("Biblioteca de PDF indispon\xEDvel.");
+        return;
+      }
+      const obras = ids.map((id) => obraStore().porId(id)).filter(Boolean);
+      if (obras.length === 0) return;
+      mostrarLoading("Gerando cat\xE1logo PDF...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const larguraPagina = doc.internal.pageSize.getWidth();
+      const alturaPagina = doc.internal.pageSize.getHeight();
+      const nomeArtista = configStore().artista && configStore().artista.nome || "Ateli\xEA do Artista";
+      obras.forEach((obra, idx) => {
+        if (idx > 0) doc.addPage();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(30, 30, 30);
+        doc.text(nomeArtista, larguraPagina / 2, 22, { align: "center" });
+        doc.setDrawColor(200);
+        doc.setLineWidth(0.4);
+        doc.line(25, 28, larguraPagina - 25, 28);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(130);
+        doc.text(`Cat\xE1logo de Obras \xB7 P\xE1gina ${idx + 1} de ${obras.length}`, larguraPagina / 2, 35, { align: "center" });
+        let yAtual = 46;
+        const imgSrc = this.obterImagem(obra);
+        if (/^data:image\/(png|jpe?g)/i.test(imgSrc || "")) {
+          try {
+            const tipo = /png/i.test(imgSrc) ? "PNG" : "JPEG";
+            doc.addImage(imgSrc, tipo, (larguraPagina - 100) / 2, yAtual, 100, 100, void 0, "FAST");
+            yAtual += 112;
+          } catch (e) {
+            console.warn("Erro ao inserir imagem no PDF:", e);
+          }
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(20);
+        doc.text(obra.titulo || "Sem t\xEDtulo", larguraPagina / 2, yAtual, { align: "center" });
+        yAtual += 9;
+        if (obra.serie) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10);
+          doc.setTextColor(120);
+          doc.text(`S\xE9rie: ${obra.serie}`, larguraPagina / 2, yAtual, { align: "center" });
+          yAtual += 8;
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(60);
+        const dados = [
+          `T\xE9cnica: ${capitalizarTexto(obra.tecnica)}`,
+          `Dimens\xF5es: ${this.formatarDimensoes(obra.dimensoes)}`,
+          `Ano: ${obra.ano || "-"}`,
+          `Status: ${rotuloStatus(obra.status)}`,
+          `Pre\xE7o: ${formatarMoeda(obra.preco)}`
+        ];
+        dados.forEach((linha) => {
+          doc.text(linha, larguraPagina / 2, yAtual, { align: "center" });
+          yAtual += 6.5;
+        });
+        if (obra.descricao) {
+          yAtual += 4;
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10);
+          doc.setTextColor(90);
+          doc.text(doc.splitTextToSize(obra.descricao, larguraPagina - 60), larguraPagina / 2, yAtual, { align: "center" });
+        }
+        doc.setDrawColor(210);
+        doc.line(25, alturaPagina - 20, larguraPagina - 25, alturaPagina - 20);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Cat\xE1logo gerado em ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")} \xB7 Atelier CRM`, larguraPagina / 2, alturaPagina - 14, { align: "center" });
+      });
+      const nomeArquivo = `catalogo-${obras.length}-obras-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.pdf`;
+      doc.save(nomeArquivo);
+      esconderLoading();
+      mostrarToast(`Cat\xE1logo PDF exportado com ${obras.length} obra${obras.length === 1 ? "" : "s"}!`);
+    }
+    /* ------------------------------------------------------------------------
+       CADASTRO / EDIÇÃO DE OBRA (com múltiplas imagens, drag & drop, editor)
+       ------------------------------------------------------------------------ */
+    abrirFormulario(id = null) {
+      const obraExistente = id ? obraStore().porId(id) : null;
+      this.imagensFormAtual = obraExistente ? [...obraExistente.imagens || []] : [];
+      this.imagemDestacadaAtual = obraExistente ? obraExistente.imagemDestacada || obraExistente.imagens && obraExistente.imagens[0] || obraExistente.imagem : null;
+      const dim = obraExistente && obraExistente.dimensoes || {};
+      abrirModal(`
+      <h3>${obraExistente ? "Editar Obra" : "Nova Obra"}</h3>
+      <form id="formObra" class="form-obra-premium">
+        <div class="campo-form">
+          <label>T\xEDtulo *</label>
+          <input type="text" id="campoTitulo" value="${obraExistente ? obraExistente.titulo : ""}" required>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>T\xE9cnica *</label>
+            <select id="campoTecnica" required>
+              <option value="">Selecione...</option>
+              <option value="\xF3leo" ${obraExistente && obraExistente.tecnica === "\xF3leo" ? "selected" : ""}>\xD3leo</option>
+              <option value="aquarela" ${obraExistente && obraExistente.tecnica === "aquarela" ? "selected" : ""}>Aquarela</option>
+              <option value="escultura" ${obraExistente && obraExistente.tecnica === "escultura" ? "selected" : ""}>Escultura</option>
+              <option value="outra" ${obraExistente && obraExistente.tecnica === "outra" ? "selected" : ""}>Outra</option>
+            </select>
+          </div>
+          <div class="campo-form">
+            <label>Ano</label>
+            <input type="number" id="campoAno" value="${obraExistente ? obraExistente.ano || "" : (/* @__PURE__ */ new Date()).getFullYear()}">
+          </div>
+        </div>
+        <div class="campo-form">
+          <label>Dimens\xF5es (cm)</label>
+          <div class="form-linha">
+            <input type="number" id="campoAltura" placeholder="Altura" value="${dim.altura || ""}">
+            <input type="number" id="campoLargura" placeholder="Largura" value="${dim.largura || ""}">
+            <input type="number" id="campoProfundidade" placeholder="Profundidade" value="${dim.profundidade || ""}">
+          </div>
+        </div>
+        <div class="campo-form">
+          <label>S\xE9rie (opcional)</label>
+          <input type="text" id="campoSerie" value="${obraExistente ? obraExistente.serie || "" : ""}">
+        </div>
+        <div class="campo-form">
+          <label>Descri\xE7\xE3o</label>
+          <textarea id="campoDescricao">${obraExistente ? obraExistente.descricao || "" : ""}</textarea>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Pre\xE7o (R$) *</label>
+            <input type="number" id="campoPreco" value="${obraExistente ? obraExistente.preco : ""}" required>
+          </div>
+          <div class="campo-form">
+            <label>Status</label>
+            <select id="campoStatus">
+              <option value="dispon\xEDvel" ${!obraExistente || classeStatus(obraExistente.status) === "disponivel" ? "selected" : ""}>Dispon\xEDvel</option>
+              <option value="reservada" ${obraExistente && classeStatus(obraExistente.status) === "reservada" ? "selected" : ""}>Reservada</option>
+              <option value="vendida" ${obraExistente && classeStatus(obraExistente.status) === "vendida" ? "selected" : ""}>Vendida</option>
+              <option value="em exposi\xE7\xE3o" ${obraExistente && classeStatus(obraExistente.status) === "exposicao" ? "selected" : ""}>Em Exposi\xE7\xE3o</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="campo-form">
+          <label>Imagens da Obra</label>
+          <div class="dropzone-imagens" id="dropzoneImagens">
+            <div class="dropzone-placeholder">
+              <span class="dropzone-icone">\u{1F4F7}</span>
+              <p>Arraste imagens para c\xE1 ou clique para selecionar</p>
+              <p class="texto-ajuda">JPG, PNG \xB7 M\xFAltiplos arquivos \xB7 M\xE1x 5 imagens</p>
+            </div>
+            <input type="file" id="campoImagens" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="preview-galeria" id="previewGaleria">
+            ${this.imagensFormAtual.length === 0 ? '<p class="texto-ajuda">Nenhuma imagem selecionada ainda.</p>' : ""}
+          </div>
+        </div>
+
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarObra">Cancelar</button>
+          <button type="submit" class="btn-primario">Salvar Obra</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarObra").addEventListener("click", fecharModal);
+      this.iniciarDropzone();
+      this.renderizarPreviewGaleria();
+      document.getElementById("formObra").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const titulo = document.getElementById("campoTitulo").value.trim();
+        const tecnica = document.getElementById("campoTecnica").value;
+        const preco = document.getElementById("campoPreco").value;
+        if (!titulo || !tecnica || preco === "") {
+          mostrarToast("Preencha os campos obrigat\xF3rios: t\xEDtulo, t\xE9cnica e pre\xE7o.");
+          return;
+        }
+        const dadosObra = {
+          titulo,
+          tecnica,
+          dimensoes: {
+            altura: Number(document.getElementById("campoAltura").value) || 0,
+            largura: Number(document.getElementById("campoLargura").value) || 0,
+            profundidade: Number(document.getElementById("campoProfundidade").value) || 0
+          },
+          ano: Number(document.getElementById("campoAno").value) || null,
+          descricao: document.getElementById("campoDescricao").value.trim(),
+          preco: Number(preco),
+          status: document.getElementById("campoStatus").value,
+          imagem: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || gerarImagemPlaceholder("#cccccc", "\u{1F5BC}\uFE0F")),
+          imagens: this.imagensFormAtual,
+          imagemDestacada: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || ""),
+          serie: document.getElementById("campoSerie").value.trim()
+        };
+        if (obraExistente) {
+          obraStore().atualizar(obraExistente.id, dadosObra);
+          mostrarToast("Obra atualizada com sucesso!");
+        } else {
+          dadosObra.dataCadastro = (/* @__PURE__ */ new Date()).toISOString();
+          obraStore().adicionar(dadosObra);
+          mostrarToast("Obra cadastrada com sucesso!");
+        }
+        fecharModal();
+        this.router.navegar("catalogo");
+      });
+    }
+    iniciarDropzone() {
+      const dropzone = document.getElementById("dropzoneImagens");
+      const inputFile = document.getElementById("campoImagens");
+      if (!dropzone) return;
+      dropzone.addEventListener("click", () => inputFile.click());
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragging");
+      });
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragging");
+      });
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragging");
+        this.processarArquivos(e.dataTransfer.files);
+      });
+      inputFile.addEventListener("change", (e) => {
+        this.processarArquivos(e.target.files);
+        e.target.value = "";
+      });
+    }
+    processarArquivos(files) {
+      if (this.imagensFormAtual.length + files.length > 5) {
+        mostrarToast("M\xE1ximo de 5 imagens por obra.");
+        return;
+      }
+      Array.from(files).forEach((arquivo) => {
+        if (!arquivo.type.startsWith("image/")) return;
+        const leitor = new FileReader();
+        leitor.onload = (ev) => {
+          const imgBase64 = ev.target.result;
+          this.comprimirImagem(imgBase64, 1200, 0.8, (comprimida) => {
+            this.imagensFormAtual.push(comprimida);
+            if (!this.imagemDestacadaAtual) {
+              this.imagemDestacadaAtual = comprimida;
+            }
+            this.renderizarPreviewGaleria();
+          });
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+    }
+    comprimirImagem(base64, maxLargura, qualidade, callback) {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > maxLargura) {
+          height = height * maxLargura / width;
+          width = maxLargura;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL("image/jpeg", qualidade));
+      };
+      img.onerror = () => callback(base64);
+      img.src = base64;
+    }
+    renderizarPreviewGaleria() {
+      const container = document.getElementById("previewGaleria");
+      if (!container) return;
+      if (this.imagensFormAtual.length === 0) {
+        container.innerHTML = '<p class="texto-ajuda">Nenhuma imagem selecionada ainda.</p>';
+        return;
+      }
+      let dragSrcIdx = -1;
+      container.innerHTML = `
+      <div class="grade-miniaturas drop-reorder">
+        ${this.imagensFormAtual.map((img, i) => `
+          <div class="miniatura-imagem ${img === this.imagemDestacadaAtual ? "destacada" : ""}" draggable="true" data-idx="${i}">
+            <img src="${img}" alt="Imagem ${i + 1}">
+            <div class="miniaturas-acoes">
+              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? "ativo" : ""}" data-destacar="${i}" title="Marcar como destacada">\u2B50</button>
+              <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem">\u270E</button>
+              <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem">\u2715</button>
+            </div>
+            <span class="mi-ordem">${i + 1}</span>
+          </div>
+        `).join("")}
+      </div>
+      <p class="texto-ajuda">\u2B50 = imagem destacada (capa). Arraste as imagens para reordenar.</p>
+    `;
+      container.querySelectorAll(".miniatura-imagem[draggable]").forEach((el) => {
+        el.addEventListener("dragstart", (e) => {
+          dragSrcIdx = parseInt(el.dataset.idx);
+          el.classList.add("d-r-arrastando");
+          e.dataTransfer.effectAllowed = "move";
+        });
+        el.addEventListener("dragend", () => {
+          el.classList.remove("d-r-arrastando");
+          container.querySelectorAll(".miniatura-imagem").forEach((e) => e.classList.remove("d-r-alvo"));
+        });
+        el.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        });
+        el.addEventListener("dragenter", (e) => {
+          e.preventDefault();
+          el.classList.add("d-r-alvo");
+        });
+        el.addEventListener("dragleave", () => el.classList.remove("d-r-alvo"));
+        el.addEventListener("drop", (e) => {
+          e.preventDefault();
+          el.classList.remove("d-r-alvo");
+          const targetIdx = parseInt(el.dataset.idx);
+          if (dragSrcIdx >= 0 && targetIdx >= 0 && dragSrcIdx !== targetIdx) {
+            const [item] = this.imagensFormAtual.splice(dragSrcIdx, 1);
+            this.imagensFormAtual.splice(targetIdx, 0, item);
+            this.renderizarPreviewGaleria();
+          }
+        });
+      });
+      container.querySelectorAll("[data-destacar]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.dataset.destacar);
+          this.imagemDestacadaAtual = this.imagensFormAtual[idx];
+          this.renderizarPreviewGaleria();
+        });
+      });
+      container.querySelectorAll("[data-remover-img]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.dataset.removerImg);
+          this.imagensFormAtual.splice(idx, 1);
+          if (this.imagemDestacadaAtual === this.imagensFormAtual[idx] || !this.imagensFormAtual.includes(this.imagemDestacadaAtual)) {
+            this.imagemDestacadaAtual = this.imagensFormAtual[0] || null;
+          }
+          this.renderizarPreviewGaleria();
+        });
+      });
+      container.querySelectorAll("[data-editar-img]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.dataset.editarImg);
+          this.abrirEditorImagem(idx);
+        });
+      });
+    }
+    abrirImportacaoLote() {
+      abrirModal(`
+      <h3>\u{1F4F8} Importar M\xFAltiplas Obras</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Arraste imagens ou clique para selecionar. Cada imagem se tornar\xE1 uma nova obra.</p>
+      <div class="dropzone-imagens batch-dropzone" id="batchDropzone">
+        <div class="dropzone-placeholder">
+          <span class="dropzone-icone">\u{1F4F7}</span>
+          <p>Arraste imagens para c\xE1</p>
+          <p class="texto-ajuda">JPG, PNG \xB7 M\xFAltiplos arquivos \xB7 Sem limite</p>
+        </div>
+        <input type="file" id="batchFileInput" accept="image/*" multiple style="display:none">
+      </div>
+      <div id="batchPreviewContainer"></div>
+      <div class="batch-campos-comuns" id="batchCamposComuns" style="display:none;">
+        <h4 style="font-size:0.85rem;margin-bottom:8px;">Campos comuns (aplicados a todas)</h4>
+        <div class="form-linha">
+          <div class="campo-form"><label>T\xE9cnica</label><select id="batchTecnica"><option value="">\u2014</option><option value="\xF3leo">\xD3leo</option><option value="aquarela">Aquarela</option><option value="escultura">Escultura</option><option value="outra">Outra</option></select></div>
+          <div class="campo-form"><label>Status</label><select id="batchStatus"><option value="dispon\xEDvel">Dispon\xEDvel</option><option value="reservada">Reservada</option><option value="vendida">Vendida</option><option value="em exposi\xE7\xE3o">Em Exposi\xE7\xE3o</option></select></div>
+          <div class="campo-form"><label>Ano</label><input type="number" id="batchAno" value="${(/* @__PURE__ */ new Date()).getFullYear()}"></div>
+        </div>
+        <div class="campo-form"><label>S\xE9rie (opcional)</label><input type="text" id="batchSerie" placeholder="Ex: S\xE9rie Jardins"></div>
+      </div>
+      <div class="modal-acoes" id="batchAcoes" style="display:none;">
+        <button class="btn-secundario" id="batchCancelar">Cancelar</button>
+        <button class="btn-primario" id="batchCriar">Importar Obras</button>
+      </div>
+    `);
+      this.iniciarBatchDrop();
+    }
+    iniciarBatchDrop() {
+      const dropzone = document.getElementById("batchDropzone");
+      const fileInput2 = document.getElementById("batchFileInput");
+      let imagensLote = [];
+      if (!dropzone) return;
+      dropzone.addEventListener("click", () => fileInput2.click());
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragging");
+      });
+      dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragging"));
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragging");
+        processarLote(e.dataTransfer.files);
+      });
+      fileInput2.addEventListener("change", () => {
+        if (fileInput2.files.length) processarLote(fileInput2.files);
+      });
+      const processarLote = (files) => {
+        const imgFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
+        if (imgFiles.length === 0) {
+          mostrarToast("Nenhuma imagem encontrada.");
+          return;
+        }
+        let concluidas = 0;
+        imgFiles.forEach((f) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            comprimirImagem2(ev.target.result, 1200, 0.8, (comprimida) => {
+              imagensLote.push(comprimida);
+              concluidas++;
+              if (concluidas === imgFiles.length) {
+                mostrarPreviewLote(imagensLote);
+              }
+            });
+          };
+          reader.readAsDataURL(f);
+        });
+      };
+      const comprimirImagem2 = (base64, maxLargura, qualidade, callback) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = img;
+          if (width > maxLargura) {
+            height = height * maxLargura / width;
+            width = maxLargura;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+          callback(canvas.toDataURL("image/jpeg", qualidade));
+        };
+        img.onerror = () => callback(base64);
+        img.src = base64;
+      };
+      const mostrarPreviewLote = (imagens) => {
+        const container = document.getElementById("batchPreviewContainer");
+        const campos = document.getElementById("batchCamposComuns");
+        const acoes = document.getElementById("batchAcoes");
+        if (container) {
+          container.innerHTML = `
+          <div class="batch-preview-grid">
+            ${imagens.map((img, i) => `
+              <div class="batch-item" data-idx="${i}">
+                <img src="${img}" alt="Obra ${i + 1}">
+                <button class="batch-remover" data-idx="${i}" title="Remover">\u2715</button>
+                <span class="batch-label">Obra ${i + 1}</span>
+              </div>
+            `).join("")}
+          </div>
+          <p class="texto-ajuda">${imagens.length} imagem(ns) preparada(s) para importa\xE7\xE3o.</p>
+        `;
+          container.querySelectorAll(".batch-remover").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const idx = parseInt(btn.dataset.idx);
+              imagens.splice(idx, 1);
+              mostrarPreviewLote(imagens);
+            });
+          });
+        }
+        if (campos) campos.style.display = imagens.length > 0 ? "block" : "none";
+        if (acoes) acoes.style.display = imagens.length > 0 ? "flex" : "none";
+        document.getElementById("batchCancelar")?.addEventListener("click", fecharModal);
+        document.getElementById("batchCriar")?.addEventListener("click", () => {
+          const tecnica = document.getElementById("batchTecnica")?.value || "";
+          const status = document.getElementById("batchStatus")?.value || "dispon\xEDvel";
+          const ano = parseInt(document.getElementById("batchAno")?.value) || (/* @__PURE__ */ new Date()).getFullYear();
+          const serie = document.getElementById("batchSerie")?.value.trim() || "";
+          const obras = imagens.map((img) => ({
+            titulo: `Obra ${Date.now()}`,
+            tecnica,
+            ano,
+            status,
+            serie,
+            imagem: img,
+            imagens: [img],
+            imagemDestacada: img,
+            preco: 0,
+            dataCadastro: (/* @__PURE__ */ new Date()).toISOString()
+          }));
+          obras.forEach((o) => obraStore().adicionar(o));
+          fecharModal();
+          mostrarToast(`${obras.length} obra(s) importada(s) com sucesso!`);
+          this.router.navegar("catalogo");
+        });
+      };
+    }
+    /* ------------------------------------------------------------------------
+       EDITOR DE IMAGEM INLINE (crop, rotate, brightness)
+       ------------------------------------------------------------------------ */
+    abrirEditorImagem(idx) {
+      const imgSrc = this.imagensFormAtual[idx];
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      let imgObj = new Image();
+      let angulo = 0;
+      let brilho = 0;
+      let crop = { x: 0, y: 0, w: 0, h: 0 };
+      let cropAtivo = false;
+      let cropInicio = null;
+      imgObj.onload = () => {
+        canvas.width = imgObj.width;
+        canvas.height = imgObj.height;
+        ctx.drawImage(imgObj, 0, 0);
+        crop = { x: 0, y: 0, w: imgObj.width, h: imgObj.height };
+        renderizarEditor();
+      };
+      imgObj.src = imgSrc;
+      const renderizarEditor = () => {
+        const previewData = aplicarTransformacoes();
+        abrirModal(`
+        <h3>\u270E Editor de Imagem</h3>
+        <div class="editor-imagem-container">
+          <div class="editor-imagem-tela">
+            <img src="${previewData}" id="previewEditor" style="max-width:100%;max-height:400px;">
+            ${cropAtivo ? '<div class="crop-overlay"></div>' : ""}
+          </div>
+          <div class="editor-imagem-controles">
+            <div class="editor-controle-grupo">
+              <label>Girar</label>
+              <button class="btn-miniatura" id="btnRotacionarEsq">\u21BA Esquerda</button>
+              <button class="btn-miniatura" id="btnRotacionarDir">\u21BB Direita</button>
+            </div>
+            <div class="editor-controle-grupo">
+              <label>Brilho: ${brilho > 0 ? "+" : ""}${brilho}</label>
+              <input type="range" id="sliderBrilho" min="-100" max="100" value="${brilho}" style="width:100%">
+            </div>
+            <div class="editor-controle-grupo">
+              <label>Cortar</label>
+              <button class="btn-miniatura" id="btnAtivarCrop">${cropAtivo ? "\u2715 Cancelar Crop" : "\u2702 Ativar Crop"}</button>
+              <p class="texto-ajuda">Clique e arraste na imagem para selecionar a \xE1rea</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button class="btn-secundario" id="btnCancelarEditor">Cancelar</button>
+          <button class="btn-primario" id="btnAplicarEditor">Aplicar</button>
+        </div>
+      `);
+        document.getElementById("btnRotacionarEsq").addEventListener("click", () => {
+          angulo -= 90;
+          renderizarEditor();
+        });
+        document.getElementById("btnRotacionarDir").addEventListener("click", () => {
+          angulo += 90;
+          renderizarEditor();
+        });
+        document.getElementById("sliderBrilho").addEventListener("input", (e) => {
+          brilho = parseInt(e.target.value);
+          renderizarEditor();
+        });
+        document.getElementById("btnAtivarCrop").addEventListener("click", () => {
+          cropAtivo = !cropAtivo;
+          renderizarEditor();
+        });
+        document.getElementById("btnCancelarEditor").addEventListener("click", fecharModal);
+        document.getElementById("btnAplicarEditor").addEventListener("click", () => {
+          this.imagensFormAtual[idx] = aplicarTransformacoes();
+          this.renderizarPreviewGaleria();
+          fecharModal();
+          mostrarToast("Imagem editada com sucesso!");
+        });
+      };
+      const aplicarTransformacoes = () => {
+        const offscreen = document.createElement("canvas");
+        const offCtx = offscreen.getContext("2d");
+        const rotRad = angulo * Math.PI / 180;
+        const cos = Math.abs(Math.cos(rotRad));
+        const sin = Math.abs(Math.sin(rotRad));
+        let w = imgObj.width;
+        let h = imgObj.height;
+        if (angulo % 180 !== 0) {
+          const novoW = h * cos + w * sin;
+          const novoH = h * sin + w * cos;
+          offscreen.width = Math.ceil(novoW);
+          offscreen.height = Math.ceil(novoH);
+          offCtx.translate(offscreen.width / 2, offscreen.height / 2);
+          offCtx.rotate(rotRad);
+          offCtx.drawImage(imgObj, -w / 2, -h / 2);
+        } else {
+          offscreen.width = w;
+          offscreen.height = h;
+          offCtx.drawImage(imgObj, 0, 0);
+        }
+        if (brilho !== 0) {
+          const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
+          const data = imageData.data;
+          const fator = 1 + brilho / 100;
+          for (let i = 0; i < data.length; i += 4) {
+            data[i] = Math.min(255, data[i] * fator);
+            data[i + 1] = Math.min(255, data[i + 1] * fator);
+            data[i + 2] = Math.min(255, data[i + 2] * fator);
+          }
+          offCtx.putImageData(imageData, 0, 0);
+        }
+        return offscreen.toDataURL("image/jpeg", 0.9);
+      };
+    }
+    /* ------------------------------------------------------------------------
+       FICHA TÉCNICA (com galeria de imagens, slideshow e QR Code)
+       ------------------------------------------------------------------------ */
+    abrirFichaTecnica(id) {
+      const o = obraStore().porId(id);
+      if (!o) return;
+      const imagens = o.imagens && o.imagens.length > 0 ? o.imagens : [o.imagem];
+      const temMultiplas = imagens.length > 1;
+      abrirModal(`
+      <div class="ficha-tecnica-obra ficha-premium">
+        <div class="ficha-galeria">
+          <div class="ficha-imagem-principal">
+            <img id="fichaImgPrincipal" src="${this.obterImagem(o)}" alt="${o.titulo}">
+            ${temMultiplas ? `
+            <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev">\u25C0</button>
+            <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext">\u25B6</button>
+            <button class="ficha-slideshow-btn" id="fichaSlideshow">\u25B6 Iniciar Slideshow</button>
+            ` : ""}
+          </div>
+          ${temMultiplas ? `
+          <div class="ficha-miniaturas" id="fichaMiniaturas">
+            ${imagens.map((img, i) => `
+              <img src="${img}" class="ficha-thumb ${i === 0 ? "ativo" : ""}" data-ficha-indice="${i}" alt="Imagem ${i + 1}">
+            `).join("")}
+          </div>
+          ` : ""}
+        </div>
+        <div class="ficha-info">
+          <div class="titulo-ficha">${o.titulo}</div>
+          <div class="serie-ficha">${o.serie ? "S\xE9rie: " + o.serie : "&nbsp;"}</div>
+          <table class="tabela-ficha">
+            <tr><td>T\xE9cnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
+            <tr><td>Dimens\xF5es</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
+            <tr><td>Ano</td><td>${o.ano || "-"}</td></tr>
+            <tr><td>Status</td><td><span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span></td></tr>
+            <tr><td>Pre\xE7o</td><td>${formatarMoeda(o.preco)}</td></tr>
+            <tr><td>Cadastrada em</td><td>${formatarData(o.dataCadastro || o.criadoEm)}</td></tr>
+          </table>
+          ${o.descricao ? `<div class="descricao-ficha">${o.descricao}</div>` : ""}
+          <div class="ficha-qrcode" id="fichaQRCode"></div>
+          <div class="acoes-ficha">
+            <button class="btn-secundario" id="btnEditarFicha">\u270E Editar</button>
+            <button class="btn-primario" id="btnExportarPdfFicha">\u{1F4C4} Exportar PDF</button>
+            <button class="btn-secundario" id="btnCompartilharObra">\u{1F517} Compartilhar</button>
+          </div>
+        </div>
+      </div>
+    `);
+      document.getElementById("btnEditarFicha").addEventListener("click", () => {
+        fecharModal();
+        this.abrirFormulario(o.id);
+      });
+      document.getElementById("btnExportarPdfFicha").addEventListener("click", () => this.exportarPDF(o));
+      document.getElementById("btnCompartilharObra")?.addEventListener("click", () => this.compartilharObra(o));
+      if (temMultiplas) {
+        let indiceAtual = 0;
+        const imgPrincipal = document.getElementById("fichaImgPrincipal");
+        const thumbs = document.querySelectorAll(".ficha-thumb");
+        const mostrarImagem = (idx) => {
+          indiceAtual = idx;
+          imgPrincipal.src = imagens[idx];
+          thumbs.forEach((t, i) => t.classList.toggle("ativo", i === idx));
+        };
+        document.getElementById("fichaNavPrev").addEventListener("click", () => {
+          mostrarImagem((indiceAtual - 1 + imagens.length) % imagens.length);
+        });
+        document.getElementById("fichaNavNext").addEventListener("click", () => {
+          mostrarImagem((indiceAtual + 1) % imagens.length);
+        });
+        document.getElementById("fichaSlideshow").addEventListener("click", () => {
+          this.abrirSlideshow(o.id);
+        });
+        thumbs.forEach((t) => {
+          t.addEventListener("click", () => mostrarImagem(parseInt(t.dataset.fichaIndice)));
+        });
+      }
+      this.gerarQRCodeObra(o);
+    }
+    compartilharObra(obra) {
+      const texto = `${obra.titulo} - ${capitalizarTexto(obra.tecnica)} - ${this.formatarDimensoes(obra.dimensoes)} - ${formatarMoeda(obra.preco)}`;
+      if (navigator.share) {
+        navigator.share({ title: obra.titulo, text: texto }).catch(() => {
+        });
+      } else {
+        navigator.clipboard.writeText(texto).then(() => mostrarToast("Informa\xE7\xE3o copiadas para a \xE1rea de transfer\xEAncia!")).catch(() => {
+        });
+      }
+    }
+    gerarQRCodeObra(obra) {
+      const container = document.getElementById("fichaQRCode");
+      if (!container) return;
+      if (typeof QRCode === "undefined") {
+        container.innerHTML = '<p class="texto-ajuda">QR Code indispon\xEDvel.</p>';
+        return;
+      }
+      try {
+        const dados = JSON.stringify({
+          titulo: obra.titulo,
+          tecnica: obra.tecnica,
+          ano: obra.ano,
+          preco: obra.preco,
+          dimensoes: this.formatarDimensoes(obra.dimensoes)
+        });
+        container.innerHTML = "";
+        const qrDiv = document.createElement("div");
+        container.appendChild(qrDiv);
+        new QRCode(qrDiv, { text: dados, width: 120, height: 120, colorDark: "#1a1a1a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+      } catch (e) {
+        container.innerHTML = '<p class="texto-ajuda">Erro ao gerar QR Code.</p>';
+      }
+    }
+    /* ------------------------------------------------------------------------
+       SLIDESHOW (modo galeria)
+       ------------------------------------------------------------------------ */
+    abrirSlideshow(id) {
+      const obra = obraStore().porId(id);
+      if (!obra) return;
+      const imagens = obra.imagens && obra.imagens.length > 0 ? obra.imagens : [obra.imagem];
+      if (!imagens || imagens.length === 0) return;
+      const images = imagens.map((src, i) => ({
+        src,
+        title: obra.titulo || "Sem t\xEDtulo",
+        subtitle: [obra.tecnica, obra.ano].filter(Boolean).join(" \xB7 ") + (imagens.length > 1 ? ` \u2014 Imagem ${i + 1}/${imagens.length}` : ""),
+        caption: obra.descricao || "",
+        price: obra.preco ? formatarMoeda(obra.preco) : "",
+        id: obra.id
+      }));
+      abrirLightbox(images, 0);
+    }
+    /* ------------------------------------------------------------------------
+       COMPARAÇÃO LADO A LADO
+       ------------------------------------------------------------------------ */
+    abrirComparacao(ids) {
+      if (ids.length < 2) {
+        mostrarToast("Selecione pelo menos 2 obras para comparar.");
+        return;
+      }
+      const obras = ids.map((id) => obraStore().porId(id)).filter(Boolean);
+      if (obras.length < 2) return;
+      const colunas = obras.map((o) => `
+      <div class="comparacao-coluna">
+        <div class="comparacao-imagem">
+          <img src="${this.obterImagem(o)}" alt="${o.titulo}">
+        </div>
+        <h3 class="comparacao-titulo">${o.titulo}</h3>
+        ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ""}
+        <table class="comparacao-tabela">
+          <tr><td>T\xE9cnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
+          <tr><td>Dimens\xF5es</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
+          <tr><td>Ano</td><td>${o.ano || "-"}</td></tr>
+          <tr><td>Status</td><td><span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span></td></tr>
+          <tr><td>Pre\xE7o</td><td>${formatarMoeda(o.preco)}</td></tr>
+          <tr><td>S\xE9rie</td><td>${o.serie || "-"}</td></tr>
+        </table>
+      </div>
+    `).join("");
+      const totalColunas = Math.min(obras.length, 4);
+      abrirModal(`
+      <h3>\u{1F4CA} Compara\xE7\xE3o de Obras</h3>
+      <div class="comparacao-container" style="grid-template-columns: repeat(${totalColunas}, 1fr)">
+        ${colunas}
+      </div>
+      <div class="modal-acoes">
+        <button class="btn-secundario" id="btnFecharComparacao">Fechar</button>
+        <button class="btn-primario" id="btnExportarComparacao">\u{1F4C4} Exportar Compara\xE7\xE3o</button>
+      </div>
+    `);
+      document.getElementById("btnFecharComparacao").addEventListener("click", fecharModal);
+      document.getElementById("btnExportarComparacao").addEventListener("click", () => {
+        this.exportarComparacaoPDF(obras);
+      });
+    }
+    adicionarComparacao(id) {
+      if (this.idsComparacao.includes(id)) {
+        this.idsComparacao = this.idsComparacao.filter((i) => i !== id);
+        if (this.idsComparacao.length === 0) this.modoComparacao = false;
+      } else {
+        this.idsComparacao.push(id);
+        this.modoComparacao = true;
+        this.selecionados.add(id);
+      }
+      this.rerenderizar();
+      if (this.idsComparacao.length >= 2) {
+        this.abrirComparacao([...this.idsComparacao]);
+        this.idsComparacao = [];
+      }
+    }
+    exportarComparacaoPDF(obras) {
+      if (!window.jspdf) {
+        mostrarToast("Biblioteca de PDF indispon\xEDvel.");
+        return;
+      }
+      mostrarLoading("Gerando compara\xE7\xE3o em PDF...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: obras.length > 2 ? "landscape" : "portrait" });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Compara\xE7\xE3o de Obras", doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+      const margemEsq = 15;
+      let y = 35;
+      const colW = (doc.internal.pageSize.getWidth() - 30) / obras.length;
+      obras.forEach((obra, i) => {
+        const x = margemEsq + i * colW;
+        doc.setDrawColor(200);
+        doc.rect(x, y - 5, colW - 4, 80);
+        const imgSrc = this.obterImagem(obra);
+        if (/^data:image\/(png|jpe?g)/i.test(imgSrc || "")) {
+          try {
+            doc.addImage(imgSrc, /png/i.test(imgSrc) ? "PNG" : "JPEG", x + 2, y, colW - 8, 35, void 0, "FAST");
+          } catch (e) {
+          }
+        }
+        y += 40;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text(obra.titulo || "Sem t\xEDtulo", x + (colW - 4) / 2, y, { align: "center", maxWidth: colW - 8 });
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const campos = [
+          ["T\xE9cnica", capitalizarTexto(obra.tecnica)],
+          ["Dimens\xF5es", this.formatarDimensoes(obra.dimensoes)],
+          ["Ano", String(obra.ano || "-")],
+          ["Status", rotuloStatus(obra.status)],
+          ["Pre\xE7o", formatarMoeda(obra.preco)]
+        ];
+        campos.forEach(([k, v]) => {
+          doc.setFont("helvetica", "bold");
+          doc.text(k + ":", x + 2, y);
+          doc.setFont("helvetica", "normal");
+          const tw = doc.getTextWidth(k + ": ");
+          doc.text(v, x + 2 + tw, y);
+          y += 5;
+        });
+        y = 35;
+      });
+      doc.save(`comparacao-obras-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.pdf`);
+      esconderLoading();
+      mostrarToast("Compara\xE7\xE3o exportada em PDF!");
+    }
+    /* ------------------------------------------------------------------------
+       EXCLUSÃO E EXPORTAÇÃO INDIVIDUAL
+       ------------------------------------------------------------------------ */
+    excluirObra(id) {
+      const obra = obraStore().porId(id);
+      if (!obra) return;
+      const confirmado = confirm(`Excluir a obra "${obra.titulo}"? Essa a\xE7\xE3o n\xE3o pode ser desfeita.`);
+      if (!confirmado) return;
+      obraStore().remover(id);
+      mostrarToast("Obra exclu\xEDda.");
+      this.rerenderizar();
+    }
+    exportarPDF(obra) {
+      if (!window.jspdf) {
+        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).");
+        return;
+      }
+      mostrarLoading("Gerando ficha t\xE9cnica em PDF...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const larguraPagina = doc.internal.pageSize.getWidth();
+      const alturaPagina = doc.internal.pageSize.getHeight();
+      const nomeArtista = configStore().artista && configStore().artista.nome || "Ateli\xEA do Artista";
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(30, 30, 30);
+      doc.text(nomeArtista, larguraPagina / 2, 22, { align: "center" });
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.4);
+      doc.line(25, 28, larguraPagina - 25, 28);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(130);
+      doc.text("Ficha T\xE9cnica de Obra", larguraPagina / 2, 35, { align: "center" });
+      let yAtual = 46;
+      const imgSrc = this.obterImagem(obra);
+      const formatoSuportado = /^data:image\/(png|jpe?g)/i.test(imgSrc || "");
+      if (formatoSuportado) {
+        try {
+          const tipo = /png/i.test(imgSrc) ? "PNG" : "JPEG";
+          doc.addImage(imgSrc, tipo, (larguraPagina - 110) / 2, yAtual, 110, 110, void 0, "FAST");
+          yAtual += 122;
+        } catch (erro) {
+          console.warn("N\xE3o foi poss\xEDvel inserir a imagem no PDF:", erro);
+        }
+      } else {
+        doc.setDrawColor(210);
+        doc.rect((larguraPagina - 90) / 2, yAtual, 90, 90);
+        doc.setFontSize(9);
+        doc.setTextColor(180);
+        doc.text("Imagem n\xE3o dispon\xEDvel", larguraPagina / 2, yAtual + 45, { align: "center" });
+        yAtual += 102;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(20);
+      doc.text(obra.titulo || "Sem t\xEDtulo", larguraPagina / 2, yAtual, { align: "center" });
+      yAtual += 9;
+      if (obra.serie) {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(120);
+        doc.text(`S\xE9rie: ${obra.serie}`, larguraPagina / 2, yAtual, { align: "center" });
+        yAtual += 8;
+      }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(60);
+      const linhasDados = [
+        `T\xE9cnica: ${capitalizarTexto(obra.tecnica)}`,
+        `Dimens\xF5es: ${this.formatarDimensoes(obra.dimensoes)}`,
+        `Ano: ${obra.ano || "-"}`,
+        `Status: ${rotuloStatus(obra.status)}`,
+        `Pre\xE7o: ${formatarMoeda(obra.preco)}`
+      ];
+      linhasDados.forEach((linha) => {
+        doc.text(linha, larguraPagina / 2, yAtual, { align: "center" });
+        yAtual += 6.5;
+      });
+      if (obra.descricao) {
+        yAtual += 4;
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(90);
+        doc.text(doc.splitTextToSize(obra.descricao, larguraPagina - 60), larguraPagina / 2, yAtual, { align: "center" });
+      }
+      doc.setDrawColor(210);
+      doc.line(25, alturaPagina - 20, larguraPagina - 25, alturaPagina - 20);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Ficha gerada em ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")} \xB7 Atelier CRM`, larguraPagina / 2, alturaPagina - 14, { align: "center" });
+      const nomeArquivo = `ficha-${(obra.titulo || "obra").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.pdf`;
+      doc.save(nomeArquivo);
+      esconderLoading();
+      mostrarToast("PDF exportado com sucesso!");
+    }
+  };
+  var ClientesView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.busca = "";
+      this.modo = "lista";
+      this.selecionados = /* @__PURE__ */ new Set();
+      eventBus.on("abrir-novo-cliente", () => this.abrirFormulario());
+    }
+    clientesFiltrados() {
+      let clientes = clienteStore().items;
+      if (this.busca) {
+        const termo = this.busca.toLowerCase();
+        clientes = clientes.filter(
+          (c) => (c.nome || "").toLowerCase().includes(termo) || (c.email || "").toLowerCase().includes(termo) || (c.tags || []).some((t) => t.toLowerCase().includes(termo))
+        );
+      }
+      return [...clientes].sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+    }
+    comprasDoCliente(clienteId) {
+      return vendaStore().items.filter((v) => v.clienteId === clienteId).sort((a, b) => new Date(b.data) - new Date(a.data));
+    }
+    render() {
+      const clientes = this.clientesFiltrados();
+      const conteudo = clientes.length ? this.modo === "lista" ? this.renderTabela(clientes) : this.renderCards(clientes) : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio">\u{1F464}</div><p>Nenhum cliente encontrado.</p></div></div>`;
+      const totalCompras = clientes.reduce((s, c) => s + (c.aquisicoes || 0), 0);
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Clientes</h2>
+          <p class="subtitulo">${clientes.length} cliente${clientes.length === 1 ? "" : "s"} \xB7 ${totalCompras} aquisi\xE7\xE3o${totalCompras === 1 ? "" : "\xF5es"} no total</p>
+        </div>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk">
+            <input type="checkbox" id="selectAllCli" ${this.selecionados.size === clientes.length && clientes.length > 0 ? "checked" : ""}>
+            <label for="selectAllCli">Todos</label>
+          </div>
+          <div class="toggle-visualizacao">
+            <button id="btnListaCli" class="${this.modo === "lista" ? "ativo" : ""}" title="Tabela">\u2630 Lista</button>
+            <button id="btnGridCli" class="${this.modo === "grid" ? "ativo" : ""}" title="Cards">\u25A6 Cards</button>
+          </div>
+          <button class="btn-gradient" id="btnNovoCliente">\u271A Novo Cliente</button>
+        </div>
+      </div>
+      ${this.selecionados.size > 0 ? this.renderBarraBulk() : ""}
+      <div class="catalogo-filtros">
+        <div class="campo-filtro busca">
+          <label>Buscar</label>
+          <input type="text" id="buscaClientes" placeholder="Nome, e-mail ou tag..." value="${this.busca}">
+        </div>
+      </div>
+      ${conteudo}
+    `;
+    }
+    renderBarraBulk() {
+      return `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} cliente${this.selecionados.size === 1 ? "" : "s"} selecionado${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkExportCli">\u{1F4C4} Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkExcluirCli">\u{1F5D1} Excluir</button>
+          <button class="btn-secundario" id="bulkCancelarCli">\u2715 Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    renderTabela(clientes) {
+      const linhas = clientes.map((c) => `
+      <tr class="${this.selecionados.has(c.id) ? "linha-selecionada" : ""}">
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? "checked" : ""}>
+        </td>
+        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong></td>
+        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${c.email || "-"}</td>
+        <td>${c.telefone || "-"}</td>
+        <td>${c.aquisicoes || 0}</td>
+        <td>${(c.tags || []).map((t) => `<span class="badge-tag">${t}</span>`).join("") || "-"}</td>
+        <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
+          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar">\u270F\uFE0F</button>
+          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir">\u{1F5D1}\uFE0F</button>
+        </td>
+      </tr>
+    `).join("");
+      return `
+      <div class="tabela-wrapper">
+        <table>
+          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Aquisi\xE7\xF5es</th><th>Tags</th><th></th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    `;
+    }
+    renderCards(clientes) {
+      return `
+      <div class="grid-clientes stagger-in">
+        ${clientes.map((c) => `
+          <div class="card-cliente ${this.selecionados.has(c.id) ? "selecionada" : ""}">
+            <div class="checkbox-bulk">
+              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? "checked" : ""}>
+            </div>
+            <div class="cc-avatar">${(c.nome || "?").charAt(0).toUpperCase()}</div>
+            <div class="cc-info" data-abrir-ficha-cliente="${c.id}">
+              <div class="cc-nome">${c.nome}</div>
+              <div class="cc-meta">${c.email || "sem email"}</div>
+            </div>
+            <div class="cc-footer">
+              <span class="cc-aquisicoes">${c.aquisicoes || 0} compra${(c.aquisicoes || 0) === 1 ? "" : "s"}</span>
+              <div class="cc-tags">${(c.tags || []).slice(0, 2).map((t) => `<span class="badge-tag">${t}</span>`).join("")}</div>
+            </div>
+            <div class="cc-acoes">
+              <button data-editar-cliente="${c.id}" title="Editar">\u270F\uFE0F</button>
+              <button data-excluir-cliente="${c.id}" title="Excluir">\u{1F5D1}\uFE0F</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      document.getElementById("btnListaCli")?.addEventListener("click", () => {
+        this.modo = "lista";
+        this.rerenderizar();
+      });
+      document.getElementById("btnGridCli")?.addEventListener("click", () => {
+        this.modo = "grid";
+        this.rerenderizar();
+      });
+      document.getElementById("btnNovoCliente")?.addEventListener("click", () => this.abrirFormulario());
+      const campoBusca = document.getElementById("buscaClientes");
+      if (campoBusca) campoBusca.addEventListener("input", (e) => {
+        this.busca = e.target.value;
+        this.rerenderizar(true);
+      });
+      const selectAll = document.getElementById("selectAllCli");
+      if (selectAll) {
+        selectAll.addEventListener("change", (e) => {
+          const clientes = this.clientesFiltrados();
+          if (e.target.checked) {
+            clientes.forEach((c) => this.selecionados.add(c.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item-cli")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkExportCli")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkExcluirCli")?.addEventListener("click", () => this.bulkAcao("excluir"));
+      document.getElementById("bulkCancelarCli")?.addEventListener("click", () => {
+        this.selecionados.clear();
+        this.rerenderizar();
+      });
+      const delegHandler = (e) => {
+        const alvoEditar = e.target.closest("[data-editar-cliente]");
+        const alvoExcluir = e.target.closest("[data-excluir-cliente]");
+        const alvoFicha = e.target.closest("[data-abrir-ficha-cliente]");
+        if (alvoEditar) {
+          this.abrirFormulario(alvoEditar.dataset.editarCliente);
+          return;
+        }
+        if (alvoExcluir) {
+          this.excluirCliente(alvoExcluir.dataset.excluirCliente);
+          return;
+        }
+        if (alvoFicha) {
+          this.abrirFicha(alvoFicha.dataset.abrirFichaCliente);
+          return;
+        }
+      };
+      container.addEventListener("click", delegHandler);
+      this._bindCache["delegClientes"] = { el: container, handler: delegHandler, type: "click" };
+    }
+    rerenderizar(manterFoco = false) {
+      const container = document.getElementById("viewPrincipal");
+      const idFoco = manterFoco ? document.activeElement.id : null;
+      this.removerListeners();
+      container.innerHTML = this.render();
+      this.aposRenderizar();
+      if (idFoco) {
+        const el = document.getElementById(idFoco);
+        if (el) {
+          el.focus();
+          const v = el.value;
+          el.value = "";
+          el.value = v;
+        }
+      }
+    }
+    bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "exportar": {
+          const clientes = ids.map((id) => clienteStore().porId(id)).filter(Boolean);
+          const csv = [
+            ["nome", "email", "telefone", "aquisicoes", "tags"].join(","),
+            ...clientes.map((c) => [c.nome, c.email || "", c.telefone || "", c.aquisicoes || 0, (c.tags || []).join(";")].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+          ].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `clientes-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          mostrarToast(`${clientes.length} cliente(s) exportado(s)`);
+          break;
+        }
+        case "excluir": {
+          ids.forEach((id) => {
+            const c = clienteStore().porId(id);
+            if (c && !vendaStore().items.some((v) => v.clienteId === id)) {
+              clienteStore().remover(id);
+            }
+          });
+          mostrarToast(`${ids.length} cliente(s) exclu\xEDdo(s) (com vendas preservados)`);
+          break;
+        }
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
+    }
+    abrirFormulario(id = null) {
+      const existente = id ? clienteStore().porId(id) : null;
+      abrirModal(`
+      <h3>${existente ? "Editar Cliente" : "Novo Cliente"}</h3>
+      <form id="formCliente">
+        <div class="campo-form">
+          <label>Nome completo *</label>
+          <input type="text" id="campoNomeCliente" value="${existente ? existente.nome : ""}" required>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>E-mail</label>
+            <input type="email" id="campoEmailCliente" value="${existente ? existente.email || "" : ""}">
+          </div>
+          <div class="campo-form">
+            <label>Telefone</label>
+            <input type="text" id="campoTelefoneCliente" value="${existente ? existente.telefone || "" : ""}" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+        <div class="campo-form">
+          <label>Endere\xE7o</label>
+          <input type="text" id="campoEnderecoCliente" value="${existente ? existente.endereco || "" : ""}">
+        </div>
+        <div class="campo-form">
+          <label>Tags (separadas por v\xEDrgula)</label>
+          <input type="text" id="campoTagsCliente" value="${existente ? (existente.tags || []).join(", ") : ""}" placeholder="Ex: colecionador, aquarela">
+        </div>
+        <div class="campo-form">
+          <label>Notas</label>
+          <textarea id="campoNotasCliente">${existente ? existente.notas || "" : ""}</textarea>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarCliente">Cancelar</button>
+          <button type="submit" class="btn-primario">Salvar Cliente</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarCliente").addEventListener("click", fecharModal);
+      document.getElementById("formCliente").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("campoNomeCliente").value.trim();
+        if (!nome) {
+          mostrarToast("O nome do cliente \xE9 obrigat\xF3rio.");
+          return;
+        }
+        const tags = document.getElementById("campoTagsCliente").value.split(",").map((t) => t.trim()).filter(Boolean);
+        const dados = {
+          nome,
+          email: document.getElementById("campoEmailCliente").value.trim(),
+          telefone: document.getElementById("campoTelefoneCliente").value.trim(),
+          endereco: document.getElementById("campoEnderecoCliente").value.trim(),
+          notas: document.getElementById("campoNotasCliente").value.trim(),
+          tags
+        };
+        if (existente) {
+          clienteStore().atualizar(existente.id, dados);
+          mostrarToast("Cliente atualizado com sucesso!");
+        } else {
+          dados.aquisicoes = 0;
+          clienteStore().adicionar(dados);
+          mostrarToast("Cliente cadastrado com sucesso!");
+        }
+        fecharModal();
+        this.router.navegar("clientes");
+      });
+    }
+    excluirCliente(id) {
+      const cliente = clienteStore().porId(id);
+      if (!cliente) return;
+      const temVendas = vendaStore().items.some((v) => v.clienteId === id);
+      if (temVendas) {
+        mostrarToast("Este cliente possui vendas registradas e n\xE3o pode ser exclu\xEDdo.");
+        return;
+      }
+      if (!confirm(`Excluir o cliente "${cliente.nome}"?`)) return;
+      clienteStore().remover(id);
+      this.rerenderizar();
+    }
+    abrirFicha(id) {
+      const c = clienteStore().porId(id);
+      if (!c) return;
+      const compras = this.comprasDoCliente(id);
+      const obras = obraStore().items;
+      const timelineHtml = compras.length ? compras.map((v) => {
+        const obra = obras.find((o) => o.id === v.obraId);
+        return `
+        <li class="timeline-item">
+          <div class="timeline-data">${formatarData(v.data)}</div>
+          <div class="timeline-conteudo">
+            <strong>${obra ? obra.titulo : "Obra removida"}</strong>
+            ${formatarMoeda(v.precoFinal)} \xB7 <span class="tag-status ${classeStatusVenda(v.status)}">${rotuloStatusVenda(v.status)}</span>
+          </div>
+        </li>
+      `;
+      }).join("") : '<p style="font-size:0.85rem;color:var(--text-muted);">Nenhuma compra registrada ainda.</p>';
+      abrirModal(`
+      <h3>${c.nome}</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">${c.email || "sem e-mail"} \xB7 ${c.telefone || "sem telefone"}</p>
+      <div style="margin-bottom:10px;">${(c.tags || []).map((t) => `<span class="badge-tag">${t}</span>`).join("") || ""}</div>
+      ${c.endereco ? `<p style="font-size:0.82rem;margin-top:8px;"><strong>Endere\xE7o:</strong> ${c.endereco}</p>` : ""}
+      ${c.notas ? `<p style="font-size:0.82rem;margin-top:6px;"><strong>Notas:</strong> ${c.notas}</p>` : ""}
+      <h3 style="margin-top:20px;font-size:0.95rem;">Hist\xF3rico de compras</h3>
+      <ul class="timeline-cliente">${timelineHtml}</ul>
+      <div class="modal-acoes">
+        <button class="btn-secundario" id="btnFecharFichaCliente">Fechar</button>
+        <button class="btn-primario" id="btnEditarFichaCliente">\u270F\uFE0F Editar</button>
+      </div>
+    `);
+      document.getElementById("btnFecharFichaCliente").addEventListener("click", fecharModal);
+      document.getElementById("btnEditarFichaCliente").addEventListener("click", () => {
+        fecharModal();
+        this.abrirFormulario(c.id);
+      });
+    }
+  };
+  var VendasView = class extends BaseView {
+    constructor(dataStore2, router2, pdfGenerator2) {
+      super(dataStore2, router2);
+      this.pdfGenerator = pdfGenerator2;
+      this.filtros = { cliente: "", status: "", dataInicio: "", dataFim: "" };
+      this.selecionados = /* @__PURE__ */ new Set();
+      eventBus.on("abrir-nova-venda", () => this.abrirFormulario());
+      eventBus.on("abrir-recibo-rapido", () => this.abrirEscolhaRapida());
+    }
+    // Aplica filtros de cliente, status e período, ordenando por data mais recente
+    vendasFiltradas() {
+      const f = this.filtros;
+      let vendas = vendaStore().items;
+      if (f.cliente) vendas = vendas.filter((v) => v.clienteId === f.cliente);
+      if (f.status) vendas = vendas.filter((v) => classeStatusVenda(v.status) === classeStatusVenda(f.status));
+      if (f.dataInicio) vendas = vendas.filter((v) => new Date(v.data) >= new Date(f.dataInicio));
+      if (f.dataFim) vendas = vendas.filter((v) => new Date(v.data) <= new Date(f.dataFim));
+      return [...vendas].sort((a, b) => new Date(b.data) - new Date(a.data));
+    }
+    render() {
+      const vendas = this.vendasFiltradas();
+      const obras = obraStore().items;
+      const clientes = clienteStore().items;
+      const statusPossiveis = ["negocia\xE7\xE3o", "aprovada", "paga", "entregue"];
+      const linhas = vendas.map((v) => {
+        const obra = obras.find((o) => o.id === v.obraId);
+        const cliente = clientes.find((c) => c.id === v.clienteId);
+        return `
+        <tr class="${this.selecionados.has(v.id) ? "linha-selecionada" : ""}">
+          <td onclick="event.stopPropagation()">
+            <input type="checkbox" class="checkbox-item-vend" data-id="${v.id}" ${this.selecionados.has(v.id) ? "checked" : ""}>
+          </td>
+          <td>${obra ? obra.titulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
+          <td>${cliente ? cliente.nome : "-"}</td>
+          <td>${formatarMoeda(v.precoFinal)}</td>
+          <td>${formatarData(v.data)}</td>
+          <td>${capitalizarTexto(v.formaPagamento)}</td>
+          <td>
+            <select class="select-status-venda" data-status-venda="${v.id}">
+              ${statusPossiveis.map((s) => `<option value="${s}" ${classeStatusVenda(v.status) === classeStatusVenda(s) ? "selected" : ""}>${rotuloStatusVenda(s)}</option>`).join("")}
+            </select>
+          </td>
+          <td class="acoes-linha-tabela">
+            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}">\xF0\x9F\x93\x84 Recibo</button>
+            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}">\xF0\x9F\x93\x9D Proposta</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">\xE2\x9C\x95</button>
+          </td>
+        </tr>
+      `;
+      }).join("");
+      const tabela = vendas.length ? `
+      <div class="tabela-wrapper">
+        <table>
+          <thead><tr><th style="width:36px;"></th><th>Obra</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio"><div class="icone-vazio">\xF0\x9F\x92\xB0</div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
+      </div>
+    `;
+      const totalVendas = vendas.reduce((s, v) => s + Number(v.precoFinal || 0), 0);
+      const statusCount = {};
+      vendas.forEach((v) => {
+        const k = rotuloStatusVenda(v.status);
+        statusCount[k] = (statusCount[k] || 0) + 1;
+      });
+      const statusSummary = Object.entries(statusCount).map(([k, v]) => `<span class="chip-filtro" style="font-size:0.72rem;padding:2px 8px;cursor:default;">${k}: ${v}</span>`).join(" ");
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Vendas</h2>
+          <p class="subtitulo">${vendas.length} venda${vendas.length === 1 ? "" : "s"} \xB7 ${formatarMoeda(totalVendas)} em neg\xF3cios</p>
+        </div>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk">
+            <input type="checkbox" id="selectAllVend" ${this.selecionados.size === vendas.length && vendas.length > 0 ? "checked" : ""}>
+            <label for="selectAllVend">Todos</label>
+          </div>
+          <button class="btn-gradient" id="btnNovaVenda">\xE2\x9C\x9A Nova Venda</button>
+        </div>
+      </div>
+      ${vendas.length > 0 ? `<div class="vendas-summary">${statusSummary}</div>` : ""}
+      ${this.selecionados.size > 0 ? `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} venda${this.selecionados.size === 1 ? "" : "s"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkExportVend">\xF0\x9F\x93\x84 Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkCancelarVend">\xE2\x9C\x95 Cancelar</button>
+        </div>
+      </div>` : ""}
+      <div class="catalogo-filtros">
+        <div class="campo-filtro">
+          <label>Cliente</label>
+          <select id="filtroVendaCliente">
+            <option value="">Todos</option>
+            ${clientes.map((c) => `<option value="${c.id}" ${this.filtros.cliente === c.id ? "selected" : ""}>${c.nome}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Status</label>
+          <select id="filtroVendaStatus">
+            <option value="">Todos</option>
+            ${statusPossiveis.map((s) => `<option value="${s}" ${this.filtros.status === s ? "selected" : ""}>${rotuloStatusVenda(s)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-filtro"><label>De</label><input type="date" id="filtroVendaDataInicio" value="${this.filtros.dataInicio}"></div>
+        <div class="campo-filtro"><label>At\xE9</label><input type="date" id="filtroVendaDataFim" value="${this.filtros.dataFim}"></div>
+        <button class="btn-secundario" id="btnLimparFiltrosVenda">Limpar filtros</button>
+      </div>
+
+      ${tabela}
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      const btnNova = document.getElementById("btnNovaVenda");
+      if (btnNova) btnNova.addEventListener("click", () => this.abrirFormulario());
+      const mapaFiltros = { filtroVendaCliente: "cliente", filtroVendaStatus: "status", filtroVendaDataInicio: "dataInicio", filtroVendaDataFim: "dataFim" };
+      Object.keys(mapaFiltros).forEach((idCampo) => {
+        const el = document.getElementById(idCampo);
+        if (!el) return;
+        el.addEventListener("change", (e) => {
+          this.filtros[mapaFiltros[idCampo]] = e.target.value;
+          this.rerenderizar();
+        });
+      });
+      const btnLimpar = document.getElementById("btnLimparFiltrosVenda");
+      if (btnLimpar) btnLimpar.addEventListener("click", () => {
+        this.filtros = { cliente: "", status: "", dataInicio: "", dataFim: "" };
+        this.rerenderizar();
+      });
+      const selectAllVend = document.getElementById("selectAllVend");
+      if (selectAllVend) {
+        selectAllVend.addEventListener("change", (e) => {
+          const vendas = this.vendasFiltradas();
+          if (e.target.checked) {
+            vendas.forEach((v) => this.selecionados.add(v.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item-vend")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkExportVend")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkCancelarVend")?.addEventListener("click", () => {
+        this.selecionados.clear();
+        this.rerenderizar();
+      });
+      const clickHandler = (e) => {
+        const alvoRecibo = e.target.closest("[data-gerar-recibo]");
+        const alvoProposta = e.target.closest("[data-gerar-proposta]");
+        const alvoCancelar = e.target.closest("[data-cancelar-venda]");
+        if (alvoRecibo) {
+          this.pdfGenerator.abrirModalAssinatura(vendaStore().porId(alvoRecibo.dataset.gerarRecibo), "recibo");
+          return;
+        }
+        if (alvoProposta) {
+          this.pdfGenerator.abrirModalAssinatura(vendaStore().porId(alvoProposta.dataset.gerarProposta), "proposta");
+          return;
+        }
+        if (alvoCancelar) {
+          this.cancelarVenda(alvoCancelar.dataset.cancelarVenda);
+          return;
+        }
+      };
+      container.addEventListener("click", clickHandler);
+      this._bindCache["delegVendasClick"] = { el: container, handler: clickHandler, type: "click" };
+      const changeHandler = (e) => {
+        const selectStatus = e.target.closest("[data-status-venda]");
+        if (selectStatus) this.atualizarStatus(selectStatus.dataset.statusVenda, e.target.value);
+      };
+      container.addEventListener("change", changeHandler);
+      this._bindCache["delegVendasChange"] = { el: container, handler: changeHandler, type: "change" };
+    }
+    atualizarStatus(id, novoStatus) {
+      vendaStore().atualizar(id, { status: novoStatus });
+      mostrarToast("Status da venda atualizado.");
+    }
+    bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "exportar": {
+          const vendas = ids.map((id) => vendaStore().porId(id)).filter(Boolean);
+          const obras = obraStore().items;
+          const clientes = clienteStore().items;
+          const csv = [
+            ["obra", "cliente", "valor", "data", "pagamento", "status"].join(","),
+            ...vendas.map((v) => {
+              const obra = obras.find((o) => o.id === v.obraId);
+              const cliente = clientes.find((c) => c.id === v.clienteId);
+              return [obra?.titulo || "", cliente?.nome || "", v.precoFinal || 0, v.data || "", v.formaPagamento || "", v.status || ""].map((s) => `"${String(s).replace(/"/g, '""')}"`).join(",");
+            })
+          ].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `vendas-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          mostrarToast(`${vendas.length} venda(s) exportada(s)`);
+          break;
+        }
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
+    }
+    // Modal de registro de nova venda: obra + cliente (ou cadastro rápido) + condição
+    abrirFormulario() {
+      const obrasDisponiveis = obraStore().items.filter((o) => classeStatus(o.status) !== "vendida");
+      const clientes = clienteStore().items;
+      if (!obrasDisponiveis.length) {
+        mostrarToast("N\xE3o h\xE1 obras dispon\xEDveis para venda no momento.");
+        return;
+      }
+      abrirModal(`
+      <h3>Nova Venda</h3>
+      <form id="formVenda">
+        <div class="campo-form">
+          <label>Obra *</label>
+          <select id="campoObraVenda" required>
+            <option value="">Selecione a obra...</option>
+            ${obrasDisponiveis.map((o) => `<option value="${o.id}" data-preco="${o.preco}">${o.titulo} (${formatarMoeda(o.preco)})</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-form">
+          <label>Cliente *</label>
+          <select id="campoClienteVenda" required>
+            <option value="">Selecione...</option>
+            ${clientes.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("")}
+            <option value="__novo__">+ Cadastrar novo cliente</option>
+          </select>
+        </div>
+        <div id="blocoNovoClienteVenda" style="display:none;">
+          <div class="form-linha">
+            <div class="campo-form"><label>Nome do novo cliente *</label><input type="text" id="campoNovoClienteNome"></div>
+            <div class="campo-form"><label>Telefone</label><input type="text" id="campoNovoClienteTelefone"></div>
+          </div>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Pre\xE7o final (R$) *</label>
+            <input type="number" id="campoPrecoVenda" required>
+          </div>
+          <div class="campo-form">
+            <label>Data</label>
+            <input type="date" id="campoDataVenda" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}">
+          </div>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Forma de pagamento</label>
+            <select id="campoFormaPagamento">
+              <option value="\xE0 vista">\xE0 vista</option>
+              <option value="parcelado">Parcelado</option>
+              <option value="transfer\xEAncia">Transfer\xEAncia</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
+          <div class="campo-form">
+            <label>Status</label>
+            <select id="campoStatusVenda">
+              <option value="negocia\xE7\xE3o">Negocia\xE7\xE3o</option>
+              <option value="aprovada">Aprovada</option>
+              <option value="paga">Paga</option>
+              <option value="entregue">Entregue</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarVenda">Cancelar</button>
+          <button type="submit" class="btn-primario">Confirmar Venda</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarVenda").addEventListener("click", fecharModal);
+      document.getElementById("campoObraVenda").addEventListener("change", (e) => {
+        const opt = e.target.selectedOptions[0];
+        if (opt && opt.dataset.preco) document.getElementById("campoPrecoVenda").value = opt.dataset.preco;
+      });
+      document.getElementById("campoClienteVenda").addEventListener("change", (e) => {
+        document.getElementById("blocoNovoClienteVenda").style.display = e.target.value === "__novo__" ? "block" : "none";
+      });
+      document.getElementById("formVenda").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const obraId = document.getElementById("campoObraVenda").value;
+        let clienteId = document.getElementById("campoClienteVenda").value;
+        const preco = document.getElementById("campoPrecoVenda").value;
+        if (!obraId || !clienteId || preco === "") {
+          mostrarToast("Selecione a obra, o cliente e informe o pre\xE7o final.");
+          return;
+        }
+        if (clienteId === "__novo__") {
+          const nomeNovo = document.getElementById("campoNovoClienteNome").value.trim();
+          if (!nomeNovo) {
+            mostrarToast("Informe o nome do novo cliente.");
+            return;
+          }
+          const novoCliente = clienteStore().adicionar({
+            nome: nomeNovo,
+            telefone: document.getElementById("campoNovoClienteTelefone").value.trim(),
+            email: "",
+            endereco: "",
+            notas: "",
+            tags: [],
+            aquisicoes: 0
+          });
+          clienteId = novoCliente.id;
+        }
+        const dadosVenda = {
+          obraId,
+          clienteId,
+          precoFinal: Number(preco),
+          data: document.getElementById("campoDataVenda").value || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+          formaPagamento: document.getElementById("campoFormaPagamento").value,
+          status: document.getElementById("campoStatusVenda").value
+        };
+        vendaStore().adicionar(dadosVenda);
+        obraStore().atualizar(obraId, { status: "vendida" });
+        const cliente = clienteStore().porId(clienteId);
+        if (cliente) clienteStore().atualizar(clienteId, { aquisicoes: (cliente.aquisicoes || 0) + 1 });
+        fecharModal();
+        mostrarToast("Venda registrada com sucesso!");
+        this.router.navegar("vendas");
+      });
+    }
+    // Cancela uma venda: reverte a obra para "disponível" e desfaz a aquisição do cliente
+    cancelarVenda(id) {
+      const venda = vendaStore().porId(id);
+      if (!venda) return;
+      if (!confirm("Cancelar esta venda? A obra voltar\xE1 a ficar dispon\xEDvel no cat\xE1logo.")) return;
+      obraStore().atualizar(venda.obraId, { status: "dispon\xEDvel" });
+      const cliente = clienteStore().porId(venda.clienteId);
+      if (cliente) clienteStore().atualizar(venda.clienteId, { aquisicoes: Math.max(0, (cliente.aquisicoes || 0) - 1) });
+      vendaStore().remover(id);
+      mostrarToast("Venda cancelada.");
+      this.rerenderizar();
+    }
+    // Modal de escolha rápida de venda, usado pelo atalho "Gerar Recibo" do Dashboard
+    abrirEscolhaRapida() {
+      const vendas = vendaStore().items;
+      if (!vendas.length) {
+        mostrarToast("Nenhuma venda registrada ainda. Registre uma venda primeiro.");
+        return;
+      }
+      const obras = obraStore().items;
+      const clientes = clienteStore().items;
+      const itensHtml = vendas.map((v) => {
+        const obra = obras.find((o) => o.id === v.obraId);
+        const cliente = clientes.find((c) => c.id === v.clienteId);
+        return `
+        <li class="item-escolha-venda">
+          <span>${obra ? obra.titulo : "-"} \xE2\x80\x94 ${cliente ? cliente.nome : "-"} (${formatarMoeda(v.precoFinal)})</span>
+          <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
+        </li>
+      `;
+      }).join("");
+      abrirModal(`
+      <h3>Selecione a venda</h3>
+      <ul class="lista-escolha-venda">${itensHtml}</ul>
+      <div class="modal-acoes"><button class="btn-secundario" id="btnFecharEscolhaVenda">Fechar</button></div>
+    `);
+      document.getElementById("btnFecharEscolhaVenda").addEventListener("click", fecharModal);
+      document.querySelectorAll("[data-escolher-venda]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const venda = vendaStore().porId(btn.dataset.escolherVenda);
+          fecharModal();
+          this.pdfGenerator.abrirModalAssinatura(venda, "recibo");
+        });
+      });
+    }
+  };
+  var PDFGenerator = class {
+    constructor(dataStore2) {
+      this.dataStore = dataStore2;
+    }
+    // Gera numeração sequencial por ano e tipo (REC-2026-001 / ORC-2026-001),
+    // persistindo o contador em config para nunca repetir um número
+    gerarNumero(tipo) {
+      const ano = (/* @__PURE__ */ new Date()).getFullYear();
+      const cfg = this.dataStore.dados.config;
+      const chave = tipo === "proposta" ? "contadorPropostas" : "contadorRecibos";
+      if (!cfg[chave]) cfg[chave] = {};
+      cfg[chave][ano] = (cfg[chave][ano] || 0) + 1;
+      this.dataStore.salvar();
+      const prefixo = tipo === "proposta" ? "ORC" : "REC";
+      return `${prefixo}-${ano}-${String(cfg[chave][ano]).padStart(3, "0")}`;
+    }
+    // Resolve as CSS variables do tema atual em valores concretos (hex/rgb),
+    // pois o html2canvas nem sempre interpreta var(--x) corretamente
+    obterCoresTema() {
+      const cs = getComputedStyle(document.body);
+      return {
+        bg: cs.getPropertyValue("--bg").trim() || "#ffffff",
+        text: cs.getPropertyValue("--text").trim() || "#1a1a1a",
+        textMuted: cs.getPropertyValue("--text-muted").trim() || "#6b7280",
+        accent: cs.getPropertyValue("--accent").trim() || "#2563eb",
+        card: cs.getPropertyValue("--card").trim() || "#f8fafc",
+        border: cs.getPropertyValue("--border").trim() || "#e5e7eb",
+        fonte: (cs.getPropertyValue("--font-principal").trim() || "Arial, sans-serif").replace(/'/g, "")
+      };
+    }
+    // Abre o modal com o resumo do documento e a área de assinatura (canvas touch/mouse)
+    abrirModalAssinatura(venda, tipo) {
+      if (!venda) {
+        mostrarToast("Venda n\xE3o encontrada.");
+        return;
+      }
+      const obra = this.dataStore.buscarPorId("obras", venda.obraId);
+      const cliente = this.dataStore.buscarPorId("clientes", venda.clienteId);
+      if (!obra || !cliente) {
+        mostrarToast("N\xE3o foi poss\xEDvel localizar a obra ou o cliente desta venda.");
+        return;
+      }
+      const chaveNumero = tipo === "proposta" ? "numeroProposta" : "numeroRecibo";
+      if (!venda[chaveNumero]) {
+        venda[chaveNumero] = this.gerarNumero(tipo);
+        this.dataStore.atualizar("vendas", venda.id, { [chaveNumero]: venda[chaveNumero] });
+      }
+      const tituloDoc = tipo === "proposta" ? "Proposta de Or\xE7amento" : "Recibo de Venda";
+      abrirModal(`
+      <h3>Gerar ${tituloDoc}</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">
+        ${obra.titulo} \u2014 ${cliente.nome} \u2014 ${formatarMoeda(venda.precoFinal)} \xB7 N\xBA ${venda[chaveNumero]}
+      </p>
+      <div class="campo-form">
+        <label>Assinatura do artista</label>
+        <canvas id="canvasAssinatura" class="area-assinatura" width="500" height="160"></canvas>
+        <div class="legenda-assinatura">
+          <span class="texto-ajuda">Desenhe com o mouse ou o dedo (touch)</span>
+          <button type="button" class="btn-secundario" id="btnLimparAssinatura" style="padding:5px 10px;font-size:0.75rem;">Limpar</button>
+        </div>
+      </div>
+      <div class="modal-acoes">
+        <button type="button" class="btn-secundario" id="btnCancelarPdf">Cancelar</button>
+        <button type="button" class="btn-primario" id="btnGerarPdfFinal">\u2B07\uFE0F Gerar PDF</button>
+      </div>
+    `);
+      const canvas = document.getElementById("canvasAssinatura");
+      const ctx = canvas.getContext("2d");
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#1a1a1a";
+      let desenhando = false;
+      const posicaoRelativa = (evento) => {
+        const rect = canvas.getBoundingClientRect();
+        const ponto = evento.touches ? evento.touches[0] : evento;
+        return {
+          x: (ponto.clientX - rect.left) * (canvas.width / rect.width),
+          y: (ponto.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      };
+      const iniciarTraco = (e) => {
+        desenhando = true;
+        const p = posicaoRelativa(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        e.preventDefault();
+      };
+      const continuarTraco = (e) => {
+        if (!desenhando) return;
+        const p = posicaoRelativa(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        e.preventDefault();
+      };
+      const finalizarTraco = () => {
+        desenhando = false;
+      };
+      canvas.addEventListener("mousedown", iniciarTraco);
+      canvas.addEventListener("mousemove", continuarTraco);
+      window.addEventListener("mouseup", finalizarTraco);
+      canvas.addEventListener("touchstart", iniciarTraco, { passive: false });
+      canvas.addEventListener("touchmove", continuarTraco, { passive: false });
+      canvas.addEventListener("touchend", finalizarTraco);
+      document.getElementById("btnLimparAssinatura").addEventListener("click", () => ctx.clearRect(0, 0, canvas.width, canvas.height));
+      document.getElementById("btnCancelarPdf").addEventListener("click", fecharModal);
+      document.getElementById("btnGerarPdfFinal").addEventListener("click", () => {
+        this.gerarPdf(venda, obra, cliente, tipo, canvas.toDataURL("image/png"));
+      });
+    }
+    // Monta um HTML off-screen estilizado com as cores do tema ativo, captura com
+    // html2canvas e embute a imagem resultante em um PDF (via jsPDF)
+    async gerarPdf(venda, obra, cliente, tipo, assinaturaDataUrl) {
+      if (!window.jspdf || !window.html2canvas) {
+        mostrarToast("Bibliotecas de PDF indispon\xEDveis (verifique sua conex\xE3o com a internet).");
+        return;
+      }
+      mostrarToast("Gerando PDF, aguarde...");
+      const cores = this.obterCoresTema();
+      const artista = this.dataStore.dados.config.artista || {};
+      const nomeArtista = artista.nome || "Ateli\xEA do Artista";
+      const numero = venda[tipo === "proposta" ? "numeroProposta" : "numeroRecibo"];
+      const tituloDoc = tipo === "proposta" ? "PROPOSTA DE OR\xC7AMENTO" : "RECIBO DE VENDA";
+      const textoGarantia = this.dataStore.dados.config.textoGarantia || "";
+      const dim = obra.dimensoes || {};
+      const partesDim = [dim.altura, dim.largura, dim.profundidade].filter((v) => v && Number(v) > 0);
+      const dimensoesTexto = partesDim.length ? `${partesDim.join(" x ")} cm` : "-";
+      const imagemObraHtml = /^data:image\/(png|jpe?g)/i.test(obra.imagem || "") ? `<img src="${obra.imagem}" style="width:150px;height:150px;object-fit:cover;border-radius:6px;border:1px solid ${cores.border};">` : "";
+      const container = document.createElement("div");
+      container.style.cssText = `position:fixed;left:-9999px;top:0;width:750px;background:${cores.bg};color:${cores.text};font-family:${cores.fonte};padding:48px;box-sizing:border-box;`;
+      container.innerHTML = `
+      <div style="text-align:center;border-bottom:2px solid ${cores.border};padding-bottom:18px;margin-bottom:24px;">
+        <div style="font-size:26px;font-weight:700;">${nomeArtista}</div>
+        <div style="font-size:12px;color:${cores.textMuted};margin-top:4px;">${artista.email || ""}${artista.telefone ? " \xB7 " + artista.telefone : ""}</div>
+      </div>
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:700;color:${cores.accent};letter-spacing:1px;">${tituloDoc}</div>
+        <div style="font-size:12px;color:${cores.textMuted};margin-top:6px;">N\xBA ${numero} \xB7 ${formatarData(venda.data)}</div>
+      </div>
+      <div style="display:flex;gap:24px;margin-bottom:24px;">
+        <div style="flex:1;background:${cores.card};border:1px solid ${cores.border};border-radius:10px;padding:16px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:${cores.textMuted};margin-bottom:8px;">Comprador</div>
+          <div style="font-size:14px;font-weight:700;">${cliente.nome}</div>
+          <div style="font-size:12px;color:${cores.textMuted};margin-top:4px;">${cliente.email || ""}</div>
+          <div style="font-size:12px;color:${cores.textMuted};">${cliente.telefone || ""}</div>
+          ${cliente.endereco ? `<div style="font-size:12px;color:${cores.textMuted};margin-top:4px;">${cliente.endereco}</div>` : ""}
+        </div>
+        <div style="flex:1;background:${cores.card};border:1px solid ${cores.border};border-radius:10px;padding:16px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:${cores.textMuted};margin-bottom:8px;">Pagamento</div>
+          <div style="font-size:20px;font-weight:700;color:${cores.accent};">${formatarMoeda(venda.precoFinal)}</div>
+          <div style="font-size:12px;color:${cores.textMuted};margin-top:4px;">Forma: ${capitalizarTexto(venda.formaPagamento)}</div>
+          <div style="font-size:12px;color:${cores.textMuted};">Status: ${rotuloStatusVenda(venda.status)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start;background:${cores.card};border:1px solid ${cores.border};border-radius:10px;padding:16px;margin-bottom:24px;">
+        ${imagemObraHtml}
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:${cores.textMuted};margin-bottom:6px;">Obra</div>
+          <div style="font-size:16px;font-weight:700;">${obra.titulo}</div>
+          <div style="font-size:12px;color:${cores.textMuted};margin-top:4px;">${capitalizarTexto(obra.tecnica)} \xB7 ${dimensoesTexto} \xB7 ${obra.ano || "-"}</div>
+        </div>
+      </div>
+      ${textoGarantia ? `<div style="font-size:11px;color:${cores.textMuted};line-height:1.6;border-top:1px solid ${cores.border};padding-top:14px;margin-bottom:28px;">${textoGarantia}</div>` : ""}
+      <div style="display:flex;justify-content:center;margin-bottom:8px;">
+        <div style="text-align:center;">
+          ${assinaturaDataUrl ? `<img src="${assinaturaDataUrl}" style="height:70px;">` : ""}
+          <div style="border-top:1px solid ${cores.text};padding-top:6px;margin-top:2px;font-size:12px;min-width:220px;">${nomeArtista}</div>
+          <div style="font-size:10px;color:${cores.textMuted};">Assinatura do artista</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:9px;color:${cores.textMuted};margin-top:20px;border-top:1px solid ${cores.border};padding-top:10px;">
+        Documento gerado em ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")} \xB7 Atelier CRM
+      </div>
+    `;
+      document.body.appendChild(container);
+      try {
+        const canvasCapturado = await window.html2canvas(container, { scale: 2, backgroundColor: cores.bg, useCORS: true });
+        const imgData = canvasCapturado.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "px", format: [canvasCapturado.width, canvasCapturado.height] });
+        doc.addImage(imgData, "PNG", 0, 0, canvasCapturado.width, canvasCapturado.height);
+        doc.save(`${tipo === "proposta" ? "proposta" : "recibo"}-${numero.toLowerCase()}.pdf`);
+        mostrarToast("PDF gerado com sucesso!");
+        fecharModal();
+      } catch (erro) {
+        console.error("Erro ao gerar PDF:", erro);
+        mostrarToast("N\xE3o foi poss\xEDvel gerar o PDF. Tente novamente.");
+      } finally {
+        document.body.removeChild(container);
+      }
+    }
+  };
+  var CertificadosView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+    }
+    certificadosOrdenados() {
+      return [...this.dataStore.listar("certificados")].sort((a, b) => new Date(b.dataEmissao || b.criadoEm) - new Date(a.dataEmissao || a.criadoEm));
+    }
+    render() {
+      const certificados = this.certificadosOrdenados();
+      const linhas = certificados.map((c) => `
+      <tr>
+        <td><strong>${c.tituloObra || "-"}</strong></td>
+        <td>${c.numeroSerie}</td>
+        <td>${c.edicaoTipo === "limitada" ? `${c.edicaoAtual}/${c.edicaoTotal}` : "\xDAnica"}</td>
+        <td>${formatarData(c.dataEmissao || c.criadoEm)}</td>
+        <td class="acoes-linha-tabela">
+          <button class="btn-icone-tabela" data-baixar-certificado="${c.id}">\u{1F4C4} PDF</button>
+          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}">\u{1F5D1}\uFE0F</button>
+        </td>
+      </tr>
+    `).join("");
+      const tabela = certificados.length ? `
+      <div class="tabela-wrapper">
+        <table>
+          <thead><tr><th>Obra</th><th>N\xBA de S\xE9rie</th><th>Edi\xE7\xE3o</th><th>Emitido em</th><th></th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F4DC}</div><p>Nenhum certificado emitido ainda.</p></div>
+      </div>
+    `;
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Certificados de Autenticidade</h2>
+          <p class="subtitulo">${certificados.length} certificado${certificados.length === 1 ? "" : "s"} emitido${certificados.length === 1 ? "" : "s"}</p>
+        </div>
+        <button class="btn-gradient" id="btnNovoCertificado">\u{1F50F} Novo Certificado</button>
+      </div>
+      ${tabela}
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      const btnNovo = document.getElementById("btnNovoCertificado");
+      if (btnNovo) btnNovo.addEventListener("click", () => this.abrirFormulario());
+      const delegHandler = (e) => {
+        const alvoBaixar = e.target.closest("[data-baixar-certificado]");
+        const alvoExcluir = e.target.closest("[data-excluir-certificado]");
+        if (alvoBaixar) {
+          this.baixarNovamente(alvoBaixar.dataset.baixarCertificado);
+          return;
+        }
+        if (alvoExcluir) {
+          this.excluirCertificado(alvoExcluir.dataset.excluirCertificado);
+          return;
+        }
+      };
+      container.addEventListener("click", delegHandler);
+      this._bindCache["delegCertificados"] = { el: container, handler: delegHandler, type: "click" };
+    }
+    excluirCertificado(id) {
+      if (!confirm("Excluir este certificado do hist\xF3rico? O PDF j\xE1 baixado n\xE3o ser\xE1 afetado.")) return;
+      this.dataStore.remover("certificados", id);
+      mostrarToast("Certificado exclu\xEDdo do hist\xF3rico.");
+      this.rerenderizar();
+    }
+    // Numeração sequencial por ano: ART-2026-001, ART-2026-002...
+    gerarNumeroSerie() {
+      const ano = (/* @__PURE__ */ new Date()).getFullYear();
+      const cfg = this.dataStore.dados.config;
+      if (!cfg.contadorCertificados) cfg.contadorCertificados = {};
+      cfg.contadorCertificados[ano] = (cfg.contadorCertificados[ano] || 0) + 1;
+      this.dataStore.salvar();
+      return `ART-${ano}-${String(cfg.contadorCertificados[ano]).padStart(3, "0")}`;
+    }
+    // Modal de emissão: a partir de obra existente (autopreenche) ou manual
+    abrirFormulario() {
+      const obras = this.dataStore.listar("obras");
+      const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || "";
+      abrirModal(`
+      <h3>Novo Certificado de Autenticidade</h3>
+      <form id="formCertificado">
+        <div class="campo-form">
+          <label>Origem dos dados</label>
+          <select id="campoOrigemCertificado">
+            <option value="">\u2014 Preencher manualmente \u2014</option>
+            ${obras.map((o) => `<option value="${o.id}">${o.titulo}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-form">
+          <label>T\xEDtulo da obra *</label>
+          <input type="text" id="campoTituloCert" required>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>T\xE9cnica *</label>
+            <select id="campoTecnicaCert" required>
+              <option value="">Selecione...</option>
+              <option value="\xF3leo">\xD3leo</option>
+              <option value="aquarela">Aquarela</option>
+              <option value="escultura">Escultura</option>
+              <option value="outra">Outra</option>
+            </select>
+          </div>
+          <div class="campo-form"><label>Ano</label><input type="number" id="campoAnoCert" value="${(/* @__PURE__ */ new Date()).getFullYear()}"></div>
+        </div>
+        <div class="campo-form"><label>Dimens\xF5es (ex: 60 x 80 cm)</label><input type="text" id="campoDimensoesCert"></div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Edi\xE7\xE3o</label>
+            <select id="campoEdicaoTipo">
+              <option value="unica">\xDAnica</option>
+              <option value="limitada">Limitada</option>
+            </select>
+          </div>
+          <div class="campo-form" id="blocoEdicaoLimitada" style="display:none;">
+            <label>N\xBA / Total</label>
+            <div class="form-linha">
+              <input type="number" id="campoEdicaoAtual" placeholder="Ex: 2" min="1">
+              <input type="number" id="campoEdicaoTotal" placeholder="Ex: 10" min="1">
+            </div>
+          </div>
+        </div>
+        <div class="form-linha">
+          <div class="campo-form"><label>Local</label><input type="text" id="campoLocalCert" placeholder="Ex: Rio Bonito/RJ"></div>
+          <div class="campo-form"><label>Data</label><input type="date" id="campoDataCert" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+        </div>
+        <div class="campo-form">
+          <label>Assinatura do artista</label>
+          <canvas id="canvasAssinaturaCert" class="area-assinatura" width="500" height="150"></canvas>
+          <div class="legenda-assinatura">
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
+              <input type="checkbox" id="campoSalvarAssinatura" ${assinaturaSalva ? "checked" : ""}> Usar/salvar como assinatura padr\xE3o
+            </label>
+            <button type="button" class="btn-secundario" id="btnLimparAssinaturaCert" style="padding:5px 10px;font-size:0.75rem;">Limpar</button>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarCertificado">Cancelar</button>
+          <button type="submit" class="btn-primario">Gerar Certificado (PDF)</button>
+        </div>
+      </form>
+    `);
+      let imagemSelecionada = "";
+      document.getElementById("campoOrigemCertificado").addEventListener("change", (e) => {
+        const obra = obras.find((o) => o.id === e.target.value);
+        if (!obra) {
+          imagemSelecionada = "";
+          return;
+        }
+        document.getElementById("campoTituloCert").value = obra.titulo;
+        document.getElementById("campoTecnicaCert").value = obra.tecnica;
+        document.getElementById("campoAnoCert").value = obra.ano || "";
+        const dim = obra.dimensoes || {};
+        const partes = [dim.altura, dim.largura, dim.profundidade].filter((v) => v && Number(v) > 0);
+        document.getElementById("campoDimensoesCert").value = partes.length ? `${partes.join(" x ")} cm` : "";
+        imagemSelecionada = obra.imagem || "";
+      });
+      document.getElementById("campoEdicaoTipo").addEventListener("change", (e) => {
+        document.getElementById("blocoEdicaoLimitada").style.display = e.target.value === "limitada" ? "block" : "none";
+      });
+      const canvas = document.getElementById("canvasAssinaturaCert");
+      const ctx = canvas.getContext("2d");
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#1a1a1a";
+      if (assinaturaSalva) {
+        const imgAssinatura = new Image();
+        imgAssinatura.onload = () => ctx.drawImage(imgAssinatura, 0, 0, canvas.width, canvas.height);
+        imgAssinatura.src = assinaturaSalva;
+      }
+      let desenhando = false;
+      const posicaoRelativa = (evento) => {
+        const rect = canvas.getBoundingClientRect();
+        const ponto = evento.touches ? evento.touches[0] : evento;
+        return { x: (ponto.clientX - rect.left) * (canvas.width / rect.width), y: (ponto.clientY - rect.top) * (canvas.height / rect.height) };
+      };
+      const iniciar = (e) => {
+        desenhando = true;
+        const p = posicaoRelativa(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        e.preventDefault();
+      };
+      const desenhar = (e) => {
+        if (!desenhando) return;
+        const p = posicaoRelativa(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        e.preventDefault();
+      };
+      const finalizar = () => {
+        desenhando = false;
+      };
+      canvas.addEventListener("mousedown", iniciar);
+      canvas.addEventListener("mousemove", desenhar);
+      window.addEventListener("mouseup", finalizar);
+      canvas.addEventListener("touchstart", iniciar, { passive: false });
+      canvas.addEventListener("touchmove", desenhar, { passive: false });
+      canvas.addEventListener("touchend", finalizar);
+      document.getElementById("btnLimparAssinaturaCert").addEventListener("click", () => ctx.clearRect(0, 0, canvas.width, canvas.height));
+      document.getElementById("btnCancelarCertificado").addEventListener("click", fecharModal);
+      document.getElementById("formCertificado").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const tituloObra = document.getElementById("campoTituloCert").value.trim();
+        const tecnica = document.getElementById("campoTecnicaCert").value;
+        if (!tituloObra || !tecnica) {
+          mostrarToast("Preencha ao menos o t\xEDtulo e a t\xE9cnica da obra.");
+          return;
+        }
+        const edicaoTipo = document.getElementById("campoEdicaoTipo").value;
+        const cert = {
+          numeroSerie: this.gerarNumeroSerie(),
+          obraId: document.getElementById("campoOrigemCertificado").value || null,
+          tituloObra,
+          tecnica,
+          dimensoesTexto: document.getElementById("campoDimensoesCert").value.trim(),
+          ano: Number(document.getElementById("campoAnoCert").value) || null,
+          edicaoTipo,
+          edicaoAtual: edicaoTipo === "limitada" ? Number(document.getElementById("campoEdicaoAtual").value) || 1 : null,
+          edicaoTotal: edicaoTipo === "limitada" ? Number(document.getElementById("campoEdicaoTotal").value) || 1 : null,
+          local: document.getElementById("campoLocalCert").value.trim(),
+          dataEmissao: document.getElementById("campoDataCert").value || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+          imagem: imagemSelecionada
+        };
+        const assinaturaDataUrl = canvas.toDataURL("image/png");
+        if (document.getElementById("campoSalvarAssinatura").checked) {
+          this.dataStore.dados.config.artista = this.dataStore.dados.config.artista || {};
+          this.dataStore.dados.config.artista.assinatura = assinaturaDataUrl;
+          this.dataStore.salvar();
+        }
+        const registrado = this.dataStore.adicionar("certificados", cert);
+        fecharModal();
+        mostrarToast("Gerando certificado em PDF...");
+        await this.gerarPdfCertificado(registrado, assinaturaDataUrl);
+        this.router.navegar("certificados");
+      });
+    }
+    // Regenera o PDF de um certificado já emitido, reaproveitando a assinatura salva (se houver)
+    async baixarNovamente(id) {
+      const cert = this.dataStore.buscarPorId("certificados", id);
+      if (!cert) return;
+      const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || "";
+      mostrarToast("Gerando PDF...");
+      await this.gerarPdfCertificado(cert, assinaturaSalva);
+    }
+    // Monta o PDF do certificado com jsPDF puro: borda decorativa, foto, texto
+    // padrão de autenticidade, edição, assinatura e QR Code de validação
+    async gerarPdfCertificado(cert, assinaturaDataUrl) {
+      if (!window.jspdf) {
+        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const w = doc.internal.pageSize.getWidth();
+      const h = doc.internal.pageSize.getHeight();
+      const artista = this.dataStore.dados.config.artista || {};
+      const nomeArtista = artista.nome || "Ateli\xEA do Artista";
+      doc.setDrawColor(190);
+      doc.setLineWidth(0.9);
+      doc.rect(10, 10, w - 20, h - 20);
+      doc.setLineWidth(0.25);
+      doc.rect(14, 14, w - 28, h - 28);
+      doc.setFont("times", "bold");
+      doc.setFontSize(23);
+      doc.setTextColor(30, 30, 30);
+      doc.text("CERTIFICADO DE AUTENTICIDADE", w / 2, 34, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(130);
+      doc.text(nomeArtista, w / 2, 41, { align: "center" });
+      let y = 54;
+      const suportada = /^data:image\/(png|jpe?g)/i.test(cert.imagem || "");
+      if (suportada) {
+        try {
+          const tipo = /png/i.test(cert.imagem) ? "PNG" : "JPEG";
+          const lado = 78;
+          doc.addImage(cert.imagem, tipo, (w - lado) / 2, y, lado, lado, void 0, "FAST");
+          y += lado + 10;
+        } catch (erro) {
+          console.warn("N\xE3o foi poss\xEDvel inserir a imagem no certificado:", erro);
+        }
+      } else {
+        y += 4;
+      }
+      doc.setFont("times", "bold");
+      doc.setFontSize(15);
+      doc.setTextColor(20);
+      doc.text(cert.tituloObra || "Obra sem t\xEDtulo", w / 2, y, { align: "center" });
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(80);
+      doc.text(`${capitalizarTexto(cert.tecnica)} \xB7 ${cert.dimensoesTexto || "-"} \xB7 ${cert.ano || "-"}`, w / 2, y, { align: "center" });
+      y += 12;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10.5);
+      doc.setTextColor(55);
+      const textoPadrao = `Certifico que a obra acima \xE9 original, de minha autoria, executada em ${cert.tecnica}. N\xE3o existem reprodu\xE7\xF5es autorizadas al\xE9m da edi\xE7\xE3o declarada.`;
+      const linhasTexto = doc.splitTextToSize(textoPadrao, w - 64);
+      doc.text(linhasTexto, w / 2, y, { align: "center" });
+      y += linhasTexto.length * 5.5 + 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(30);
+      doc.text(cert.edicaoTipo === "limitada" ? `Edi\xE7\xE3o: ${cert.edicaoAtual} de ${cert.edicaoTotal}` : "Edi\xE7\xE3o: \xDAnica", w / 2, y, { align: "center" });
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(110);
+      doc.text(`N\xFAmero de s\xE9rie: ${cert.numeroSerie}`, w / 2, y, { align: "center" });
+      y += 16;
+      const yBase = y;
+      const centroEsquerda = w / 2 - 42;
+      const centroDireita = w / 2 + 42;
+      if (assinaturaDataUrl) {
+        try {
+          doc.addImage(assinaturaDataUrl, "PNG", centroEsquerda - 27, yBase, 54, 22);
+        } catch (erro) {
+        }
+      }
+      doc.setDrawColor(140);
+      doc.line(centroEsquerda - 27, yBase + 25, centroEsquerda + 27, yBase + 25);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(90);
+      doc.text(nomeArtista, centroEsquerda, yBase + 30, { align: "center" });
+      doc.setFontSize(7.5);
+      doc.setTextColor(140);
+      doc.text("Assinatura do artista", centroEsquerda, yBase + 34, { align: "center" });
+      doc.setFontSize(8.5);
+      doc.setTextColor(90);
+      doc.text(`${cert.local || ""}${cert.local ? ", " : ""}${formatarData(cert.dataEmissao)}`, centroEsquerda, yBase + 41, { align: "center" });
+      const textoQR = `Obra: ${cert.tituloObra} | Artista: ${nomeArtista} | Autenticada em: ${formatarData(cert.dataEmissao)}`;
+      const qrDataUrl = await gerarQRCodeDataUrl(textoQR);
+      if (qrDataUrl) {
+        try {
+          doc.addImage(qrDataUrl, "PNG", centroDireita - 14, yBase, 28, 28);
+          doc.setFontSize(7.5);
+          doc.setTextColor(140);
+          doc.text("Valida\xE7\xE3o digital", centroDireita, yBase + 34, { align: "center" });
+        } catch (erro) {
+        }
+      }
+      doc.setDrawColor(210);
+      doc.line(25, h - 20, w - 25, h - 20);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Emitido em ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")} \xB7 Atelier CRM`, w / 2, h - 14, { align: "center" });
+      doc.save(`certificado-${cert.numeroSerie.toLowerCase()}.pdf`);
+      mostrarToast("Certificado gerado com sucesso!");
+    }
+  };
+  var ReferenciasView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.filtros = { tag: "", categoria: "", obra: "" };
+      this.indiceArrastado = null;
+      this.itensApresentacao = [];
+      this.indiceApresentacao = 0;
+    }
+    // Mantém a ordem salva no array (usada para persistir o drag & drop)
+    referenciasFiltradas() {
+      let refs = this.dataStore.listar("referencias");
+      const f = this.filtros;
+      if (f.tag) refs = refs.filter((r) => (r.tags || []).includes(f.tag));
+      if (f.categoria) refs = refs.filter((r) => r.categoria === f.categoria);
+      if (f.obra) refs = refs.filter((r) => r.obraVinculada === f.obra);
+      return refs;
+    }
+    tagsDisponiveis() {
+      const todas = this.dataStore.listar("referencias").flatMap((r) => r.tags || []);
+      return [...new Set(todas)].sort();
+    }
+    categoriasDisponiveis() {
+      const todas = this.dataStore.listar("referencias").map((r) => r.categoria).filter(Boolean);
+      return [...new Set(todas)].sort();
+    }
+    render() {
+      const refs = this.referenciasFiltradas();
+      const tags = this.tagsDisponiveis();
+      const categorias = this.categoriasDisponiveis();
+      const obras = this.dataStore.listar("obras");
+      const cardsHtml = refs.length ? `
+      <div class="grid-referencias" id="gridReferencias">
+        ${refs.map((r, indice) => this.renderCard(r, indice, obras)).join("")}
+      </div>
+    ` : `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F4D2}</div><p>Nenhuma refer\xEAncia encontrada. Adicione imagens, links ou notas para montar seu board.</p></div>
+      </div>
+    `;
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Board de Refer\xEAncias</h2>
+          <p class="subtitulo">${refs.length} item${refs.length === 1 ? "" : "ns"}  \xB7  arraste os cards para reorganizar</p>
+        </div>
+        <div class="barra-acoes-referencias">
+          <button class="btn-secundario" id="btnApresentarReferencias">\u{1F4FA} Apresentar</button>
+          <button class="btn-primario" id="btnNovaReferencia">\u2795 Nova Refer\xEAncia</button>
+        </div>
+      </div>
+
+      <div class="catalogo-filtros">
+        <div class="campo-filtro">
+          <label>Tag</label>
+          <select id="filtroRefTag">
+            <option value="">Todas</option>
+            ${tags.map((t) => `<option value="${t}" ${this.filtros.tag === t ? "selected" : ""}>${t}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Categoria</label>
+          <select id="filtroRefCategoria">
+            <option value="">Todas</option>
+            ${categorias.map((c) => `<option value="${c}" ${this.filtros.categoria === c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label>Obra vinculada</label>
+          <select id="filtroRefObra">
+            <option value="">Todas</option>
+            ${obras.map((o) => `<option value="${o.id}" ${this.filtros.obra === o.id ? "selected" : ""}>${o.titulo}</option>`).join("")}
+          </select>
+        </div>
+        <button class="btn-secundario" id="btnLimparFiltrosRef">Limpar filtros</button>
+      </div>
+
+      ${cardsHtml}
+    `;
+    }
+    renderCard(r, indice, obras) {
+      const obraVinculada = r.obraVinculada ? obras.find((o) => o.id === r.obraVinculada) : null;
+      const tagsHtml = (r.tags || []).map((t) => `<span class="badge-tag">${t}</span>`).join("");
+      let corpoHtml = "";
+      if (r.tipo === "imagem") {
+        corpoHtml = `
+        <img class="imagem-referencia" data-apresentar="${indice}" src="${r.imagem}" alt="${r.titulo || "Refer\xEAncia"}">
+        <div class="corpo-referencia">
+          <div class="icone-tipo-referencia">\u{1F5BC}\uFE0F Imagem</div>
+          ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ""}
+        </div>
+      `;
+      } else if (r.tipo === "link") {
+        corpoHtml = `
+        <img class="imagem-referencia" data-apresentar="${indice}" src="${r.url}" alt="${r.titulo || "Link de refer\xEAncia"}" onerror="this.style.display='none'">
+        <div class="corpo-referencia">
+          <div class="icone-tipo-referencia">\u{1F517} Link externo</div>
+          ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ""}
+          <a class="link-referencia" href="${r.url}" target="_blank" rel="noopener">${r.url}</a>
+        </div>
+      `;
+      } else {
+        corpoHtml = `
+        <div class="corpo-referencia" data-apresentar="${indice}" style="cursor:pointer;">
+          <div class="icone-tipo-referencia">\u{1F4DD} Nota</div>
+          ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ""}
+          <div class="nota-referencia">${r.nota || ""}</div>
+        </div>
+      `;
+      }
+      return `
+      <div class="card-referencia" draggable="true" data-indice="${indice}" data-id="${r.id}">
+        ${corpoHtml}
+        <div class="corpo-referencia" style="padding-top:0;">
+          ${tagsHtml ? `<div class="tags-referencia">${tagsHtml}</div>` : ""}
+          ${obraVinculada ? `<span class="badge-obra-vinculada">Usado em: ${obraVinculada.titulo}</span>` : ""}
+        </div>
+        <div class="acoes-referencia">
+          <button class="btn-icone-tabela" data-excluir-referencia="${r.id}" style="flex:1;">\u{1F5D1}\uFE0F Excluir</button>
+        </div>
+      </div>
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
+      const btnNova = document.getElementById("btnNovaReferencia");
+      if (btnNova) btnNova.addEventListener("click", () => this.abrirFormulario());
+      const btnApresentar = document.getElementById("btnApresentarReferencias");
+      if (btnApresentar) btnApresentar.addEventListener("click", () => this.abrirApresentacao(0));
+      const mapaFiltros = { filtroRefTag: "tag", filtroRefCategoria: "categoria", filtroRefObra: "obra" };
+      Object.keys(mapaFiltros).forEach((idCampo) => {
+        const el = document.getElementById(idCampo);
+        if (!el) return;
+        el.addEventListener("change", (e) => {
+          this.filtros[mapaFiltros[idCampo]] = e.target.value;
+          this.rerenderizar();
+        });
+      });
+      const btnLimpar = document.getElementById("btnLimparFiltrosRef");
+      if (btnLimpar) btnLimpar.addEventListener("click", () => {
+        this.filtros = { tag: "", categoria: "", obra: "" };
+        this.rerenderizar();
+      });
+      const delegHandler = (e) => {
+        const alvoExcluir = e.target.closest("[data-excluir-referencia]");
+        const alvoApresentar = e.target.closest("[data-apresentar]");
+        if (alvoExcluir) {
+          this.excluirReferencia(alvoExcluir.dataset.excluirReferencia);
+          return;
+        }
+        if (alvoApresentar) {
+          this.abrirApresentacao(Number(alvoApresentar.dataset.apresentar));
+          return;
+        }
+      };
+      container.addEventListener("click", delegHandler);
+      this._bindCache["delegReferencias"] = { el: container, handler: delegHandler, type: "click" };
+      this.ligarDragAndDrop();
+    }
+    // Reordenação por arrastar e soltar (HTML5 Drag & Drop API nativa)
+    ligarDragAndDrop() {
+      const grid = document.getElementById("gridReferencias");
+      if (!grid) return;
+      const cards = grid.querySelectorAll(".card-referencia");
+      cards.forEach((card) => {
+        card.addEventListener("dragstart", () => {
+          this.indiceArrastado = Number(card.dataset.indice);
+          card.classList.add("arrastando");
+        });
+        card.addEventListener("dragend", () => card.classList.remove("arrastando"));
+        card.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          card.classList.add("zona-drop");
+        });
+        card.addEventListener("dragleave", () => card.classList.remove("zona-drop"));
+        card.addEventListener("drop", (e) => {
+          e.preventDefault();
+          card.classList.remove("zona-drop");
+          const indiceDestino = Number(card.dataset.indice);
+          if (this.indiceArrastado === null || this.indiceArrastado === indiceDestino) return;
+          const refsAtuais = this.referenciasFiltradas();
+          const [item] = refsAtuais.splice(this.indiceArrastado, 1);
+          refsAtuais.splice(indiceDestino, 0, item);
+          const idsOrdenados = refsAtuais.map((r) => r.id);
+          const restante = this.dataStore.listar("referencias").filter((r) => !idsOrdenados.includes(r.id));
+          this.dataStore.dados.referencias = [...refsAtuais, ...restante];
+          this.dataStore.salvar();
+          this.indiceArrastado = null;
+          this.rerenderizar();
+        });
+      });
+    }
+    // Modal de criação de referência (imagem / link / nota)
+    abrirFormulario() {
+      const obras = this.dataStore.listar("obras");
+      abrirModal(`
+      <h3>Nova Refer\xEAncia</h3>
+      <div class="grupo-botoes-toggle" id="grupoTipoReferencia">
+        <button type="button" class="ativo" data-tipo-ref="imagem">\u{1F5BC}\uFE0F Imagem</button>
+        <button type="button" data-tipo-ref="link">\u{1F517} Link</button>
+        <button type="button" data-tipo-ref="nota">\u{1F4DD} Nota</button>
+      </div>
+      <form id="formReferencia">
+        <div class="campo-form"><label>T\xEDtulo (opcional)</label><input type="text" id="campoTituloRef"></div>
+
+        <div class="campo-form" data-bloco-tipo="imagem">
+          <label>Imagem</label>
+          <input type="file" id="campoArquivoRef" accept="image/*">
+          <img id="previewImagemRef" class="preview-imagem-form" style="display:none;">
+        </div>
+
+        <div class="campo-form" data-bloco-tipo="link" style="display:none;">
+          <label>URL da imagem/p\xE1gina</label>
+          <input type="url" id="campoUrlRef" placeholder="https://...">
+          <p class="texto-ajuda">Se a URL apontar para uma imagem, o preview aparecer\xE1 automaticamente no board.</p>
+        </div>
+
+        <div class="campo-form" data-bloco-tipo="nota" style="display:none;">
+          <label>Nota</label>
+          <textarea id="campoNotaRef" placeholder="Escreva sua ideia, inspira\xE7\xE3o ou observa\xE7\xE3o..."></textarea>
+        </div>
+
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Categoria</label>
+            <input type="text" id="campoCategoriaRef" list="listaCategoriasRef" placeholder="cor, \xE9poca, artista, emo\xE7\xE3o...">
+            <datalist id="listaCategoriasRef">
+              <option value="cor"><option value="\xE9poca"><option value="artista"><option value="emo\xE7\xE3o"><option value="composi\xE7\xE3o">
+            </datalist>
+          </div>
+          <div class="campo-form">
+            <label>Obra vinculada</label>
+            <select id="campoObraVinculadaRef">
+              <option value="">Nenhuma</option>
+              ${obras.map((o) => `<option value="${o.id}">${o.titulo}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <div class="campo-form"><label>Tags (separadas por v\xEDrgula)</label><input type="text" id="campoTagsRef" placeholder="Ex: quente, retrato, luz suave"></div>
+
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarReferencia">Cancelar</button>
+          <button type="submit" class="btn-primario">Adicionar ao Board</button>
+        </div>
+      </form>
+    `);
+      let tipoAtual = "imagem";
+      let imagemBase64 = "";
+      document.querySelectorAll("[data-tipo-ref]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          tipoAtual = btn.dataset.tipoRef;
+          document.querySelectorAll("[data-tipo-ref]").forEach((b) => b.classList.toggle("ativo", b === btn));
+          document.querySelectorAll("[data-bloco-tipo]").forEach((bloco) => {
+            bloco.style.display = bloco.dataset.blocoTipo === tipoAtual ? "block" : "none";
+          });
+        });
+      });
+      document.getElementById("campoArquivoRef").addEventListener("change", (e) => {
+        const arquivo = e.target.files[0];
+        if (!arquivo) return;
+        const leitor = new FileReader();
+        leitor.onload = (ev) => {
+          imagemBase64 = ev.target.result;
+          const preview = document.getElementById("previewImagemRef");
+          preview.src = imagemBase64;
+          preview.style.display = "block";
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+      document.getElementById("btnCancelarReferencia").addEventListener("click", fecharModal);
+      document.getElementById("formReferencia").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (tipoAtual === "imagem" && !imagemBase64) {
+          mostrarToast("Selecione uma imagem para continuar.");
+          return;
+        }
+        const url = document.getElementById("campoUrlRef").value.trim();
+        if (tipoAtual === "link" && !url) {
+          mostrarToast("Informe a URL do link de refer\xEAncia.");
+          return;
+        }
+        const nota = document.getElementById("campoNotaRef").value.trim();
+        if (tipoAtual === "nota" && !nota) {
+          mostrarToast("Escreva o conte\xFAdo da nota.");
+          return;
+        }
+        const tags = document.getElementById("campoTagsRef").value.split(",").map((t) => t.trim()).filter(Boolean);
+        const referencia = {
+          tipo: tipoAtual,
+          titulo: document.getElementById("campoTituloRef").value.trim(),
+          imagem: tipoAtual === "imagem" ? imagemBase64 : "",
+          url: tipoAtual === "link" ? url : "",
+          nota: tipoAtual === "nota" ? nota : "",
+          categoria: document.getElementById("campoCategoriaRef").value.trim(),
+          obraVinculada: document.getElementById("campoObraVinculadaRef").value || "",
+          tags
+        };
+        this.dataStore.adicionar("referencias", referencia);
+        fecharModal();
+        mostrarToast("Refer\xEAncia adicionada ao board!");
+        this.rerenderizar();
+      });
+    }
+    excluirReferencia(id) {
+      if (!confirm("Remover este item do board de refer\xEAncias?")) return;
+      this.dataStore.remover("referencias", id);
+      mostrarToast("Refer\xEAncia removida.");
+      this.rerenderizar();
+    }
+    // Modo apresentação em tela cheia: navega pelos itens filtrados atualmente exibidos
+    abrirApresentacao(indiceInicial) {
+      this.itensApresentacao = this.referenciasFiltradas();
+      if (!this.itensApresentacao.length) {
+        mostrarToast("N\xE3o h\xE1 itens para apresentar.");
+        return;
+      }
+      this.indiceApresentacao = indiceInicial || 0;
+      const overlay = document.createElement("div");
+      overlay.className = "overlay-apresentacao";
+      overlay.id = "overlayApresentacaoRef";
+      document.body.appendChild(overlay);
+      const botaoFechar = document.createElement("button");
+      botaoFechar.className = "btn-fechar-apresentacao";
+      botaoFechar.textContent = "\u2715";
+      botaoFechar.addEventListener("click", () => this.fecharApresentacao());
+      document.body.appendChild(botaoFechar);
+      overlay.dataset.temBotaoFechar = "true";
+      this._botaoFecharApresentacao = botaoFechar;
+      this._teclaApresentacao = (e) => {
+        if (e.key === "Escape") this.fecharApresentacao();
+        if (e.key === "ArrowRight") this.navegarApresentacao(1);
+        if (e.key === "ArrowLeft") this.navegarApresentacao(-1);
+      };
+      window.addEventListener("keydown", this._teclaApresentacao);
+      this.renderizarSlideApresentacao();
+    }
+    renderizarSlideApresentacao() {
+      const overlay = document.getElementById("overlayApresentacaoRef");
+      if (!overlay) return;
+      const item = this.itensApresentacao[this.indiceApresentacao];
+      let midiaHtml = "";
+      if (item.tipo === "imagem") midiaHtml = `<img class="midia-apresentacao" src="${item.imagem}" alt="${item.titulo || ""}">`;
+      else if (item.tipo === "link") midiaHtml = `<img class="midia-apresentacao" src="${item.url}" alt="${item.titulo || ""}" onerror="this.outerHTML='<div class=\\'nota-apresentacao\\'>Link: ${item.url}</div>'">`;
+      else midiaHtml = `<div class="nota-apresentacao">${item.nota || ""}</div>`;
+      overlay.innerHTML = `
+      ${midiaHtml}
+      <div class="legenda-apresentacao">
+        ${item.titulo ? `<strong>${item.titulo}</strong>  \xB7  ` : ""}${this.indiceApresentacao + 1} / ${this.itensApresentacao.length}
+      </div>
+      <div class="controles-apresentacao">
+        <button id="btnApresentacaoAnterior">\u25C0 Anterior</button>
+        <button id="btnApresentacaoProxima">Pr\xF3xima \u25B6</button>
+      </div>
+    `;
+      document.getElementById("btnApresentacaoAnterior").addEventListener("click", () => this.navegarApresentacao(-1));
+      document.getElementById("btnApresentacaoProxima").addEventListener("click", () => this.navegarApresentacao(1));
+    }
+    navegarApresentacao(direcao) {
+      const total = this.itensApresentacao.length;
+      this.indiceApresentacao = (this.indiceApresentacao + direcao + total) % total;
+      this.renderizarSlideApresentacao();
+    }
+    fecharApresentacao() {
+      const overlay = document.getElementById("overlayApresentacaoRef");
+      if (overlay) document.body.removeChild(overlay);
+      if (this._botaoFecharApresentacao) {
+        document.body.removeChild(this._botaoFecharApresentacao);
+        this._botaoFecharApresentacao = null;
+      }
+      if (this._teclaApresentacao) {
+        window.removeEventListener("keydown", this._teclaApresentacao);
+        this._teclaApresentacao = null;
+      }
+    }
+  };
+  var GaleriaVirtualView = class {
+    constructor(dataStore2, router2) {
+      this.dataStore = dataStore2;
+      this.router = router2;
+      this.obrasVisiveis = [];
+      this.zoomAtivo = null;
+      this.zoomIndice = 0;
+      this.ambienteAtual = "branca";
+      this.tourAtivo = false;
+      this.tourIndex = 0;
+      this.tourInterval = null;
+      this.tourDuracao = 4;
+      this.renderer = null;
+      this.scene = null;
+      this.camera = null;
+      this.clock = null;
+      this.obraMeshes = [];
+      this.obraData = [];
+      this.frameId = null;
+      this.raycaster = null;
+      this.mouse = { x: 0, y: 0 };
+      this.isMouseDown = false;
+      this.prevMouse = { x: 0, y: 0 };
+      this.targetTheta = 0;
+      this.targetPhi = 0.25;
+      this.targetDist = 500;
+      this.currentTheta = 0;
+      this.currentPhi = 0.25;
+      this.currentDist = 500;
+      this.minDist = 200;
+      this.maxDist = 1200;
+      this.autoRotate = false;
+      this.autoRotateSpeed = 0.15;
+      this.wallGroups = [];
+      this.threeReady = typeof THREE !== "undefined" && this._checkWebGL();
+      this._boundResize = null;
+      this._boundKeyDown = null;
+    }
+    _checkWebGL() {
+      try {
+        const c = document.createElement("canvas");
+        return !!(c.getContext("webgl") || c.getContext("experimental-webgl"));
+      } catch (e) {
+        return false;
+      }
+    }
+    carregarObras() {
+      const todas = obraStore().items;
+      this.obrasVisiveis = todas.filter((o) => o.imagem && (o.status === "disponivel" || o.status === "em exposicao" || o.status === "dispon\xEDvel" || o.status === "em exposi\xE7\xE3o"));
+      if (this.obrasVisiveis.length === 0) {
+        this.obrasVisiveis = todas.filter((o) => o.imagem).slice(0, 20);
+      }
+      if (this.obrasVisiveis.length > 20) this.obrasVisiveis = this.obrasVisiveis.slice(0, 20);
+    }
+    render() {
+      this.carregarObras();
+      const temObras = this.obrasVisiveis.length > 0;
+      if (!temObras) {
+        return `
+        <div class="galeria-virtual" style="display:flex;align-items:center;justify-content:center;background:var(--bg);min-height:400px;">
+          <div style="text-align:center;color:var(--text-muted);">
+            <div style="font-size:3rem;margin-bottom:12px;">\u{1F3DB}\uFE0F</div>
+            <h3 style="margin:0 0 8px;color:var(--text);">Galeria Virtual</h3>
+            <p style="margin:0;font-size:0.9rem;">Adicione obras com imagem no Cat\xE1logo para v\xEA-las aqui.</p>
+            <button class="btn-primario" style="margin-top:16px;" data-acao="irCatalogo">Ir para Cat\xE1logo</button>
+          </div>
+        </div>`;
+      }
+      return `
+      <div class="galeria-virtual" id="galeriaContainer">
+        <div class="barra-topo">
+          <h2>\u{1F3DB}\uFE0F Galeria Virtual</h2>
+          <div class="acoes-barra">
+            <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria">\u{1F517} Compartilhar</button>
+            <button class="btn-bar ${this.tourAtivo ? "ativo" : ""}" id="btnTourToggle" title="Iniciar tour guiado">\u{1F3A7} Tour</button>
+            <button class="btn-bar" id="btnAutoRotate" title="Rota\xE7\xE3o autom\xE1tica">\u{1F504} Auto</button>
+            <select class="ambiente-select" id="selectAmbiente">
+              <option value="branca" ${this.ambienteAtual === "branca" ? "selected" : ""}>\u{1F3DB}\uFE0F Galeria Branca</option>
+              <option value="classico" ${this.ambienteAtual === "classico" ? "selected" : ""}>\u{1FAB5} Atelier Cl\xE1ssico</option>
+              <option value="moderno" ${this.ambienteAtual === "moderno" ? "selected" : ""}>\u{1F5BC}\uFE0F Museu Moderno</option>
+            </select>
+          </div>
+        </div>
+        <div class="three-container" id="threeContainer">
+          <div class="loading-3d" id="loading3d">${this.threeReady ? "Carregando galeria 3D..." : "WebGL n\xE3o dispon\xEDvel \u2014 use um navegador moderno."}</div>
+        </div>
+        <div class="hud-navegacao" id="hudNavegacao">
+          <span class="nav-indicador" id="navIndicador">${this.obrasVisiveis.length} obras</span>
+          <span class="hint-controle">Arraste para girar \xB7 Scroll para zoom</span>
+        </div>
+        <div class="hud-tour ${this.tourAtivo ? "visivel" : ""}" id="hudTour">
+          <button class="tour-btn" id="tourPrev">\u25C0</button>
+          <button class="tour-btn ${this.tourAtivo ? "ativo" : ""}" id="tourPlayPause">${this.tourAtivo ? "\u23F8" : "\u25B6"}</button>
+          <button class="tour-btn" id="tourNext">\u25B6</button>
+          <span class="tour-progresso" id="tourProgresso">1 / ${this.obrasVisiveis.length}</span>
+        </div>
+      </div>`;
+    }
+    aposRenderizar() {
+      this.pararTour();
+      this.fecharZoom();
+      this.destruirThree();
+      if (this.obrasVisiveis.length === 0) return;
+      if (!this.threeReady) return;
+      this.container = document.getElementById("threeContainer");
+      const loading = document.getElementById("loading3d");
+      if (!this.container) return;
+      this._initThree();
+      this._construirSala();
+      this._bindThreeEvents();
+      if (loading) loading.style.display = "none";
+      const selAmb = document.getElementById("selectAmbiente");
+      if (selAmb) selAmb.addEventListener("change", () => {
+        this.ambienteAtual = selAmb.value;
+        this._aplicarAmbiente();
+      });
+      document.getElementById("btnAutoRotate")?.addEventListener("click", () => {
+        this.autoRotate = !this.autoRotate;
+        document.getElementById("btnAutoRotate")?.classList.toggle("ativo", this.autoRotate);
+      });
+      document.getElementById("btnTourToggle")?.addEventListener("click", () => this.toggleTour());
+      document.getElementById("tourPlayPause")?.addEventListener("click", () => this.toggleTour());
+      document.getElementById("tourPrev")?.addEventListener("click", () => this.tourAnterior());
+      document.getElementById("tourNext")?.addEventListener("click", () => this.tourProximo());
+      document.getElementById("btnCompartilhar")?.addEventListener("click", () => this.compartilhar());
+      this._boundResize = () => this._onResize();
+      window.addEventListener("resize", this._boundResize);
+    }
+    _initThree() {
+      const w = this.container.clientWidth;
+      const h = this.container.clientHeight;
+      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      this.renderer.setSize(w, h);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1;
+      this.renderer.outputEncoding = THREE.sRGBEncoding;
+      this.container.appendChild(this.renderer.domElement);
+      this.scene = new THREE.Scene();
+      this.scene.fog = new THREE.Fog(this._corFundo(), 600, 1400);
+      this.camera = new THREE.PerspectiveCamera(50, w / h, 1, 2e3);
+      this._updateCamera();
+      const ambient = new THREE.AmbientLight(4210784, 0.4);
+      this.scene.add(ambient);
+      const hemi = new THREE.HemisphereLight(16777215, 4473924, 0.5);
+      this.scene.add(hemi);
+      const mainLight = new THREE.DirectionalLight(16772829, 1.2);
+      mainLight.position.set(300, 500, 400);
+      mainLight.castShadow = true;
+      mainLight.shadow.mapSize.width = 1024;
+      mainLight.shadow.mapSize.height = 1024;
+      mainLight.shadow.camera.near = 1;
+      mainLight.shadow.camera.far = 1500;
+      mainLight.shadow.camera.left = -500;
+      mainLight.shadow.camera.right = 500;
+      mainLight.shadow.camera.top = 500;
+      mainLight.shadow.camera.bottom = -500;
+      this.scene.add(mainLight);
+      const fillLight = new THREE.DirectionalLight(8947967, 0.3);
+      fillLight.position.set(-300, 100, -400);
+      this.scene.add(fillLight);
+      const rimLight = new THREE.DirectionalLight(16777215, 0.2);
+      rimLight.position.set(0, -300, 0);
+      this.scene.add(rimLight);
+      this.clock = new THREE.Clock();
+      this.raycaster = new THREE.Raycaster();
+      this._startLoop();
+    }
+    _corFundo() {
+      return this.ambienteAtual === "branca" ? 1118481 : this.ambienteAtual === "classico" ? 657414 : 328965;
+    }
+    _updateCamera() {
+      if (!this.camera) return;
+      const theta = this.currentTheta;
+      const phi = this.currentPhi;
+      const dist = this.currentDist;
+      this.camera.position.x = dist * Math.sin(theta) * Math.cos(phi);
+      this.camera.position.y = dist * Math.sin(phi);
+      this.camera.position.z = dist * Math.cos(theta) * Math.cos(phi);
+      this.camera.lookAt(0, 0, 0);
+    }
+    _startLoop() {
+      const loop = () => {
+        this.frameId = requestAnimationFrame(loop);
+        const dt = this.clock.getDelta();
+        this.currentTheta += (this.targetTheta - this.currentTheta) * 0.06;
+        this.currentPhi += (this.targetPhi - this.currentPhi) * 0.06;
+        this.currentDist += (this.targetDist - this.currentDist) * 0.06;
+        if (this.autoRotate) {
+          this.targetTheta += this.autoRotateSpeed * dt;
+        }
+        this._updateCamera();
+        if (this.renderer && this.scene && this.camera) {
+          this.renderer.render(this.scene, this.camera);
+        }
+      };
+      this.frameId = requestAnimationFrame(loop);
+    }
+    _construirSala() {
+      this.obraMeshes = [];
+      this.obraData = [];
+      this.wallGroups = [];
+      const corParede = this.ambienteAtual === "branca" ? 15790320 : this.ambienteAtual === "classico" ? 9139029 : 2236962;
+      const corChao = this.ambienteAtual === "branca" ? 13948116 : this.ambienteAtual === "classico" ? 6045747 : 3355443;
+      const corTeto = this.ambienteAtual === "branca" ? 16119285 : this.ambienteAtual === "classico" ? 8022864 : 1710618;
+      const floorGeo = new THREE.PlaneGeometry(900, 900);
+      const floorMat = new THREE.MeshStandardMaterial({ color: corChao, roughness: 0.9, metalness: 0 });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -200;
+      floor.receiveShadow = true;
+      this.scene.add(floor);
+      const ceilMat = new THREE.MeshStandardMaterial({ color: corTeto, roughness: 0.9, metalness: 0 });
+      const ceil = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), ceilMat);
+      ceil.rotation.x = Math.PI / 2;
+      ceil.position.y = 200;
+      this.scene.add(ceil);
+      const wallMat = new THREE.MeshStandardMaterial({ color: corParede, roughness: 0.7, metalness: 0 });
+      const wallW = 800;
+      const wallH = 400;
+      const walls = ["back", "left", "right", "front"];
+      walls.forEach((id) => this._criarParedeEstrutural(id, wallMat, wallW, wallH));
+      const obras = this.obrasVisiveis;
+      const obrasPorParede = Math.ceil(obras.length / 4);
+      walls.forEach((wallId, wi) => {
+        const start = wi * obrasPorParede;
+        const end = Math.min(start + obrasPorParede, obras.length);
+        const fatia = obras.slice(start, end);
+        if (fatia.length === 0) return;
+        const group = new THREE.Group();
+        this._posicionarGrupoParede(group, wallId);
+        this._adicionarObrasAoGrupo(group, fatia, wallId);
+        this.scene.add(group);
+        this.wallGroups.push({ group, wallId, obras: fatia });
+      });
+    }
+    _criarParedeEstrutural(id, mat, w, h) {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+      mesh.receiveShadow = true;
+      switch (id) {
+        case "back":
+          mesh.position.set(0, 0, -350);
+          break;
+        case "front":
+          mesh.position.set(0, 0, 350);
+          mesh.rotation.y = Math.PI;
+          break;
+        case "left":
+          mesh.position.set(-350, 0, 0);
+          mesh.rotation.y = -Math.PI / 2;
+          break;
+        case "right":
+          mesh.position.set(350, 0, 0);
+          mesh.rotation.y = Math.PI / 2;
+          break;
+      }
+      this.scene.add(mesh);
+    }
+    _posicionarGrupoParede(group, wallId) {
+      switch (wallId) {
+        case "back":
+          group.position.set(0, 0, -349);
+          break;
+        case "front":
+          group.position.set(0, 0, 349);
+          group.rotation.y = Math.PI;
+          break;
+        case "left":
+          group.position.set(-349, 0, 0);
+          group.rotation.y = -Math.PI / 2;
+          break;
+        case "right":
+          group.position.set(349, 0, 0);
+          group.rotation.y = Math.PI / 2;
+          break;
+      }
+    }
+    _adicionarObrasAoGrupo(group, obras, wallId) {
+      const cols = Math.min(4, obras.length);
+      const rows = Math.ceil(obras.length / cols);
+      const spacingX = 150;
+      const spacingY = 150;
+      const offsetX = (cols - 1) * spacingX / 2;
+      const offsetY = (rows - 1) * spacingY / 2;
+      const corMoldura = this.ambienteAtual === "branca" ? 13935988 : this.ambienteAtual === "classico" ? 9127187 : 5592405;
+      const molduraMat = new THREE.MeshStandardMaterial({ color: corMoldura, roughness: 0.4, metalness: 0.3 });
+      obras.forEach((obra, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const lx = col * spacingX - offsetX;
+        const ly = -(row * spacingY - offsetY);
+        const imgW = obra.dimensoes && obra.dimensoes.largura && obra.dimensoes.altura ? 80 : 80;
+        const aspect = obra.dimensoes && obra.dimensoes.largura && obra.dimensoes.altura ? obra.dimensoes.largura / obra.dimensoes.altura : 0.75;
+        const pw = imgW;
+        const ph = imgW / Math.max(aspect, 0.1);
+        const frameDepth = 3;
+        const fbMat = new THREE.MeshStandardMaterial({ color: 2236962, roughness: 0.6 });
+        const fb = new THREE.Mesh(new THREE.BoxGeometry(pw + 14, ph + 14, frameDepth), fbMat);
+        fb.position.set(lx, ly, -1);
+        fb.castShadow = true;
+        group.add(fb);
+        const borda = new THREE.Mesh(new THREE.BoxGeometry(pw + 18, ph + 18, 2), molduraMat);
+        borda.position.set(lx, ly, 0.5);
+        group.add(borda);
+        const imgMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0, side: THREE.DoubleSide });
+        const imgMesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), imgMat);
+        imgMesh.position.set(lx, ly, 2);
+        imgMesh.userData = { obra, index: this.obraMeshes.length };
+        group.add(imgMesh);
+        this.obraMeshes.push(imgMesh);
+        this.obraData.push(obra);
+        this._carregarTextura(imgMesh, obra.imagem);
+      });
+    }
+    _carregarTextura(mesh, url) {
+      if (!url || !mesh.material) return;
+      const loader = new THREE.TextureLoader();
+      loader.load(url, (tex) => {
+        tex.encoding = THREE.sRGBEncoding;
+        mesh.material.map = tex;
+        mesh.material.needsUpdate = true;
+      }, void 0, () => {
+      });
+    }
+    _aplicarAmbiente() {
+      if (!this.scene) return;
+      this.scene.fog.color.setHex(this._corFundo());
+      this.scene.fog.far = this.ambienteAtual === "moderno" ? 1e3 : 1400;
+      this.renderer.setClearColor(this._corFundo());
+      this._reconstruirSala();
+    }
+    _reconstruirSala() {
+      this.wallGroups.forEach((wg) => {
+        this.scene.remove(wg.group);
+        wg.group.traverse((c) => {
+          if (c.geometry) c.geometry.dispose();
+          if (c.material) c.material.dispose();
+        });
+      });
+      this.wallGroups = [];
+      this.obraMeshes = [];
+      this._construirSala();
+    }
+    _bindThreeEvents() {
+      const canvas = this.renderer?.domElement;
+      if (!canvas) return;
+      canvas.addEventListener("mousedown", (e) => {
+        this.isMouseDown = true;
+        this.prevMouse = { x: e.clientX, y: e.clientY };
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!this.isMouseDown) {
+          this.mouse.x = e.clientX / window.innerWidth * 2 - 1;
+          this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+          return;
+        }
+        const dx = e.clientX - this.prevMouse.x;
+        const dy = e.clientY - this.prevMouse.y;
+        this.targetTheta -= dx * 5e-3;
+        this.targetPhi = Math.max(-0.8, Math.min(0.8, this.targetPhi + dy * 5e-3));
+        this.prevMouse = { x: e.clientX, y: e.clientY };
+      });
+      window.addEventListener("mouseup", () => {
+        if (this.isMouseDown) {
+          this.isMouseDown = false;
+          this._checkClick();
+        }
+      });
+      canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        this.targetDist = Math.max(this.minDist, Math.min(this.maxDist, this.targetDist + e.deltaY * 0.5));
+      }, { passive: false });
+      canvas.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) {
+          this.isMouseDown = true;
+          this.prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+      }, { passive: true });
+      canvas.addEventListener("touchmove", (e) => {
+        if (e.touches.length === 1 && this.isMouseDown) {
+          const dx = e.touches[0].clientX - this.prevMouse.x;
+          const dy = e.touches[0].clientY - this.prevMouse.y;
+          this.targetTheta -= dx * 5e-3;
+          this.targetPhi = Math.max(-0.8, Math.min(0.8, this.targetPhi + dy * 5e-3));
+          this.prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+      }, { passive: true });
+      canvas.addEventListener("touchend", () => {
+        this.isMouseDown = false;
+      }, { passive: true });
+    }
+    _checkClick() {
+      if (!this.raycaster || !this.camera || !this.renderer) return;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      const hits = this.raycaster.intersectObjects(this.obraMeshes);
+      if (hits.length > 0) {
+        const data = hits[0].object.userData;
+        if (data && data.obra && data.index !== void 0) {
+          this.abrirZoom(data.index);
+        }
+      }
+    }
+    _onResize() {
+      if (!this.container || !this.renderer || !this.camera) return;
+      const w = this.container.clientWidth;
+      const h = this.container.clientHeight;
+      if (w > 0 && h > 0) {
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+      }
+    }
+    // --- Tour ---
+    toggleTour() {
+      this.tourAtivo ? this.pararTour() : this.iniciarTour();
+    }
+    iniciarTour() {
+      if (this.obrasVisiveis.length === 0) return;
+      this.tourAtivo = true;
+      this.tourIndex = 0;
+      this._mostrarHudTour(true);
+      this._atualizarBotaoTour();
+      this._focarObraTour(0);
+      this._iniciarTimerTour();
+    }
+    pararTour() {
+      this.tourAtivo = false;
+      this._pararTimerTour();
+      this._mostrarHudTour(false);
+      this._atualizarBotaoTour();
+    }
+    _iniciarTimerTour() {
+      this._pararTimerTour();
+      this.tourInterval = setInterval(() => {
+        if (this.tourAtivo) this.tourProximo();
+      }, this.tourDuracao * 1e3);
+    }
+    _pararTimerTour() {
+      if (this.tourInterval) {
+        clearInterval(this.tourInterval);
+        this.tourInterval = null;
+      }
+    }
+    tourAnterior() {
+      if (this.obrasVisiveis.length === 0) return;
+      this.tourIndex = (this.tourIndex - 1 + this.obrasVisiveis.length) % this.obrasVisiveis.length;
+      this._focarObraTour(this.tourIndex);
+      if (this.tourAtivo) this._reiniciarTimerTour();
+    }
+    tourProximo() {
+      if (this.obrasVisiveis.length === 0) return;
+      this.tourIndex = (this.tourIndex + 1) % this.obrasVisiveis.length;
+      if (this.tourIndex === 0 && this.tourAtivo) {
+        this.pararTour();
+        return;
+      }
+      this._focarObraTour(this.tourIndex);
+      if (this.tourAtivo) this._reiniciarTimerTour();
+    }
+    _reiniciarTimerTour() {
+      if (this.tourAtivo) {
+        this._pararTimerTour();
+        this._iniciarTimerTour();
+      }
+    }
+    _focarObraTour(idx) {
+      if (idx < 0 || idx >= this.obraData.length) return;
+      this.tourIndex = idx;
+      const totalParedes = 4;
+      const obrasPorParede = Math.ceil(this.obraData.length / totalParedes);
+      const paredeIdx = Math.floor(idx / obrasPorParede);
+      const angulos = [0, Math.PI / 2, -Math.PI / 2, Math.PI];
+      this.targetTheta = angulos[Math.min(paredeIdx, 3)] || 0;
+      this.targetPhi = 0.1;
+      this.targetDist = 350;
+      const prog = document.getElementById("tourProgresso");
+      if (prog) prog.textContent = `${idx + 1} / ${this.obraData.length}`;
+    }
+    _mostrarHudTour(visivel) {
+      const hud = document.getElementById("hudTour");
+      if (hud) hud.classList.toggle("visivel", visivel);
+    }
+    _atualizarBotaoTour() {
+      const btn = document.getElementById("btnTourToggle");
+      if (btn) {
+        btn.classList.toggle("ativo", this.tourAtivo);
+        btn.textContent = this.tourAtivo ? "\u23F9 Tour" : "\u{1F3A7} Tour";
+      }
+      const pp = document.getElementById("tourPlayPause");
+      if (pp) {
+        pp.classList.toggle("ativo", this.tourAtivo);
+        pp.textContent = this.tourAtivo ? "\u23F8" : "\u25B6";
+      }
+    }
+    // --- Zoom (via Lightbox Premium) ---
+    abrirZoom(idx) {
+      if (idx < 0 || idx >= this.obraData.length) return;
+      const images = this.obraData.map((o) => ({
+        src: o.imagem || "",
+        title: o.titulo || "Sem t\xEDtulo",
+        subtitle: [o.tecnica, o.ano].filter(Boolean).join(" \xB7 "),
+        caption: o.descricao || "",
+        price: o.preco ? formatarMoeda(o.preco) : "",
+        id: o.id
+      }));
+      abrirLightbox(images, idx);
+    }
+    fecharZoom() {
+      if (imageLightbox) imageLightbox.close();
+    }
+    // --- Compartilhar ---
+    compartilhar() {
+      const hash = "#galeria=virtual&tour=obras-disponiveis";
+      const url = window.location.origin + window.location.pathname + hash;
+      const msg = `Ol\xE1! \u{1F3A8} Convido voc\xEA para um tour virtual pela minha galeria de obras:
+${url}
+
+Aprecie a exposi\xE7\xE3o!`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(() => this._mostrarToastCompartilhar(url)).catch(() => this._fallbackCompartilhar(url, msg));
+      } else {
+        this._fallbackCompartilhar(url, msg);
+      }
+    }
+    _fallbackCompartilhar(url, msg) {
+      const ta = document.createElement("textarea");
+      ta.value = msg;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        this._mostrarToastCompartilhar(url);
+      } catch (e) {
+        prompt("Copie o link abaixo:", url);
+      }
+      document.body.removeChild(ta);
+    }
+    _mostrarToastCompartilhar(url) {
+      const existente = document.querySelector(".toast-compartilhar");
+      if (existente) existente.remove();
+      const toast = document.createElement("div");
+      toast.className = "toast-compartilhar";
+      toast.innerHTML = `
+      <span>\u2705 Link copiado!</span>
+      <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
+      <button class="btn-toast" id="btnAbrirLinkCompartilhado">Abrir</button>`;
+      document.body.appendChild(toast);
+      document.getElementById("btnAbrirLinkCompartilhado")?.addEventListener("click", () => {
+        toast.remove();
+        if (this.router) this.router.navegar("galeriaVirtual");
+      });
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 5e3);
+    }
+    // --- Cleanup ---
+    destruirThree() {
+      if (this.frameId) {
+        cancelAnimationFrame(this.frameId);
+        this.frameId = null;
+      }
+      if (this._boundResize) {
+        window.removeEventListener("resize", this._boundResize);
+        this._boundResize = null;
+      }
+      if (this.renderer) {
+        this.renderer.domElement.remove();
+        this.renderer.dispose();
+        this.renderer = null;
+      }
+      this.scene = null;
+      this.camera = null;
+      this.clock = null;
+      this.raycaster = null;
+      this.wallGroups = [];
+      this.obraMeshes = [];
+      this.obraData = [];
+    }
+    destruir() {
+      this.pararTour();
+      this.fecharZoom();
+      this.destruirThree();
+    }
+  };
+  var PrecificadorView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.calc = { materiais: 0, horas: 0, valorHora: 60, largura: 0, altura: 0, complexidade: 3, obraId: "" };
+      this.fatoresComplexidade = [0, 0.7, 0.85, 1, 1.2, 1.5];
+    }
+    get config() {
+      return configStore().precificador || {};
+    }
+    get cfgRoot() {
+      return configStore();
+    }
+    get moeda() {
+      return this.cfgRoot.moedaPadrao || "BRL";
+    }
+    get taxas() {
+      return this.cfgRoot.taxasCambio || {};
+    }
+    get regras() {
+      return this.cfgRoot.precificadorRegras || [];
+    }
+    salvarConfig(cfg) {
+      const c = this.cfgRoot;
+      c.precificador = { ...c.precificador || {}, ...cfg };
+      configStore().salvar();
+    }
+    fmt(valor, moeda) {
+      const m = moeda || this.moeda;
+      const localeMap = { BRL: "pt-BR", USD: "en-US", EUR: "de-DE", GBP: "en-GB" };
+      const loc = localeMap[m] || "pt-BR";
+      try {
+        return (Number(valor) || 0).toLocaleString(loc, { style: "currency", currency: m, maximumFractionDigits: 2 });
+      } catch {
+        return (Number(valor) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      }
+    }
+    converter(valor, de, para) {
+      const v = Number(valor) || 0;
+      if (de === para) return v;
+      const tx = this.taxas;
+      const emBRL = de === "BRL" ? v : tx[de] ? v * tx[de] : v;
+      return para === "BRL" ? emBRL : tx[para] ? emBRL / tx[para] : emBRL;
+    }
+    // --- RENDER ---
+    render() {
+      const obras = obraStore().items || [];
+      const vendas = vendaStore().items || [];
+      const temObras = obras.length > 0;
+      this.calc.valorHora = this.config.valorHora || 60;
+      const opcoesObra = obras.map(
+        (o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"} \u2014 ${this.fmt(o.preco)}</option>`
+      ).join("");
+      return `
+      <div class="precificador" id="precificadorContainer">
+        <div class="precificador-toolbar">
+          <div class="moeda-selector">
+            <label>Moeda:</label>
+            <select id="selMoedaPadrao">
+              ${["BRL", "USD", "EUR", "GBP"].map(
+        (m) => `<option value="${m}" ${this.moeda === m ? "selected" : ""}>${m}</option>`
+      ).join("")}
+            </select>
+            <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de c\xE2mbio">\u{1F4B1}</button>
+          </div>
+          <button class="btn-secundario" id="btnAbrirRegras">\u{1F4CB} Regras de Precifica\xE7\xE3o</button>
+          <button class="btn-primario" id="btnExportarRelatorio">\u{1F4DE} Relat\xF3rio PDF</button>
+        </div>
+
+        <div class="card">
+          <h3>\u{1F9EE} Calculadora de Pre\xE7o</h3>
+          <div class="calc-grid">
+            <div class="campo-calc" style="grid-column:1/-1">
+              <label>Obra de refer\xEAncia</label>
+              <select class="sel-obra-calc" id="selObraCalc"><option value="">\u2014 Selecionar obra \u2014</option>${opcoesObra}</select>
+            </div>
+            <div class="campo-calc">
+              <label>\u{1F4B0} Custo materiais (${this.moeda})</label>
+              <input type="number" id="calcMateriais" value="${this.calc.materiais}" min="0" step="0.1">
+            </div>
+            <div class="campo-calc">
+              <label>\u23F1 Horas trabalhadas</label>
+              <input type="number" id="calcHoras" value="${this.calc.horas}" min="0" step="0.5">
+            </div>
+            <div class="campo-calc">
+              <label>\u{1F675} Valor hora (${this.moeda})</label>
+              <input type="number" id="calcValorHora" value="${this.calc.valorHora}" min="0" step="1">
+            </div>
+            <div class="campo-calc">
+              <label>\u{1F4D0} Dimens\xF5es (cm)</label>
+              <div style="display:flex;gap:6px;">
+                <input type="number" id="calcLargura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
+                <span style="align-self:center;color:var(--text-muted);font-size:0.8rem;">\xD7</span>
+                <input type="number" id="calcAltura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
+              </div>
+            </div>
+            <div class="campo-calc">
+              <label>\u2B50 Complexidade</label>
+              <div class="estrelas-input" id="estrelasInput">
+                ${[1, 2, 3, 4, 5].map(
+        (i) => `<span class="estrela ${i <= this.calc.complexidade ? "preenchida" : ""}" data-val="${i}">\u2605</span>`
+      ).join("")}
+              </div>
+            </div>
+          </div>
+
+          <div class="resultado-preco" id="resultadoPreco">
+            <div class="rotulo-sugerido">Pre\xE7o Sugerido</div>
+            <div class="valor-sugerido" id="valorSugerido">${this.fmt(this.calcularPreco(this.calc))}</div>
+            <div class="detalhe-calculo" id="detalheCalculo">${this.detalharCalculo(this.calcularPreco(this.calc))}</div>
+            <div id="conversoesMultiMoeda" class="conversoes-multi"></div>
+          </div>
+
+          <div id="faixaComparativa">${this.renderFaixaComparativa(obras)}</div>
+          <button class="btn-primario" id="btnSalvarPrecoCalc" style="margin-top:12px;width:100%;">\u{1F4BE} Salvar pre\xE7o sugerido na obra</button>
+        </div>
+
+        ${temObras ? this.renderBreakEven(obras) : ""}
+        ${temObras ? this.renderMLCard(obras, vendas) : ""}
+        ${temObras ? this.renderProjecao(obras) : ""}
+
+        <div class="card card-full">
+          <h3>\u{1F4CA} An\xE1lise do Portf\xF3lio</h3>
+          ${temObras ? this.renderAnalise(obras, vendas) : '<p style="color:var(--text-muted);font-size:0.85rem;">Adicione obras no Cat\xE1logo para ver an\xE1lises.</p>'}
+        </div>
+
+        <div class="card card-full">
+          <h3>\u{1F3AF} Metas Financeiras</h3>
+          ${this.renderMetas(obras, vendas)}
+        </div>
+      </div>
+
+      ${this.renderModalRegras()}
+      ${this.renderModalTaxas()}
+    `;
+    }
+    // --- Cálculo ---
+    calcularPreco(c) {
+      const materiais = Number(c.materiais) || 0;
+      const horas = Number(c.horas) || 0;
+      const valorHora = Number(c.valorHora) || 60;
+      const complexidade = Math.max(1, Math.min(5, Number(c.complexidade) || 3));
+      const mult = this.config.multiplicadorExperiencia || 1.5;
+      const fator = this.fatoresComplexidade[complexidade] || 1;
+      const base = materiais + horas * valorHora;
+      const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
+      const bonusArea = area > 0 ? 1 + area / 1e4 : 1;
+      return Math.round(base * mult * fator * bonusArea);
+    }
+    detalharCalculo(preco) {
+      const c = this.calc;
+      const m = Number(c.materiais) || 0;
+      const h = Number(c.horas) || 0;
+      const vh = Number(c.valorHora) || 60;
+      const mult = this.config.multiplicadorExperiencia || 1.5;
+      const fator = this.fatoresComplexidade[Math.max(1, Math.min(5, Number(c.complexidade) || 3))];
+      const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
+      const bonus = area > 0 ? 1 + area / 1e4 : 1;
+      return `${this.fmt(m)} + (${h}h \xD7 ${this.fmt(vh)}) \xD7 ${mult} \xD7 ${fator}${bonus !== 1 ? ` \xD7 ${bonus.toFixed(2)} (\xE1rea)` : ""} = ${this.fmt(preco)}`;
+    }
+    renderFaixaComparativa(obras) {
+      const c = this.calc;
+      const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
+      if (!area || obras.length < 2) return "";
+      const similares = obras.filter((o) => {
+        const dim = o.dimensoes;
+        if (!dim || !dim.largura || !dim.altura) return false;
+        const oArea = dim.largura * dim.altura;
+        return oArea > area * 0.5 && oArea < area * 1.5 && o.preco > 0;
+      });
+      if (similares.length < 2) return "";
+      const precos = similares.map((o) => Number(o.preco)).sort((a, b) => a - b);
+      const min = precos[0], max = precos[precos.length - 1];
+      const media = Math.round(precos.reduce((s, v) => s + v, 0) / precos.length);
+      return `
+      <div class="faixa-comparativo">
+        <div class="faixa-item"><div class="faixa-valor">${this.fmt(min)}</div><div class="faixa-rotulo">Menor similar</div></div>
+        <div class="faixa-item"><div class="faixa-valor">${this.fmt(media)}</div><div class="faixa-rotulo">M\xE9dia similares</div></div>
+        <div class="faixa-item"><div class="faixa-valor">${this.fmt(max)}</div><div class="faixa-rotulo">Maior similar</div></div>
+      </div>
+    `;
+    }
+    // --- Break-Even ---
+    renderBreakEven(obras) {
+      const comCusto = obras.filter((o) => (o.custoMateriais > 0 || o.horasTrabalho > 0) && o.preco > 0);
+      if (comCusto.length === 0) return "";
+      const linhas = comCusto.map((o) => {
+        const custoMat = Number(o.custoMateriais) || 0;
+        const horas = Number(o.horasTrabalho) || 0;
+        const vh = this.config.valorHora || 60;
+        const custoTotal = custoMat + horas * vh;
+        const preco = Number(o.preco) || 0;
+        const margem = preco > 0 ? (preco - custoTotal) / preco * 100 : 0;
+        const markup = custoTotal > 0 ? preco / custoTotal : 0;
+        const classeMargem = margem >= 50 ? "be-alta" : margem >= 25 ? "be-media" : "be-baixa";
+        return `<tr class="${classeMargem}">
+        <td>${o.titulo || "Sem t\xEDtulo"}</td>
+        <td>${this.fmt(custoTotal)}</td>
+        <td>${this.fmt(preco)}</td>
+        <td class="be-num">${margem.toFixed(1)}%</td>
+        <td class="be-num">${markup.toFixed(2)}\xD7</td>
+        <td>${this.fmt(preco - custoTotal)}</td>
+      </tr>`;
+      }).join("");
+      return `
+      <div class="card card-full">
+        <h3>\u{1F4CA} An\xE1lise de Break-Even</h3>
+        <div class="be-tabela-wrapper">
+          <table class="be-tabela">
+            <thead><tr>
+              <th>Obra</th><th>Custo Total</th><th>Pre\xE7o</th><th>Margem</th><th>Markup</th><th>Lucro</th>
+            </tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+        <div class="be-legend">
+          <span class="be-tag be-alta">\u2265 50% margem</span>
+          <span class="be-tag be-media">25\u201350%</span>
+          <span class="be-tag be-baixa">< 25%</span>
+        </div>
+      </div>
+    `;
+    }
+    // --- ML Accuracy ---
+    renderMLCard(obras, vendas) {
+      const comHistorico = obras.filter((o) => o.historicoPrecos && o.historicoPrecos.length > 0 && o.dimensoes && o.dimensoes.largura);
+      if (comHistorico.length < 2) return "";
+      let acertos = 0, erros = 0, erroTotal = 0;
+      const amostras = [];
+      comHistorico.forEach((o) => {
+        const calcTemp = {
+          materiais: Number(o.custoMateriais) || 0,
+          horas: Number(o.horasTrabalho) || 0,
+          valorHora: this.config.valorHora || 60,
+          largura: o.dimensoes.largura,
+          altura: o.dimensoes.altura,
+          complexidade: 3
+        };
+        const sugerido = this.calcularPreco(calcTemp);
+        const real = Number(o.preco) || 0;
+        if (real > 0) {
+          const diff = Math.abs(sugerido - real);
+          erroTotal += diff;
+          const pctErro = diff / real * 100;
+          if (pctErro <= 20) acertos++;
+          else erros++;
+          amostras.push({ titulo: o.titulo, real, sugerido, pctErro });
+        }
+      });
+      const total = acertos + erros;
+      if (total === 0) return "";
+      const hitRate = acertos / total * 100;
+      const erroMedio = erroTotal / total;
+      const ultimas = amostras.sort((a, b) => b.pctErro - a.pctErro).slice(0, 5);
+      return `
+      <div class="card card-full">
+        <h3>\u{1F916} Precis\xE3o (ML) \u2014 Sugest\xE3o vs. Realidade</h3>
+        <div class="ml-precisao-grid">
+          <div class="ml-precisao-card ${hitRate >= 70 ? "ml-bom" : hitRate >= 40 ? "ml-medio" : "ml-ruim"}">
+            <div class="ml-numero">${hitRate.toFixed(0)}%</div>
+            <div class="ml-rotulo">Hit Rate</div>
+            <div class="ml-sub">${acertos}/${total} dentro de 20% do real</div>
+          </div>
+          <div class="ml-precisao-card">
+            <div class="ml-numero">${this.fmt(erroMedio)}</div>
+            <div class="ml-rotulo">Erro M\xE9dio Absoluto</div>
+          </div>
+          <div class="ml-precisao-card">
+            <div class="ml-numero">${erros}</div>
+            <div class="ml-rotulo">Fora da Margem</div>
+          </div>
+        </div>
+        ${ultimas.length > 0 ? `
+        <h4 style="margin:12px 0 6px;font-size:0.8rem;color:var(--text-muted);">Maiores discrep\xE2ncias</h4>
+        <table class="be-tabela">
+          <thead><tr><th>Obra</th><th>Sugerido</th><th>Real</th><th>Erro</th></tr></thead>
+          <tbody>${ultimas.map((u) => `<tr class="${u.pctErro > 20 ? "be-baixa" : "be-alta"}">
+            <td>${u.titulo || "\u2014"}</td>
+            <td>${this.fmt(u.sugerido)}</td>
+            <td>${this.fmt(u.real)}</td>
+            <td>${u.pctErro.toFixed(0)}%</td>
+          </tr>`).join("")}</tbody>
+        </table>` : ""}
+      </div>
+    `;
+    }
+    // --- Projeção de Preços ---
+    renderProjecao(obras) {
+      const comHistorico = obras.filter((o) => o.historicoPrecos && o.historicoPrecos.length >= 2);
+      if (comHistorico.length === 0) return "";
+      const selOpts = comHistorico.map(
+        (o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`
+      ).join("");
+      const obra = comHistorico[0];
+      const proj = this.projetarPreco(obra);
+      return `
+      <div class="card card-full">
+        <h3>\u{1F52E} Proje\xE7\xE3o de Valoriza\xE7\xE3o</h3>
+        <div style="margin-bottom:12px;">
+          <select id="selProjecaoObra" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">${selOpts}</select>
+        </div>
+        ${this.renderProjecaoDetalhe(obra, proj)}
+      </div>
+    `;
+    }
+    projetarPreco(obra) {
+      const hist = obra.historicoPrecos || [];
+      const pts = hist.map((h) => ({ preco: Number(h.preco), data: new Date(h.data).getTime() }));
+      pts.push({ preco: Number(obra.preco) || 0, data: Date.now() });
+      const precos = pts.filter((p) => p.preco > 0);
+      if (precos.length < 2) return null;
+      const n = precos.length;
+      const xMean = (n - 1) / 2;
+      let yMean = 0;
+      precos.forEach((p) => yMean += p.preco);
+      yMean /= n;
+      let num = 0, den = 0;
+      precos.forEach((p, i) => {
+        num += (i - xMean) * (p.preco - yMean);
+        den += (i - xMean) * (i - xMean);
+      });
+      const inclinacao = den !== 0 ? num / den : 0;
+      const intercept = yMean - inclinacao * xMean;
+      const anos = [1, 3, 5];
+      const ultimo = precos[precos.length - 1].preco;
+      const projecoes = anos.map((a) => {
+        const passos = Math.round(a * 12 / Math.max(1, Math.round((pts[pts.length - 1].data - pts[0].data) / (864e5 * 30))));
+        const totalPassos = n + passos;
+        const projetado = Math.max(0, inclinacao * (totalPassos - 1) + intercept);
+        const aprecAnual = ultimo > 0 ? ((projetado / ultimo) ** (1 / a) - 1) * 100 : 0;
+        return { anos: a, projetado: Math.round(projetado), aprecAnual };
+      });
+      return { ultimo, inclinacao, intercept, projecoes, r2: this.calcularR2(precos, inclinacao, intercept) };
+    }
+    calcularR2(precos, inclinacao, intercept) {
+      const n = precos.length;
+      let yMean = 0;
+      precos.forEach((p) => yMean += p.preco);
+      yMean /= n;
+      let ssRes = 0, ssTot = 0;
+      precos.forEach((p, i) => {
+        const pred = inclinacao * i + intercept;
+        ssRes += (p.preco - pred) ** 2;
+        ssTot += (p.preco - yMean) ** 2;
+      });
+      return ssTot > 0 ? 1 - ssRes / ssTot : 0;
+    }
+    renderProjecaoDetalhe(obra, proj) {
+      if (!proj) return '<p style="color:var(--text-muted);">Dados insuficientes para proje\xE7\xE3o (m\xEDn. 2 pontos).</p>';
+      return `
+      <div class="projecao-grid">
+        ${proj.projecoes.map((p) => `
+          <div class="projecao-card">
+            <div class="proj-numero">${this.fmt(p.projetado)}</div>
+            <div class="proj-rotulo">Em ${p.anos} ano${p.anos > 1 ? "s" : ""}</div>
+            <div class="proj-apreciacao ${p.aprecAnual > 0 ? "proj-positiva" : "proj-negativa"}">
+              ${p.aprecAnual > 0 ? "\u{1F4C8}" : "\u{1F4C9}"} ${p.aprecAnual.toFixed(1)}% a.a.
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="proj-detalhes">
+        <span>Pre\xE7o atual: <strong>${this.fmt(proj.ultimo)}</strong></span>
+        <span>R\xB2: <strong>${proj.r2.toFixed(3)}</strong> ${proj.r2 > 0.7 ? "(boa correla\xE7\xE3o)" : proj.r2 > 0.3 ? "(correla\xE7\xE3o moderada)" : "(baixa correla\xE7\xE3o)"}</span>
+        <span>Baseado em regress\xE3o linear sobre hist\xF3rico de pre\xE7os</span>
+      </div>
+    `;
+    }
+    // --- Regras de Precificação ---
+    renderModalRegras() {
+      const regras = this.regras;
+      return `
+      <div class="widget-config-overlay" id="regrasOverlay" style="display:none">
+        <div class="widget-config-modal" style="max-width:800px;">
+          <h3>\u{1F4CB} Regras de Precifica\xE7\xE3o</h3>
+          <p class="texto-ajuda">Defina regras autom\xE1ticas: t\xE9cnica + dimens\xE3o \u2192 pre\xE7o sugerido. Use "qualquer" para t\xE9cnica.</p>
+          <div class="regras-lista" id="regrasLista">
+            ${regras.length === 0 ? '<p style="color:var(--text-muted);text-align:center;">Nenhuma regra cadastrada.</p>' : ""}
+            ${regras.map((r, i) => `
+              <div class="regra-item" data-regra-idx="${i}">
+                <div class="regra-info">
+                  <strong>${r.nome}</strong>
+                  <span class="texto-ajuda">${r.tecnica || "qualquer"} \xB7 ${r.larguraMin}\u2013${r.larguraMax}\xD7${r.alturaMin}\u2013${r.alturaMax}cm \xB7 \xD7${r.multiplicador} \xB7 base ${this.fmt(r.precoBase)}</span>
+                </div>
+                <div class="regra-acoes">
+                  <button class="btn-miniatura btn-aplicar-regra" data-idx="${i}">\u25B6 Aplicar</button>
+                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;">\u2715</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+          <hr style="margin:12px 0;border-color:var(--border);">
+          <h4 style="margin:0 0 8px;font-size:0.85rem;">Nova Regra</h4>
+          <div class="regra-form">
+            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input">
+            <select id="regraTecnica" class="regra-input">
+              <option value="">Qualquer t\xE9cnica</option>
+              <option value="\xF3leo">\xD3leo</option>
+              <option value="aquarela">Aquarela</option>
+              <option value="escultura">Escultura</option>
+              <option value="acr\xEDlica">Acr\xEDlica</option>
+              <option value="outra">Outra</option>
+            </select>
+            <div style="display:flex;gap:6px;grid-column:1/-1;">
+              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1">
+              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1">
+              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1">
+              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1">
+            </div>
+            <div style="display:flex;gap:6px;grid-column:1/-1;">
+              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1">
+              <input type="number" id="regraBase" placeholder="Pre\xE7o base" class="regra-input" value="0" style="flex:1">
+              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1">
+            </div>
+            <button class="btn-primario" id="btnAdicionarRegra" style="grid-column:1/-1;">+ Adicionar Regra</button>
+          </div>
+          <div class="modal-acoes" style="margin-top:12px;">
+            <button class="btn-secundario" id="btnAplicarRegrasTodas">\u25B6 Aplicar todas as regras em obras sem pre\xE7o</button>
+            <button class="btn-secundario" id="btnFecharRegras">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    renderModalTaxas() {
+      const tx = this.taxas;
+      return `
+      <div class="widget-config-overlay" id="taxasOverlay" style="display:none">
+        <div class="widget-config-modal" style="max-width:400px;">
+          <h3>\u{1F4B1} Taxas de C\xE2mbio</h3>
+          <p class="texto-ajuda">Valor de 1 ${this.moeda} em cada moeda. Deixe 1 para a moeda padr\xE3o.</p>
+          <div class="taxas-form">
+            ${["USD", "EUR", "GBP"].map((m) => `
+              <div class="taxa-item">
+                <label>${m}</label>
+                <input type="number" id="taxa${m}" value="${tx[m] || 1}" step="0.01" min="0.01">
+              </div>
+            `).join("")}
+          </div>
+          <div class="modal-acoes">
+            <button class="btn-secundario" id="btnFecharTaxas">Fechar</button>
+            <button class="btn-primario" id="btnSalvarTaxas">Salvar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    // --- Histórico de Preços ---
+    renderHistoricoPrecos(obras) {
+      const comHistorico = obras.filter((o) => o.historicoPrecos && o.historicoPrecos.length > 0);
+      if (comHistorico.length === 0) return "";
+      const obra = comHistorico[0];
+      const hist = obra.historicoPrecos;
+      const precos = hist.map((h2) => Number(h2.preco)).concat([Number(obra.preco) || 0]).filter((p) => p > 0);
+      if (precos.length < 2) return "";
+      const maxP = Math.max(...precos) * 1.15;
+      const minP = Math.min(...precos) * 0.85;
+      const range2 = maxP - minP || 1;
+      const w = 400, h = 140;
+      const padX = 40, padY = 20;
+      const cw = w - padX * 2, ch = h - padY * 2;
+      const pts = precos.map((p, i) => ({
+        x: padX + i / (precos.length - 1 || 1) * cw,
+        y: padY + ch - (p - minP) / range2 * ch,
+        valor: p,
+        label: i < hist.length ? hist[i].data?.slice(0, 7) || "" : "Atual"
+      }));
+      const lineD = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+      const areaD = `M${pts[0].x},${padY + ch} ${lineD.slice(1)} L${pts[pts.length - 1].x},${padY + ch} Z`;
+      const vendas = vendaStore().items || [];
+      const vendaObra = vendas.filter((v) => String(v.obraId) === obra.id || v.obraTitulo === obra.titulo);
+      const selOpts = comHistorico.map(
+        (o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`
+      ).join("");
+      return `
+      <div class="card">
+        <h3>\u{1F4CB} Hist\xF3rico de Pre\xE7os</h3>
+        <div style="margin-bottom:12px;">
+          <select id="selHistoricoObra" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+            ${selOpts}
+          </select>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px;">${obra.titulo} \u2014 ${hist.length} reajustes</span>
+        </div>
+        <svg viewBox="0 0 ${w} ${h}" class="svg-chart" style="height:${h}px;">
+          <defs><linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+          ${[0.25, 0.5, 0.75].map((f) => `<line class="chart-grid" x1="${padX}" y1="${padY + ch - ch * f}" x2="${padX + cw}" y2="${padY + ch - ch * f}"/>`).join("")}
+          ${[0, 0.25, 0.5, 0.75, 1].map((f) => `<text class="chart-label" x="${padX - 8}" y="${padY + ch - ch * f + 3}" text-anchor="end">${this.fmt(minP + range2 * f)}</text>`).join("")}
+          <path class="chart-area" d="${areaD}"/>
+          <path class="chart-line" d="${lineD}"/>
+          ${pts.map((p, i) => `<circle class="chart-dot ${i < hist.length && vendaObra.some((v) => v.dataVenda && new Date(v.dataVenda) >= new Date(hist[i].data || 0) - 864e5 && new Date(v.dataVenda) <= new Date(hist[i].data || Date.now()) + 864e5) ? "vendido" : ""}" cx="${p.x}" cy="${p.y}"/>`).join("")}
+          ${pts.map((p) => `<text class="chart-valor" x="${p.x}" y="${p.y - 8}">${this.fmt(p.valor)}</text>`).join("")}
+          ${pts.map((p) => `<text class="chart-label" x="${p.x}" y="${padY + ch + 14}">${p.label}</text>`).join("")}
+        </svg>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;display:flex;gap:12px;justify-content:center;">
+          <span>\u2501 <span style="color:var(--accent)">Evolu\xE7\xE3o</span></span>
+          <span>\u25CF <span style="color:#10b981">Vendido</span></span>
+        </div>
+      </div>
+    `;
+    }
+    // --- Análise ---
+    renderAnalise(obras, vendas) {
+      const precos = obras.filter((o) => Number(o.preco) > 0).map((o) => Number(o.preco));
+      const precoMedio = precos.length ? Math.round(precos.reduce((s, v) => s + v, 0) / precos.length) : 0;
+      const maiorPreco = precos.length ? Math.max(...precos) : 0;
+      const menorPreco = precos.length ? Math.min(...precos) : 0;
+      const valorTotal = precos.reduce((s, v) => s + v, 0);
+      const tecnicas = {};
+      obras.forEach((o) => {
+        if (!o.preco) return;
+        const tec = o.tecnica || "Outra";
+        if (!tecnicas[tec]) tecnicas[tec] = { soma: 0, count: 0 };
+        tecnicas[tec].soma += Number(o.preco);
+        tecnicas[tec].count++;
+      });
+      const tecRows = Object.entries(tecnicas).map(([tec, d]) => ({
+        tec,
+        media: Math.round(d.soma / d.count),
+        count: d.count
+      })).sort((a, b) => b.media - a.media);
+      const numBarras = 8;
+      const maxPreco = Math.max(...precos, 1);
+      const bucketSize = maxPreco / numBarras || 1;
+      const buckets = Array(numBarras).fill(0);
+      const bucketLabels = [];
+      for (let i = 0; i < numBarras; i++) {
+        bucketLabels.push(`${this.fmt(i * bucketSize)}\u2013${this.fmt((i + 1) * bucketSize)}`);
+      }
+      precos.forEach((p) => {
+        const idx = Math.min(Math.floor(p / bucketSize), numBarras - 1);
+        buckets[idx]++;
+      });
+      const maxCount = Math.max(...buckets, 1);
+      const histBars = buckets.map((c, i) => `<div class="barra" style="height:${c / maxCount * 100}%"><span class="barra-count">${c}</span><span class="barra-label">${bucketLabels[i]}</span></div>`).join("");
+      const subprecificadas = obras.filter((o) => {
+        if (!o.preco || !o.dimensoes || !o.dimensoes.largura || !o.dimensoes.altura) return false;
+        const area = o.dimensoes.largura * o.dimensoes.altura;
+        const similares = obras.filter((s) => {
+          if (s.id === o.id || !s.preco) return false;
+          const sd = s.dimensoes;
+          if (!sd || !sd.largura || !sd.altura) return false;
+          const sa = sd.largura * sd.altura;
+          return sa > area * 0.5 && sa < area * 1.5;
+        });
+        if (similares.length < 2) return false;
+        const mediaSimilar = similares.reduce((s, v) => s + Number(v.preco), 0) / similares.length;
+        return Number(o.preco) < mediaSimilar * 0.7;
+      });
+      const vendasComObra = vendas.filter((v) => v.dataVenda && v.obraId);
+      const temposVenda = vendasComObra.map((v) => {
+        const obra = obras.find((o) => o.id === v.obraId);
+        if (!obra || !obra.criadoEm) return null;
+        const criacao = new Date(obra.criadoEm).getTime();
+        const venda = new Date(v.dataVenda).getTime();
+        return venda > criacao ? Math.round((venda - criacao) / 864e5) : null;
+      }).filter((t) => t !== null);
+      const tempoMedio = temposVenda.length ? Math.round(temposVenda.reduce((s, t) => s + t, 0) / temposVenda.length) : null;
+      return `
+      <div class="analise-grid" style="margin-bottom:16px;">
+        <div class="analise-card"><div class="analise-valor">${this.fmt(precoMedio)}</div><div class="analise-rotulo">\u{1F4B0} Pre\xE7o m\xE9dio</div></div>
+        <div class="analise-card"><div class="analise-valor">${this.fmt(valorTotal)}</div><div class="analise-rotulo">\u{1F4E6} Valor total do portf\xF3lio</div></div>
+        <div class="analise-card"><div class="analise-valor">${precos.length}</div><div class="analise-rotulo">\u{1F5C3}\uFE0F Obras precificadas</div></div>
+        <div class="analise-card"><div class="analise-valor">${this.fmt(menorPreco)} \u2014 ${this.fmt(maiorPreco)}</div><div class="analise-rotulo">\u{1F4D0} Faixa de pre\xE7os</div></div>
+        <div class="analise-card"><div class="analise-valor">${tempoMedio !== null ? tempoMedio + " dias" : "\u2014"}</div><div class="analise-rotulo">\u23F1 Tempo m\xE9dio p/ vender</div></div>
+        <div class="analise-card"><div class="analise-valor">${subprecificadas.length}</div><div class="analise-rotulo">\u26A1 Possivelmente subprecificadas</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <h4 style="margin:0 0 8px;font-size:0.85rem;color:var(--text-muted);">Distribui\xE7\xE3o de Pre\xE7os</h4>
+          <div class="histograma">${histBars}</div>
+        </div>
+        <div>
+          <h4 style="margin:0 0 8px;font-size:0.85rem;color:var(--text-muted);">M\xE9dia de Pre\xE7o por T\xE9cnica</h4>
+          <table class="tabela-media">
+            <tr><th>T\xE9cnica</th><th>M\xE9dia</th><th>Obras</th></tr>
+            ${tecRows.map((r) => `<tr><td>${r.tec}</td><td>${this.fmt(r.media)}</td><td>${r.count}</td></tr>`).join("")}
+          </table>
+        </div>
+      </div>
+      ${subprecificadas.length > 0 ? `
+      <div style="margin-top:16px;">
+        <h4 style="margin:0 0 8px;font-size:0.85rem;color:#92400e;">\u26A1 Obras que podem estar subprecificadas</h4>
+        <ul class="sub-list">
+          ${subprecificadas.map((o) => {
+        const area = o.dimensoes.largura * o.dimensoes.altura;
+        const similares = obras.filter((s) => {
+          if (s.id === o.id || !s.preco) return false;
+          const sd = s.dimensoes;
+          if (!sd || !sd.largura || !sd.altura) return false;
+          const sa = sd.largura * sd.altura;
+          return sa > area * 0.5 && sa < area * 1.5;
+        });
+        const mediaSimilar = similares.reduce((s, v) => s + Number(v.preco), 0) / similares.length;
+        const diff = Math.round(mediaSimilar - Number(o.preco));
+        return `<li class="sub-alert"><span class="sub-nome">${o.titulo || "Sem t\xEDtulo"}</span><span class="sub-valores">Atual: ${this.fmt(o.preco)} | Sugerido: ${this.fmt(mediaSimilar)}</span><span class="sub-diff">+${this.fmt(diff)}</span></li>`;
+      }).join("")}
+        </ul>
+      </div>` : ""}
+    `;
+    }
+    // --- Metas ---
+    renderMetas(obras, vendas) {
+      const cfg = this.config;
+      const metaMensal = Number(cfg.metaMensal) || 1e4;
+      const metaAnual = Number(cfg.metaAnual) || 12e4;
+      const agora = /* @__PURE__ */ new Date();
+      const mesAtual = agora.getMonth();
+      const anoAtual = agora.getFullYear();
+      const faturamentoMes = vendas.filter((v) => {
+        if (!v.dataVenda || !v.valorTotal) return false;
+        const d = new Date(v.dataVenda);
+        return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+      }).reduce((s, v) => s + Number(v.valorTotal), 0);
+      const faturamentoAno = vendas.filter((v) => {
+        if (!v.dataVenda || !v.valorTotal) return false;
+        const d = new Date(v.dataVenda);
+        return d.getFullYear() === anoAtual;
+      }).reduce((s, v) => s + Number(v.valorTotal), 0);
+      const pctMes = Math.min(100, metaMensal > 0 ? Math.round(faturamentoMes / metaMensal * 100) : 0);
+      const pctAno = Math.min(100, metaAnual > 0 ? Math.round(faturamentoAno / metaAnual * 100) : 0);
+      const diaAtual = agora.getDate();
+      const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+      const diasRestantes = diasNoMes - diaAtual;
+      const ritmoDiario = diaAtual > 0 ? faturamentoMes / diaAtual : 0;
+      const diasParaMeta = ritmoDiario > 0 ? Math.ceil((metaMensal - faturamentoMes) / ritmoDiario) : null;
+      const projecao = ritmoDiario > 0 ? `Com o ritmo atual (${this.fmt(Math.round(ritmoDiario))}/dia), voc\xEA ${diasParaMeta !== null && diasParaMeta <= diasRestantes ? `atingir\xE1 a meta mensal em <strong>${diasParaMeta} dias</strong>.` : `<strong>n\xE3o</strong> atingir\xE1 a meta mensal a tempo.`}` : "";
+      const falta = Math.max(0, metaMensal - faturamentoMes);
+      const precos = obras.filter((o) => Number(o.preco) > 0);
+      const precoMedio = precos.length > 0 ? precos.reduce((s, o) => s + Number(o.preco), 0) / precos.length : 0;
+      const obrasNecessarias = precoMedio > 0 ? Math.ceil(falta / precoMedio) : 0;
+      const sugestao = falta > 0 && precoMedio > 0 ? `Voc\xEA precisa vender <strong>${obrasNecessarias} obra${obrasNecessarias > 1 ? "s" : ""}</strong> de ~${this.fmt(Math.round(precoMedio))} para atingir a meta mensal.` : "Meta mensal j\xE1 atingida! \u{1F389}";
+      const circM = this.circuloProgresso(pctMes, `${pctMes}%`, "do m\xEAs");
+      const circA = this.circuloProgresso(pctAno, `${pctAno}%`, "do ano");
+      return `
+      <div class="metas-grid">
+        <div class="card meta-card">
+          <div class="meta-rotulo">Meta Mensal</div>
+          <div class="meta-valor">${this.fmt(metaMensal)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;">
+            <span style="font-size:0.85rem;color:var(--text-muted);">Faturamento: ${this.fmt(faturamentoMes)}</span>
+          </div>
+          ${circM}
+          <div class="meta-edit">
+            <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100">
+            <button class="btn-secundario" id="btnSalvarMetaMensal">Salvar</button>
+          </div>
+          ${projecao ? `<div class="meta-projecao">\u{1F4C8} ${projecao}</div>` : ""}
+          ${sugestao ? `<div class="meta-sugestao">\u{1F4A1} ${sugestao}</div>` : ""}
+        </div>
+        <div class="card meta-card">
+          <div class="meta-rotulo">Meta Anual</div>
+          <div class="meta-valor">${this.fmt(metaAnual)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;">
+            <span style="font-size:0.85rem;color:var(--text-muted);">Faturamento: ${this.fmt(faturamentoAno)}</span>
+          </div>
+          ${circA}
+          <div class="meta-edit">
+            <input type="number" id="metaAnualInput" value="${metaAnual}" min="0" step="1000">
+            <button class="btn-secundario" id="btnSalvarMetaAnual">Salvar</button>
+          </div>
+          <div class="meta-projecao">\u{1F4C6} ${diasRestantes} dias restantes no m\xEAs</div>
+        </div>
+      </div>
+    `;
+    }
+    circuloProgresso(pct, label, subtitulo) {
+      const r = 56, circ = 2 * Math.PI * r;
+      const offset = circ - pct / 100 * circ;
+      return `
+      <div class="circulo-progresso">
+        <svg viewBox="0 0 140 140">
+          <circle class="bg-circle" cx="70" cy="70" r="${r}"/>
+          <circle class="progress-circle" cx="70" cy="70" r="${r}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="centro-texto">
+          <div class="pct">${label}</div>
+          <div class="pct-label">${subtitulo}</div>
+        </div>
+      </div>
+    `;
+    }
+    // --- EVENT BINDING ---
+    aposRenderizar() {
+      this.removerListeners();
+      const selMoeda = document.getElementById("selMoedaPadrao");
+      if (selMoeda) {
+        const handler = () => {
+          this.cfgRoot.moedaPadrao = selMoeda.value;
+          configStore().salvar();
+          this.rerenderizar();
+        };
+        selMoeda.addEventListener("change", handler);
+        this._bindCache["selMoedaPadrao"] = { el: selMoeda, handler, type: "change" };
+      }
+      document.getElementById("btnEditarTaxas")?.addEventListener("click", () => {
+        document.getElementById("taxasOverlay").style.display = "flex";
+      });
+      document.getElementById("btnFecharTaxas")?.addEventListener("click", () => {
+        document.getElementById("taxasOverlay").style.display = "none";
+      });
+      document.getElementById("btnSalvarTaxas")?.addEventListener("click", () => {
+        const tx = this.cfgRoot.taxasCambio || {};
+        ["USD", "EUR", "GBP"].forEach((m) => {
+          const el = document.getElementById("taxa" + m);
+          if (el) tx[m] = Number(el.value) || 1;
+        });
+        this.cfgRoot.taxasCambio = tx;
+        configStore().salvar();
+        document.getElementById("taxasOverlay").style.display = "none";
+        mostrarToast("Taxas de c\xE2mbio salvas!");
+        this.rerenderizar();
+      });
+      document.getElementById("btnAbrirRegras")?.addEventListener("click", () => {
+        document.getElementById("regrasOverlay").style.display = "flex";
+      });
+      document.getElementById("btnFecharRegras")?.addEventListener("click", () => {
+        document.getElementById("regrasOverlay").style.display = "none";
+      });
+      document.getElementById("btnAdicionarRegra")?.addEventListener("click", () => this.adicionarRegra());
+      document.getElementById("btnAplicarRegrasTodas")?.addEventListener("click", () => this.aplicarRegrasEmTodas());
+      const regrasLista = document.getElementById("regrasLista");
+      if (regrasLista) {
+        regrasLista.addEventListener("click", (e) => {
+          const btnAplicar = e.target.closest(".btn-aplicar-regra");
+          const btnRemover = e.target.closest(".btn-remover-regra");
+          if (btnAplicar) {
+            const idx = Number(btnAplicar.dataset.idx);
+            this.aplicarRegra(idx);
+          }
+          if (btnRemover) {
+            const idx = Number(btnRemover.dataset.idx);
+            this.removerRegra(idx);
+          }
+        });
+      }
+      ["calcMateriais", "calcHoras", "calcValorHora", "calcLargura", "calcAltura"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const handler = () => {
+          this.calc[id.replace("calc", "").toLowerCase()] = Number(el.value) || 0;
+          if (id === "calcValorHora") this.salvarConfig({ valorHora: Number(el.value) || 60 });
+          this.atualizarResultado();
+        };
+        el.addEventListener("input", handler);
+        this._bindCache[id] = { el, handler, type: "input" };
+      });
+      const estrelasContainer = document.getElementById("estrelasInput");
+      if (estrelasContainer) {
+        const handler = (e) => {
+          const est = e.target.closest(".estrela");
+          if (!est) return;
+          this.calc.complexidade = Number(est.dataset.val);
+          estrelasContainer.querySelectorAll(".estrela").forEach((el) => el.classList.toggle("preenchida", Number(el.dataset.val) <= this.calc.complexidade));
+          this.atualizarResultado();
+        };
+        estrelasContainer.addEventListener("click", handler);
+        this._bindCache["estrelasInput"] = { el: estrelasContainer, handler, type: "click" };
+      }
+      const selObra = document.getElementById("selObraCalc");
+      if (selObra) {
+        const handler = () => {
+          const obra = obraStore().porId(selObra.value);
+          if (obra) {
+            document.getElementById("calcMateriais").value = obra.custoMateriais || 0;
+            document.getElementById("calcHoras").value = obra.horasTrabalho || 0;
+            if (obra.dimensoes) {
+              document.getElementById("calcLargura").value = obra.dimensoes.largura || 0;
+              document.getElementById("calcAltura").value = obra.dimensoes.altura || 0;
+            }
+            this.calc.materiais = Number(obra.custoMateriais) || 0;
+            this.calc.horas = Number(obra.horasTrabalho) || 0;
+            this.calc.largura = obra.dimensoes && obra.dimensoes.largura || 0;
+            this.calc.altura = obra.dimensoes && obra.dimensoes.altura || 0;
+            this.calc.obraId = obra.id;
+            this.atualizarResultado();
+          } else {
+            this.calc.obraId = "";
+            this.atualizarResultado();
+          }
+        };
+        selObra.addEventListener("change", handler);
+        this._bindCache["selObraCalc"] = { el: selObra, handler, type: "change" };
+      }
+      document.getElementById("btnSalvarPrecoCalc")?.addEventListener("click", () => this.salvarPrecoNaObra());
+      document.getElementById("selHistoricoObra")?.addEventListener("change", () => this.rerenderizar());
+      document.getElementById("selProjecaoObra")?.addEventListener("change", () => this.rerenderizar());
+      document.getElementById("btnSalvarMetaMensal")?.addEventListener("click", () => {
+        const v = Number(document.getElementById("metaMensalInput")?.value) || 0;
+        this.salvarConfig({ metaMensal: v });
+        mostrarToast("Meta mensal salva!");
+        this.rerenderizar();
+      });
+      document.getElementById("btnSalvarMetaAnual")?.addEventListener("click", () => {
+        const v = Number(document.getElementById("metaAnualInput")?.value) || 0;
+        this.salvarConfig({ metaAnual: v });
+        mostrarToast("Meta anual salva!");
+        this.rerenderizar();
+      });
+      document.getElementById("btnExportarRelatorio")?.addEventListener("click", () => this.exportarRelatorioPDF());
+    }
+    atualizarResultado() {
+      const preco = this.calcularPreco(this.calc);
+      const elValor = document.getElementById("valorSugerido");
+      const elDetalhe = document.getElementById("detalheCalculo");
+      const elFaixa = document.getElementById("faixaComparativa");
+      const elConversoes = document.getElementById("conversoesMultiMoeda");
+      if (elValor) elValor.textContent = this.fmt(preco);
+      if (elDetalhe) elDetalhe.textContent = this.detalharCalculo(preco);
+      if (elConversoes) {
+        const moedas = ["USD", "EUR", "GBP"];
+        elConversoes.innerHTML = moedas.filter((m) => m !== this.moeda).map(
+          (m) => `<span class="conv-moeda">${m}: ${this.fmt(this.converter(preco, this.moeda, m), m)}</span>`
+        ).join("");
+      }
+      if (elFaixa) {
+        const obras = obraStore().items || [];
+        elFaixa.innerHTML = this.renderFaixaComparativa(obras);
+      }
+    }
+    salvarPrecoNaObra() {
+      const obraId = this.calc.obraId || document.getElementById("selObraCalc")?.value;
+      if (!obraId) {
+        mostrarToast("Selecione uma obra primeiro.");
+        return;
+      }
+      const precoSugerido = this.calcularPreco(this.calc);
+      const obra = obraStore().porId(obraId);
+      if (!obra) {
+        mostrarToast("Obra n\xE3o encontrada.");
+        return;
+      }
+      const hist = obra.historicoPrecos || [];
+      if (obra.preco && Number(obra.preco) > 0) {
+        hist.push({ preco: Number(obra.preco), data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), motivo: "Reajuste via Precificador" });
+      }
+      hist.push({ preco: precoSugerido, data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), motivo: "Pre\xE7o sugerido pelo Precificador" });
+      obraStore().atualizar(obraId, {
+        preco: precoSugerido,
+        custoMateriais: Number(this.calc.materiais) || 0,
+        horasTrabalho: Number(this.calc.horas) || 0,
+        historicoPrecos: hist
+      });
+      mostrarToast(`Pre\xE7o ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ""}"!`);
+      this.rerenderizar();
+    }
+    // --- Regras ---
+    adicionarRegra() {
+      const nome = document.getElementById("regraNome")?.value?.trim();
+      if (!nome) {
+        mostrarToast("Informe um nome para a regra.");
+        return;
+      }
+      const regras = this.cfgRoot.precificadorRegras || [];
+      regras.push({
+        id: "regra_" + Date.now(),
+        nome,
+        tecnica: document.getElementById("regraTecnica")?.value || "",
+        larguraMin: Number(document.getElementById("regraLargMin")?.value) || 0,
+        larguraMax: Number(document.getElementById("regraLargMax")?.value) || 9999,
+        alturaMin: Number(document.getElementById("regraAltMin")?.value) || 0,
+        alturaMax: Number(document.getElementById("regraAltMax")?.value) || 9999,
+        complexidade: Number(document.getElementById("regraComplexidade")?.value) || 3,
+        multiplicador: Number(document.getElementById("regraMult")?.value) || 1.5,
+        precoBase: Number(document.getElementById("regraBase")?.value) || 0
+      });
+      this.cfgRoot.precificadorRegras = regras;
+      configStore().salvar();
+      mostrarToast("Regra adicionada!");
+      this.rerenderizar();
+    }
+    removerRegra(idx) {
+      const regras = this.cfgRoot.precificadorRegras || [];
+      regras.splice(idx, 1);
+      this.cfgRoot.precificadorRegras = regras;
+      configStore().salvar();
+      this.rerenderizar();
+    }
+    aplicarRegra(idx) {
+      const regras = this.cfgRoot.precificadorRegras || [];
+      const regra = regras[idx];
+      if (!regra) return;
+      const obras = obraStore().items || [];
+      let count = 0;
+      obras.forEach((o) => {
+        const dim = o.dimensoes;
+        if (!dim) return;
+        if (regra.tecnica && o.tecnica !== regra.tecnica) return;
+        if (dim.largura < regra.larguraMin || dim.largura > regra.larguraMax) return;
+        if (dim.altura < regra.alturaMin || dim.altura > regra.alturaMax) return;
+        const area = dim.largura * dim.altura;
+        const bonusArea = 1 + area / 1e4;
+        const preco = Math.round((regra.precoBase || 0) * regra.multiplicador * this.fatoresComplexidade[regra.complexidade] * bonusArea);
+        if (preco > 0) {
+          const hist = o.historicoPrecos || [];
+          if (o.preco && Number(o.preco) > 0) {
+            hist.push({ preco: Number(o.preco), data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), motivo: "Reajuste por regra: " + regra.nome });
+          }
+          obraStore().atualizar(o.id, { preco, historicoPrecos: hist });
+          count++;
+        }
+      });
+      mostrarToast(`Regra "${regra.nome}" aplicada em ${count} obra${count > 1 ? "s" : ""}.`);
+      this.rerenderizar();
+    }
+    aplicarRegrasEmTodas() {
+      const regras = this.cfgRoot.precificadorRegras || [];
+      if (regras.length === 0) {
+        mostrarToast("Nenhuma regra cadastrada.");
+        return;
+      }
+      const obras = obraStore().items || [];
+      const semPreco = obras.filter((o) => !o.preco || Number(o.preco) === 0);
+      let count = 0;
+      semPreco.forEach((o) => {
+        const dim = o.dimensoes;
+        if (!dim || !dim.largura) return;
+        const regraAplicada = regras.find((r) => {
+          if (r.tecnica && o.tecnica !== r.tecnica) return false;
+          if (dim.largura < r.larguraMin || dim.largura > r.larguraMax) return false;
+          if (dim.altura < r.alturaMin || dim.altura > r.alturaMax) return false;
+          return true;
+        });
+        if (!regraAplicada) return;
+        const area = dim.largura * dim.altura;
+        const bonusArea = 1 + area / 1e4;
+        const preco = Math.round((regraAplicada.precoBase || 0) * regraAplicada.multiplicador * this.fatoresComplexidade[regraAplicada.complexidade || 3] * bonusArea);
+        if (preco > 0) {
+          obraStore().atualizar(o.id, { preco });
+          count++;
+        }
+      });
+      mostrarToast(`Regras aplicadas em ${count} obra${count > 1 ? "s" : ""} sem pre\xE7o.`);
+      this.rerenderizar();
+    }
+    // --- PDF Export ---
+    exportarRelatorioPDF() {
+      if (typeof window.jspdf === "undefined" && typeof jspdf === "undefined") {
+        mostrarToast("jsPDF n\xE3o carregado. Tente novamente.");
+        return;
+      }
+      mostrarLoading("Gerando relat\xF3rio de precifica\xE7\xE3o...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const obras = obraStore().items || [];
+      const vendas = vendaStore().items || [];
+      const cfg = this.config;
+      const artista = configStore().artista?.nome || "Artista";
+      let y = 20;
+      const margem = 20;
+      const larg = 170;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Relat\xF3rio de Precifica\xE7\xE3o", margem, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Artista: ${artista} | Moeda: ${this.moeda} | Gerado em: ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}`, margem, y);
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Pre\xE7os Sugeridos", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      const precificaveis = obras.filter((o) => o.dimensoes && o.dimensoes.largura && o.dimensoes.altura);
+      if (precificaveis.length > 0) {
+        precificaveis.slice(0, 20).forEach((o) => {
+          const calcTemp = {
+            materiais: Number(o.custoMateriais) || 0,
+            horas: Number(o.horasTrabalho) || 0,
+            valorHora: cfg.valorHora || 60,
+            largura: o.dimensoes.largura,
+            altura: o.dimensoes.altura,
+            complexidade: 3
+          };
+          const sugerido = this.calcularPreco(calcTemp);
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.text(`${o.titulo || "Sem t\xEDtulo"} \u2014 Atual: ${this.fmt(o.preco)} | Sugerido: ${this.fmt(sugerido)} | ${o.tecnica || ""} | ${o.dimensoes.largura}\xD7${o.dimensoes.altura}cm`, margem, y);
+          y += 5;
+        });
+      } else {
+        doc.text("Nenhuma obra com dimens\xF5es para calcular pre\xE7o sugerido.", margem, y);
+        y += 5;
+      }
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("An\xE1lise de Break-Even", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      const comCusto = obras.filter((o) => (o.custoMateriais > 0 || o.horasTrabalho > 0) && o.preco > 0);
+      if (comCusto.length > 0) {
+        comCusto.slice(0, 15).forEach((o) => {
+          const custoTotal = (Number(o.custoMateriais) || 0) + (Number(o.horasTrabalho) || 0) * (cfg.valorHora || 60);
+          const preco = Number(o.preco) || 0;
+          const margem2 = preco > 0 ? (preco - custoTotal) / preco * 100 : 0;
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.text(`${o.titulo || "Sem t\xEDtulo"} \u2014 Custo: ${this.fmt(custoTotal)} | Pre\xE7o: ${this.fmt(preco)} | Margem: ${margem2.toFixed(1)}%`, margem2, y);
+          y += 5;
+        });
+      } else {
+        doc.text("Nenhuma obra com dados de custo.", margem, y);
+        y += 5;
+      }
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Metas Financeiras", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const agora = /* @__PURE__ */ new Date();
+      const mesAtual = agora.getMonth(), anoAtual = agora.getFullYear();
+      const fatMes = vendas.filter((v) => v.dataVenda && v.valorTotal && new Date(v.dataVenda).getMonth() === mesAtual && new Date(v.dataVenda).getFullYear() === anoAtual).reduce((s, v) => s + Number(v.valorTotal), 0);
+      const fatAno = vendas.filter((v) => v.dataVenda && v.valorTotal && new Date(v.dataVenda).getFullYear() === anoAtual).reduce((s, v) => s + Number(v.valorTotal), 0);
+      doc.text(`Meta Mensal: ${this.fmt(cfg.metaMensal || 1e4)} | Faturamento: ${this.fmt(fatMes)}`, margem, y);
+      y += 5;
+      doc.text(`Meta Anual: ${this.fmt(cfg.metaAnual || 12e4)} | Faturamento: ${this.fmt(fatAno)}`, margem, y);
+      y += 5;
+      doc.text(`Progresso mensal: ${cfg.metaMensal > 0 ? Math.round(fatMes / cfg.metaMensal * 100) : 0}%`, margem, y);
+      y += 5;
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("An\xE1lise do Portf\xF3lio", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const precos = obras.filter((o) => Number(o.preco) > 0).map((o) => Number(o.preco));
+      const media = precos.length ? Math.round(precos.reduce((s, v) => s + v, 0) / precos.length) : 0;
+      const total = precos.reduce((s, v) => s + v, 0);
+      doc.text(`Obras precificadas: ${precos.length}`, margem, y);
+      y += 5;
+      doc.text(`Pre\xE7o m\xE9dio: ${this.fmt(media)}`, margem, y);
+      y += 5;
+      doc.text(`Valor total do portf\xF3lio: ${this.fmt(total)}`, margem, y);
+      y += 5;
+      if (precos.length > 0) {
+        doc.text(`Menor pre\xE7o: ${this.fmt(Math.min(...precos))} | Maior pre\xE7o: ${this.fmt(Math.max(...precos))}`, margem, y);
+        y += 5;
+      }
+      doc.save("relatorio-precificacao.pdf");
+      esconderLoading();
+      mostrarToast("Relat\xF3rio PDF exportado com sucesso!");
+    }
+  };
+  var AtelierView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.tabAtiva = "estoque";
+      this.filtroCategoria = "";
+      this.catIcones = { tintas: "\u{1F3A8}", superficies: "\u{1F4D0}", ferramentas: "\u{1F527}", molduras: "\u{1F5BC}\uFE0F" };
+      this.catLabels = { tintas: "Tintas", superficies: "Superf\xEDcies", ferramentas: "Ferramentas", molduras: "Molduras" };
+    }
+    get materiais() {
+      return this.dataStore.listar("materiais") || [];
+    }
+    get fornecedores() {
+      return this.dataStore.listar("fornecedores") || [];
+    }
+    get consumos() {
+      return this.dataStore.listar("consumos") || [];
+    }
+    get obras() {
+      return this.dataStore.listar("obras") || [];
+    }
+    // --- RENDER ---
+    render() {
+      const tabs = ["estoque", "consumo", "compras", "fornecedores", "custo"];
+      const tabLabels = { estoque: "\u{1F4E6} Estoque", consumo: "\u{1F4CB} Consumo", compras: "\u{1F6D2} Compras", fornecedores: "\u{1F3EA} Fornecedores", custo: "\u{1F4B0} Custo p/ Obra" };
+      const tabContent = {
+        estoque: () => this.renderEstoque(),
+        consumo: () => this.renderConsumo(),
+        compras: () => this.renderCompras(),
+        fornecedores: () => this.renderFornecedores(),
+        custo: () => this.renderCustoObra()
+      };
+      return `
+      <div>
+        <div class="atelier-tabs">
+          ${tabs.map((t) => `<button class="tab-btn ${t === this.tabAtiva ? "ativo" : ""}" data-tab="${t}">${tabLabels[t]}</button>`).join("")}
+        </div>
+        <div id="atelierContent">${tabContent[this.tabAtiva]()}</div>
+      </div>
+    `;
+    }
+    // --- ESTOQUE ---
+    renderEstoque() {
+      const materiais = this.materiais;
+      const cats = Object.keys(this.catLabels);
+      const filtrados = this.filtroCategoria ? materiais.filter((m) => m.categoria === this.filtroCategoria) : materiais;
+      return `
+      <div class="mat-filtros">
+        <select id="filtroCatEstoque">
+          <option value="">\u{1F4DA} Todas as categorias</option>
+          ${cats.map((c) => `<option value="${c}" ${this.filtroCategoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("")}
+        </select>
+        <button class="btn-primario" id="btnNovoMaterial" style="font-size:0.8rem;padding:6px 14px;">\u2795 Novo Material</button>
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">${filtrados.length} item(ns)</span>
+      </div>
+      <div class="mat-grid">
+        ${filtrados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material encontrado.</p>' : ""}
+        ${filtrados.map((m) => this.renderCardMaterial(m)).join("")}
+      </div>
+    `;
+    }
+    renderCardMaterial(m) {
+      const qtd = Number(m.quantidade) || 0;
+      const min = Number(m.quantidadeMinima) || 0;
+      const nivel = qtd <= 0 ? "baixo" : min > 0 && qtd <= min ? "baixo" : min > 0 && qtd <= min * 2 ? "medio" : "ok";
+      const badgeLabel = nivel === "baixo" ? "\u26A0\uFE0F Repor" : nivel === "medio" ? "\u26A0\uFE0F Aten\xE7\xE3o" : "\u2714 OK";
+      const categoria = m.categoria || "outros";
+      return `
+      <div class="mat-card">
+        <div class="mat-faixa-alerta ${nivel}"></div>
+        <div class="mat-header">
+          <div>
+            <div class="mat-nome">${this.catIcones[categoria] || "\u{1F4E6}"} ${m.nome || ""}</div>
+            <span class="mat-cat ${categoria}">${this.catLabels[categoria] || categoria} ${m.subcategoria ? "\xB7 " + m.subcategoria : ""}</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="mat-qtd ${nivel === "baixo" ? "alerta" : "ok"}">${qtd}</div>
+            <div class="mat-qtd-label">${m.unidade || "un"}</div>
+            <span class="mat-badge ${nivel}">${badgeLabel}</span>
+          </div>
+        </div>
+        <div class="mat-detalhes">
+          ${m.marca ? `<span>\u{1F3F7}\uFE0F ${m.marca}</span>` : ""}
+          ${m.local ? `<span>\u{1F4CD} ${m.local}</span>` : ""}
+          ${m.precoUnitario ? `<span>\u{1F4B0} R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || "un"}</span>` : ""}
+          ${m.dataAquisicao ? `<span>\u{1F4C5} ${m.dataAquisicao}</span>` : ""}
+          ${m.validade ? `<span>\u23F3 Val: ${m.validade}</span>` : ""}
+        </div>
+        ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${m.notas}</div>` : ""}
+        <div class="mat-acoes">
+          <button data-acao="editarMaterial" data-id="${m.id}">\u270F\uFE0F Editar</button>
+          <button data-acao="consumirMaterial" data-id="${m.id}">\u{1F4C9} Consumir</button>
+          <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+        </div>
+      </div>
+    `;
+    }
+    // --- CONSUMO ---
+    renderConsumo() {
+      const consumos = this.consumos;
+      const materiais = this.materiais;
+      const obras = this.obras;
+      const rows = consumos.map((c) => {
+        const mat = materiais.find((m) => m.id === c.materialId);
+        const obra = obras.find((o) => o.id === c.obraId);
+        const custo = mat && mat.precoUnitario ? Number(c.quantidade) * Number(mat.precoUnitario) : null;
+        return { ...c, matNome: mat ? mat.nome : "(removido)", obraTitulo: obra ? obra.titulo : "(removida)", custo };
+      }).reverse();
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <button class="btn-primario" id="btnNovoConsumo" style="font-size:0.8rem;padding:6px 14px;">\u2795 Registrar Consumo</button>
+        <span style="font-size:0.8rem;color:var(--text-muted);">${consumos.length} registro(s)</span>
+      </div>
+      ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum consumo registrado.</p>' : `
+      <table class="cons-table">
+        <tr><th>Material</th><th>Obra</th><th>Qtd</th><th>Custo</th><th>Data</th><th>Notas</th><th></th></tr>
+        ${rows.map((r) => `
+          <tr>
+            <td class="cons-obra">${r.matNome}</td>
+            <td>${r.obraTitulo}</td>
+            <td>${r.quantidade}</td>
+            <td>${r.custo !== null ? formatarMoeda(r.custo) : "\u2014"}</td>
+            <td>${r.data || "\u2014"}</td>
+            <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${r.notas || ""}</td>
+            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;">\u{1F5D1}\uFE0F</button></td>
+          </tr>
+        `).join("")}
+      </table>`}
+    `;
+    }
+    // --- COMPRAS ---
+    renderCompras() {
+      const materiais = this.materiais;
+      const abaixoMin = materiais.filter((m) => {
+        const q = Number(m.quantidade) || 0;
+        const min = Number(m.quantidadeMinima) || 0;
+        return min > 0 && q <= min;
+      });
+      const todosItens = materiais.filter((m) => m.comprado !== void 0);
+      const paraComprar = materiais.filter((m) => m.comprado === false);
+      const comprados = materiais.filter((m) => m.comprado === true);
+      const totalEst = paraComprar.reduce((s, m) => s + (Number(m.precoUnitario) || 0) * Math.max(1, Math.ceil(((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)) / 1)), 0);
+      return `
+      <div class="compras-resumo">
+        <div class="cr-item"><div class="cr-valor">${abaixoMin.length}</div><div class="cr-label">\u26A0\uFE0F Abaixo do m\xEDnimo</div></div>
+        <div class="cr-item"><div class="cr-valor">${paraComprar.length}</div><div class="cr-label">\u{1F6D2} Para comprar</div></div>
+        <div class="cr-item"><div class="cr-valor">${comprados.length}</div><div class="cr-label">\u2714 Comprados</div></div>
+        <div class="cr-item"><div class="cr-valor">${formatarMoeda(Math.round(totalEst))}</div><div class="cr-label">\u{1F4B0} Custo estimado</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">\u26A1 Gerar lista autom\xE1tica</button>
+        <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">\u2795 Adicionar item manual</button>
+        <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">\u{1F4DE} Exportar TXT</button>
+      </div>
+      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista autom\xE1tica".</p>' : ""}
+      <ul class="lista-compras">
+        ${paraComprar.map((m) => this.renderItemCompra(m, false)).join("")}
+        ${comprados.map((m) => this.renderItemCompra(m, true)).join("")}
+      </ul>
+    `;
+    }
+    renderItemCompra(m, comprado) {
+      const qtdSugerida = Math.max(1, Math.ceil((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)));
+      return `
+      <li class="${comprado ? "comprado" : ""}">
+        <div class="lc-info">
+          <div class="lc-nome">${this.catIcones[m.categoria] || "\u{1F4E6}"} ${m.nome}</div>
+          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? "\xB7 " + m.marca : ""}</div>
+        </div>
+        <div class="lc-qtd">${comprado ? "\u2714\uFE0F" : `Qtd: ${qtdSugerida} ${m.unidade || "un"}`}</div>
+        ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ""}
+        <div class="lc-acoes">
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}">\u21A9\uFE0F</button>` : `<button data-acao="marcarComprado" data-id="${m.id}">\u2714</button>`}
+          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+        </div>
+      </li>
+    `;
+    }
+    // --- FORNECEDORES ---
+    renderFornecedores() {
+      const fornecedores = this.fornecedores;
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <button class="btn-primario" id="btnNovoFornecedor" style="font-size:0.8rem;padding:6px 14px;">\u2795 Novo Fornecedor</button>
+        <span style="font-size:0.8rem;color:var(--text-muted);">${fornecedores.length} fornecedor(es)</span>
+      </div>
+      <div class="forn-grid">
+        ${fornecedores.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum fornecedor cadastrado.</p>' : ""}
+        ${fornecedores.map((f) => {
+        const hist = f.historicoCompras || [];
+        const totalGasto = hist.reduce((s, h) => s + Number(h.valor || 0), 0);
+        return `
+            <div class="forn-card">
+              <div class="forn-nome">\u{1F3EA} ${f.nome}</div>
+              <div class="forn-contato">${f.contato || ""}${f.email ? " \xB7 " + f.email : ""}</div>
+              <div class="forn-esp">\u{1F4D2} ${f.especialidade || "Sem especialidade"}</div>
+              ${f.avaliacao ? `<div class="forn-estrelas">${"\u2605".repeat(Math.min(5, Number(f.avaliacao)))}${"\u2606".repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ""}
+              ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${f.notas}</div>` : ""}
+              ${hist.length > 0 ? `
+                <div class="forn-hist">
+                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Hist\xF3rico (Total: ${formatarMoeda(totalGasto)})</div>
+                  ${hist.map((h) => `<div class="hist-item"><span>${h.data || ""} \u2014 ${h.itens || ""}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join("")}
+                </div>
+              ` : ""}
+              <div class="forn-acoes">
+                <button data-acao="editarFornecedor" data-id="${f.id}">\u270F\uFE0F Editar</button>
+                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+              </div>
+            </div>
+          `;
+      }).join("")}
+      </div>
+    `;
+    }
+    // --- CUSTO POR OBRA ---
+    renderCustoObra() {
+      const obras = this.obras;
+      const consumos = this.consumos;
+      const materiais = this.materiais;
+      return `
+      <div style="margin-bottom:12px;">
+        <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
+          <option value="">\u2014 Selecione uma obra \u2014</option>
+          ${obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"} ${o.preco ? "\u2014 " + formatarMoeda(o.preco) : ""}</option>`).join("")}
+        </select>
+      </div>
+      <div id="custoObraDetalhe">
+        <p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o detalhamento de custos.</p>
+      </div>
+    `;
+    }
+    renderCustoDetalhe(obraId) {
+      const obra = this.dataStore.buscarPorId("obras", obraId);
+      if (!obra) return '<p style="color:var(--text-muted);">Obra n\xE3o encontrada.</p>';
+      const consumosObra = this.consumos.filter((c) => c.obraId === obraId);
+      const materiais = this.materiais;
+      let custoTotal = 0;
+      const rows = consumosObra.map((c) => {
+        const mat = materiais.find((m) => m.id === c.materialId);
+        const custo = mat && mat.precoUnitario ? Number(c.quantidade) * Number(mat.precoUnitario) : 0;
+        custoTotal += custo;
+        return { ...c, matNome: mat ? mat.nome : "(removido)", custo };
+      });
+      const precoVenda = Number(obra.preco) || 0;
+      const margem = precoVenda > 0 ? (precoVenda - custoTotal) / precoVenda * 100 : 0;
+      const margemClass = margem >= 60 ? "lucro-alta" : margem >= 30 ? "lucro-media" : "lucro-baixa";
+      return `
+      <div class="custo-obra-header">
+        <div class="custo-obra-card">
+          <div class="co-valor">${formatarMoeda(Math.round(custoTotal))}</div>
+          <div class="co-label">\u{1F4B0} Custo de produ\xE7\xE3o</div>
+        </div>
+        <div class="custo-obra-card">
+          <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : "\u2014"}</div>
+          <div class="co-label">\u{1F3F7}\uFE0F Pre\xE7o de venda</div>
+        </div>
+        <div class="custo-obra-card">
+          <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + "%" : "\u2014"}</div>
+          ${margem > 0 ? `<div class="co-label">\u{1F4CA} Margem de lucro ${margem >= 60 ? "\u2714" : margem >= 30 ? "\u26A0\uFE0F" : "\u{1F53D}"}</div>` : '<div class="co-label">Sem venda definida</div>'}
+        </div>
+      </div>
+      ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `
+      <table class="cons-table">
+        <tr><th>Material</th><th>Qtd</th><th>Valor unit.</th><th>Custo</th><th>Data</th><th>Notas</th></tr>
+        ${rows.map((r) => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find((m) => m.id === r.materialId)?.precoUnitario ? "R$ " + Number(materiais.find((m) => m.id === r.materialId).precoUnitario).toFixed(2) : "\u2014"}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || "\u2014"}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ""}</td></tr>`).join("")}
+        <tr style="font-weight:600;"><td>TOTAL</td><td></td><td></td><td>${formatarMoeda(Math.round(custoTotal))}</td><td></td><td></td></tr>
+      </table>`}
+      <div style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">
+        \u{1F4A1} Dica: Registre materiais usados na aba <strong>Consumo</strong> para ver o custo real de cada obra.
+      </div>
+    `;
+    }
+    // --- EVENT BINDING ---
+    aposRenderizar() {
+      this.removerListeners();
+      document.querySelectorAll(".tab-btn[data-tab]").forEach((btn) => {
+        const handler = () => {
+          this.tabAtiva = btn.dataset.tab;
+          this.rerenderizar();
+        };
+        btn.addEventListener("click", handler);
+        this._bindCache["tab_" + btn.dataset.tab] = { el: btn, handler, type: "click" };
+      });
+      const filtro = document.getElementById("filtroCatEstoque");
+      if (filtro) {
+        const handler = () => {
+          this.filtroCategoria = filtro.value;
+          this.rerenderizar();
+        };
+        filtro.addEventListener("change", handler);
+        this._bindCache["filtroCatEstoque"] = { el: filtro, handler, type: "change" };
+      }
+      document.getElementById("btnNovoMaterial")?.addEventListener("click", () => this.abrirFormMaterial());
+      document.getElementById("btnNovoConsumo")?.addEventListener("click", () => this.abrirFormConsumo());
+      document.getElementById("btnNovoFornecedor")?.addEventListener("click", () => this.abrirFormFornecedor());
+      document.getElementById("btnGerarLista")?.addEventListener("click", () => this.gerarListaCompras());
+      document.getElementById("btnAddItemLista")?.addEventListener("click", () => this.abrirFormMaterial(true));
+      document.getElementById("btnExportarListaTXT")?.addEventListener("click", () => this.exportarListaTXT());
+      const selCusto = document.getElementById("selCustoObra");
+      if (selCusto) {
+        const handler = () => {
+          const detalhe = document.getElementById("custoObraDetalhe");
+          if (detalhe) detalhe.innerHTML = selCusto.value ? this.renderCustoDetalhe(selCusto.value) : '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o detalhamento de custos.</p>';
+        };
+        selCusto.addEventListener("change", handler);
+        this._bindCache["selCustoObra"] = { el: selCusto, handler, type: "change" };
+      }
+      const container = document.getElementById("atelierContent") || document.getElementById("viewPrincipal");
+      if (container) {
+        const handler = (e) => {
+          const btn = e.target.closest("[data-acao]");
+          if (!btn) return;
+          const acao = btn.dataset.acao;
+          const id = btn.dataset.id;
+          if (acao === "editarMaterial") this.abrirFormMaterial(false, id);
+          else if (acao === "excluirMaterial") this.excluirMaterial(id);
+          else if (acao === "consumirMaterial") this.consumirRapido(id);
+          else if (acao === "excluirConsumo") this.excluirConsumo(id);
+          else if (acao === "editarFornecedor") this.abrirFormFornecedor(id);
+          else if (acao === "excluirFornecedor") this.excluirFornecedor(id);
+          else if (acao === "marcarComprado") this.marcarComprado(id, true);
+          else if (acao === "desmarcarComprado") this.marcarComprado(id, false);
+          else if (acao === "removerLista") this.removerDaLista(id);
+        };
+        container.addEventListener("click", handler);
+        this._bindCache["delegatedAtelier"] = { el: container, handler, type: "click" };
+      }
+    }
+    // --- CRUD Material ---
+    abrirFormMaterial(ehLista = false, id = null) {
+      const mat = id ? this.dataStore.buscarPorId("materiais", id) : null;
+      const isLista = ehLista || mat && mat.comprado !== void 0;
+      const cats = Object.keys(this.catLabels);
+      const catOpts = cats.map((c) => `<option value="${c}" ${mat && mat.categoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("");
+      abrirModal(`
+      <h3>${mat ? "\u270F\uFE0F Editar" : isLista ? "\u2795 Adicionar \xE0 Lista" : "\u2795 Novo Material"}</h3>
+      <form id="formModal" style="display:grid;gap:10px;">
+        <div class="modal-form-grid">
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fMatCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${catOpts}</select></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Subcategoria</label><input type="text" id="fMatSub" value="${mat ? mat.subcategoria || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || "un" : "un"}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. m\xEDnima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Pre\xE7o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisi\xE7\xE3o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || "" : ""}</textarea></div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">Salvar</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const dados = {
+          nome: document.getElementById("fMatNome").value.trim(),
+          categoria: document.getElementById("fMatCat").value,
+          subcategoria: document.getElementById("fMatSub").value.trim(),
+          marca: document.getElementById("fMatMarca").value.trim(),
+          quantidade: Number(document.getElementById("fMatQtd").value) || 0,
+          unidade: document.getElementById("fMatUn").value.trim() || "un",
+          quantidadeMinima: Number(document.getElementById("fMatMin").value) || 0,
+          precoUnitario: Number(document.getElementById("fMatPreco").value) || 0,
+          local: document.getElementById("fMatLocal").value.trim(),
+          dataAquisicao: document.getElementById("fMatData").value,
+          notas: document.getElementById("fMatNotas").value.trim()
+        };
+        if (!dados.nome) {
+          mostrarToast("O nome \xE9 obrigat\xF3rio.");
+          return;
+        }
+        if (isLista) dados.comprado = false;
+        if (mat) {
+          this.dataStore.atualizar("materiais", id, dados);
+          mostrarToast("Material atualizado!");
+        } else {
+          this.dataStore.adicionar("materiais", dados);
+          mostrarToast("Material adicionado!");
+        }
+        fecharModal();
+        this.rerenderizar();
+      });
+    }
+    excluirMaterial(id) {
+      if (!confirm("Excluir este material?")) return;
+      this.dataStore.remover("materiais", id);
+      mostrarToast("Material exclu\xEDdo.");
+      this.rerenderizar();
+    }
+    consumirRapido(id) {
+      const mat = this.dataStore.buscarPorId("materiais", id);
+      if (!mat) return;
+      const obras = this.obras;
+      const opcoes = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
+      abrirModal(`
+      <h3>\u{1F4C9} Consumir: ${mat.nome}</h3>
+      <form id="formModal">
+        <div class="campo-form"><label>Obra</label><select id="fConsObra">${opcoes}</select></div>
+        <div class="campo-form"><label>Quantidade (${mat.unidade || "un"} \u2014 atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">Consumir</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const qtd = Number(document.getElementById("fConsQtd").value) || 0;
+        if (qtd <= 0) {
+          mostrarToast("Quantidade inv\xE1lida.");
+          return;
+        }
+        const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
+        this.dataStore.atualizar("materiais", id, { quantidade: novaQtd });
+        this.dataStore.adicionar("consumos", {
+          materialId: id,
+          obraId: document.getElementById("fConsObra").value,
+          quantidade: qtd,
+          data: document.getElementById("fConsData").value,
+          notas: document.getElementById("fConsNotas").value.trim()
+        });
+        fecharModal();
+        mostrarToast(`${qtd} ${mat.unidade || "un"} consumido(s) de "${mat.nome}". Novo estoque: ${novaQtd}.`);
+        this.rerenderizar();
+      });
+    }
+    // --- CRUD Consumo ---
+    abrirFormConsumo() {
+      const materiais = this.materiais;
+      const obras = this.obras;
+      const matOpts = materiais.map((m) => `<option value="${m.id}">${this.catIcones[m.categoria] || "\u{1F4E6}"} ${m.nome} (${m.quantidade} ${m.unidade || "un"})</option>`).join("");
+      const obrOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
+      abrirModal(`
+      <h3>\u{1F4CB} Registrar Consumo</h3>
+      <form id="formModal">
+        <div class="campo-form"><label>Material</label><select id="fConsMat">${matOpts}</select></div>
+        <div class="campo-form"><label>Obra</label><select id="fConsObraFull">${obrOpts}</select></div>
+        <div class="campo-form"><label>Quantidade</label><input type="number" id="fConsQtdFull" value="1" min="0.1" step="0.1"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsDataFull" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotasFull" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">Registrar</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const matId = document.getElementById("fConsMat").value;
+        const qtd = Number(document.getElementById("fConsQtdFull").value) || 0;
+        if (qtd <= 0) {
+          mostrarToast("Quantidade inv\xE1lida.");
+          return;
+        }
+        const mat = this.dataStore.buscarPorId("materiais", matId);
+        if (mat) {
+          const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
+          this.dataStore.atualizar("materiais", matId, { quantidade: novaQtd });
+        }
+        this.dataStore.adicionar("consumos", {
+          materialId: matId,
+          obraId: document.getElementById("fConsObraFull").value,
+          quantidade: qtd,
+          data: document.getElementById("fConsDataFull").value,
+          notas: document.getElementById("fConsNotasFull").value.trim()
+        });
+        fecharModal();
+        mostrarToast("Consumo registrado e estoque atualizado!");
+        this.rerenderizar();
+      });
+    }
+    excluirConsumo(id) {
+      if (!confirm("Excluir este registro de consumo?")) return;
+      this.dataStore.remover("consumos", id);
+      mostrarToast("Registro exclu\xEDdo.");
+      this.rerenderizar();
+    }
+    // --- Fornecedores ---
+    abrirFormFornecedor(id = null) {
+      const f = id ? this.dataStore.buscarPorId("fornecedores", id) : null;
+      abrirModal(`
+      <h3>${f ? "\u270F\uFE0F Editar Fornecedor" : "\u2795 Novo Fornecedor"}</h3>
+      <form id="formModal" style="display:grid;gap:10px;">
+        <div class="modal-form-grid">
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avalia\xE7\xE3o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || "" : ""}</textarea></div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">Salvar</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("fFornNome").value.trim();
+        if (!nome) {
+          mostrarToast("O nome \xE9 obrigat\xF3rio.");
+          return;
+        }
+        const dados = {
+          nome,
+          contato: document.getElementById("fFornContato").value.trim(),
+          email: document.getElementById("fFornEmail").value.trim(),
+          especialidade: document.getElementById("fFornEsp").value.trim(),
+          avaliacao: Math.min(5, Math.max(0, Number(document.getElementById("fFornAval").value) || 0)),
+          notas: document.getElementById("fFornNotas").value.trim(),
+          historicoCompras: f ? f.historicoCompras || [] : []
+        };
+        if (f) {
+          this.dataStore.atualizar("fornecedores", id, dados);
+          mostrarToast("Fornecedor atualizado!");
+        } else {
+          this.dataStore.adicionar("fornecedores", dados);
+          mostrarToast("Fornecedor adicionado!");
+        }
+        fecharModal();
+        this.rerenderizar();
+      });
+    }
+    excluirFornecedor(id) {
+      if (!confirm("Excluir este fornecedor?")) return;
+      this.dataStore.remover("fornecedores", id);
+      mostrarToast("Fornecedor exclu\xEDdo.");
+      this.rerenderizar();
+    }
+    // --- Lista de Compras ---
+    gerarListaCompras() {
+      const materiais = this.materiais;
+      let count = 0;
+      materiais.forEach((m) => {
+        const q = Number(m.quantidade) || 0;
+        const min = Number(m.quantidadeMinima) || 0;
+        if (min > 0 && q <= min && m.comprado === void 0) {
+          this.dataStore.atualizar("materiais", m.id, { comprado: false });
+          count++;
+        }
+      });
+      mostrarToast(`${count} item(ns) adicionado(s) \xE0 lista de compras!`);
+      this.rerenderizar();
+    }
+    marcarComprado(id, comprado) {
+      this.dataStore.atualizar("materiais", id, { comprado });
+      mostrarToast(comprado ? "Marcado como comprado!" : "Reaberto na lista.");
+      this.rerenderizar();
+    }
+    removerDaLista(id) {
+      this.dataStore.atualizar("materiais", id, { comprado: void 0 });
+      mostrarToast("Item removido da lista.");
+      this.rerenderizar();
+    }
+    exportarListaTXT() {
+      const materiais = this.materiais.filter((m) => m.comprado === false);
+      if (materiais.length === 0) {
+        mostrarToast("Lista vazia.");
+        return;
+      }
+      let txt = "=== LISTA DE COMPRAS \u2014 ATELIER ===\n";
+      txt += `Gerada em: ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}
+
+`;
+      let total = 0;
+      materiais.forEach((m) => {
+        const qtd = Math.max(1, Math.ceil((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)));
+        const preco = (Number(m.precoUnitario) || 0) * qtd;
+        total += preco;
+        txt += `\u25A1 ${m.nome}
+`;
+        txt += `   Qtd: ${qtd} ${m.unidade || "un"} | Cat: ${this.catLabels[m.categoria] || m.categoria}${m.marca ? " | Marca: " + m.marca : ""}
+`;
+        txt += `   Est.: ${formatarMoeda(Math.round(preco))}
+
+`;
+      });
+      txt += `=== CUSTO TOTAL ESTIMADO: ${formatarMoeda(Math.round(total))} ===
+`;
+      const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lista-compras-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      mostrarToast("Lista exportada em TXT!");
+    }
+  };
+  var RedeView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.tabAtiva = "contatos";
+      this.filtroCategoria = "";
+      this.filtroEstagio = "";
+      this.catLabels = { galerista: "Galerista", curador: "Curador", critico: "Critico", artista: "Artista", colecionador: "Colecionador", fornecedor: "Fornecedor" };
+      this.catIcones = { galerista: "\u{1F3DB}\uFE0F", curador: "\u{1F4D3}", critico: "\u270D\uFE0F", artista: "\u{1F3A8}", colecionador: "\u{1F464}", fornecedor: "\u{1F3EA}" };
+      this.estagios = { novo_contato: "\u{1F195} Novo Contato", primeira_aproximacao: "\u{1F91D} Primeira Aproximacao", em_conversa: "\u{1F4AC} Em Conversa", parceria_ativa: "\u{1F932} Parceria Ativa", colaboracao_consolidada: "\u{1F31F} Colaboracao Consolidada" };
+      this.estagiosOrdem = Object.keys(this.estagios);
+      this.tiposInteracao = { email: "\u{1F4E7} E-mail", ligacao: "\u{1F4DE} Ligacao", reuniao: "\u{1F91D} Reuniao", visita: "\u{1F3E0} Visita", evento: "\u{1F3AA} Evento" };
+      this._d3Initiated = false;
+    }
+    get contatos() {
+      return this.dataStore.listar("contatosProfissionais") || [];
+    }
+    get interacoes() {
+      return this.dataStore.listar("interacoes") || [];
+    }
+    get eventos() {
+      return this.dataStore.listar("eventos") || [];
+    }
+    get clientes() {
+      return this.dataStore.listar("clientes") || [];
+    }
+    render() {
+      const tabs = ["contatos", "pipeline", "interacoes", "eventos", "mapa"];
+      const tabLabels = { contatos: "\u{1F4CB} Contatos", pipeline: "\u{1F51E} Pipeline", interacoes: "\u{1F4F9} Interacoes", eventos: "\u{1F3AA} Eventos", mapa: "\u{1F53A}\uFE0F Mapa de Influencia" };
+      const content = { contatos: () => this.renderContatos(), pipeline: () => this.renderPipeline(), interacoes: () => this.renderInteracoes(), eventos: () => this.renderEventos(), mapa: () => this.renderMapa() };
+      return `<div><div class="rede-tabs">${tabs.map((t) => `<button class="tab-btn ${t === this.tabAtiva ? "ativo" : ""}" data-tab="${t}">${tabLabels[t]}</button>`).join("")}</div><div id="redeContent">${content[this.tabAtiva]()}</div></div>`;
+    }
+    // --- CONTATOS ---
+    renderContatos() {
+      const cats = Object.keys(this.catLabels);
+      let filtrados = this.contatos;
+      if (this.filtroCategoria) filtrados = filtrados.filter((c) => c.categoria === this.filtroCategoria);
+      if (this.filtroEstagio) filtrados = filtrados.filter((c) => c.estagio === this.filtroEstagio);
+      const hoje = /* @__PURE__ */ new Date();
+      return `
+      <div class="rede-filtros">
+        <select id="filtroCatRede"><option value="">\u{1F4CA} Todos os contatos</option>${cats.map((c) => `<option value="${c}" ${this.filtroCategoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("")}</select>
+        <select id="filtroEstagioRede"><option value="">\u{1F51E} Todos os estagios</option>${this.estagiosOrdem.map((e) => `<option value="${e}" ${this.filtroEstagio === e ? "selected" : ""}>${this.estagios[e]}</option>`).join("")}</select>
+        <button class="btn-primario" id="btnNovoContato" style="font-size:0.8rem;padding:6px 14px;">\u2728 Novo Contato</button>
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">${filtrados.length} contato(s)</span>
+      </div>
+      <div class="cont-grid">${filtrados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum contato encontrado.</p>' : ""}${filtrados.map((c) => this.renderCardContato(c, hoje)).join("")}</div>`;
+    }
+    renderCardContato(c, hoje) {
+      const cat = c.categoria || "outros";
+      const dias = c.ultimoContato ? Math.floor((hoje - new Date(c.ultimoContato)) / 864e5) : null;
+      const alerta = dias !== null && dias > 30 ? dias > 90 ? "urgente" : "follow-up" : null;
+      const alertaMsg = dias !== null && dias > 30 ? `\u26A0\uFE0F ${dias} dias sem contato` : "";
+      return `
+      <div class="cont-card" style="border-left-color:var(--accent)">
+        ${c.vip ? '<span class="cont-vip">\u{1F451} VIP</span>' : ""}
+        <div class="cont-nome">${this.catIcones[cat] || "\u{1F4CB}"} ${c.nome || ""}</div>
+        <span class="cont-cat-tag ${cat}">${this.catLabels[cat] || cat}</span>
+        ${c.nivelRelacionamento ? `<span class="cont-estrelas" style="margin-left:6px;">${"\u2605".repeat(Math.min(5, Number(c.nivelRelacionamento)))}${"\u2606".repeat(Math.max(0, 5 - Number(c.nivelRelacionamento)))}</span>` : ""}
+        <div class="cont-inst">${c.instituicao || ""}${c.cargo ? " \xB7 " + c.cargo : ""}</div>
+        <div class="cont-contato">${c.contato || ""}${c.email ? " \xB7 " + c.email : ""}${c.redes ? "<br>\u{1F590} " + c.redes : ""}</div>
+        ${c.comoConheceu ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F91D} ${c.comoConheceu}</div>` : ""}
+        ${c.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${c.notas}</div>` : ""}
+        ${c.estagio ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${this.estagios[c.estagio] || c.estagio}</div>` : ""}
+        ${alerta ? `<div class="cont-alerta ${alerta}">${alertaMsg}</div>` : ""}
+        ${c.proximoPasso ? `<div class="cont-passos">\u{1F3AF} ${c.proximoPasso}</div>` : ""}
+        <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">\u270F\uFE0F Editar</button><button data-acao="interagirContato" data-id="${c.id}">\u{1F4AC} Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button></div>
+      </div>`;
+    }
+    // --- PIPELINE ---
+    renderPipeline() {
+      const contatos = this.contatos;
+      const hoje = /* @__PURE__ */ new Date();
+      const contPorEstagio = {};
+      this.estagiosOrdem.forEach((e) => {
+        contPorEstagio[e] = contatos.filter((c) => c.estagio === e);
+      });
+      return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:0.9rem;color:var(--text-muted);">Arraste os cards entre os estagios (use os botoes \u25C0 \u25B6)</span><span style="font-size:0.8rem;color:var(--text-muted);">${contatos.length} contato(s)</span></div>
+      <div class="pipeline">${this.estagiosOrdem.map((e) => `
+        <div class="coluna-pipe" data-estagio="${e}">
+          <div class="pipe-titulo"><span>${this.estagios[e]}</span><span>${contPorEstagio[e]?.length || 0}</span></div>
+          ${(contPorEstagio[e] || []).map((c) => {
+        const dias = c.ultimoContato ? Math.floor((hoje - new Date(c.ultimoContato)) / 864e5) : null;
+        return `<div class="pipe-card" data-id="${c.id}">
+              <div class="pipe-nome">${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome}</div>
+              <div class="pipe-cat">${this.catLabels[c.categoria] || c.categoria}</div>
+              ${dias !== null ? `<div class="pipe-dias">${dias > 30 ? "\u26A0\uFE0F " + dias + " dias" : "\u2705 " + dias + " dias"}</div>` : ""}
+              <div style="display:flex;gap:4px;margin-top:6px;">
+                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">\u25C0</button>
+                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">\u25B6</button>
+              </div>
+            </div>`;
+      }).join("")}
+        </div>`).join("")}</div>`;
+    }
+    moverPipeline(id, direcao) {
+      const c = this.dataStore.buscarPorId("contatosProfissionais", id);
+      if (!c) return;
+      const idx = this.estagiosOrdem.indexOf(c.estagio || "novo_contato");
+      const novoIdx = Math.max(0, Math.min(this.estagiosOrdem.length - 1, idx + direcao));
+      if (novoIdx !== idx) {
+        this.dataStore.atualizar("contatosProfissionais", id, { estagio: this.estagiosOrdem[novoIdx] });
+        this.rerenderizar();
+      }
+    }
+    // --- INTERACOES ---
+    renderInteracoes() {
+      const contatos = this.contatos;
+      const interacoes = this.interacoes;
+      const selValue = this._selContatoInteracao || "";
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <select class="sel-interacao-contato" id="selInteracaoContato">
+          <option value="">\u2014 Todos os contatos \u2014</option>
+          ${contatos.map((c) => `<option value="${c.id}" ${selValue === c.id ? "selected" : ""}>${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome}</option>`).join("")}
+        </select>
+        <button class="btn-primario" id="btnNovaInteracao" style="font-size:0.8rem;padding:6px 14px;">\u2728 Nova Interacao</button>
+      </div>
+      ${selValue ? this.renderTimelineContato(selValue) : '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione um contato para ver o historico de interacoes.</p>'}`;
+    }
+    renderTimelineContato(contatoId) {
+      const c = this.dataStore.buscarPorId("contatosProfissionais", contatoId);
+      const inter = this.interacoes.filter((i) => i.contatoId === contatoId).sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+      if (!c) return '<p style="color:var(--text-muted);">Contato nao encontrado.</p>';
+      return `
+      <div style="margin-bottom:12px;font-size:0.9rem;font-weight:600;color:var(--text);">${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome} \u2014 ${inter.length} interacao(oes)</div>
+      ${inter.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhuma interacao registrada.</p>' : `
+      <div class="timeline">${inter.map((i) => `
+        <div class="tl-item">
+          <div class="tl-tipo">${this.tiposInteracao[i.tipo] || i.tipo} \xB7 ${i.data || ""}</div>
+          <div class="tl-resumo">${i.resumo || ""}</div>
+          ${i.sentimento ? `<span class="tl-sentimento ${i.sentimento}">${i.sentimento === "positivo" ? "\u{1F60A}" : i.sentimento === "neutro" ? "\u{1F610}" : "\u{1F61F}"} ${i.sentimento}</span>` : ""}
+          ${i.followUp ? `<span style="font-size:0.7rem;color:#92400e;margin-left:6px;">\u{1F51D} Follow-up: ${i.followUpNotas || "pendente"}</span>` : ""}
+          <div class="tl-data">${i.anexos && i.anexos.length > 0 ? "\u{1F4CE} " + i.anexos.length + " anexo(s)" : ""}</div>
+        </div>`).join("")}</div>`}`;
+    }
+    // --- EVENTOS ---
+    renderEventos() {
+      const eventos = this.eventos;
+      const eventosStatus = { pesquisando: "\u{1F50D} Pesquisando", inscrito: "\u{1F4DD} Inscrito", selecionado: "\u2705 Selecionado", participando: "\u{1F3AF} Participando", finalizado: "\u{1F3C1} Finalizado" };
+      const tiposEvento = { bienal: "Bienal", feira: "Feira", mostra: "Mostra", edital: "Edital", premio: "Premio" };
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <button class="btn-primario" id="btnNovoEvento" style="font-size:0.8rem;padding:6px 14px;">\u2728 Novo Evento</button>
+        <span style="font-size:0.8rem;color:var(--text-muted);">${eventos.length} evento(s)</span>
+      </div>
+      <div class="evt-grid">${eventos.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum evento cadastrado.</p>' : ""}${eventos.map((e) => {
+        const obras = (e.obrasEnviadas || []).map((oId) => {
+          const o = this.dataStore.buscarPorId("obras", oId);
+          return o ? o.titulo : null;
+        }).filter(Boolean);
+        return `<div class="evt-card">
+          <span class="evt-tipo-tag ${e.tipo || "mostra"}">${tiposEvento[e.tipo] || e.tipo}</span>
+          <div class="evt-nome" style="margin-top:4px;">${e.nome}</div>
+          <div class="evt-status ${e.status || "pesquisando"}">${eventosStatus[e.status] || e.status}</div>
+          <div class="evt-info">${e.dataEvento ? "\u{1F4C5} " + e.dataEvento : ""}${e.dataInscricao ? " \xB7 Inscricao: " + e.dataInscricao : ""}${e.investimento ? "<br>\u{1F4B0} R$ " + Number(e.investimento).toFixed(2) : ""}${e.retorno && Number(e.retorno) > 0 ? " \xB7 Retorno: R$ " + Number(e.retorno).toFixed(2) : ""}</div>
+          ${e.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${e.notas}</div>` : ""}
+          ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F5BC}\uFE0F Obras: ${obras.join(", ")}</div>` : ""}
+          ${e.documentacao && e.documentacion.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DE} Docs: ${e.documentacao.join(", ")}</div>` : ""}
+          ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">\u{1F3C6} ${e.resultado}</div>` : ""}
+          <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">\u270F\uFE0F Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button></div>
+        </div>`;
+      }).join("")}</div>`;
+    }
+    // --- MAPA DE INFLUENCIA (D3.js) ---
+    renderMapa() {
+      const contatos = this.contatos;
+      if (contatos.length === 0) return '<p style="color:var(--text-muted);font-size:0.85rem;">Adicione contatos para ver o mapa.</p>';
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:0.85rem;color:var(--text-muted);">Tamanho = nivel de relacionamento \xB7 Cores por categoria \xB7 Arraste nos</span>
+        <button class="btn-primario" id="btnExportarRedePDF" style="font-size:0.8rem;padding:6px 14px;">\u{1F4DE} Exportar Relatorio PDF</button>
+      </div>
+      <div class="mapa-container" id="d3MapaContainer">
+        <svg id="d3MapaSVG"></svg>
+      </div>
+      <div id="d3MapaHubs" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">\u{1F4A1} Processando rede...</div>`;
+    }
+    // --- EVENT BINDING ---
+    aposRenderizar() {
+      this.removerListeners();
+      document.querySelectorAll(".tab-btn[data-tab]").forEach((btn) => {
+        const h = () => {
+          this.tabAtiva = btn.dataset.tab;
+          this.rerenderizar();
+        };
+        btn.addEventListener("click", h);
+        this._bindCache["tab_" + btn.dataset.tab] = { el: btn, handler: h, type: "click" };
+      });
+      const filtroCat = document.getElementById("filtroCatRede");
+      if (filtroCat) {
+        const h = () => {
+          this.filtroCategoria = filtroCat.value;
+          this.rerenderizar();
+        };
+        filtroCat.addEventListener("change", h);
+        this._bindCache["filtroCatRede"] = { el: filtroCat, handler: h, type: "change" };
+      }
+      const filtroEst = document.getElementById("filtroEstagioRede");
+      if (filtroEst) {
+        const h = () => {
+          this.filtroEstagio = filtroEst.value;
+          this.rerenderizar();
+        };
+        filtroEst.addEventListener("change", h);
+        this._bindCache["filtroEstagioRede"] = { el: filtroEst, handler: h, type: "change" };
+      }
+      document.getElementById("btnNovoContato")?.addEventListener("click", () => this.abrirFormContato());
+      document.getElementById("btnNovaInteracao")?.addEventListener("click", () => this.abrirFormInteracao());
+      document.getElementById("btnNovoEvento")?.addEventListener("click", () => this.abrirFormEvento());
+      const selInt = document.getElementById("selInteracaoContato");
+      if (selInt) {
+        const h = () => {
+          this._selContatoInteracao = selInt.value;
+          this.rerenderizar();
+        };
+        selInt.addEventListener("change", h);
+        this._bindCache["selInteracaoContato"] = { el: selInt, handler: h, type: "change" };
+      }
+      document.getElementById("btnExportarRedePDF")?.addEventListener("click", () => this.exportarRelatorioPDF());
+      const container = document.getElementById("redeContent") || document.getElementById("viewPrincipal");
+      if (container) {
+        const h = (e) => {
+          const btn = e.target.closest("[data-acao]");
+          if (!btn) return;
+          const acao = btn.dataset.acao, id = btn.dataset.id;
+          if (acao === "editarContato") this.abrirFormContato(id);
+          else if (acao === "excluirContato") this.excluirContato(id);
+          else if (acao === "interagirContato") {
+            this._selContatoInteracao = id;
+            this.tabAtiva = "interacoes";
+            this.rerenderizar();
+            setTimeout(() => this.abrirFormInteracao(id), 100);
+          } else if (acao === "pipeMovEsq") this.moverPipeline(id, -1);
+          else if (acao === "pipeMovDir") this.moverPipeline(id, 1);
+          else if (acao === "editarEvento") this.abrirFormEvento(id);
+          else if (acao === "excluirEvento") this.excluirEvento(id);
+        };
+        container.addEventListener("click", h);
+        this._bindCache["delegatedRede"] = { el: container, handler: h, type: "click" };
+      }
+      if (this.tabAtiva === "mapa" && this.contatos.length > 0) {
+        setTimeout(() => this.iniciarMapaD3(), 50);
+      }
+      this.verificarLembretes();
+    }
+    // --- D3.js Mapa ---
+    iniciarMapaD3() {
+      if (typeof d3 === "undefined") return;
+      const container = document.getElementById("d3MapaContainer");
+      const svg = document.getElementById("d3MapaSVG");
+      const hubsDiv = document.getElementById("d3MapaHubs");
+      if (!container || !svg) return;
+      const contatos = this.contatos;
+      const cores = { galerista: "#3b82f6", curador: "#10b981", critico: "#f59e0b", artista: "#6366f1", colecionador: "#ec4899", fornecedor: "#0ea5e9" };
+      const raioMin = 10, raioMax = 35;
+      const nodes = contatos.map((c) => ({
+        ...c,
+        r: raioMin + (c.nivelRelacionamento || 1) / 5 * (raioMax - raioMin)
+      }));
+      const links = [];
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j];
+          if (a.instituicao && b.instituicao && a.instituicao === b.instituicao) {
+            links.push({ source: i, target: j, strength: 0.3 });
+          } else if (a.comoConheceu && b.comoConheceu && (a.comoConheceu.toLowerCase().includes((b.nome || "").toLowerCase().slice(0, 5)) || b.comoConheceu.toLowerCase().includes((a.nome || "").toLowerCase().slice(0, 5)))) {
+            links.push({ source: i, target: j, strength: 0.2 });
+          }
+        }
+      }
+      const width = container.clientWidth || 700;
+      const height = container.clientHeight || 400;
+      const d3svg = d3.select(svg).attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "100%");
+      d3svg.selectAll("*").remove();
+      const g = d3svg.append("g");
+      const zoom = d3.zoom().scaleExtent([0.3, 3]).on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+      d3svg.call(zoom);
+      const simulation = d3.forceSimulation(nodes).force("link", d3.forceLink(links).id((d, i) => i).distance(100)).force("charge", d3.forceManyBody().strength(-300)).force("center", d3.forceCenter(width / 2, height / 2)).force("collide", d3.forceCollide().radius((d) => d.r + 10));
+      const link = g.append("g").selectAll("line").data(links).join("line").attr("stroke", "var(--border)").attr("stroke-width", 1.5).attr("stroke-dasharray", "4,4");
+      const node = g.append("g").selectAll("g").data(nodes).join("g").call(
+        d3.drag().on("start", (event, d) => {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        }).on("drag", (event, d) => {
+          d.fx = event.x;
+          d.fy = event.y;
+        }).on("end", (event, d) => {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        })
+      );
+      node.append("circle").attr("r", (d) => d.r).attr("fill", (d) => cores[d.categoria] || "#6b7280").attr("opacity", 0.8).attr("stroke", "#fff").attr("stroke-width", 2).style("cursor", "pointer");
+      node.append("text").text((d) => (d.nome || "?").slice(0, 2)).attr("text-anchor", "middle").attr("dy", "0.35em").attr("fill", "#fff").attr("font-size", (d) => d.r > 20 ? 9 : 6).attr("font-weight", "600").style("pointer-events", "none");
+      node.append("text").text((d) => (d.nome || "").length > 18 ? (d.nome || "").slice(0, 16) + "..." : d.nome || "").attr("text-anchor", "middle").attr("dy", (d) => d.r + 14).attr("fill", "var(--text-muted)").attr("font-size", 9).style("pointer-events", "none");
+      node.on("click", (event, d) => {
+        if (d.id) {
+          this._selContatoInteracao = d.id;
+          this.tabAtiva = "interacoes";
+          this.rerenderizar();
+        }
+      });
+      node.append("title").text((d) => `${d.nome || "Sem nome"}
+${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.instituicao : ""}${d.nivelRelacionamento ? "\nRelacionamento: " + "\u2605".repeat(d.nivelRelacionamento) : ""}`);
+      simulation.on("tick", () => {
+        link.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y).attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+        node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      });
+      setTimeout(() => {
+        const hubCounts = {};
+        links.forEach((l) => {
+          const srcId = typeof l.source === "object" ? l.source.id || l.source.nome : null;
+          const tgtId = typeof l.target === "object" ? l.target.id || l.target.nome : null;
+          if (srcId) hubCounts[srcId] = (hubCounts[srcId] || 0) + 1;
+          if (tgtId) hubCounts[tgtId] = (hubCounts[tgtId] || 0) + 1;
+        });
+        const hubs = nodes.filter((n) => hubCounts[n.id || n.nome] > 0).sort((a, b) => (hubCounts[b.id || b.nome] || 0) - (hubCounts[a.id || a.nome] || 0)).slice(0, 3).map((n) => `<strong>${n.nome}</strong>`).join(", ");
+        if (hubsDiv) hubsDiv.innerHTML = hubs ? `\u{1F4A1} Contatos que mais conectam (hubs): ${hubs}` : "\u{1F4A1} Nenhum hub identificado.";
+      }, 2e3);
+    }
+    // --- CRUD Contato ---
+    abrirFormContato(id = null) {
+      const c = id ? this.dataStore.buscarPorId("contatosProfissionais", id) : null;
+      const cats = Object.keys(this.catLabels);
+      const catOpts = cats.map((cat) => `<option value="${cat}" ${c && c.categoria === cat ? "selected" : ""}>${this.catIcones[cat]} ${this.catLabels[cat]}</option>`).join("");
+      const estOpts = this.estagiosOrdem.map((e) => `<option value="${e}" ${c && c.estagio === e ? "selected" : ""}>${this.estagios[e]}</option>`).join("");
+      abrirModal(`<h3>${c ? "\u270F\uFE0F Editar" : "\u2728 Novo"} Contato Profissional</h3>
+      <form id="formModal" style="display:grid;gap:10px;"><div class="modal-form-grid">
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fContNome" value="${c ? c.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fContCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${catOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Estagio</label><select id="fContEstagio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${estOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Instituicao</label><input type="text" id="fContInst" value="${c ? c.instituicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Cargo</label><input type="text" id="fContCargo" value="${c ? c.cargo || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fContTel" value="${c ? c.contato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fContEmail" value="${c ? c.email || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Redes sociais</label><input type="text" id="fContRedes" value="${c ? c.redes || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Relacionamento (1-5)</label><input type="number" id="fContNivel" value="${c ? c.nivelRelacionamento || 0 : 0}" min="1" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Como conheceu</label><input type="text" id="fContConheceu" value="${c ? c.comoConheceu || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Ultimo contato</label><input type="date" id="fContUltimo" value="${c ? c.ultimoContato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Proximo passo</label><input type="text" id="fContPasso" value="${c ? c.proximoPasso || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-full"><label><input type="checkbox" id="fContVip" ${c && c.vip ? "checked" : ""}> \u{1F451} Contato VIP (colecionador)</label></div>
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fContNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${c ? c.notas || "" : ""}</textarea></div>
+      </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("fContNome").value.trim();
+        if (!nome) {
+          mostrarToast("Nome obrigatorio.");
+          return;
+        }
+        const dados = { nome, categoria: document.getElementById("fContCat").value, estagio: document.getElementById("fContEstagio").value, instituicao: document.getElementById("fContInst").value.trim(), cargo: document.getElementById("fContCargo").value.trim(), contato: document.getElementById("fContTel").value.trim(), email: document.getElementById("fContEmail").value.trim(), redes: document.getElementById("fContRedes").value.trim(), nivelRelacionamento: Number(document.getElementById("fContNivel").value) || 0, comoConheceu: document.getElementById("fContConheceu").value.trim(), ultimoContato: document.getElementById("fContUltimo").value, proximoPasso: document.getElementById("fContPasso").value.trim(), vip: document.getElementById("fContVip").checked, notas: document.getElementById("fContNotas").value.trim() };
+        if (c) {
+          this.dataStore.atualizar("contatosProfissionais", id, dados);
+          mostrarToast("Contato atualizado!");
+        } else {
+          this.dataStore.adicionar("contatosProfissionais", dados);
+          mostrarToast("Contato adicionado!");
+        }
+        fecharModal();
+        this.rerenderizar();
+      });
+    }
+    excluirContato(id) {
+      if (!confirm("Excluir este contato?")) return;
+      this.dataStore.remover("contatosProfissionais", id);
+      mostrarToast("Contato excluido.");
+      this.rerenderizar();
+    }
+    // --- CRUD Interacao ---
+    abrirFormInteracao(contatoId = null) {
+      const contatos = this.contatos;
+      const selId = contatoId || this._selContatoInteracao || "";
+      const tipoOpts = Object.entries(this.tiposInteracao).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+      abrirModal(`<h3>\u2728 Nova Interacao</h3>
+      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato">${contatos.map((c) => `<option value="${c.id}" ${c.id === selId ? "selected" : ""}>${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome}</option>`).join("")}</select></div>
+      <div class="campo-form"><label>Tipo</label><select id="fIntTipo">${tipoOpts}</select></div>
+      <div class="campo-form"><label>Data</label><input type="date" id="fIntData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+      <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" placeholder="Descreva a interacao..."></textarea></div>
+      <div class="campo-form"><label>Sentimento</label><select id="fIntSentimento"><option value="positivo">\u{1F60A} Positivo</option><option value="neutro">\u{1F610} Neutro</option><option value="negativo">\u{1F61F} Negativo</option></select></div>
+      <div class="campo-form"><label><input type="checkbox" id="fIntFollowUp"> \u{1F51D} Necessita follow-up</label></div>
+      <div class="campo-form" id="divFollowUpNotas" style="display:none;"><label>Notas do follow-up</label><textarea id="fIntFollowNotas" placeholder="O que fazer?"></textarea></div>
+      <div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
+      document.getElementById("fIntFollowUp")?.addEventListener("change", () => {
+        document.getElementById("divFollowUpNotas").style.display = document.getElementById("fIntFollowUp").checked ? "block" : "none";
+      });
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.dataStore.adicionar("interacoes", { contatoId: document.getElementById("fIntContato").value, tipo: document.getElementById("fIntTipo").value, data: document.getElementById("fIntData").value, resumo: document.getElementById("fIntResumo").value.trim(), sentimento: document.getElementById("fIntSentimento").value, followUp: document.getElementById("fIntFollowUp").checked, followUpNotas: document.getElementById("fIntFollowNotas").value.trim(), anexos: [] });
+        this.dataStore.atualizar("contatosProfissionais", document.getElementById("fIntContato").value, { ultimoContato: document.getElementById("fIntData").value });
+        fecharModal();
+        mostrarToast("Interacao registrada!");
+        this.rerenderizar();
+        this.solicitarNotificacao("Interacao registrada", "Nao se esqueca do follow-up!");
+      });
+    }
+    // --- CRUD Evento ---
+    abrirFormEvento(id = null) {
+      const e = id ? this.dataStore.buscarPorId("eventos", id) : null;
+      const statusOpts = ["pesquisando", "inscrito", "selecionado", "participando", "finalizado"].map((s) => `<option value="${s}" ${e && e.status === s ? "selected" : ""}>${s}</option>`).join("");
+      const tipoOpts = ["bienal", "feira", "mostra", "edital", "premio"].map((t) => `<option value="${t}" ${e && e.tipo === t ? "selected" : ""}>${t}</option>`).join("");
+      const obras = this.obras || this.dataStore.listar("obras") || [];
+      const obraOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem titulo"}</option>`).join("");
+      abrirModal(`<h3>${e ? "\u270F\uFE0F Editar" : "\u2728 Novo"} Evento</h3>
+      <form id="formModal"><div class="modal-form-grid">
+        <div class="campo-full"><input type="text" id="fEvtNome" value="${e ? e.nome || "" : ""}" required placeholder="Nome do evento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><select id="fEvtTipo">${tipoOpts}</select></div>
+        <div><select id="fEvtStatus">${statusOpts}</select></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Inscricao</label><input type="date" id="fEvtDataIns" value="${e ? e.dataInscricao || "" : ""}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Evento</label><input type="date" id="fEvtDataEvt" value="${e ? e.dataEvento || "" : ""}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Investimento (R$)</label><input type="number" id="fEvtInvest" value="${e ? e.investimento || 0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Retorno (R$)</label><input type="number" id="fEvtRetorno" value="${e ? e.retorno || 0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Resultado</label><input type="text" id="fEvtResultado" value="${e ? e.resultado || "" : ""}" placeholder="Ex.: Premiado, selecionado..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Documentacao</label><input type="text" id="fEvtDocs" value="${e && e.documentacao ? e.documentacao.join(", ") : ""}" placeholder="docs separados por virgula" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Obras enviadas</label><select multiple id="fEvtObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;">${obraOpts}</select></div>
+        <div class="campo-full"><textarea id="fEvtNotas" placeholder="Notas..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${e ? e.notas || "" : ""}</textarea></div>
+      </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e2) => {
+        e2.preventDefault();
+        const sel = document.getElementById("fEvtObras");
+        const obrasSel = sel ? Array.from(sel.selectedOptions).map((o) => o.value) : [];
+        const docs = document.getElementById("fEvtDocs").value.split(",").map((s) => s.trim()).filter(Boolean);
+        const dados = { nome: document.getElementById("fEvtNome").value.trim(), tipo: document.getElementById("fEvtTipo").value, status: document.getElementById("fEvtStatus").value, dataInscricao: document.getElementById("fEvtDataIns").value, dataEvento: document.getElementById("fEvtDataEvt").value, investimento: Number(document.getElementById("fEvtInvest").value) || 0, retorno: Number(document.getElementById("fEvtRetorno").value) || 0, resultado: document.getElementById("fEvtResultado").value.trim(), documentacao: docs, obrasEnviadas: obrasSel, notas: document.getElementById("fEvtNotas").value.trim() };
+        if (!dados.nome) {
+          mostrarToast("Nome obrigatorio.");
+          return;
+        }
+        if (e) {
+          this.dataStore.atualizar("eventos", id, dados);
+          mostrarToast("Evento atualizado!");
+        } else {
+          this.dataStore.adicionar("eventos", dados);
+          mostrarToast("Evento adicionado!");
+        }
+        fecharModal();
+        this.rerenderizar();
+      });
+    }
+    excluirEvento(id) {
+      if (!confirm("Excluir este evento?")) return;
+      this.dataStore.remover("eventos", id);
+      mostrarToast("Evento excluido.");
+      this.rerenderizar();
+    }
+    // --- LEMBRETES ---
+    verificarLembretes() {
+      const hoje = /* @__PURE__ */ new Date();
+      const contatos = this.contatos;
+      const pendentes = [];
+      contatos.forEach((c) => {
+        if (!c.ultimoContato) return;
+        const dias = Math.floor((hoje - new Date(c.ultimoContato)) / 864e5);
+        if (dias > 60) pendentes.push({ nome: c.nome, dias, passo: c.proximoPasso || "revisar relacionamento" });
+      });
+      if (pendentes.length > 0 && "Notification" in window && Notification.permission === "granted") {
+        pendentes.slice(0, 3).forEach((p) => {
+          try {
+            new Notification("\u{1F51D} Rede Profissional", { body: `Voce nao contata ${p.nome} ha ${p.dias} dias. Sugestao: ${p.passo}` });
+          } catch (e) {
+          }
+        });
+      }
+    }
+    solicitarNotificacao(titulo, corpo) {
+      if (!("Notification" in window) || Notification.permission === "denied") return;
+      if (Notification.permission === "granted") {
+        try {
+          new Notification(titulo, { body: corpo });
+        } catch (e) {
+        }
+      } else {
+        Notification.requestPermission();
+      }
+    }
+    // --- PDF ---
+    exportarRelatorioPDF() {
+      if (typeof window.jspdf === "undefined" && typeof jspdf === "undefined" || !window.jspdf?.jsPDF) {
+        mostrarToast("jsPDF nao carregado.");
+        return;
+      }
+      mostrarLoading("Gerando relatorio de networking...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const contatos = this.contatos;
+      const eventos = this.eventos;
+      const margem = 20;
+      let y = 20;
+      const larg = 170;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Relatorio de Networking", margem, y);
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Gerado em: ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}`, margem, y);
+      y += 5;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 7;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Contatos (" + contatos.length + ")", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      contatos.forEach((c) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`${c.nome || ""} \u2014 ${c.instituicao || ""} (${c.categoria || ""}) ${c.nivelRelacionamento ? "\u2605".repeat(c.nivelRelacionamento) : ""}`, margem, y);
+        y += 4;
+        if (c.proximoPasso) {
+          doc.text(`  \u2192 Proximo passo: ${c.proximoPasso}`, margem + 4, y);
+          y += 4;
+        }
+      });
+      y += 5;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 7;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Eventos (" + eventos.length + ")", margem, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      eventos.forEach((e) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`${e.nome || ""} \u2014 ${e.tipo || ""} (${e.status || ""}) ${e.dataEvento ? "\xB7 " + e.dataEvento : ""}`, margem, y);
+        y += 4;
+      });
+      doc.save("relatorio-networking.pdf");
+      esconderLoading();
+      mostrarToast("Relatorio exportado em PDF!");
+    }
+  };
+  var DiarioView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.tabAtiva = "entradas";
+      this.calData = /* @__PURE__ */ new Date();
+      this.calVisao = "mensal";
+      this._filtroObraProc = "";
+      this._entradaEditando = null;
+      this._fotosTemporarias = [];
+      this._selHumor = 0;
+      this.humorEmojis = { 1: "\u{1F62B}", 2: "\u{1F615}", 3: "\u{1F610}", 4: "\u{1F642}", 5: "\u{1F929}" };
+      this.humorLabels = { 1: "Terr\xEDvel", 2: "Dif\xEDcil", 3: "Neutro", 4: "Bom", 5: "Excelente" };
+      this.tipoAtividade = { pintura: "#3b82f6", escultura: "#8b5cf6", admin: "#f59e0b", descanso: "#10b981" };
+      this.etapasPadrao = [
+        "Sketch inicial",
+        "Estudo de cor",
+        "Primeira camada",
+        "Camadas intermedi\xE1rias",
+        "Detalhamento",
+        "Finaliza\xE7\xE3o",
+        "Verniz"
+      ];
+      this.citacoes = [
+        { texto: "A arte \xE9 a mentira que nos permite conhecer a verdade.", autor: "Pablo Picasso" },
+        { texto: "N\xE3o h\xE1 nada mais art\xEDstico do que amar as pessoas.", autor: "Vincent van Gogh" },
+        { texto: "A criatividade \xE9 a intelig\xEAncia se divertindo.", autor: "Albert Einstein" },
+        { texto: "A pintura \xE9 poesia silenciosa.", autor: "Plutarco" },
+        { texto: "A arte lava da alma a poeira do cotidiano.", autor: "Pablo Picasso" },
+        { texto: "Eu sonho minha pintura e pinto meu sonho.", autor: "Vincent van Gogh" },
+        { texto: "A cor \xE9 o teclado, os olhos s\xE3o os martelos, a alma \xE9 o piano com muitas cordas.", autor: "Wassily Kandinsky" },
+        { texto: "O artista n\xE3o \xE9 nada sem o dom, mas o dom n\xE3o \xE9 nada sem o trabalho.", autor: "\xC9mile Zola" },
+        { texto: "A arte n\xE3o reproduz o vis\xEDvel, ela torna vis\xEDvel.", autor: "Paul Klee" },
+        { texto: "Comece onde voc\xEA est\xE1. Use o que voc\xEA tem. Fa\xE7a o que voc\xEA pode.", autor: "Arthur Ashe" },
+        { texto: "A perfei\xE7\xE3o n\xE3o \xE9 quando n\xE3o h\xE1 mais nada a acrescentar, mas quando n\xE3o h\xE1 mais nada a retirar.", autor: "Antoine de Saint-Exup\xE9ry" },
+        { texto: "A arte \xE9 a express\xE3o dos mais profundos pensamentos pelo caminho mais simples.", autor: "Albert Einstein" },
+        { texto: "Toda crian\xE7a \xE9 artista. O problema \xE9 como permanecer artista depois de crescer.", autor: "Pablo Picasso" },
+        { texto: "A criatividade \xE9 contaminante. Passe adiante.", autor: "Albert Einstein" },
+        { texto: "A simplicidade \xE9 o \xFAltimo grau da sofistica\xE7\xE3o.", autor: "Leonardo da Vinci" },
+        { texto: "A arte deve confortar os perturbados e perturbar os confort\xE1veis.", autor: "Banksy" },
+        { texto: "O prop\xF3sito da arte \xE9 lavar a poeira da vida cotidiana de nossas almas.", autor: "Pablo Picasso" },
+        { texto: "A inspira\xE7\xE3o existe, mas precisa te encontrar trabalhando.", autor: "Pablo Picasso" },
+        { texto: "Grandes coisas s\xE3o feitas por uma s\xE9rie de pequenas coisas reunidas.", autor: "Vincent van Gogh" },
+        { texto: "A arte n\xE3o \xE9 um artesanato, \xE9 a transmiss\xE3o de uma emo\xE7\xE3o que o artista experimentou.", autor: "Leonardo da Vinci" },
+        { texto: "Pinte como se voc\xEA nunca tivesse medo de errar.", autor: "Bob Ross" },
+        { texto: "N\xE3o h\xE1 erro na arte, apenas oportunidades.", autor: "Bob Ross" },
+        { texto: "A arte \xE9 a assinatura da civiliza\xE7\xE3o.", autor: "Beverly Sills" },
+        { texto: "O mundo real \xE9 apenas um, mas a arte pode criar muitos mundos.", autor: "Frida Kahlo" },
+        { texto: "Pinto autorretratos porque estou sempre dispon\xEDvel.", autor: "Frida Kahlo" },
+        { texto: "A arte \xE9 a mais bela das mentiras.", autor: "Claude Debussy" },
+        { texto: "Nuances, nuances, sempre nuances!", autor: "Eug\xE8ne Delacroix" },
+        { texto: "O olhar do pintor s\xF3 se completa no olhar do espectador.", autor: "Marcel Duchamp" },
+        { texto: "A forma segue a intui\xE7\xE3o.", autor: "Joan Mir\xF3" },
+        { texto: "N\xE3o pinte o que v\xEA, pinte o que sente.", autor: "Henri Matisse" },
+        { texto: "A cor \xE9 um poder que influencia diretamente a alma.", autor: "Wassily Kandinsky" },
+        { texto: "A arte n\xE3o \xE9 o que voc\xEA v\xEA, mas o que voc\xEA faz os outros verem.", autor: "Edgar Degas" },
+        { texto: "Primeiro aprenda as regras como um profissional, depois quebre-as como um artista.", autor: "Pablo Picasso" },
+        { texto: "A luz n\xE3o est\xE1 na tela, est\xE1 no olho de quem v\xEA.", autor: "Claude Monet" },
+        { texto: "O importante \xE9 a emo\xE7\xE3o, n\xE3o a t\xE9cnica.", autor: "Vincent van Gogh" },
+        { texto: "Eu procuro nas cores uma vibra\xE7\xE3o que n\xE3o precise de explica\xE7\xE3o.", autor: "Paul C\xE9zanne" },
+        { texto: "O desenho \xE9 a honestidade da arte.", autor: "Jean-Auguste-Dominique Ingres" },
+        { texto: "A arte \xE9 feita para incomodar. A ci\xEAncia para tranquilizar.", autor: "Georges Braque" },
+        { texto: "A \xFAnica tradi\xE7\xE3o verdadeira \xE9 a da inova\xE7\xE3o.", autor: "Piet Mondrian" },
+        { texto: "Menos \xE9 mais.", autor: "Ludwig Mies van der Rohe" },
+        { texto: "A arte \xE9 o prazer de um esp\xEDrito que penetra na natureza.", autor: "Auguste Renoir" },
+        { texto: "O segredo da arte \xE9 o amor.", autor: "Camille Pissarro" },
+        { texto: "Sem emo\xE7\xE3o, n\xE3o h\xE1 arte.", autor: "Wassily Kandinsky" },
+        { texto: "A arte \xE9 uma mentira que nos faz perceber a verdade.", autor: "Pablo Picasso" },
+        { texto: "O importante \xE9 fazer da arte um ato de amor.", autor: "Frida Kahlo" },
+        { texto: "Pinte a luz, n\xE3o a coisa.", autor: "Claude Monet" },
+        { texto: "A arte \xE9 a mais intensa forma de individualismo que o mundo conhece.", autor: "Oscar Wilde" },
+        { texto: "O talento \xE9 a capacidade de fazer um esfor\xE7o que vale a pena.", autor: "Francisco de Goya" },
+        { texto: "As cores s\xE3o as a\xE7\xE3o da luz, a\xE7\xE3o e paix\xF5es.", autor: "Johann Wolfgang von Goethe" },
+        { texto: "O olho \xE9 a janela da alma e o pincel \xE9 a sua voz.", autor: "Leonardo da Vinci" }
+      ];
+      this.promptsDiarios = [
+        "Experimente uma paleta restrita de apenas 3 cores hoje.",
+        "Desenhe algo que voc\xEA ama usando apenas a m\xE3o n\xE3o-dominante.",
+        "Pinte o mesmo objeto em 3 humores diferentes.",
+        "Crie uma textura usando materiais n\xE3o convencionais (caf\xE9, areia, tecido).",
+        "Fa\xE7a um estudo de luz com apenas preto e branco.",
+        "Pegue uma obra inacabada e finalize em 30 minutos.",
+        "Crie um gradiente de 10 tons entre duas cores complementares.",
+        "Desenhe de mem\xF3ria um lugar que voc\xEA visitou h\xE1 muito tempo.",
+        "Use uma esp\xE1tula em vez de pincel o dia todo.",
+        "Pinte ao ar livre por pelo menos 1 hora.",
+        "Escolha uma cor que voc\xEA evita e crie algo s\xF3 com ela.",
+        "Fa\xE7a 10 miniaturas de composi\xE7\xE3o antes de come\xE7ar a obra do dia.",
+        "Releia um esbo\xE7o antigo e d\xEA uma nova vers\xE3o.",
+        "Misture t\xE9cnica: use aquarela com toques de \xF3leo.",
+        "Observe uma sombra por 5 minutos e pinte apenas ela.",
+        "Crie uma paleta inspirada em uma fotografia que voc\xEA ama.",
+        "Trabalhe apenas com tons past\xE9is hoje.",
+        "Desafio monocrom\xE1tico: pinte usando um \xFAnico pigmento.",
+        "Fa\xE7a um autorretrato emocional (como voc\xEA se sente agora).",
+        "Use uma paleta de cores que voc\xEA nunca usou antes.",
+        "Pinte uma mem\xF3ria de inf\xE2ncia em 20 minutos.",
+        "Copie um mestre para aprender sua t\xE9cnica de pincelada.",
+        "Crie uma s\xE9rie de 3 obras que contem uma hist\xF3ria.",
+        "Pinte com os olhos fechados e veja o que surge.",
+        "Use um pincel diferente do habitual para cada etapa.",
+        "Adicione douramento ou folha de ouro a uma obra existente.",
+        "Crie um estudo de m\xE3os hoje.",
+        "Fa\xE7a uma pintura gestual em menos de 10 minutos.",
+        "Transforme um erro em destaque criativo intencional.",
+        "Pinte o mesmo tema em dois estilos completamente diferentes."
+      ];
+      this.desafiosSemanais = [
+        "S\xE9rie rel\xE2mpago: 7 pinturas em 7 dias sobre o mesmo tema.",
+        "Semana do preto e branco: apenas tons neutros por 7 dias.",
+        "Desafio da transpar\xEAncia: explore camadas e sobreposi\xE7\xE3o.",
+        "Semana do retrato: estude rostos de 7 pessoas diferentes.",
+        "Desafio do movimento: capture algo em movimento a cada dia.",
+        "Semana macro: pinte detalhes ampliados de objetos pequenos.",
+        "Desafio da cor complementar: cada dia um par de complementares.",
+        "Semana de arte colaborativa: convide outro artista para trocar telas."
+      ];
+    }
+    // --- Getters ---
+    get entradas() {
+      return this.dataStore.listar("entradasDiario") || [];
+    }
+    get processos() {
+      return this.dataStore.listar("etapasProcesso") || [];
+    }
+    get obras() {
+      return this.dataStore.listar("obras") || [];
+    }
+    get encomendas() {
+      return this.dataStore.listar("encomendas") || [];
+    }
+    // --- RENDER PRINCIPAL ---
+    render() {
+      const tabs = ["entradas", "cronograma", "processo", "estatisticas", "inspiracao"];
+      const tabLabels = { entradas: "\u{1F4CB} Entradas", cronograma: "\u{1F4C5} Cronograma", processo: "\u{1F4DD} Processo", estatisticas: "\u{1F4CA} Estat\xEDsticas", inspiracao: "\u{1F4A1} Inspira\xE7\xE3o" };
+      const content = {
+        entradas: () => this.renderEntradas(),
+        cronograma: () => this.renderCronograma(),
+        processo: () => this.renderProcesso(),
+        estatisticas: () => this.renderEstatisticas(),
+        inspiracao: () => this.renderInspiracao()
+      };
+      return `
+      <div class="diario-header">
+        <div>
+          <h2>\u{1F4CB} Di\xE1rio Criativo</h2>
+          <div class="diario-sub">Registro \xEDntimo do seu processo art\xEDstico  \xB7  ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primario" id="btnNovaEntrada" style="font-size:0.8rem;padding:6px 14px;">\u2795 Nova Entrada</button>
+        </div>
+      </div>
+      <div class="diario-tabs">
+        ${tabs.map((t) => `<button class="tab-btn ${t === this.tabAtiva ? "ativo" : ""}" data-tab="${t}">${tabLabels[t]}</button>`).join("")}
+      </div>
+      <div id="diarioContent">${content[this.tabAtiva]()}</div>
+    `;
+    }
+    // ======================= 1. ENTRADAS DIÁRIAS =======================
+    renderEntradas() {
+      const entradas = [...this.entradas].sort((a, b) => new Date(b.data || b.criadoEm) - new Date(a.data || a.criadoEm));
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:0.85rem;color:var(--text-muted);">${entradas.length} registro(s)  \xB7  \xFAltima semana: ${entradas.filter((e) => {
+        const d = /* @__PURE__ */ new Date();
+        d.setDate(d.getDate() - 7);
+        return new Date(e.data) >= d;
+      }).length} entrada(s)</span>
+      </div>
+      ${entradas.length === 0 ? '<div class="diario-card" style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;margin-bottom:6px;">\u{1F4DD}</p><p>Nenhuma entrada no di\xE1rio ainda.<br>Clique em "Nova Entrada" para come\xE7ar seu registro criativo.</p></div>' : ""}
+      <div class="diario-entry-grid">
+        ${entradas.map((e) => this.renderCardEntrada(e)).join("")}
+      </div>
+    `;
+    }
+    renderCardEntrada(e) {
+      const humor = e.humor || 3;
+      const emoji = this.humorEmojis[humor] || "\u{1F610}";
+      const label = this.humorLabels[humor] || "";
+      const data = e.data ? new Date(e.data).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }) : "";
+      const obrasNomes = (e.obrasTrabalhadas || []).map((id) => {
+        const o = this.dataStore.buscarPorId("obras", id);
+        return o ? o.titulo : null;
+      }).filter(Boolean);
+      const fotos = e.fotos || [];
+      return `
+      <div class="diario-card">
+        <div class="dc-data">${data}</div>
+        <div class="dc-humor" title="${label}">${emoji} <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">${label}</span></div>
+        <div class="dc-horas"><strong>\u23F0 ${e.horasTrabalhadas || 0}h</strong> trabalhadas</div>
+        <div class="dc-texto">${e.oQueTrabalhou || ""}</div>
+        ${obrasNomes.length > 0 ? `<div class="dc-obras">${obrasNomes.map((n) => `<span>\u{1F5BC}\uFE0F ${n}</span>`).join("")}</div>` : ""}
+        ${e.bloqueios ? `<div class="dc-bloqueios">\u26A0\uFE0F ${e.bloqueios}</div>` : ""}
+        ${e.avancos ? `<div class="dc-avancos">\u2705 ${e.avancos}</div>` : ""}
+        ${e.descobertas ? `<div class="dc-descobertas">\u{1F4A1} ${e.descobertas}</div>` : ""}
+        ${fotos.length > 0 ? `<div class="dc-fotos">${fotos.map((f) => `<img src="${f}" onclick="window.open('${f}')">`).join("")}</div>` : ""}
+        <div class="diario-acoes">
+          <button data-acao="editarEntrada" data-id="${e.id}">\u270F\uFE0F Editar</button>
+          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+        </div>
+      </div>
+    `;
+    }
+    // ======================= 2. CRONOGRAMA DE PRODUÇÃO =======================
+    renderCronograma() {
+      const ano = this.calData.getFullYear();
+      const mes = this.calData.getMonth();
+      const hoje = /* @__PURE__ */ new Date();
+      const primeiroDia = new Date(ano, mes, 1);
+      const ultimoDia = new Date(ano, mes + 1, 0);
+      const diasNoMes = ultimoDia.getDate();
+      const diaSemanaInicio = primeiroDia.getDay();
+      const diasMesAnterior = [];
+      const ultimoMes = new Date(ano, mes, 0);
+      const ultimoDiaMesAnt = ultimoMes.getDate();
+      for (let i = diaSemanaInicio - 1; i >= 0; i--) {
+        diasMesAnterior.push({ dia: ultimoDiaMesAnt - i, outro: true });
+      }
+      const diasMes = [];
+      for (let i = 1; i <= diasNoMes; i++) {
+        const dataStr = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+        const data = new Date(ano, mes, i);
+        const ehHoje = data.toDateString() === hoje.toDateString();
+        const atividades = this.entradas.filter((e) => {
+          if (!e.data) return false;
+          const ed = new Date(e.data);
+          return ed.getFullYear() === ano && ed.getMonth() === mes && ed.getDate() === i;
+        });
+        const prazos = this.encomendas.filter((enc) => {
+          if (!enc.prazo) return false;
+          const pd = new Date(enc.prazo);
+          return pd.getFullYear() === ano && pd.getMonth() === mes && pd.getDate() === i;
+        });
+        const cores = [];
+        atividades.forEach((a) => {
+          const texto = (a.oQueTrabalhou || "").toLowerCase();
+          if (texto.includes("escultura") || texto.includes("argila") || texto.includes("bronze")) cores.push("escultura");
+          else if (texto.includes("admin") || texto.includes("organiz") || texto.includes("email") || texto.includes("papel") || texto.includes("nota")) cores.push("admin");
+          else if (a.horasTrabalhadas === 0 || a.bloqueios && a.bloqueios.includes("descanso")) cores.push("descanso");
+          else cores.push("pintura");
+        });
+        const horasTot = atividades.reduce((s, a) => s + (a.horasTrabalhadas || 0), 0);
+        const metaText = horasTot > 0 ? `${horasTot}h` : "";
+        diasMes.push({ dia: i, dataStr, ehHoje, atividades, prazos, cores, metaText });
+      }
+      const totalCelulas = diasMesAnterior.length + diasMes.length;
+      const diasProxMes = [];
+      const resto = totalCelulas % 7 === 0 ? 0 : 7 - totalCelulas % 7;
+      for (let i = 1; i <= resto; i++) {
+        diasProxMes.push({ dia: i, outro: true });
+      }
+      const diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S\xE1b"];
+      const nomeMes = this.calData.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      return `
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button id="calMesAnt">\u25C0</button>
+          <span>${nomeMes}</span>
+          <button id="calMesProx">\u25B6</button>
+          <button id="calHoje" style="margin-left:4px;font-size:0.75rem;padding:4px 10px;">Hoje</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Total: ${this.entradas.reduce((s, e) => s + (e.horasTrabalhadas || 0), 0).toFixed(1)}h</span>
+        </div>
+      </div>
+      <div class="cal-grid">
+        ${diasDaSemana.map((d) => `<div class="cal-header-cell">${d}</div>`).join("")}
+        ${[...diasMesAnterior, ...diasMes, ...diasProxMes].map((cel) => {
+        const classes = ["cal-cell"];
+        if (cel.outro) classes.push("outro-mes");
+        if (cel.ehHoje) classes.push("hoje");
+        if (cel.atividades && cel.atividades.length > 0) classes.push("tem-atividade");
+        if (cel.prazos && cel.prazos.length > 0) classes.push("tem-prazo");
+        return `
+            <div class="${classes.join(" ")}" ${cel.dataStr ? `data-data="${cel.dataStr}"` : ""}>
+              <div class="cal-num">${cel.dia}</div>
+              ${cel.cores ? `<div class="cal-atividades">${cel.cores.map((c) => `<span class="cal-dot ${c}" title="${c}"></span>`).join("")}${cel.prazos ? cel.prazos.map(() => `<span class="cal-dot prazo" title="Prazo"></span>`).join("") : ""}</div>` : ""}
+              ${cel.prazos && cel.prazos.length > 0 ? `<div style="font-size:0.55rem;color:#ef4444;font-weight:600;margin-top:1px;">\u26A0\uFE0F ${cel.prazos.length}</div>` : ""}
+              ${cel.metaText ? `<div class="cal-meta-text">${cel.metaText}</div>` : ""}
+            </div>
+          `;
+      }).join("")}
+      </div>
+      <div class="cal-legenda">
+        <span><span class="leg-dot" style="background:#3b82f6;"></span> Pintura</span>
+        <span><span class="leg-dot" style="background:#8b5cf6;"></span> Escultura</span>
+        <span><span class="leg-dot" style="background:#f59e0b;"></span> Administrativo</span>
+        <span><span class="leg-dot" style="background:#10b981;"></span> Descanso</span>
+        <span><span class="leg-dot" style="background:#ef4444;animation:pulse-dot 1.5s infinite;"></span> Prazo</span>
+      </div>
+    `;
+    }
+    // ======================= 3. DOCUMENTAÇÃO DE PROCESSO =======================
+    renderProcesso() {
+      const obras = this.obras;
+      const processos = this.processos;
+      const obraId = this._filtroObraProc;
+      const proc = obraId ? processos.find((p) => p.obraId === obraId) : null;
+      const etapas = proc ? proc.etapas || [] : [];
+      const opcoes = `<option value="">\u2192 Selecione uma obra \u2014</option>
+      ${obras.map((o) => `<option value="${o.id}" ${o.id === obraId ? "selected" : ""}>${o.titulo || "Sem t\xEDtulo"}</option>`).join("")}`;
+      return `
+      <div class="proc-worksel">
+        <select id="selObraProcesso">${opcoes}</select>
+        <button class="btn-primario" id="btnNovaEtapa" style="font-size:0.75rem;padding:5px 12px;margin-left:8px;" ${!obraId ? "disabled" : ""}>\u2795 Nova Etapa</button>
+        ${obraId ? `<button class="btn-secundario" id="btnExportarProcessoPDF" style="font-size:0.75rem;padding:5px 12px;margin-left:4px;">\u{1F4E4} Exportar Making Of PDF</button>` : ""}
+      </div>
+      ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : etapas.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;">\u{1F4C9}</p><p>Nenhuma etapa documentada para esta obra ainda.<br>Clique em "Nova Etapa" para iniciar a linha do tempo do processo criativo.</p></div>` : ""}
+      ${etapas.length > 0 ? `
+        <div style="margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">${etapas.length} etapa(s)  \xB7  ${obras.find((o) => o.id === obraId)?.titulo || ""}</div>
+        <div class="proc-timeline">
+          ${etapas.sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)).map((et, i) => `
+            <div class="proc-step">
+              <div class="ps-titulo">${i + 1}. ${et.titulo || "Etapa"}</div>
+              <div class="ps-data">\u{1F4C5} ${et.data ? new Date(et.data).toLocaleDateString("pt-BR") : "\u2014"}</div>
+              <div class="ps-desc">${et.descricao || ""}</div>
+              ${et.notasTecnicas ? `<div class="ps-notas">\u{1F4DD} ${et.notasTecnicas}</div>` : ""}
+              ${et.foto ? `<div class="ps-foto"><img src="${et.foto}" onclick="window.open('${et.foto}')"></div>` : ""}
+              ${et.videoLink ? `<div class="ps-video">\u{1F4C9} <a href="${et.videoLink}" target="_blank">Ver v\xEDdeo time-lapse</a></div>` : ""}
+              <div class="diario-acoes">
+                <button data-acao="editarEtapa" data-id="${et.id}">\u270F\uFE0F Editar</button>
+                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+    `;
+    }
+    // ======================= 4. ESTATÍSTICAS CRIATIVAS =======================
+    renderEstatisticas() {
+      const entradas = this.entradas;
+      const obras = this.obras;
+      const horasSemana = {};
+      const horasMes = {};
+      const horasAno = {};
+      let totalHoras = 0;
+      entradas.forEach((e) => {
+        if (!e.data || !e.horasTrabalhadas) return;
+        const d = new Date(e.data);
+        const semana = `${d.getFullYear()}-S${Math.ceil((d.getDate() - d.getDay() + 1) / 7)}`;
+        const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const ano = d.getFullYear();
+        const h = e.horasTrabalhadas || 0;
+        horasSemana[semana] = (horasSemana[semana] || 0) + h;
+        horasMes[mes] = (horasMes[mes] || 0) + h;
+        horasAno[ano] = (horasAno[ano] || 0) + h;
+        totalHoras += h;
+      });
+      const tecnicas = {};
+      entradas.forEach((e) => {
+        (e.obrasTrabalhadas || []).forEach((oid) => {
+          const o = this.dataStore.buscarPorId("obras", oid);
+          if (o && o.tecnica) {
+            tecnicas[o.tecnica] = (tecnicas[o.tecnica] || 0) + (e.horasTrabalhadas || 0);
+          }
+        });
+      });
+      const mediasObra = {};
+      obras.forEach((o) => {
+        if (!o.dataCadastro || !o.criadoEm) return;
+        const proc = this.processos.find((p) => p.obraId === o.id);
+        const etapas = proc ? proc.etapas || [] : [];
+        const dataFim = etapas.length > 0 ? new Date(etapas[etapas.length - 1].data) : new Date(o.criadoEm);
+        const dataInicio = new Date(o.criadoEm);
+        const dias = Math.round((dataFim - dataInicio) / 864e5);
+        if (dias > 0 && o.tecnica) {
+          if (!mediasObra[o.tecnica]) mediasObra[o.tecnica] = { total: 0, count: 0 };
+          mediasObra[o.tecnica].total += dias;
+          mediasObra[o.tecnica].count++;
+        }
+      });
+      const topDias = [...entradas].filter((e) => e.humor >= 4 && e.horasTrabalhadas >= 4).sort((a, b) => (b.horasTrabalhadas || 0) - (a.horasTrabalhadas || 0)).slice(0, 5);
+      const meses = [];
+      const agora = /* @__PURE__ */ new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+        const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const rotulo = d.toLocaleDateString("pt-BR", { month: "short" });
+        meses.push({ chave, rotulo, horas: horasMes[chave] || 0 });
+      }
+      const maxHoras = Math.max(1, ...meses.map((m) => m.horas));
+      const svgW = 460, svgH = 140, margem = 24;
+      const largBarra = (svgW - margem) / meses.length - 8;
+      const altUtil = svgH - 30;
+      const barras = meses.map((m, i) => {
+        const x = margem + i * ((svgW - margem) / meses.length);
+        const h = m.horas / maxHoras * (altUtil - 10);
+        const y = svgH - 10 - h;
+        return `<rect class="stats-bar" x="${x}" y="${y}" width="${Math.max(largBarra, 6)}" height="${Math.max(h, 2)}" rx="3"></rect>
+        <text class="stats-value" x="${x + largBarra / 2}" y="${y - 4}">${m.horas.toFixed(0)}</text>
+        <text class="stats-label" x="${x + largBarra / 2}" y="${svgH - 2}">${m.rotulo}</text>`;
+      }).join("");
+      const tecArray = Object.entries(tecnicas).sort((a, b) => b[1] - a[1]);
+      const maxTec = Math.max(1, ...tecArray.map((t) => t[1]));
+      return `
+      <div class="stats-grid">
+        <div class="stats-card">
+          <h4>\u23F0 Total de Horas</h4>
+          <div class="stats-valor">${totalHoras.toFixed(1)}h</div>
+          <div class="stats-sub">${entradas.length} dias registrados</div>
+        </div>
+        <div class="stats-card">
+          <h4>\u{1F4C5} M\xE9dia Di\xE1ria</h4>
+          <div class="stats-valor">${entradas.length > 0 ? (totalHoras / entradas.length).toFixed(1) : 0}h</div>
+          <div class="stats-sub">por dia de trabalho</div>
+        </div>
+        <div class="stats-card">
+          <h4>\u{1F4DD} M\xE9dia p/ Obra</h4>
+          <div class="stats-valor">${Object.values(mediasObra).length > 0 ? (Object.values(mediasObra).reduce((s, m) => s + m.total / m.count, 0) / Object.values(mediasObra).length).toFixed(0) : "\u2014"}</div>
+          <div class="stats-sub">dias em m\xE9dia (${Object.keys(mediasObra).length} t\xE9cnicas)</div>
+        </div>
+        <div class="stats-card" style="grid-column:1/-1;">
+          <h4>\u{1F4C6} Horas por M\xEAs</h4>
+          <svg class="stats-svg" viewBox="0 0 ${svgW} ${svgH}">${barras}</svg>
+        </div>
+        ${tecArray.length > 0 ? `
+        <div class="stats-card" style="grid-column:1/-1;">
+          <h4>\u{1F4DD} Produtividade por T\xE9cnica</h4>
+          ${tecArray.map(([tec, horas]) => `
+            <div style="margin-bottom:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:2px;">
+                <span>${tec}</span><span>${horas.toFixed(1)}h</span>
+              </div>
+              <div class="stats-barra"><div class="fill" style="width:${horas / maxTec * 100}%"></div></div>
+            </div>
+          `).join("")}
+        </div>` : ""}
+        <div class="stats-card">
+          <h4>\u{1F929} Dias de Maior Criatividade</h4>
+          ${topDias.length === 0 ? '<p style="font-size:0.8rem;color:var(--text-muted);">Registre mais entradas com humor alto para ver esta an\xE1lise.</p>' : topDias.map((d) => `
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);">
+              <span>${d.data ? new Date(d.data).toLocaleDateString("pt-BR") : ""}</span>
+              <span>${this.humorEmojis[d.humor] || "\u{1F610}"} ${d.horasTrabalhadas || 0}h</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="stats-card">
+          <h4>\u{1F3A8} Por T\xE9cnica \u2014 Dias M\xE9dios</h4>
+          ${Object.entries(mediasObra).length === 0 ? '<p style="font-size:0.8rem;color:var(--text-muted);">Dados insuficientes.</p>' : Object.entries(mediasObra).map(([tec, m]) => `
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);">
+              <span>${tec}</span><span><strong>${(m.total / m.count).toFixed(0)}</strong> dias (${m.count} obra(s))</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:0.8rem;color:var(--text-muted);">
+        \u{1F4A1} Registre entradas di\xE1rias com humor e horas para estat\xEDsticas mais precisas.
+      </div>
+    `;
+    }
+    // ======================= 5. INSPIRAÇÃO DO DIA =======================
+    renderInspiracao() {
+      const hoje = /* @__PURE__ */ new Date();
+      const diaDoAno = Math.floor((hoje - new Date(hoje.getFullYear(), 0, 0)) / 864e5);
+      const idxCitacao = diaDoAno % this.citacoes.length;
+      const idxPrompt = diaDoAno % this.promptsDiarios.length;
+      const idxDesafio = hoje.getDay() === 1 ? Math.floor(diaDoAno / 7) % this.desafiosSemanais.length : -1;
+      const cit = this.citacoes[idxCitacao];
+      const prompt2 = this.promptsDiarios[idxPrompt];
+      const desafio = idxDesafio >= 0 ? this.desafiosSemanais[idxDesafio] : null;
+      return `
+      <div class="inspiracao-card">
+        <div class="ic-citacao">"${cit.texto}"</div>
+        <div class="ic-autor">\u2014 ${cit.autor}</div>
+        <div class="ic-prompt">\u{1F4A1} Prompt criativo de hoje: <strong>${prompt2}</strong></div>
+        ${desafio ? `<div class="ic-desafio">\u{1F3AF} Desafio da semana: ${desafio}</div>` : ""}
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn-primario" id="btnNovaCitacao" style="font-size:0.8rem;padding:6px 14px;">\u2795 Nova cita\xE7\xE3o</button>
+        <button class="btn-secundario" id="btnNovoPrompt" style="font-size:0.8rem;padding:6px 14px;margin-left:6px;">\u2795 Novo prompt</button>
+      </div>
+      <div style="margin-top:24px;">
+        <h4 style="font-size:0.9rem;margin-bottom:8px;">\u{1F4CB} Todas as cita\xE7\xE3o</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;">
+          ${this.citacoes.map((c) => `
+            <div style="font-size:0.75rem;padding:8px 10px;background:var(--card);border-radius:6px;border:1px solid var(--border);">
+              <em>"${c.texto}"</em><br><span style="color:var(--text-muted);">\u2014 ${c.autor}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+    }
+    // ======================= EVENT BINDING =======================
+    aposRenderizar() {
+      this.removerListeners();
+      document.querySelectorAll(".diario-tabs .tab-btn[data-tab]").forEach((btn) => {
+        const h = () => {
+          this.tabAtiva = btn.dataset.tab;
+          this.rerenderizar();
+        };
+        btn.addEventListener("click", h);
+        this._bindCache["tab_" + btn.dataset.tab] = { el: btn, handler: h, type: "click" };
+      });
+      document.getElementById("btnNovaEntrada")?.addEventListener("click", () => this.abrirFormEntrada());
+      document.getElementById("calMesAnt")?.addEventListener("click", () => {
+        this.calData.setMonth(this.calData.getMonth() - 1);
+        this.rerenderizar();
+      });
+      document.getElementById("calMesProx")?.addEventListener("click", () => {
+        this.calData.setMonth(this.calData.getMonth() + 1);
+        this.rerenderizar();
+      });
+      document.getElementById("calHoje")?.addEventListener("click", () => {
+        this.calData = /* @__PURE__ */ new Date();
+        this.rerenderizar();
+      });
+      document.querySelectorAll(".cal-cell[data-data]").forEach((cel) => {
+        const h = () => {
+          const data = cel.dataset.data;
+          const entradaExistente = this.entradas.find((e) => e.data && e.data.startsWith(data));
+          if (entradaExistente) {
+            this._entradaEditando = entradaExistente.id;
+            this.abrirFormEntrada(entradaExistente.id);
+          } else {
+            this._entradaEditando = null;
+            this.abrirFormEntrada(null, data);
+          }
+        };
+        cel.addEventListener("click", h);
+        this._bindCache["cal_" + cel.dataset.data] = { el: cel, handler: h, type: "click" };
+      });
+      const selObra = document.getElementById("selObraProcesso");
+      if (selObra) {
+        const h = () => {
+          this._filtroObraProc = selObra.value;
+          this.rerenderizar();
+        };
+        selObra.addEventListener("change", h);
+        this._bindCache["selObraProcesso"] = { el: selObra, handler: h, type: "change" };
+      }
+      document.getElementById("btnNovaEtapa")?.addEventListener("click", () => this.abrirFormEtapa());
+      document.getElementById("btnExportarProcessoPDF")?.addEventListener("click", () => this.exportarProcessoPDF());
+      document.getElementById("btnNovaCitacao")?.addEventListener("click", () => this.rerenderizar());
+      document.getElementById("btnNovoPrompt")?.addEventListener("click", () => this.rerenderizar());
+      const container = document.getElementById("diarioContent") || document.getElementById("viewPrincipal");
+      if (container) {
+        const h = (e) => {
+          const btn = e.target.closest("[data-acao]");
+          if (!btn) return;
+          const acao = btn.dataset.acao, id = btn.dataset.id;
+          if (acao === "editarEntrada") this.abrirFormEntrada(id);
+          else if (acao === "excluirEntrada") this.excluirEntrada(id);
+          else if (acao === "editarEtapa") this.abrirFormEtapa(id);
+          else if (acao === "excluirEtapa") this.excluirEtapa(id);
+        };
+        container.addEventListener("click", h);
+        this._bindCache["delegatedDiario"] = { el: container, handler: h, type: "click" };
+      }
+    }
+    // ======================= CRUD ENTRADAS =======================
+    abrirFormEntrada(id = null, dataPrefill = null) {
+      const entrada = id ? this.dataStore.buscarPorId("entradasDiario", id) : null;
+      const obras = this.obras;
+      const obraOpts = obras.map((o) => `<option value="${o.id}">\u{1F5BC}\uFE0F ${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
+      const selObras = entrada ? entrada.obrasTrabalhadas || [] : [];
+      const fotos = entrada ? entrada.fotos || [] : [];
+      const dataVal = entrada ? entrada.data.slice(0, 10) : dataPrefill || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+      const humorVal = entrada ? entrada.humor || 3 : 3;
+      const textoVal = entrada ? entrada.oQueTrabalhou || "" : "";
+      const horasVal = entrada ? entrada.horasTrabalhadas || 0 : 0;
+      const bloqueiosVal = entrada ? entrada.bloqueios || "" : "";
+      const avancosVal = entrada ? entrada.avancos || "" : "";
+      const descobertasVal = entrada ? entrada.descobertas || "" : "";
+      this._fotosTemporarias = [...fotos];
+      this._selHumor = humorVal;
+      const humorBtns = [1, 2, 3, 4, 5].map(
+        (n) => `<button type="button" class="humor-btn ${n === this._selHumor ? "selecionado" : ""}" data-humor="${n}">${this.humorEmojis[n]}</button>`
+      ).join("");
+      abrirModal(`
+      <h3>${entrada ? "\u270F\uFE0F Editar Entrada" : "\u2795 Nova Entrada do Di\xE1rio"}</h3>
+      <form id="formModal" class="diario-form-grid">
+        <div class="campo-full">
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F4C5} Data</label>
+          <input type="date" id="fEntData" value="${dataVal}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        </div>
+        <div class="campo-full">
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F600} Humor criativo</label>
+          <div class="humor-selector" id="humorSelector">${humorBtns}</div>
+        </div>
+        <div class="campo-full">
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F4DD} O que trabalhou hoje</label>
+          <div style="margin-bottom:4px;display:flex;gap:4px;flex-wrap:wrap;">
+            <button type="button" class="btn-toolbar" data-insere="<p></p>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;">Par\xE1grafo</button>
+            <button type="button" class="btn-toolbar" data-insere="<strong></strong>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><strong>Negrito</strong></button>
+            <button type="button" class="btn-toolbar" data-insere="<em></em>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><em>It\xE1lico</em></button>
+          </div>
+          <textarea id="fEntTexto" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
+        </div>
+        <div class="campo-full">
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F5BC}\uFE0F Obras trabalhadas (segure Ctrl para m\xFAltiplas)</label>
+          <select multiple id="fEntObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Selecione as obras que trabalhou hoje</div>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u23F0 Horas trabalhadas</label>
+          <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u26A0\uFE0F Bloqueios criativos</label>
+          <textarea id="fEntBloqueios" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u2705 Avan\xE7os</label>
+          <textarea id="fEntAvancos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
+        </div>
+        <div>
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F4A1} Descobertas</label>
+          <textarea id="fEntDescobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
+        </div>
+        <div class="campo-full">
+          <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F4F7} Fotos do dia</label>
+          <input type="file" id="fEntFotos" accept="image/*" multiple style="font-size:0.8rem;">
+          <div class="photo-strip" id="photoStrip">${fotos.map((f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">\u{1F4F7}</button></div>`).join("")}</div>
+        </div>
+        <div class="modal-acoes" style="grid-column:1/-1;">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">${entrada ? "Atualizar" : "Salvar Entrada"}</button>
+        </div>
+      </form>
+    `);
+      document.querySelectorAll(".humor-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".humor-btn").forEach((b) => b.classList.remove("selecionado"));
+          btn.classList.add("selecionado");
+          this._selHumor = Number(btn.dataset.humor);
+        });
+      });
+      document.querySelectorAll(".btn-toolbar").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const textarea = document.getElementById("fEntTexto");
+          const tag = btn.dataset.insere;
+          const cursorPos = textarea.selectionStart;
+          const text = textarea.value;
+          const before = text.slice(0, cursorPos);
+          const after = text.slice(cursorPos);
+          textarea.value = before + tag + after;
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = cursorPos + tag.indexOf(">") + 1;
+        });
+      });
+      document.getElementById("fEntFotos")?.addEventListener("change", (e) => {
+        const files = e.target.files;
+        Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            this._fotosTemporarias.push(ev.target.result);
+            this.atualizarPhotoStrip();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+      document.querySelectorAll(".ps-remove").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const foto = btn.dataset.foto;
+          this._fotosTemporarias = this._fotosTemporarias.filter((f) => f !== foto);
+          this.atualizarPhotoStrip();
+        });
+      });
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const sel = document.getElementById("fEntObras");
+        const obrasSel = sel ? Array.from(sel.selectedOptions).map((o) => o.value) : [];
+        const dados = {
+          data: document.getElementById("fEntData").value,
+          humor: this._selHumor,
+          oQueTrabalhou: document.getElementById("fEntTexto").value.trim(),
+          obrasTrabalhadas: obrasSel,
+          fotos: this._fotosTemporarias,
+          horasTrabalhadas: Number(document.getElementById("fEntHoras").value) || 0,
+          bloqueios: document.getElementById("fEntBloqueios").value.trim(),
+          avancos: document.getElementById("fEntAvancos").value.trim(),
+          descobertas: document.getElementById("fEntDescobertas").value.trim()
+        };
+        if (!dados.data) {
+          mostrarToast("A data \xE9 obrigat\xF3ria.");
+          return;
+        }
+        if (entrada) {
+          this.dataStore.atualizar("entradasDiario", id, dados);
+          mostrarToast("Entrada atualizada!");
+        } else {
+          this.dataStore.adicionar("entradasDiario", dados);
+          mostrarToast("Entrada registrada no di\xE1rio!");
+        }
+        fecharModal();
+        this._fotosTemporarias = [];
+        this.rerenderizar();
+      });
+    }
+    atualizarPhotoStrip() {
+      const strip = document.getElementById("photoStrip");
+      if (!strip) return;
+      strip.innerHTML = this._fotosTemporarias.map(
+        (f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">\u{1F4F7}</button></div>`
+      ).join("");
+      strip.querySelectorAll(".ps-remove").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          this._fotosTemporarias = this._fotosTemporarias.filter((f) => f !== btn.dataset.foto);
+          this.atualizarPhotoStrip();
+        });
+      });
+    }
+    excluirEntrada(id) {
+      if (!confirm("Excluir esta entrada do di\xE1rio?")) return;
+      this.dataStore.remover("entradasDiario", id);
+      mostrarToast("Entrada exclu\xEDda.");
+      this.rerenderizar();
+    }
+    // ======================= CRUD ETAPAS DE PROCESSO =======================
+    abrirFormEtapa(id = null) {
+      const obraId = this._filtroObraProc;
+      if (!obraId) {
+        mostrarToast("Selecione uma obra primeiro.");
+        return;
+      }
+      let proc = this.processos.find((p) => p.obraId === obraId);
+      let etapa = null;
+      if (id && proc) etapa = (proc.etapas || []).find((e) => e.id === id);
+      const etapaOpts = this.etapasPadrao.map(
+        (e) => `<option value="${e}" ${etapa && etapa.titulo === e ? "selected" : ""}>${e}</option>`
+      ).join("");
+      abrirModal(`
+      <h3>${etapa ? "\u270F\uFE0F Editar Etapa" : "\u2795 Nova Etapa do Processo"}</h3>
+      <form id="formModal">
+        <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo"><option value="">\u2192 Personalizada \u2014</option>${etapaOpts}</select></div>
+        <div class="campo-form"><label>Ou digite t\xEDtulo personalizado</label><input type="text" id="fEtpTituloCustom" value="${etapa && !this.etapasPadrao.includes(etapa.titulo) ? etapa.titulo || "" : ""}" placeholder="Ex.: Aplica\xE7\xE3o de verniz" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label>\u{1F4C5} Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || "" : (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label>\u{1F4DD} Descri\xE7\xE3o</label><textarea id="fEtpDesc" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || "" : ""}</textarea></div>
+        <div class="campo-form"><label>\u{1F4DD} Notas t\xE9cnicas (cores, pinc\xE9is, misturas)</label><textarea id="fEtpNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || "" : ""}</textarea></div>
+        <div class="campo-form"><label>\u{1F4F7} Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*"></div>
+        ${etapa && etapa.foto ? `<div style="margin-bottom:8px;"><img src="${etapa.foto}" style="max-width:150px;max-height:100px;border-radius:4px;"></div>` : ""}
+        <div class="campo-form"><label>\u{1F4C9} Link de v\xEDdeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || "" : ""}" placeholder="https://..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
+          <button type="submit" class="btn-primario">${etapa ? "Atualizar" : "Adicionar Etapa"}</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
+      document.getElementById("formModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const titulo = document.getElementById("fEtpTitulo").value || document.getElementById("fEtpTituloCustom").value.trim();
+        if (!titulo) {
+          mostrarToast("T\xEDtulo da etapa \xE9 obrigat\xF3rio.");
+          return;
+        }
+        const dadosEtapa = {
+          id: etapa ? etapa.id : "etp_" + Date.now() + "_" + Math.floor(Math.random() * 1e3),
+          titulo,
+          data: document.getElementById("fEtpData").value,
+          descricao: document.getElementById("fEtpDesc").value.trim(),
+          notasTecnicas: document.getElementById("fEtpNotas").value.trim(),
+          foto: etapa ? etapa.foto : "",
+          videoLink: document.getElementById("fEtpVideo").value.trim()
+        };
+        const fotoInput = document.getElementById("fEtpFoto");
+        if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            dadosEtapa.foto = ev.target.result;
+            this.salvarEtapa(obraId, proc, dadosEtapa, etapa);
+          };
+          reader.readAsDataURL(fotoInput.files[0]);
+        } else {
+          if (etapa) dadosEtapa.foto = etapa.foto;
+          this.salvarEtapa(obraId, proc, dadosEtapa, etapa);
+        }
+      });
+    }
+    salvarEtapa(obraId, proc, dadosEtapa, etapa) {
+      if (proc) {
+        if (etapa) {
+          const idx = proc.etapas.findIndex((e) => e.id === etapa.id);
+          if (idx >= 0) proc.etapas[idx] = dadosEtapa;
+          this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
+          mostrarToast("Etapa atualizada!");
+        } else {
+          proc.etapas.push(dadosEtapa);
+          this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
+          mostrarToast("Etapa adicionada!");
+        }
+      } else {
+        this.dataStore.adicionar("etapasProcesso", {
+          obraId,
+          etapas: [dadosEtapa]
+        });
+        mostrarToast("Processo criado e etapa adicionada!");
+      }
+      fecharModal();
+      this.rerenderizar();
+    }
+    excluirEtapa(id) {
+      if (!confirm("Excluir esta etapa do processo?")) return;
+      const obraId = this._filtroObraProc;
+      const proc = this.processos.find((p) => p.obraId === obraId);
+      if (!proc) return;
+      proc.etapas = (proc.etapas || []).filter((e) => e.id !== id);
+      if (proc.etapas.length === 0) {
+        this.dataStore.remover("etapasProcesso", proc.id);
+      } else {
+        this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
+      }
+      mostrarToast("Etapa exclu\xEDda.");
+      this.rerenderizar();
+    }
+    // ======================= PDF MAKING OF =======================
+    exportarProcessoPDF() {
+      if (typeof window.jspdf === "undefined" || !window.jspdf.jsPDF) {
+        mostrarToast("jsPDF n\xE3o carregado.");
+        return;
+      }
+      mostrarLoading("Exportando making of...");
+      const obraId = this._filtroObraProc;
+      const obra = this.dataStore.buscarPorId("obras", obraId);
+      const proc = this.processos.find((p) => p.obraId === obraId);
+      if (!obra || !proc) {
+        mostrarToast("Selecione uma obra com processo documentado.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const margem = 20;
+      let y = 20;
+      const larg = 170;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("Making Of", margem, y);
+      y += 10;
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "normal");
+      doc.text(obra.titulo || "Obra sem t\xEDtulo", margem, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.text(`${obra.tecnica || ""}  \xB7  ${obra.dimensoes ? obra.dimensoes.altura + "x" + obra.dimensoes.largura + (obra.dimensoes.profundidade ? "x" + obra.dimensoes.profundidade : "") + " cm" : ""}`, margem, y);
+      y += 5;
+      doc.text(`Processo criativo documentado  \xB7  ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}`, margem, y);
+      y += 8;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 10;
+      const etapas = (proc.etapas || []).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
+      etapas.forEach((et, i) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text(`${i + 1}. ${et.titulo || "Etapa"}`, margem, y);
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        if (et.data) {
+          doc.text(`\u{1F4C5} ${new Date(et.data).toLocaleDateString("pt-BR")}`, margem, y);
+          y += 4;
+        }
+        if (et.descricao) {
+          const lines = doc.splitTextToSize(et.descricao, larg);
+          lines.forEach((l) => {
+            if (y > 270) {
+              doc.addPage();
+              y = 20;
+            }
+            doc.text(l, margem + 2, y);
+            y += 4;
+          });
+        }
+        if (et.notasTecnicas) {
+          if (y > 265) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.text(`\u{1F4DD} T\xE9cnica: ${et.notasTecnicas}`, margem + 2, y);
+          y += 5;
+        }
+        if (i < etapas.length - 1) {
+          doc.setDrawColor(220);
+          doc.line(margem, y, margem + larg, y);
+          y += 4;
+        }
+      });
+      if (y > 230) {
+        doc.addPage();
+        y = 20;
+      }
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 6;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Dados da Obra", margem, y);
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      if (obra.preco) {
+        doc.text(`\u{1F4B5} Pre\xE7o: ${formatarMoeda(obra.preco)}`, margem, y);
+        y += 4;
+      }
+      if (obra.serie) {
+        doc.text(`\u{1F4C1} S\xE9rie: ${obra.serie}`, margem, y);
+        y += 4;
+      }
+      if (obra.descricao) {
+        const lines = doc.splitTextToSize(obra.descricao, larg);
+        lines.forEach((l) => {
+          doc.text(l, margem, y);
+          y += 4;
+        });
+      }
+      doc.save(`making-of-${(obra.titulo || "obra").replace(/\s+/g, "-").toLowerCase()}.pdf`);
+      esconderLoading();
+      mostrarToast("Making Of exportado em PDF!");
+    }
+  };
+  var PortalView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.token = "";
+      this.cliente = null;
+      this.encomendas = [];
+    }
+    render() {
+      this.token = this.extrairToken();
+      if (!this.token) {
+        return `
+        <div class="portal-wrapper">
+          <div class="portal-card portal-erro">
+            <div class="portal-icone">\u{1F512}</div>
+            <h2>Link inv\xE1lido</h2>
+            <p>O link de acesso n\xE3o \xE9 v\xE1lido ou expirou. Entre em contato com o artista para obter um novo link.</p>
+          </div>
+        </div>
+      `;
+      }
+      const portal = this.dataStore.listar("portais").find((p) => p.token === this.token && p.ativo);
+      if (!portal) {
+        return `
+        <div class="portal-wrapper">
+          <div class="portal-card portal-erro">
+            <div class="portal-icone">\u{1F512}</div>
+            <h2>Acesso n\xE3o autorizado</h2>
+            <p>Este link n\xE3o est\xE1 mais ativo ou \xE9 inv\xE1lido. Solicite um novo link ao artista.</p>
+          </div>
+        </div>
+      `;
+      }
+      portal.ultimoAcesso = (/* @__PURE__ */ new Date()).toISOString();
+      this.dataStore.salvar();
+      this.cliente = { id: portal.clienteId, nome: portal.clienteNome };
+      this.encomendas = this.dataStore.listar("encomendas").filter(
+        (e) => e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
+      );
+      const encomendasHtml = this.encomendas.length > 0 ? this.encomendas.map((e) => this.renderEncomendaCard(e)).join("") : '<div class="portal-vazio">Nenhuma encomenda encontrada para este cliente.</div>';
+      const artista = this.dataStore.dados.config.artista?.nome || "Artista";
+      return `
+      <div class="portal-wrapper">
+        <div class="portal-header">
+          <div class="portal-header-info">
+            <h2>\u{1F4E6} Acompanhamento de Encomendas</h2>
+            <p class="portal-sub">${portal.clienteNome} \xB7 via ${artista}</p>
+          </div>
+        </div>
+        <div class="portal-encomendas-lista">
+          ${encomendasHtml}
+        </div>
+        <div class="portal-footer">
+          <p>D\xFAvidas? Entre em contato direto com o artista.</p>
+          <p class="portal-footer-peq">Atualizado em ${(/* @__PURE__ */ new Date()).toLocaleString("pt-BR")}</p>
+        </div>
+      </div>
+    `;
+    }
+    extrairToken() {
+      try {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.replace("#portal?", ""));
+        return params.get("token") || "";
+      } catch {
+        return "";
+      }
+    }
+    renderEncomendaCard(enc) {
+      const statusMap = {
+        "criado": { rotulo: "Pedido Recebido", cor: "#3b82f6", icone: "\u{1F4CB}" },
+        "em_andamento": { rotulo: "Em Andamento", cor: "#f59e0b", icone: "\u{1F3A8}" },
+        "aprovacao": { rotulo: "Aguardando Aprova\xE7\xE3o", cor: "#8b5cf6", icone: "\u2705" },
+        "finalizado": { rotulo: "Finalizado", cor: "#16a34a", icone: "\u2728" },
+        "entregue": { rotulo: "Entregue", cor: "#065f46", icone: "\u{1F4E6}" },
+        "cancelado": { rotulo: "Cancelado", cor: "#dc2626", icone: "\u274C" }
+      };
+      const st = statusMap[enc.status] || { rotulo: enc.status, cor: "#6b7280", icone: "\u{1F4CB}" };
+      const diasRestantes = enc.prazo ? Math.ceil((new Date(enc.prazo) - /* @__PURE__ */ new Date()) / 864e5) : null;
+      const prazoLabel = diasRestantes !== null ? diasRestantes > 0 ? `${diasRestantes} dia${diasRestantes > 1 ? "s" : ""} restante${diasRestantes > 1 ? "s" : ""}` : "Prazo encerrado" : "Sem prazo definido";
+      const timeline = enc.atualizacoes && enc.atualizacoes.length > 0 ? enc.atualizacoes.map((a) => `
+        <div class="portal-timeline-item">
+          <div class="portal-timeline-dot" style="background:${statusMap[a.status]?.cor || "#6b7280"}"></div>
+          <div class="portal-timeline-content">
+            <div class="portal-timeline-status">${statusMap[a.status]?.rotulo || a.status}</div>
+            <div class="portal-timeline-msg">${sanitizarHTML(a.mensagem)}</div>
+            <div class="portal-timeline-data">${formatarData(a.data)}</div>
+          </div>
+        </div>
+      `).join("") : '<div class="portal-timeline-empty">Nenhuma atualiza\xE7\xE3o ainda.</div>';
+      return `
+      <div class="portal-encomenda-card">
+        <div class="portal-encomenda-header">
+          <div class="portal-encomenda-titulo">
+            <h3>${sanitizarHTML(enc.descricao) || "Encomenda"}</h3>
+            <span class="portal-badge" style="background:${st.cor}20;color:${st.cor};border:1px solid ${st.cor}40;">
+              ${st.icone} ${st.rotulo}
+            </span>
+          </div>
+          <div class="portal-encomenda-meta">
+            <span>\u{1F4B0} ${formatarMoeda(enc.valor || 0)}</span>
+            <span>\u{1F4C5} ${prazoLabel}</span>
+            ${enc.clienteEmail ? `<span>\u2709\uFE0F ${sanitizarHTML(enc.clienteEmail)}</span>` : ""}
+          </div>
+        </div>
+        <div class="portal-encomenda-body">
+          <h4>\u{1F4DC} Atualiza\xE7\xF5es</h4>
+          <div class="portal-timeline">
+            ${timeline}
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+    }
+  };
+  var EncomendasView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.filtroStatus = "";
+      this.busca = "";
+    }
+    render() {
+      const encomendas = this.filtrarEncomendas();
+      const todas = this.dataStore.listar("encomendas") || [];
+      const linhas = encomendas.map((e) => this.renderLinha(e)).join("");
+      const statusOpts = ["", "criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
+        (s) => `<option value="${s}" ${this.filtroStatus === s ? "selected" : ""}>${s ? this.rotuloStatus(s) : "Todos"}</option>`
+      ).join("");
+      const totalPendente = todas.filter((e) => !["entregue", "cancelado", "finalizado"].includes(e.status)).length;
+      const totalPrevisto = todas.reduce((s, e) => s + (e.valor || 0), 0);
+      const chipsStatus = ["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map((st) => {
+        const qtd = todas.filter((e) => e.status === st).length;
+        const stInfo = { criado: { rot: "Criado", cor: "#3b82f6" }, em_andamento: { rot: "Andamento", cor: "#f59e0b" }, aprovacao: { rot: "Aprova\xE7\xE3o", cor: "#8b5cf6" }, finalizado: { rot: "Finalizado", cor: "#16a34a" }, entregue: { rot: "Entregue", cor: "#065f46" }, cancelado: { rot: "Cancelado", cor: "#dc2626" } };
+        return qtd ? `<span class="chip-filtro" style="font-size:0.72rem;padding:2px 8px;border:1px solid ${stInfo[st].cor}40;background:${stInfo[st].cor}15;color:${stInfo[st].cor};">${stInfo[st].rot}: ${qtd}</span>` : "";
+      }).join("");
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Encomendas</h2>
+          <p class="subtitulo">${todas.length} encomenda${todas.length === 1 ? "" : "s"} \xB7 ${totalPendente} pendente${totalPendente === 1 ? "" : "s"} \xB7 ${formatarMoeda(totalPrevisto)} previsto</p>
+        </div>
+        <button class="btn-gradient" id="btnNovaEncomenda">\u271A Nova Encomenda</button>
+      </div>
+      ${chipsStatus ? `<div class="vendas-summary">${chipsStatus}</div>` : ""}
+      <div class="filtros-linha">
+        <input type="text" id="buscaEncomenda" placeholder="\u{1F50D} Buscar por cliente ou descri\xE7\xE3o..." value="${sanitizarHTML(this.busca)}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        <select id="filtroStatusEncomenda" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${statusOpts}</select>
+        <button class="btn-secundario" id="btnPortaisCliente">\u{1F517} Links de Acesso</button>
+      </div>
+      ${encomendas.length > 0 ? `
+      <div class="tabela-wrapper">
+        <table>
+          <thead><tr>
+            <th>Cliente</th><th>Descri\xE7\xE3o</th><th>Valor</th><th>Prazo</th><th>Status</th><th>A\xE7\xF5es</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>` : `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F4E6}</div><p>Nenhuma encomenda encontrada.</p></div>
+      </div>`}
+    `;
+    }
+    rotuloStatus(s) {
+      const m = { criado: "Criado", em_andamento: "Em Andamento", aprovacao: "Aprova\xE7\xE3o", finalizado: "Finalizado", entregue: "Entregue", cancelado: "Cancelado" };
+      return m[s] || s;
+    }
+    classeStatus(s) {
+      const m = { criado: "", em_andamento: "exposicao", aprovacao: "reservada", finalizado: "vendida", entregue: "vendida", cancelado: "" };
+      return m[s] || "";
+    }
+    filtrarEncomendas() {
+      let lista = this.dataStore.listar("encomendas") || [];
+      if (this.filtroStatus) lista = lista.filter((e) => e.status === this.filtroStatus);
+      if (this.busca) {
+        const t = this.busca.toLowerCase();
+        lista = lista.filter((e) => (e.clienteNome || "").toLowerCase().includes(t) || (e.descricao || "").toLowerCase().includes(t));
+      }
+      return lista.sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0));
+    }
+    renderLinha(e) {
+      const statusMap = {
+        criado: { rotulo: "Criado", cor: "#3b82f6" },
+        em_andamento: { rotulo: "Em Andamento", cor: "#f59e0b" },
+        aprovacao: { rotulo: "Aprova\xE7\xE3o", cor: "#8b5cf6" },
+        finalizado: { rotulo: "Finalizado", cor: "#16a34a" },
+        entregue: { rotulo: "Entregue", cor: "#065f46" },
+        cancelado: { rotulo: "Cancelado", cor: "#dc2626" }
+      };
+      const st = statusMap[e.status] || { rotulo: e.status, cor: "#6b7280" };
+      const dias = e.prazo ? Math.ceil((new Date(e.prazo) - /* @__PURE__ */ new Date()) / 864e5) : null;
+      const prazoHtml = dias !== null ? `<span style="${dias < 0 ? "color:#dc2626;font-weight:600;" : dias <= 15 ? "color:#f59e0b;" : ""}">${formatarData(e.prazo)}${dias < 0 ? " (atrasado)" : ` (${dias}d)`}</span>` : "\u2014";
+      return `
+      <tr>
+        <td><strong>${sanitizarHTML(e.clienteNome) || "\u2014"}</strong>${e.clienteEmail ? `<br><span style="font-size:0.75rem;color:var(--text-muted);">${sanitizarHTML(e.clienteEmail)}</span>` : ""}</td>
+        <td>${sanitizarRich(e.descricao) || "\u2014"}</td>
+        <td>${formatarMoeda(e.valor || 0)}</td>
+        <td>${prazoHtml}</td>
+        <td><span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span></td>
+        <td>
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar">\u270F\uFE0F</button>
+          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualiza\xE7\xE3o">\u{1F4DD}</button>
+          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+        </td>
+      </tr>
+    `;
+    }
+    // --- Modais ---
+    abrirModalForm(enc) {
+      const e = enc || {};
+      const isEdit = !!e.id;
+      const clientes = this.dataStore.listar("clientes") || [];
+      const optsClientes = clientes.map((c) => `<option value="${c.id}" ${c.nome === e.clienteNome ? "selected" : ""}>${c.nome} (${c.email || ""})</option>`).join("");
+      abrirModal(`
+      <h3>${isEdit ? "\u270F\uFE0F Editar" : "\u{1F4E6} Nova"} Encomenda</h3>
+      <form id="formEncomenda">
+        <div class="campo-form"><label>Cliente</label>
+          <div style="display:flex;gap:6px;">
+            <select id="encClienteSelect" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+              <option value="">\u2014 Digitar nome manualmente \u2014</option>
+              ${optsClientes}
+            </select>
+          </div>
+        </div>
+        <div class="campo-form"><label>Nome do Cliente</label><input type="text" id="encClienteNome" value="${sanitizarHTML(e.clienteNome || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label>Email</label><input type="email" id="encClienteEmail" value="${sanitizarHTML(e.clienteEmail || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Telefone</label><input type="text" id="encClienteTel" value="${sanitizarHTML(e.clienteTelefone || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        </div>
+        <div class="campo-form"><label>Descri\xE7\xE3o</label><textarea id="encDescricao" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label>Valor (R$)</label><input type="number" id="encValor" value="${e.valor || 0}" min="0" step="0.01" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Prazo</label><input type="date" id="encPrazo" value="${e.prazo ? new Date(e.prazo).toISOString().slice(0, 10) : ""}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        </div>
+        <div class="campo-form"><label>Status</label>
+          <select id="encStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            ${["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
+        (s) => `<option value="${s}" ${e.status === s ? "selected" : ""}>${this.rotuloStatus(s)}</option>`
+      ).join("")}
+          </select>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarEnc">Cancelar</button>
+          <button type="submit" class="btn-primario">${isEdit ? "Salvar" : "Criar"}</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarEnc")?.addEventListener("click", fecharModal);
+      document.getElementById("encClienteSelect")?.addEventListener("change", (ev) => {
+        const c = clientes.find((cl) => cl.id === ev.target.value);
+        if (c) {
+          document.getElementById("encClienteNome").value = c.nome;
+          document.getElementById("encClienteEmail").value = c.email || "";
+          document.getElementById("encClienteTel").value = c.telefone || "";
+        }
+      });
+      document.getElementById("formEncomenda")?.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        this.salvarEncomenda(enc);
+      });
+    }
+    abrirModalAtualizacao(encId) {
+      const enc = this.dataStore.buscarPorId("encomendas", encId);
+      if (!enc) {
+        mostrarToast("Encomenda n\xE3o encontrada.");
+        return;
+      }
+      const statusOpts = ["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
+        (s) => `<option value="${s}" ${enc.status === s ? "selected" : ""}>${this.rotuloStatus(s)}</option>`
+      ).join("");
+      abrirModal(`
+      <h3>\u{1F4DD} Atualizar Status \u2014 ${sanitizarHTML(enc.descricao)}</h3>
+      <form id="formAtualizacao">
+        <div class="campo-form"><label>Novo Status</label>
+          <select id="atuStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">${statusOpts}</select>
+        </div>
+        <div class="campo-form"><label>Mensagem para o cliente</label>
+          <textarea id="atuMensagem" placeholder="Ex: Iniciei a pintura, as cores est\xE3o secando..." style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:80px;background:var(--bg);color:var(--text);"></textarea>
+        </div>
+        <div class="campo-form" style="font-size:0.8rem;color:var(--text-muted);">
+          \u{1F4A1} Esta atualiza\xE7\xE3o ficar\xE1 vis\xEDvel no portal do cliente.
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarAtu">Cancelar</button>
+          <button type="submit" class="btn-primario">Salvar Atualiza\xE7\xE3o</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarAtu")?.addEventListener("click", fecharModal);
+      document.getElementById("formAtualizacao")?.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        this.salvarAtualizacao(enc);
+      });
+    }
+    abrirModalPortais() {
+      const portais = this.dataStore.listar("portais") || [];
+      const clientes = this.dataStore.listar("clientes") || [];
+      const encomendas = this.dataStore.listar("encomendas") || [];
+      const portaisHtml = portais.length > 0 ? portais.map((p) => {
+        const encCliente = encomendas.filter((e) => e.clienteNome === p.clienteNome).length;
+        return `
+        <div class="portal-item">
+          <div class="portal-item-info">
+            <strong>${sanitizarHTML(p.clienteNome)}</strong>
+            <span class="texto-ajuda">${encCliente} encomenda${encCliente > 1 ? "s" : ""} \xB7 ${p.ativo ? "\u{1F7E2} Ativo" : "\u{1F534} Inativo"}</span>
+            <span class="texto-ajuda">\xDAltimo acesso: ${p.ultimoAcesso ? formatarData(p.ultimoAcesso) : "Nunca"}</span>
+          </div>
+          <div class="portal-item-acoes">
+            <input type="text" readonly value="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.75rem;width:240px;background:var(--bg);color:var(--text);" onclick="this.select()">
+            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link">\u{1F4CB}</button>
+            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? "Desativar" : "Ativar"}">${p.ativo ? "\u{1F513}" : "\u{1F512}"}</button>
+            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+          </div>
+        </div>
+      `;
+      }).join("") : '<p style="color:var(--text-muted);text-align:center;padding:12px;">Nenhum link de acesso gerado ainda.</p>';
+      const clientesComEncomenda = clientes.filter((c) => encomendas.some((e) => e.clienteNome === c.nome));
+      const clientesOpts = clientesComEncomenda.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+      abrirModal(`
+      <h3>\u{1F517} Links de Acesso do Cliente</h3>
+      <p class="texto-ajuda" style="margin-bottom:12px;">Gere links para que seus clientes acompanhem o status das encomendas.</p>
+      <div class="portais-lista">${portaisHtml}</div>
+      <hr style="margin:12px 0;border-color:var(--border);">
+      <h4 style="font-size:0.85rem;margin:0 0 8px;">Gerar novo link</h4>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="selClientePortal" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
+        </select>
+        <button class="btn-primario" id="btnGerarPortal">\u{1F517} Gerar Link</button>
+      </div>
+      <div class="modal-acoes" style="margin-top:16px;">
+        <button class="btn-secundario" id="btnFecharPortais">Fechar</button>
+      </div>
+    `);
+      document.getElementById("btnFecharPortais")?.addEventListener("click", fecharModal);
+      document.getElementById("btnGerarPortal")?.addEventListener("click", () => this.gerarLinkPortal());
+      document.querySelector(".portais-lista")?.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-copiar-link")) {
+          const link = e.target.closest(".btn-copiar-link").dataset.link;
+          navigator.clipboard.writeText(link).then(() => mostrarToast("Link copiado!")).catch(() => mostrarToast("Erro ao copiar."));
+        }
+        if (e.target.closest(".btn-toggle-portal")) {
+          this.togglePortal(e.target.closest(".btn-toggle-portal").dataset.id);
+        }
+        if (e.target.closest(".btn-remover-portal")) {
+          this.removerPortal(e.target.closest(".btn-remover-portal").dataset.id);
+        }
+      });
+    }
+    // --- Ações ---
+    salvarEncomenda(encExistente) {
+      const dados = {
+        clienteNome: document.getElementById("encClienteNome")?.value?.trim() || "",
+        clienteEmail: document.getElementById("encClienteEmail")?.value?.trim() || "",
+        clienteTelefone: document.getElementById("encClienteTel")?.value?.trim() || "",
+        descricao: document.getElementById("encDescricao")?.value?.trim() || "",
+        valor: Number(document.getElementById("encValor")?.value) || 0,
+        prazo: document.getElementById("encPrazo")?.value || "",
+        status: document.getElementById("encStatus")?.value || "criado"
+      };
+      if (!dados.clienteNome || !dados.descricao) {
+        mostrarToast("Preencha nome do cliente e descri\xE7\xE3o.");
+        return;
+      }
+      if (encExistente && encExistente.id) {
+        this.dataStore.atualizar("encomendas", encExistente.id, dados);
+        mostrarToast("Encomenda atualizada!");
+        activityLogger.registrar("atualizacao", "Encomenda atualizada", dados.clienteNome, "atualizacao");
+      } else {
+        dados.atualizacoes = [{ data: (/* @__PURE__ */ new Date()).toISOString(), status: "criado", mensagem: "Pedido registrado." }];
+        dados.imagens = [];
+        this.dataStore.adicionar("encomendas", dados);
+        mostrarToast("Encomenda criada!");
+        activityLogger.registrar("criacao", "Nova encomenda", dados.clienteNome, "criacao");
+      }
+      fecharModal();
+      this.rerenderizar();
+    }
+    salvarAtualizacao(enc) {
+      const novoStatus = document.getElementById("atuStatus")?.value || enc.status;
+      const mensagem = document.getElementById("atuMensagem")?.value?.trim() || "";
+      const atualizacoes = enc.atualizacoes || [];
+      atualizacoes.push({ data: (/* @__PURE__ */ new Date()).toISOString(), status: novoStatus, mensagem: mensagem || "Status atualizado." });
+      this.dataStore.atualizar("encomendas", enc.id, { status: novoStatus, atualizacoes });
+      mostrarToast("Atualiza\xE7\xE3o registrada!");
+      activityLogger.registrar("atualizacao", `Encomenda: ${novoStatus}`, enc.clienteNome, "atualizacao");
+      fecharModal();
+      this.rerenderizar();
+    }
+    gerarLinkPortal() {
+      const sel = document.getElementById("selClientePortal");
+      if (!sel || !sel.value) {
+        mostrarToast("Selecione um cliente.");
+        return;
+      }
+      const cliente = this.dataStore.buscarPorId("clientes", sel.value);
+      if (!cliente) {
+        mostrarToast("Cliente n\xE3o encontrado.");
+        return;
+      }
+      const portais = this.dataStore.listar("portais") || [];
+      const existente = portais.find((p) => p.clienteId === cliente.id);
+      if (existente) {
+        if (existente.ativo) {
+          mostrarToast("Este cliente j\xE1 possui um link ativo.");
+          return;
+        }
+        existente.ativo = true;
+        this.dataStore.salvar();
+        mostrarToast("Link reativado!");
+        this.rerenderizar();
+        fecharModal();
+        return;
+      }
+      const token = "pt_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      const portal = {
+        id: "portal_" + Date.now(),
+        clienteId: cliente.id,
+        clienteNome: cliente.nome,
+        token,
+        ativo: true,
+        criadoEm: (/* @__PURE__ */ new Date()).toISOString(),
+        ultimoAcesso: ""
+      };
+      this.dataStore.dados.portais.push(portal);
+      this.dataStore.salvar();
+      mostrarToast("Link gerado! Compartilhe com o cliente.");
+      activityLogger.registrar("criacao", "Link de portal gerado", cliente.nome, "criacao");
+      this.rerenderizar();
+      fecharModal();
+    }
+    togglePortal(portalId) {
+      const portal = this.dataStore.buscarPorId("portais", portalId);
+      if (!portal) return;
+      portal.ativo = !portal.ativo;
+      this.dataStore.salvar();
+      this.rerenderizar();
+      fecharModal();
+    }
+    removerPortal(portalId) {
+      if (!confirm("Remover este link de acesso?")) return;
+      this.dataStore.remover("portais", portalId);
+      this.dataStore.salvar();
+      this.rerenderizar();
+      fecharModal();
+    }
+    excluirEncomenda(id) {
+      if (!confirm("Excluir esta encomenda permanentemente?")) return;
+      this.dataStore.remover("encomendas", id);
+      mostrarToast("Encomenda exclu\xEDda.");
+      this.rerenderizar();
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      document.getElementById("btnNovaEncomenda")?.addEventListener("click", () => this.abrirModalForm(null));
+      document.getElementById("buscaEncomenda")?.addEventListener("input", (e) => {
+        this.busca = e.target.value;
+        this.rerenderizar();
+      });
+      document.getElementById("filtroStatusEncomenda")?.addEventListener("change", (e) => {
+        this.filtroStatus = e.target.value;
+        this.rerenderizar();
+      });
+      document.getElementById("btnPortaisCliente")?.addEventListener("click", () => this.abrirModalPortais());
+      document.querySelectorAll(".btn-editar-enc").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const enc = this.dataStore.buscarPorId("encomendas", btn.dataset.id);
+          if (enc) this.abrirModalForm(enc);
+        });
+      });
+      document.querySelectorAll(".btn-atualizar-enc").forEach((btn) => {
+        btn.addEventListener("click", () => this.abrirModalAtualizacao(btn.dataset.id));
+      });
+      document.querySelectorAll(".btn-remover-enc").forEach((btn) => {
+        btn.addEventListener("click", () => this.excluirEncomenda(btn.dataset.id));
+      });
+    }
+  };
+  var ImageLightbox = class {
+    constructor() {
+      this.images = [];
+      this.currentIndex = 0;
+      this.isOpen = false;
+      this.scale = 1;
+      this.minScale = 0.5;
+      this.maxScale = 5;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this.isDragging = false;
+      this.dragStart = { x: 0, y: 0 };
+      this.dragOffset = { x: 0, y: 0 };
+      this.touchStartDistance = 0;
+      this.touchStartScale = 1;
+      this.swipeStartX = 0;
+      this.swipeStartY = 0;
+      this.isSwiping = false;
+      this.autoPlayTimer = null;
+      this.autoPlayInterval = 3500;
+      this.zoomBtn = null;
+      this.thumbScrollPos = 0;
+      this._onKeyDown = null;
+      this._onMouseMove = null;
+      this._onMouseUp = null;
+      this._onTouchStart = null;
+      this._onTouchMove = null;
+      this._onTouchEnd = null;
+      this._onWheel = null;
+      this.overlay = null;
+    }
+    open(images, index = 0) {
+      if (!images || images.length === 0) return;
+      this.images = images;
+      this.currentIndex = Math.max(0, Math.min(index, images.length - 1));
+      this.scale = 1;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this.isOpen = true;
+      document.body.style.overflow = "hidden";
+      this._render();
+      this._bindEvents();
+      this._showImage();
+    }
+    close() {
+      if (!this.isOpen) return;
+      this.isOpen = false;
+      this.stopAutoPlay();
+      this._unbindEvents();
+      if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
+      this.overlay = null;
+      document.body.style.overflow = "";
+    }
+    navigate(dir) {
+      const newIndex = (this.currentIndex + dir + this.images.length) % this.images.length;
+      this.currentIndex = newIndex;
+      this.scale = 1;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this._showImage();
+      this._updateThumbActive();
+    }
+    zoomIn() {
+      this._setScale(this.scale * 1.3);
+    }
+    zoomOut() {
+      this._setScale(this.scale / 1.3);
+    }
+    resetZoom() {
+      this._setScale(1);
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this._applyTransform();
+    }
+    toggleAutoPlay() {
+      if (this.autoPlayTimer) this.stopAutoPlay();
+      else this.startAutoPlay();
+    }
+    startAutoPlay() {
+      if (this.autoPlayTimer || this.images.length <= 1) return;
+      this.autoPlayTimer = setInterval(() => this.navigate(1), this.autoPlayInterval);
+      const btn = this.overlay?.querySelector(".lb-ctrl-autoplay");
+      if (btn) {
+        btn.textContent = "\u23F8";
+        btn.classList.add("ativo");
+      }
+    }
+    stopAutoPlay() {
+      if (this.autoPlayTimer) {
+        clearInterval(this.autoPlayTimer);
+        this.autoPlayTimer = null;
+      }
+      const btn = this.overlay?.querySelector(".lb-ctrl-autoplay");
+      if (btn) {
+        btn.textContent = "\u25B6";
+        btn.classList.remove("ativo");
+      }
+    }
+    _render() {
+      const existing = document.querySelector(".lb-overlay");
+      if (existing) existing.remove();
+      const overlay = document.createElement("div");
+      overlay.className = "lb-overlay";
+      overlay.innerHTML = `
+      <div class="lb-topbar">
+        <span class="lb-counter">${this.currentIndex + 1} / ${this.images.length}</span>
+        <div class="lb-top-actions">
+          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow">\u25B6</button>
+          <button class="lb-btn lb-ctrl-download" title="Download">\u2B07</button>
+          <button class="lb-btn lb-ctrl-share" title="Compartilhar">\u{1F517}</button>
+          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)">\u2715</button>
+        </div>
+      </div>
+      <div class="lb-main">
+        <div class="lb-img-container">
+          <img class="lb-img" alt="">
+          <div class="lb-loader"></div>
+          <div class="lb-caption">
+            <div class="lb-caption-title"></div>
+            <div class="lb-caption-sub"></div>
+          </div>
+        </div>
+      </div>
+      <button class="lb-nav lb-nav-prev" title="Anterior (\u2190)">\u25C0</button>
+      <button class="lb-nav lb-nav-next" title="Pr\xF3ximo (\u2192)">\u25B6</button>
+      <div class="lb-thumbstrip">
+        <div class="lb-thumb-track"></div>
+      </div>
+      <div class="lb-zoom-indicator">${Math.round(this.scale * 100)}%</div>
+    `;
+      document.body.appendChild(overlay);
+      this.overlay = overlay;
+      overlay.querySelector(".lb-ctrl-close")?.addEventListener("click", () => this.close());
+      overlay.querySelector(".lb-nav-prev")?.addEventListener("click", () => this.navigate(-1));
+      overlay.querySelector(".lb-nav-next")?.addEventListener("click", () => this.navigate(1));
+      overlay.querySelector(".lb-ctrl-autoplay")?.addEventListener("click", () => this.toggleAutoPlay());
+      overlay.querySelector(".lb-ctrl-download")?.addEventListener("click", () => this._download());
+      overlay.querySelector(".lb-ctrl-share")?.addEventListener("click", () => this._share());
+      this._renderThumbs();
+      overlay.querySelector(".lb-main")?.addEventListener("dblclick", (e) => {
+        if (this.scale > 1) this.resetZoom();
+        else this._setScale(2.5);
+      });
+    }
+    _renderThumbs() {
+      const track2 = this.overlay?.querySelector(".lb-thumb-track");
+      if (!track2) return;
+      track2.innerHTML = this.images.map((img, i) => `
+      <div class="lb-thumb ${i === this.currentIndex ? "ativo" : ""}" data-idx="${i}">
+        <img src="${img.src}" alt="" loading="lazy">
+      </div>
+    `).join("");
+      track2.querySelectorAll(".lb-thumb").forEach((el) => {
+        el.addEventListener("click", () => {
+          this.currentIndex = parseInt(el.dataset.idx);
+          this.scale = 1;
+          this.offsetX = 0;
+          this.offsetY = 0;
+          this._showImage();
+          this._updateThumbActive();
+        });
+      });
+      this._scrollThumbIntoView();
+    }
+    _updateThumbActive() {
+      this.overlay?.querySelectorAll(".lb-thumb").forEach((el) => {
+        el.classList.toggle("ativo", parseInt(el.dataset.idx) === this.currentIndex);
+      });
+      this._scrollThumbIntoView();
+      const counter = this.overlay?.querySelector(".lb-counter");
+      if (counter) counter.textContent = `${this.currentIndex + 1} / ${this.images.length}`;
+    }
+    _scrollThumbIntoView() {
+      const active = this.overlay?.querySelector(".lb-thumb.ativo");
+      if (active) active.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+    _showImage() {
+      if (!this.overlay) return;
+      const img = this.images[this.currentIndex];
+      const imgEl = this.overlay.querySelector(".lb-img");
+      const loader = this.overlay.querySelector(".lb-loader");
+      const captionTitle = this.overlay.querySelector(".lb-caption-title");
+      const captionSub = this.overlay.querySelector(".lb-caption-sub");
+      if (!imgEl) return;
+      loader.style.display = "block";
+      imgEl.style.opacity = "0";
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        imgEl.src = img.src;
+        imgEl.style.opacity = "1";
+        if (loader) loader.style.display = "none";
+        this._applyTransform();
+      };
+      tempImg.onerror = () => {
+        imgEl.alt = "Erro ao carregar";
+        imgEl.style.opacity = "1";
+        if (loader) loader.style.display = "none";
+      };
+      tempImg.src = img.src;
+      const parts = [];
+      if (img.title) parts.push(img.title);
+      if (img.subtitle) parts.push(img.subtitle);
+      captionTitle.textContent = parts.join(" \xB7 ") || "";
+      if (img.price) captionSub.textContent = img.price;
+      else captionSub.textContent = img.caption || "";
+    }
+    _applyTransform() {
+      const imgEl = this.overlay?.querySelector(".lb-img");
+      if (!imgEl) return;
+      imgEl.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+      const ind = this.overlay?.querySelector(".lb-zoom-indicator");
+      if (ind) ind.textContent = `${Math.round(this.scale * 100)}%`;
+    }
+    _setScale(s) {
+      this.scale = Math.max(this.minScale, Math.min(this.maxScale, s));
+      if (this.scale <= 1) {
+        this.offsetX = 0;
+        this.offsetY = 0;
+      }
+      this._applyTransform();
+    }
+    _calcZoomCenter(cursorX, cursorY) {
+      const imgEl = this.overlay?.querySelector(".lb-img");
+      if (!imgEl) return;
+      const rect = imgEl.getBoundingClientRect();
+      const cx = (cursorX - rect.left) / rect.width;
+      const cy = (cursorY - rect.top) / rect.height;
+      return { cx, cy };
+    }
+    _download() {
+      const img = this.images[this.currentIndex];
+      if (!img || !img.src) return;
+      const a = document.createElement("a");
+      a.href = img.src;
+      a.download = (img.title || "imagem") + ".jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      this._toast("\u2B07 Imagem baixada");
+    }
+    _share() {
+      const img = this.images[this.currentIndex];
+      const text = img.title ? `${img.title}${img.price ? " - " + img.price : ""}` : "Minha obra de arte";
+      if (navigator.share) {
+        navigator.share({ title: text, text }).catch(() => {
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => this._toast("\u{1F517} Info copiada!")).catch(() => {
+        });
+      } else {
+        this._toast("\u{1F4CB} " + text);
+      }
+    }
+    _toast(msg) {
+      const t = document.createElement("div");
+      t.className = "lb-toast";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => {
+        if (t.parentNode) t.remove();
+      }, 2e3);
+    }
+    _bindEvents() {
+      this._onKeyDown = (e) => {
+        if (!this.isOpen) return;
+        switch (e.key) {
+          case "Escape":
+            this.close();
+            break;
+          case "ArrowLeft":
+            this.navigate(-1);
+            break;
+          case "ArrowRight":
+            this.navigate(1);
+            break;
+          case "+":
+          case "=":
+            this.zoomIn();
+            break;
+          case "-":
+            this.zoomOut();
+            break;
+          case "0":
+            this.resetZoom();
+            break;
+          case " ":
+            e.preventDefault();
+            this.toggleAutoPlay();
+            break;
+        }
+      };
+      this._onMouseMove = (e) => {
+        if (!this.isDragging) return;
+        const dx = e.clientX - this.dragStart.x;
+        const dy = e.clientY - this.dragStart.y;
+        this.offsetX = this.dragOffset.x + dx;
+        this.offsetY = this.dragOffset.y + dy;
+        this._applyTransform();
+      };
+      this._onMouseUp = () => {
+        if (this.isSwiping) {
+          const dist = this.dragStart.x - (this.dragOffset.x + (this.offsetX - this.dragOffset.x));
+          if (Math.abs(dist) > 80) {
+            this.navigate(dist > 0 ? 1 : -1);
+          }
+        }
+        this.isDragging = false;
+        this.isSwiping = false;
+      };
+      this._onWheel = (e) => {
+        if (!this.isOpen) return;
+        e.preventDefault();
+        if (e.deltaY < 0) this.zoomIn();
+        else this.zoomOut();
+      };
+      window.addEventListener("keydown", this._onKeyDown);
+      window.addEventListener("mousemove", this._onMouseMove);
+      window.addEventListener("mouseup", this._onMouseUp);
+      this.overlay?.addEventListener("wheel", this._onWheel, { passive: false });
+      this.overlay?.querySelector(".lb-main")?.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".lb-caption") || e.target.closest(".lb-thumbstrip")) return;
+        this.dragStart = { x: e.clientX, y: e.clientY };
+        this.dragOffset = { x: this.offsetX, y: this.offsetY };
+        this.isDragging = true;
+        this.isSwiping = this.scale <= 1;
+      });
+      this.overlay?.querySelector(".lb-main")?.addEventListener("click", (e) => {
+        if (!this.isSwiping && !this.isDragging) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          if (x < rect.width * 0.3) this.navigate(-1);
+          else if (x > rect.width * 0.7) this.navigate(1);
+        }
+      });
+      this._onTouchStart = (e) => {
+        if (e.touches.length === 1) {
+          this.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          this.dragOffset = { x: this.offsetX, y: this.offsetY };
+          this.swipeStartX = e.touches[0].clientX;
+          this.swipeStartY = e.touches[0].clientY;
+          this.isDragging = true;
+          this.isSwiping = this.scale <= 1;
+        } else if (e.touches.length === 2) {
+          this.isDragging = false;
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          this.touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+          this.touchStartScale = this.scale;
+        }
+      };
+      this._onTouchMove = (e) => {
+        if (!this.isOpen) return;
+        e.preventDefault();
+        if (e.touches.length === 1 && this.isDragging) {
+          const dx = e.touches[0].clientX - this.dragStart.x;
+          const dy = e.touches[0].clientY - this.dragStart.y;
+          if (this.isSwiping && this.scale <= 1) {
+            this.offsetX = this.dragOffset.x + dx;
+            this.offsetY = this.dragOffset.y + dy;
+          } else {
+            this.offsetX = this.dragOffset.x + dx;
+            this.offsetY = this.dragOffset.y + dy;
+          }
+          this._applyTransform();
+        } else if (e.touches.length === 2) {
+          const dx2 = e.touches[0].clientX - e.touches[1].clientX;
+          const dy2 = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+          if (this.touchStartDistance > 0) {
+            const ratio = dist / this.touchStartDistance;
+            this._setScale(this.touchStartScale * ratio);
+          }
+        }
+      };
+      this._onTouchEnd = (e) => {
+        if (this.isSwiping && this.scale <= 1) {
+          const dx = this.swipeStartX - (e.changedTouches[0]?.clientX || this.swipeStartX);
+          if (Math.abs(dx) > 60) {
+            this.navigate(dx > 0 ? 1 : -1);
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this._applyTransform();
+          } else {
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this._applyTransform();
+          }
+        }
+        this.isDragging = false;
+        this.isSwiping = false;
+      };
+      this.overlay?.addEventListener("touchstart", this._onTouchStart, { passive: true });
+      this.overlay?.addEventListener("touchmove", this._onTouchMove, { passive: false });
+      this.overlay?.addEventListener("touchend", this._onTouchEnd, { passive: true });
+    }
+    _unbindEvents() {
+      if (this._onKeyDown) window.removeEventListener("keydown", this._onKeyDown);
+      if (this._onMouseMove) window.removeEventListener("mousemove", this._onMouseMove);
+      if (this._onMouseUp) window.removeEventListener("mouseup", this._onMouseUp);
+      if (this.overlay) {
+        if (this._onWheel) this.overlay.removeEventListener("wheel", this._onWheel);
+        if (this._onTouchStart) this.overlay.removeEventListener("touchstart", this._onTouchStart);
+        if (this._onTouchMove) this.overlay.removeEventListener("touchmove", this._onTouchMove);
+        if (this._onTouchEnd) this.overlay.removeEventListener("touchend", this._onTouchEnd);
+      }
+      this._onKeyDown = null;
+      this._onMouseMove = null;
+      this._onMouseUp = null;
+      this._onWheel = null;
+      this._onTouchStart = null;
+      this._onTouchMove = null;
+      this._onTouchEnd = null;
+    }
+  };
+  var imageLightbox = null;
+  function abrirLightbox(images, index = 0) {
+    if (!imageLightbox) imageLightbox = new ImageLightbox();
+    imageLightbox.open(images, index);
+    return imageLightbox;
+  }
+  var ExportImportView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.abaAtiva = "exportar";
+      this.previewData = null;
+      this.arquivoCarregado = null;
+    }
+    render() {
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>\u{1F4E6} Exportar / Importar Dados</h2>
+          <p class="subtitulo">Backup completo, exporta\xE7\xE3o seletiva e restaura\xE7\xE3o</p>
+        </div>
+      </div>
+      <div class="ei-tabs">
+        <button class="ei-tab ${this.abaAtiva === "exportar" ? "ativo" : ""}" data-ei-tab="exportar">\u{1F4E4} Exportar</button>
+        <button class="ei-tab ${this.abaAtiva === "importar" ? "ativo" : ""}" data-ei-tab="importar">\u{1F4E5} Importar</button>
+        <button class="ei-tab ${this.abaAtiva === "historico" ? "ativo" : ""}" data-ei-tab="historico">\u{1F550} Hist\xF3rico</button>
+      </div>
+      <div class="ei-painel">${this.renderPainel()}</div>
+    `;
+    }
+    renderPainel() {
+      if (this.abaAtiva === "exportar") return this.renderExportar();
+      if (this.abaAtiva === "importar") return this.renderImportar();
+      return this.renderHistorico();
+    }
+    renderExportar() {
+      const colecoes = ["obras", "clientes", "vendas", "encomendas", "contatosProfissionais", "interacoes", "eventos", "financas"];
+      const contagens = {};
+      colecoes.forEach((c) => {
+        contagens[c] = (this.dataStore.listar(c) || []).length;
+      });
+      const totalRegistros = Object.values(contagens).reduce((a, b) => a + b, 0);
+      const cards = colecoes.map((c) => {
+        const rotulos = { obras: "\u{1F5BC}\uFE0F Obras", clientes: "\u{1F464} Clientes", vendas: "\u{1F4B0} Vendas", encomendas: "\u{1F4E6} Encomendas", contatosProfissionais: "\u{1F91D} Contatos", interacoes: "\u{1F4AC} Intera\xE7\xF5es", eventos: "\u{1F3AA} Eventos", financas: "\u{1F4C8} Finan\xE7as" };
+        return `
+        <div class="ei-colecao-card" data-colecao="${c}">
+          <div class="eicc-header"><span class="eicc-icone">${rotulos[c] || c}</span><span class="eicc-nome">${c}</span></div>
+          <div class="eicc-qtd">${contagens[c]} registros</div>
+          <div class="eicc-acoes">
+            <button class="btn-miniatura ei-export-json" data-colecao="${c}" title="Exportar JSON">\u{1F4CB} JSON</button>
+            <button class="btn-miniatura ei-export-csv" data-colecao="${c}" title="Exportar CSV">\u{1F4CA} CSV</button>
+          </div>
+        </div>
+      `;
+      }).join("");
+      return `
+      <div class="ei-export-grid">
+        <div class="ei-secao-destaque">
+          <div class="ei-destaque-icon">\u{1F4BE}</div>
+          <div class="ei-destaque-info">
+            <h3>Backup Completo</h3>
+            <p>Exporta todos os dados do CRM em um \xFAnico arquivo JSON.</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);">${totalRegistros} registros \xB7 ${Object.keys(contagens).length} cole\xE7\xF5es</p>
+          </div>
+          <button class="btn-primario" id="eiBackupCompleto">\u{1F4E5} Exportar Tudo</button>
+        </div>
+        <div class="ei-secao">
+          <h3 style="margin-bottom:12px;">Exportar por Cole\xE7\xE3o</h3>
+          <div class="ei-cards-grid">${cards}</div>
+        </div>
+      </div>
+    `;
+    }
+    renderImportar() {
+      const previewHtml = this.previewData && this.arquivoCarregado ? this.renderPreview() : "";
+      return `
+      <div class="ei-import-area" id="eiDropZone">
+        <div class="ei-drop-content">
+          <div class="ei-drop-icon">\u{1F4E5}</div>
+          <p><strong>Arraste um arquivo JSON</strong> ou clique para selecionar</p>
+          <p style="font-size:0.8rem;color:var(--text-muted);">Formatos aceitos: backup completo (.json) ou exporta\xE7\xE3o parcial</p>
+        </div>
+        <input type="file" id="eiFileInput" accept=".json" style="display:none;">
+      </div>
+      <div id="eiPreviewContainer">${previewHtml}</div>
+    `;
+    }
+    renderPreview() {
+      if (!this.previewData || !this.previewData.valido) {
+        return `<div class="ei-preview-box ei-preview-erro"><span>\u274C</span> Arquivo inv\xE1lido: ${this.previewData?.erro || "formato n\xE3o reconhecido"}</div>`;
+      }
+      const linhas = this.previewData.colecoes.map(
+        (c) => `<tr><td>${c.nome}</td><td>${c.quantidade}</td><td>${c.quantidade > 0 ? "\u{1F195} Novos dados" : "\u2014"}</td></tr>`
+      ).join("");
+      const isCompleto = this.previewData.tipo === "completo";
+      return `
+      <div class="ei-preview-box">
+        <div class="ei-preview-header">
+          <span class="ei-preview-badge ${isCompleto ? "ei-bg-azul" : "ei-bg-verde"}">${isCompleto ? "Backup Completo" : "Dados Parciais"}</span>
+          <span style="color:var(--text-muted);font-size:0.85rem;">${this.arquivoCarregado}</span>
+        </div>
+        <table class="ei-preview-tabela">
+          <thead><tr><th>Cole\xE7\xE3o</th><th>Registros</th><th>A\xE7\xE3o</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+        <div class="ei-import-opcoes">
+          <label class="ei-checkbox"><input type="radio" name="eiModo" value="substituir" checked> Substituir dados existentes</label>
+          <label class="ei-checkbox"><input type="radio" name="eiModo" value="mesclar"> Mesclar com dados existentes (mant\xE9m IDs duplicados)</label>
+        </div>
+        <div class="ei-import-acoes">
+          <button class="btn-primario" id="eiConfirmarImport">\u2705 Confirmar Importa\xE7\xE3o</button>
+          <button class="btn-secundario" id="eiCancelarImport">Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    renderHistorico() {
+      const historico = this.dataStore.obterHistoricoExport() || [];
+      if (historico.length === 0) {
+        return `<div class="estado-vazio"><div class="icone-vazio">\u{1F550}</div><p>Nenhum backup exportado ainda.</p></div>`;
+      }
+      const linhas = historico.map((h, i) => {
+        const tamanho = h.tamanho > 1024 ? `${(h.tamanho / 1024).toFixed(1)} KB` : `${h.tamanho} B`;
+        const data = formatarData(h.data);
+        const tipo = typeof h.tipo === "string" ? h.tipo : "completo";
+        return `
+        <tr>
+          <td>${data}</td>
+          <td><span class="tag-status" style="background:var(--accent)15;color:var(--accent);">${tipo}</span></td>
+          <td>${tamanho}</td>
+        </tr>
+      `;
+      }).join("");
+      return `
+      <div class="ei-historico">
+        <p style="margin-bottom:12px;color:var(--text-muted);font-size:0.85rem;">\xDAltimos ${historico.length} backups exportados.</p>
+        <div class="tabela-wrapper">
+          <table>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Tamanho</th></tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    }
+    aposRenderizar() {
+      this.configurarTabs();
+      this.configurarExportar();
+      this.configurarImportar();
+      this.configurarHistorico();
+    }
+    configurarTabs() {
+      document.querySelectorAll(".ei-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          this.abaAtiva = tab.dataset.eiTab;
+          const painel = document.querySelector(".ei-painel");
+          if (painel) {
+            painel.innerHTML = this.renderPainel();
+            this.aposRenderizar();
+          }
+        });
+      });
+    }
+    configurarExportar() {
+      document.getElementById("eiBackupCompleto")?.addEventListener("click", () => {
+        this.dataStore.exportarBackup();
+      });
+      document.querySelectorAll(".ei-export-json").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          this.dataStore.exportarColecao(btn.dataset.colecao);
+        });
+      });
+      document.querySelectorAll(".ei-export-csv").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          this.exportarCSV(btn.dataset.colecao);
+        });
+      });
+    }
+    exportarCSV(colecao) {
+      const itens = this.dataStore.listar(colecao) || [];
+      if (itens.length === 0) {
+        mostrarToast("Nenhum registro para exportar.", "erro");
+        return;
+      }
+      const cabecalhos = Object.keys(itens[0]).filter((k) => !k.startsWith("_"));
+      const linhas = itens.map((item) => cabecalhos.map((k) => {
+        const v = item[k];
+        if (v === null || v === void 0) return "";
+        const s = String(v);
+        return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+      }).join(","));
+      const csv = [cabecalhos.join(","), ...linhas].join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `atelier-crm-${colecao}-${(/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.dataStore.salvarHistoricoExport(colecao, { tipo: "csv", tamanho: csv.length });
+      mostrarToast(`\u{1F4CA} CSV exportado: ${itens.length} registros`, "sucesso");
+    }
+    configurarImportar() {
+      const dropZone = document.getElementById("eiDropZone");
+      const fileInput2 = document.getElementById("eiFileInput");
+      if (!dropZone) return;
+      dropZone.addEventListener("click", () => fileInput2.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("ei-drop-over");
+      });
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("ei-drop-over");
+      });
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("ei-drop-over");
+        const file = e.dataTransfer.files[0];
+        if (file) this.processarArquivo(file);
+      });
+      fileInput2.addEventListener("change", () => {
+        if (fileInput2.files[0]) this.processarArquivo(fileInput2.files[0]);
+      });
+    }
+    processarArquivo(file) {
+      if (!file.name.endsWith(".json")) {
+        mostrarToast("Apenas arquivos .json s\xE3o suportados.", "erro");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const texto = e.target.result;
+        const preview = this.dataStore.previewImport(texto);
+        this.previewData = preview;
+        this.arquivoCarregado = file.name;
+        const container = document.getElementById("eiPreviewContainer");
+        if (container) {
+          container.innerHTML = this.renderPreview();
+          this.configurarAcoesImport(texto);
+        }
+      };
+      reader.readAsText(file);
+    }
+    configurarAcoesImport(jsonTexto) {
+      document.getElementById("eiConfirmarImport")?.addEventListener("click", () => {
+        const modo = document.querySelector('input[name="eiModo"]:checked')?.value || "substituir";
+        const resultado = this.dataStore.importarBackup(jsonTexto);
+        if (resultado.sucesso) {
+          mostrarToast(`\u2705 Dados importados com sucesso (${resultado.tipo})`, "sucesso");
+          this.previewData = null;
+          this.arquivoCarregado = null;
+          const container = document.getElementById("eiPreviewContainer");
+          if (container) container.innerHTML = "";
+          if (this.router) this.router.navegar(this.router.viewAtual);
+        } else {
+          mostrarToast(`\u274C Erro na importa\xE7\xE3o: ${resultado.erro}`, "erro");
+        }
+      });
+      document.getElementById("eiCancelarImport")?.addEventListener("click", () => {
+        this.previewData = null;
+        this.arquivoCarregado = null;
+        const container = document.getElementById("eiPreviewContainer");
+        if (container) container.innerHTML = "";
+      });
+    }
+    configurarHistorico() {
+    }
+  };
+  var ExposicoesView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.busca = "";
+    }
+    render() {
+      const exposicoes = this.filtrarExposicoes();
+      const todas = this.dataStore.listar("exposicoes") || [];
+      const ativas = todas.filter((e) => e.status !== "encerrada").length;
+      const linhas = exposicoes.map((ex) => `
+      <tr>
+        <td><strong>${sanitizarHTML(ex.nome) || "-"}</strong></td>
+        <td>${sanitizarHTML(ex.local) || "-"}</td>
+        <td>${formatarData(ex.data)}</td>
+        <td><span class="tag-status ${ex.status === "confirmada" ? "exposicao" : ex.status === "encerrada" ? "vendida" : ""}" style="background:${ex.status === "confirmada" ? "#16a34a20" : ex.status === "encerrada" ? "#6b728020" : "#f59e0b20"};color:${ex.status === "confirmada" ? "#16a34a" : ex.status === "encerrada" ? "#6b7280" : "#f59e0b"};">${ex.status || "planejada"}</span></td>
+        <td class="acoes-linha-tabela">
+          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar">\u270F\uFE0F</button>
+          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+        </td>
+      </tr>
+    `).join("");
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Exposicoes</h2>
+          <p class="subtitulo">${todas.length} exposicao${todas.length === 1 ? "" : "es"} \xB7 ${ativas} ativa${ativas === 1 ? "" : "s"}</p>
+        </div>
+        <button class="btn-gradient" id="btnNovaExposicao">\u271A Nova Exposicao</button>
+      </div>
+      <div class="catalogo-filtros">
+        <div class="campo-filtro busca">
+          <label>Buscar</label>
+          <input type="text" id="buscaExposicao" placeholder="Nome ou local..." value="${sanitizarHTML(this.busca)}">
+        </div>
+      </div>
+      ${exposicoes.length ? `
+      <div class="tabela-wrapper">
+        <table>
+          <thead><tr><th>Nome</th><th>Local</th><th>Data</th><th>Status</th><th></th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>` : `
+      <div class="tabela-wrapper">
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F5BC}\uFE0F</div><p>Nenhuma exposicao encontrada.</p></div>
+      </div>`}
+    `;
+    }
+    filtrarExposicoes() {
+      let lista = this.dataStore.listar("exposicoes") || [];
+      if (this.busca) {
+        const q = this.busca.toLowerCase();
+        lista = lista.filter((e) => (e.nome || "").toLowerCase().includes(q) || (e.local || "").toLowerCase().includes(q));
+      }
+      return lista.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+    }
+    abrirFormExposicao(existente) {
+      const e = existente || {};
+      abrirModal(`
+      <h3>${e.id ? "\u270F\uFE0F Editar" : "\u271A Nova"} Exposicao</h3>
+      <form id="formExposicao">
+        <div class="campo-form"><label>Nome *</label><input type="text" id="expoNome" value="${sanitizarHTML(e.nome || "")}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label>Local</label><input type="text" id="expoLocal" value="${sanitizarHTML(e.local || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Data</label><input type="date" id="expoData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        </div>
+        <div class="campo-form">
+          <label>Status</label>
+          <select id="expoStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            <option value="planejada" ${e.status === "planejada" || !e.status ? "selected" : ""}>Planejada</option>
+            <option value="confirmada" ${e.status === "confirmada" ? "selected" : ""}>Confirmada</option>
+            <option value="encerrada" ${e.status === "encerrada" ? "selected" : ""}>Encerrada</option>
+          </select>
+        </div>
+        <div class="campo-form"><label>Descricao</label><textarea id="expoDescricao" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarExpo">Cancelar</button>
+          <button type="submit" class="btn-primario">${e.id ? "Salvar" : "Criar"}</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarExpo")?.addEventListener("click", fecharModal);
+      document.getElementById("formExposicao")?.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        this.salvarExposicao(e);
+      });
+    }
+    salvarExposicao(existente) {
+      const dados = {
+        nome: document.getElementById("expoNome")?.value?.trim() || "",
+        local: document.getElementById("expoLocal")?.value?.trim() || "",
+        data: document.getElementById("expoData")?.value || "",
+        status: document.getElementById("expoStatus")?.value || "planejada",
+        descricao: document.getElementById("expoDescricao")?.value?.trim() || ""
+      };
+      if (!dados.nome) {
+        mostrarToast("Preencha o nome da exposicao.");
+        return;
+      }
+      if (existente && existente.id) {
+        this.dataStore.atualizar("exposicoes", existente.id, dados);
+        mostrarToast("Exposicao atualizada!");
+      } else {
+        this.dataStore.adicionar("exposicoes", dados);
+        mostrarToast("Exposicao criada!");
+      }
+      fecharModal();
+      this.rerenderizar();
+    }
+    excluirExposicao(id) {
+      if (!confirm("Excluir esta exposicao permanentemente?")) return;
+      this.dataStore.remover("exposicoes", id);
+      mostrarToast("Exposicao excluida.");
+      this.rerenderizar();
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      document.getElementById("btnNovaExposicao")?.addEventListener("click", () => this.abrirFormExposicao(null));
+      document.getElementById("buscaExposicao")?.addEventListener("input", (e) => {
+        this.busca = e.target.value;
+        this.rerenderizar();
+      });
+      document.querySelectorAll("[data-editar-expo]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const ex = this.dataStore.buscarPorId("exposicoes", el.dataset.editarExpo);
+          if (ex) this.abrirFormExposicao(ex);
+        });
+      });
+      document.querySelectorAll("[data-excluir-expo]").forEach((el) => {
+        el.addEventListener("click", () => this.excluirExposicao(el.dataset.excluirExpo));
+      });
+    }
+    rerenderizar() {
+      const c = document.getElementById("viewPrincipal");
+      if (c) {
+        this.removerListeners();
+        c.innerHTML = this.render();
+        this.aposRenderizar();
+      }
+    }
+  };
+  var FinanceiroView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+      this.filtroTipo = "";
+      this.busca = "";
+    }
+    render() {
+      const transacoes = this.filtrarTransacoes();
+      const todas = this.dataStore.listar("transacoes") || [];
+      const entradas = todas.filter((t) => t.tipo === "entrada").reduce((s, t) => s + Number(t.valor || 0), 0);
+      const saidas = todas.filter((t) => t.tipo === "saida").reduce((s, t) => s + Number(t.valor || 0), 0);
+      const saldo = entradas - saidas;
+      const linhas = transacoes.map((t) => `
+      <tr>
+        <td>${sanitizarRich(t.descricao)}</td>
+        <td><span class="tag-status ${t.tipo === "entrada" ? "vendida" : ""}" style="background:${t.tipo === "entrada" ? "#16a34a20" : "#dc262620"};color:${t.tipo === "entrada" ? "#16a34a" : "#dc2626"};">${t.tipo === "entrada" ? "\u{1F4B0} Entrada" : "\u{1F4B8} Saida"}</span></td>
+        <td style="font-weight:600;color:${t.tipo === "entrada" ? "#16a34a" : "#dc2626"};">${t.tipo === "entrada" ? "+" : "-"}${formatarMoeda(t.valor)}</td>
+        <td>${formatarData(t.data)}</td>
+        <td class="acoes-linha-tabela">
+          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir">\u{1F5D1}\uFE0F</button>
+        </td>
+      </tr>
+    `).join("");
+      const categorias = [...new Set(todas.map((t) => t.categoria).filter(Boolean))];
+      const catsHtml = categorias.map((cat) => {
+        const total = todas.filter((t) => t.categoria === cat).reduce((s, t) => s + Number(t.valor || 0), 0);
+        const pct = entradas + saidas > 0 ? Math.round(total / (entradas + saidas) * 100) : 0;
+        return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.8rem;border-bottom:1px solid var(--border);"><span>${sanitizarHTML(cat)}</span><span style="font-weight:600;">${formatarMoeda(total)} (${pct}%)</span></div>`;
+      }).join("");
+      const tabela = transacoes.length ? `
+      <div class="tabela-wrapper" style="margin-top:16px;">
+        <table>
+          <thead><tr><th>Descricao</th><th>Tipo</th><th>Valor</th><th>Data</th><th></th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="tabela-wrapper" style="margin-top:16px;">
+        <div class="estado-vazio"><div class="icone-vazio">\u{1F4CA}</div><p>Nenhuma transacao encontrada.</p></div>
+      </div>
+    `;
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Financeiro</h2>
+          <p class="subtitulo">${todas.length} transacao${todas.length === 1 ? "" : "es"} \xB7 ${formatarMoeda(entradas)} entradas \xB7 ${formatarMoeda(saidas)} saidas</p>
+        </div>
+        <button class="btn-gradient" id="btnNovaTransacao">\u271A Nova Transacao</button>
+      </div>
+      <div class="grid-cards">
+        <div class="card"><div class="rotulo-card" style="color:#16a34a;">\u{1F4B0} Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
+        <div class="card"><div class="rotulo-card" style="color:#dc2626;">\u{1F4B8} Saidas</div><div class="valor-card">${formatarMoeda(saidas)}</div></div>
+        <div class="card"><div class="rotulo-card">\u{1F3E6} Saldo</div><div class="valor-card" style="color:${saldo >= 0 ? "#16a34a" : "#dc2626"};">${formatarMoeda(saldo)}</div></div>
+      </div>
+      ${categorias.length ? `<div class="card" style="margin-top:12px;padding:12px 16px;"><h4 style="margin:0 0 6px;font-size:0.82rem;">Categorias</h4>${catsHtml}</div>` : ""}
+      <div class="catalogo-filtros" style="margin-top:12px;">
+        <div class="campo-filtro busca">
+          <label>Buscar</label>
+          <input type="text" id="buscaTransacao" placeholder="Descricao..." value="${sanitizarHTML(this.busca)}">
+        </div>
+        <div class="campo-filtro">
+          <label>Tipo</label>
+          <select id="filtroTipoTransacao">
+            <option value="">Todos</option>
+            <option value="entrada" ${this.filtroTipo === "entrada" ? "selected" : ""}>Entrada</option>
+            <option value="saida" ${this.filtroTipo === "saida" ? "selected" : ""}>Saida</option>
+          </select>
+        </div>
+      </div>
+      ${tabela}
+    `;
+    }
+    filtrarTransacoes() {
+      let lista = this.dataStore.listar("transacoes") || [];
+      if (this.filtroTipo) lista = lista.filter((t) => t.tipo === this.filtroTipo);
+      if (this.busca) {
+        const q = this.busca.toLowerCase();
+        lista = lista.filter((t) => (t.descricao || "").toLowerCase().includes(q));
+      }
+      return lista.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+    }
+    abrirFormTransacao(existente) {
+      const e = existente || {};
+      abrirModal(`
+      <h3>${e.id ? "\u270F\uFE0F Editar" : "\u271A Nova"} Transacao</h3>
+      <form id="formTransacao">
+        <div class="campo-form"><label>Descricao *</label><input type="text" id="transDescricao" value="${sanitizarHTML(e.descricao || "")}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label>Tipo *</label>
+            <select id="transTipo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+              <option value="entrada" ${e.tipo === "entrada" || !e.tipo ? "selected" : ""}>\u{1F4B0} Entrada</option>
+              <option value="saida" ${e.tipo === "saida" ? "selected" : ""}>\u{1F4B8} Saida</option>
+            </select>
+          </div>
+          <div><label>Valor (R$) *</label><input type="number" id="transValor" value="${e.valor || ""}" min="0" step="0.01" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        </div>
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label>Data</label><input type="date" id="transData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Categoria</label>
+            <select id="transCategoria" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+              <option value="">\u2014 Selecione \u2014</option>
+              ${["Venda", "Comissao", "Material", "Inscricao", "Frete", "Embalagem", "Ferramenta", "Assinatura", "Outro"].map(
+        (cat) => `<option value="${cat}" ${e.categoria === cat ? "selected" : ""}>${cat}</option>`
+      ).join("")}
+            </select>
+          </div>
+        </div>
+        <div class="campo-form"><label>Notas</label><textarea id="transNotas" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:50px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.notas || "")}</textarea></div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarTrans">Cancelar</button>
+          <button type="submit" class="btn-primario">${e.id ? "Salvar" : "Adicionar"}</button>
+        </div>
+      </form>
+    `);
+      document.getElementById("btnCancelarTrans")?.addEventListener("click", fecharModal);
+      document.getElementById("formTransacao")?.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        this.salvarTransacao(e);
+      });
+    }
+    salvarTransacao(existente) {
+      const dados = {
+        descricao: document.getElementById("transDescricao")?.value?.trim() || "",
+        tipo: document.getElementById("transTipo")?.value || "entrada",
+        valor: Number(document.getElementById("transValor")?.value) || 0,
+        data: document.getElementById("transData")?.value || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+        categoria: document.getElementById("transCategoria")?.value || "",
+        notas: document.getElementById("transNotas")?.value?.trim() || ""
+      };
+      if (!dados.descricao || !dados.valor) {
+        mostrarToast("Preencha descricao e valor.");
+        return;
+      }
+      if (existente && existente.id) {
+        this.dataStore.atualizar("transacoes", existente.id, dados);
+        mostrarToast("Transacao atualizada!");
+      } else {
+        this.dataStore.adicionar("transacoes", dados);
+        mostrarToast("Transacao adicionada!");
+      }
+      fecharModal();
+      this.rerenderizar();
+    }
+    excluirTransacao(id) {
+      if (!confirm("Excluir esta transacao?")) return;
+      this.dataStore.remover("transacoes", id);
+      mostrarToast("Transacao excluida.");
+      this.rerenderizar();
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      document.getElementById("btnNovaTransacao")?.addEventListener("click", () => this.abrirFormTransacao(null));
+      document.getElementById("buscaTransacao")?.addEventListener("input", (e) => {
+        this.busca = e.target.value;
+        this.rerenderizar();
+      });
+      document.getElementById("filtroTipoTransacao")?.addEventListener("change", (e) => {
+        this.filtroTipo = e.target.value;
+        this.rerenderizar();
+      });
+      document.querySelectorAll("[data-excluir-transacao]").forEach((el) => {
+        el.addEventListener("click", () => this.excluirTransacao(el.dataset.excluirTransacao));
+      });
+    }
+    rerenderizar() {
+      const c = document.getElementById("viewPrincipal");
+      if (c) {
+        this.removerListeners();
+        c.innerHTML = this.render();
+        this.aposRenderizar();
+      }
+    }
+  };
+  var ConfiguracoesView = class extends BaseView {
+    constructor(dataStore2, router2) {
+      super(dataStore2, router2);
+    }
+    _salvar() {
+      const nome = document.getElementById("cfgNome").value.trim();
+      const email = document.getElementById("cfgEmail").value.trim();
+      const telefone = document.getElementById("cfgTelefone").value.trim();
+      configStore().artista = { nome, email, telefone };
+      configStore().textoGarantia = document.getElementById("cfgTextoGarantia").value.trim();
+      const langSel = document.getElementById("cfgIdioma");
+      if (langSel) {
+        configStore().idioma = langSel.value;
+        if (window.AtelierCRMTranslations) {
+          window.AtelierCRMTranslations.locale = langSel.value;
+        }
+      }
+      const hcSel = document.getElementById("cfgAltoContraste");
+      if (hcSel) {
+        configStore().altoContraste = hcSel.checked;
+        document.body.setAttribute("data-high-contrast", hcSel.checked);
+      }
+      const fontSel = document.getElementById("cfgTamanhoFonte");
+      if (fontSel) {
+        configStore().tamanhoFonte = fontSel.value;
+        document.body.setAttribute("data-font-size", fontSel.value);
+      }
+      const gc = document.getElementById("cfgGoogleClientId");
+      if (gc) configStore().syncGoogleClientId = gc.value.trim();
+      const wu = document.getElementById("cfgWebDAVUrl");
+      if (wu) configStore().syncWebDAVUrl = wu.value.trim();
+      const wuser = document.getElementById("cfgWebDAVUser");
+      if (wuser) configStore().syncWebDAVUser = wuser.value.trim();
+      const wpass = document.getElementById("cfgWebDAVPass");
+      if (wpass) configStore().syncWebDAVPass = wpass.value.trim();
+      const auto = document.getElementById("cfgAutoSync");
+      if (auto) configStore().syncAutoBackup = auto.checked;
+      const interval = document.getElementById("cfgSyncInterval");
+      if (interval) configStore().syncAutoBackupInterval = Number(interval.value) || 30;
+      configStore().salvar();
+      mostrarToast("Configura\xE7\xF5es salvas com sucesso!");
+    }
+    _salvarPin() {
+      const pinVal = document.getElementById("cfgPin")?.value;
+      if (pinVal && pinVal.length === 4 && /^\d{4}$/.test(pinVal)) {
+        configStore().pin = pinVal;
+        configStore().salvar();
+        mostrarToast("PIN salvo com sucesso!");
+        document.getElementById("cfgPin").value = "";
+      } else {
+        mostrarToast("Digite um PIN de 4 d\xEDgitos.");
+      }
+    }
+    _removerPin() {
+      if (confirm("Remover o PIN de acesso?")) {
+        configStore().pin = "";
+        configStore().autoLock = false;
+        configStore().salvar();
+        mostrarToast("PIN removido.");
+        if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
+      }
+    }
+    render() {
+      const cfg = configStore().artista || {};
+      const textoGarantia = configStore().textoGarantia || "";
+      const idiomaAtual = configStore().idioma || "pt-BR";
+      const altoContraste = configStore().altoContraste || false;
+      const tamanhoFonte = configStore().tamanhoFonte || "medio";
+      const pinAtivo = configStore().pin || "";
+      const s = configStore();
+      const ultimoBackup = s.syncLastBackup ? formatarData(s.syncLastBackup) : "Nunca";
+      const idiomas = [
+        { v: "pt-BR", r: "\u{1F1E7}\u{1F1F7} Portugu\xEAs (BR)" },
+        { v: "en-US", r: "\u{1F1FA}\u{1F1F8} English (US)" },
+        { v: "es", r: "\u{1F1EA}\u{1F1F8} Espa\xF1ol" },
+        { v: "fr", r: "\u{1F1EB}\u{1F1F7} Fran\xE7ais" },
+        { v: "it", r: "\u{1F1EE}\u{1F1F9} Italiano" }
+      ];
+      return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Configura\xE7\xF5es</h2>
+          <p class="subtitulo">Dados do artista e prefer\xEAncias do sistema</p>
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px">
+        <h3>\u{1F464} Perfil do Artista</h3>
+        <div class="campo-form">
+          <label>Nome / Nome do Ateli\xEA</label>
+          <input type="text" id="cfgNome" value="${sanitizarHTML(cfg.nome || "")}">
+        </div>
+        <div class="campo-form">
+          <label>E-mail</label>
+          <input type="email" id="cfgEmail" value="${sanitizarHTML(cfg.email || "")}">
+        </div>
+        <div class="campo-form">
+          <label>Telefone</label>
+          <input type="text" id="cfgTelefone" value="${sanitizarHTML(cfg.telefone || "")}">
+        </div>
+        <div class="campo-form">
+          <label>Texto de garantia/autenticidade (usado nos recibos e propostas)</label>
+          <textarea id="cfgTextoGarantia" style="min-height:110px;">${sanitizarHTML(textoGarantia)}</textarea>
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>\u{1F310} Idioma</h3>
+        <div class="campo-form">
+          <label>Idioma da interface</label>
+          <select id="cfgIdioma">${idiomas.map((i) => `<option value="${i.v}" ${idiomaAtual === i.v ? "selected" : ""}>${i.r}</option>`).join("")}</select>
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>\u267F Acessibilidade</h3>
+        <div class="campo-form">
+          <label><input type="checkbox" id="cfgAltoContraste" ${altoContraste ? "checked" : ""}> \u{1F512} Alto contraste</label>
+        </div>
+        <div class="campo-form">
+          <label>Tamanho da fonte</label>
+          <select id="cfgTamanhoFonte">
+            <option value="pequeno" ${tamanhoFonte === "pequeno" ? "selected" : ""}>Pequeno</option>
+            <option value="medio" ${tamanhoFonte === "medio" ? "selected" : ""}>M\xE9dio</option>
+            <option value="grande" ${tamanhoFonte === "grande" ? "selected" : ""}>Grande</option>
+          </select>
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>\u{1F510} Seguran\xE7a</h3>
+        <div class="campo-form">
+          <label>PIN de acesso (4 d\xEDgitos) ${pinAtivo ? "\u{1F512} Ativo" : "\u274C Desativado"}</label>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="cfgPin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
+            <button class="btn-secundario" id="btnSalvarPin" style="font-size:0.8rem;padding:6px 14px;">${pinAtivo ? "Alterar" : "Ativar"} PIN</button>
+            ${pinAtivo ? `<button class="btn-secundario" id="btnRemoverPin" style="font-size:0.8rem;padding:6px 14px;color:#dc2626;">Remover PIN</button>` : ""}
+          </div>
+        </div>
+        <div class="campo-form">
+          <label><input type="checkbox" id="cfgAutoLock" ${configStore().autoLock ? "checked" : ""}> \u{1F510} Bloquear automaticamente ap\xF3s inatividade</label>
+        </div>
+      </div>
+
+      <!-- Sincroniza\xE7\xE3o -->
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>\u2601\uFE0F Sincroniza\xE7\xE3o na Nuvem</h3>
+        <p class="texto-ajuda" style="margin-bottom:12px;">\xDAltimo backup: ${ultimoBackup}</p>
+
+        <div class="sync-tabs" style="display:flex;gap:4px;margin-bottom:12px;">
+          <button class="sync-tab ativo" data-sync-tab="indexeddb">\u{1F4BE} Local (IDB)</button>
+          <button class="sync-tab" data-sync-tab="googledrive">\u2601\uFE0F Google Drive</button>
+          <button class="sync-tab" data-sync-tab="webdav">\u{1F4C1} WebDAV</button>
+        </div>
+
+        <div class="sync-panel" id="syncPanelIndexedDB">
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">Snapshots salvos no navegador (IndexedDB \u2014 sem limite de espa\xE7o).</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-secundario" id="btnIDBSnapshot">\u{1F4BE} Tirar Snapshot</button>
+            <button class="btn-secundario" id="btnIDBListar">\u{1F4CB} Listar Snapshots</button>
+          </div>
+          <div id="idbSnapshotList" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="sync-panel" id="syncPanelGoogleDrive" style="display:none;">
+          <div class="campo-form">
+            <label>Google Drive Client ID (OAuth 2.0)</label>
+            <input type="text" id="cfgGoogleClientId" value="${sanitizarHTML(s.syncGoogleClientId || "")}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="btn-secundario" id="btnGoogleAuth">\u{1F511} Autenticar</button>
+            <button class="btn-secundario" id="btnGoogleBackup">\u2601\uFE0F Fazer Backup</button>
+            <button class="btn-secundario" id="btnGoogleListar">\u{1F4CB} Listar Backups</button>
+          </div>
+          <div id="googleBackupList" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="sync-panel" id="syncPanelWebDAV" style="display:none;">
+          <div class="campo-form">
+            <label>URL do servidor WebDAV</label>
+            <input type="url" id="cfgWebDAVUrl" value="${sanitizarHTML(s.syncWebDAVUrl || "")}" placeholder="https://meu-servidor.com/remote.php/dav/files/usuario/" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+          </div>
+          <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div><label>Usu\xE1rio</label><input type="text" id="cfgWebDAVUser" value="${sanitizarHTML(s.syncWebDAVUser || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+            <div><label>Senha</label><input type="password" id="cfgWebDAVPass" value="${sanitizarHTML(s.syncWebDAVPass || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="btn-secundario" id="btnWebDAVTest">\u{1F517} Testar Conex\xE3o</button>
+            <button class="btn-secundario" id="btnWebDAVBackup">\u2601\uFE0F Fazer Backup</button>
+            <button class="btn-secundario" id="btnWebDAVListar">\u{1F4CB} Listar Backups</button>
+          </div>
+          <div id="webdavBackupList" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="campo-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <label><input type="checkbox" id="cfgAutoSync" ${s.syncAutoBackup ? "checked" : ""}> \u{1F504} Backup autom\xE1tico no IndexedDB</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:0.75rem;color:var(--text-muted);">A cada</span>
+            <select id="cfgSyncInterval" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
+              ${[5, 10, 15, 30, 60, 120].map((m) => `<option value="${m}" ${(s.syncAutoBackupInterval || 30) === m ? "selected" : ""}>${m} min</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primario" id="btnSalvarConfig" style="margin-top:16px;">Salvar Configura\xE7\xF5es</button>
+    `;
+    }
+    aposRenderizar() {
+      this.removerListeners();
+      const btnSalvar = document.getElementById("btnSalvarConfig");
+      if (btnSalvar) {
+        const h = () => this._salvar();
+        btnSalvar.addEventListener("click", h);
+        this._bindCache["btnSalvarConfig"] = { el: btnSalvar, handler: h, type: "click" };
+      }
+      const btnPin = document.getElementById("btnSalvarPin");
+      if (btnPin) {
+        const h = () => this._salvarPin();
+        btnPin.addEventListener("click", h);
+        this._bindCache["btnSalvarPin"] = { el: btnPin, handler: h, type: "click" };
+      }
+      const btnRem = document.getElementById("btnRemoverPin");
+      if (btnRem) {
+        const h = () => this._removerPin();
+        btnRem.addEventListener("click", h);
+        this._bindCache["btnRemoverPin"] = { el: btnRem, handler: h, type: "click" };
+      }
+      document.querySelectorAll(".sync-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".sync-tab").forEach((t) => t.classList.remove("ativo"));
+          tab.classList.add("ativo");
+          document.querySelectorAll(".sync-panel").forEach((p) => p.style.display = "none");
+          const panel = document.getElementById("syncPanel" + tab.dataset.syncTab.replace("g", "G").replace("i", "I").replace("w", "W"));
+          if (panel) panel.style.display = "block";
+        });
+      });
+      document.getElementById("btnIDBSnapshot")?.addEventListener("click", () => {
+        cloudSync.salvarSnapshotIDB().then(() => this._mostrarIDBSnapshots());
+      });
+      document.getElementById("btnIDBListar")?.addEventListener("click", () => this._mostrarIDBSnapshots());
+      document.getElementById("btnGoogleAuth")?.addEventListener("click", () => cloudSync.autenticarGoogle());
+      document.getElementById("btnGoogleBackup")?.addEventListener("click", () => cloudSync.backupGoogle());
+      document.getElementById("btnGoogleListar")?.addEventListener("click", () => this._listarGoogle());
+      document.getElementById("btnWebDAVTest")?.addEventListener("click", async () => {
+        this._salvar();
+        const ok = await cloudSync.testarWebDAV();
+        mostrarToast(ok ? "\u2705 Conex\xE3o WebDAV OK!" : "\u274C Falha na conex\xE3o WebDAV");
+      });
+      document.getElementById("btnWebDAVBackup")?.addEventListener("click", () => cloudSync.backupWebDAV());
+      document.getElementById("btnWebDAVListar")?.addEventListener("click", () => this._listarWebDAV());
+    }
+    async _mostrarIDBSnapshots() {
+      const container = document.getElementById("idbSnapshotList");
+      if (!container) return;
+      container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Carregando...</span>';
+      try {
+        const snaps = await cloudSync.listarSnapshotsIDB();
+        if (snaps.length === 0) {
+          container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Nenhum snapshot encontrado.</span>';
+          return;
+        }
+        container.innerHTML = `
+        <div style="max-height:200px;overflow-y:auto;">
+          ${snaps.map((s) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
+              <span style="font-size:0.75rem;color:var(--text);">${s.label || s.timestamp}</span>
+              <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(s.timestamp).toLocaleString("pt-BR")}</span>
+              <span>
+                <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar">\u21A9\uFE0F</button>
+                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+        container.querySelectorAll(".btn-restaurar-idb").forEach((btn) => {
+          btn.addEventListener("click", () => cloudSync.restaurarSnapshotIDB(Number(btn.dataset.id)).then(() => {
+            if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
+          }));
+        });
+        container.querySelectorAll(".btn-remover-idb").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            await cloudSync.removerSnapshotIDB(Number(btn.dataset.id));
+            this._mostrarIDBSnapshots();
+          });
+        });
+      } catch (e) {
+        container.innerHTML = '<span style="color:#dc2626;font-size:0.8rem;">Erro ao carregar: ' + e.message + "</span>";
+      }
+    }
+    async _listarGoogle() {
+      const container = document.getElementById("googleBackupList");
+      if (!container) return;
+      container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Carregando...</span>';
+      const backups = await cloudSync.listarBackupsGoogle();
+      if (backups.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Nenhum backup no Google Drive.</span>';
+        return;
+      }
+      container.innerHTML = `
+      <div style="max-height:200px;overflow-y:auto;">
+        ${backups.map((b) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
+            <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(b.data).toLocaleString("pt-BR")}</span>
+            <button class="btn-miniatura btn-restaurar-gd" data-id="${b.id}" title="Restaurar">\u21A9\uFE0F</button>
+          </div>
+        `).join("")}
+      </div>
+    `;
+      container.querySelectorAll(".btn-restaurar-gd").forEach((btn) => {
+        btn.addEventListener("click", () => cloudSync.restaurarGoogle(btn.dataset.id).then(() => {
+          if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
+        }));
+      });
+    }
+    async _listarWebDAV() {
+      const container = document.getElementById("webdavBackupList");
+      if (!container) return;
+      container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Carregando...</span>';
+      const backups = await cloudSync.listarBackupsWebDAV();
+      if (backups.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Nenhum backup no WebDAV.</span>';
+        return;
+      }
+      container.innerHTML = `
+      <div style="max-height:200px;overflow-y:auto;">
+        ${backups.map((b) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
+            <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">${b.data || ""}</span>
+            <button class="btn-miniatura btn-restaurar-wd" data-nome="${b.nome}" title="Restaurar">\u21A9\uFE0F</button>
+          </div>
+        `).join("")}
+      </div>
+    `;
+      container.querySelectorAll(".btn-restaurar-wd").forEach((btn) => {
+        btn.addEventListener("click", () => cloudSync.restaurarWebDAV(btn.dataset.nome).then(() => {
+          if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
+        }));
+      });
+    }
+  };
+  var CloudSync = class {
+    constructor(dataStore2) {
+      this.dataStore = dataStore2;
+      this._db = null;
+      this._dbPromise = null;
+    }
+    // ==================== IndexedDB ====================
+    get db() {
+      if (!this._dbPromise) {
+        this._dbPromise = new Promise((resolve, reject) => {
+          const req = indexedDB.open("AtelierCRM", 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains("snapshots")) {
+              const store = db.createObjectStore("snapshots", { keyPath: "id", autoIncrement: true });
+              store.createIndex("timestamp", "timestamp", { unique: false });
+              store.createIndex("label", "label", { unique: false });
+            }
+          };
+          req.onsuccess = (e) => {
+            this._db = e.target.result;
+            resolve(this._db);
+          };
+          req.onerror = (e) => reject(e.target.error);
+        });
+      }
+      return this._dbPromise;
+    }
+    async salvarSnapshotIDB(label) {
+      const db = await this.db;
+      const tx = db.transaction("snapshots", "readwrite");
+      const store = tx.objectStore("snapshots");
+      const snapshot = {
+        dados: JSON.parse(JSON.stringify(this.dataStore.dados)),
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        label: label || "Backup " + (/* @__PURE__ */ new Date()).toLocaleString("pt-BR")
+      };
+      return new Promise((resolve, reject) => {
+        const req = store.add(snapshot);
+        req.onsuccess = () => {
+          mostrarToast("Snapshot salvo no IndexedDB!");
+          resolve(req.result);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async listarSnapshotsIDB() {
+      const db = await this.db;
+      const tx = db.transaction("snapshots", "readonly");
+      const store = tx.objectStore("snapshots");
+      const index = store.index("timestamp");
+      return new Promise((resolve, reject) => {
+        const req = index.openCursor(null, "prev");
+        const results = [];
+        req.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            results.push(cursor.value);
+            cursor.continue();
+          } else resolve(results);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async restaurarSnapshotIDB(id) {
+      const db = await this.db;
+      const tx = db.transaction("snapshots", "readonly");
+      const store = tx.objectStore("snapshots");
+      return new Promise((resolve, reject) => {
+        const req = store.get(id);
+        req.onsuccess = (e) => {
+          const snap = e.target.result;
+          if (snap) {
+            this.dataStore.dados = JSON.parse(JSON.stringify(snap.dados));
+            this.dataStore.salvar();
+            mostrarToast("Snapshot restaurado com sucesso!");
+            resolve(true);
+          } else {
+            reject(new Error("Snapshot n\xE3o encontrado"));
+          }
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async removerSnapshotIDB(id) {
+      const db = await this.db;
+      const tx = db.transaction("snapshots", "readwrite");
+      const store = tx.objectStore("snapshots");
+      return new Promise((resolve, reject) => {
+        const req = store.delete(id);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    // ==================== Google Drive ====================
+    get googleToken() {
+      return this.dataStore.dados.config.syncGoogleToken || "";
+    }
+    get googleClientId() {
+      return this.dataStore.dados.config.syncGoogleClientId || "";
+    }
+    async autenticarGoogle() {
+      const clientId = this.googleClientId;
+      if (!clientId) {
+        mostrarToast("Configure o Client ID do Google Drive nas Configura\xE7\xF5es.");
+        return false;
+      }
+      return new Promise((resolve) => {
+        const redirectUri = window.location.origin + window.location.pathname;
+        const scope = "https://www.googleapis.com/auth/drive.file";
+        const state = "crm_sync_" + Date.now();
+        const authUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=" + encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&scope=" + encodeURIComponent(scope) + "&state=" + state;
+        const w = window.open(authUrl, "google_oauth", "width=600,height=700");
+        if (!w) {
+          mostrarToast("Pop-up bloqueado. Permita pop-ups para usar o Google Drive.");
+          resolve(false);
+          return;
+        }
+        const checkInterval = setInterval(() => {
+          try {
+            if (w.closed) {
+              clearInterval(checkInterval);
+              resolve(false);
+              return;
+            }
+            if (w.location.hash && w.location.hash.includes("access_token")) {
+              const params = new URLSearchParams(w.location.hash.replace("#", ""));
+              const token = params.get("access_token");
+              if (token) {
+                this.dataStore.dados.config.syncGoogleToken = token;
+                this.dataStore.salvar();
+                mostrarToast("Google Drive autenticado!");
+                w.close();
+                clearInterval(checkInterval);
+                resolve(true);
+              }
+            }
+          } catch (e) {
+          }
+        }, 500);
+      });
+    }
+    async _reqGoogle(path, method, body) {
+      const token = this.googleToken;
+      if (!token) throw new Error("Google Drive n\xE3o autenticado");
+      const opts = {
+        method: method || "GET",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch("https://www.googleapis.com/drive/v3/" + path, opts);
+      if (res.status === 401) {
+        this.dataStore.dados.config.syncGoogleToken = "";
+        this.dataStore.salvar();
+        mostrarToast("Token expirado. Autentique novamente.", "erro");
+        throw new Error("Token expirado");
+      }
+      return res.json();
+    }
+    async _garantirPastaGoogle() {
+      const res = await this._reqGoogle("files?q=name%3D%27AtelierCRM%27%20and%20mimeType%3D%27application%2Fvnd.google-apps.folder%27&fields=files(id,name)");
+      if (res.files && res.files.length > 0) return res.files[0].id;
+      const folder = await this._reqGoogle("files", "POST", {
+        name: "AtelierCRM",
+        mimeType: "application/vnd.google-apps.folder"
+      });
+      return folder.id;
+    }
+    async backupGoogle() {
+      if (!this.googleToken) {
+        const ok = await this.autenticarGoogle();
+        if (!ok) return false;
+      }
+      mostrarLoading("Enviando backup para Google Drive...");
+      try {
+        const folderId = await this._garantirPastaGoogle();
+        const conteudo = JSON.stringify(this.dataStore.dados);
+        const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+        const nome = `atelier-crm-backup-${timestamp}.json`;
+        const boundary = "crm_boundary_" + Date.now();
+        const body = [
+          "--" + boundary,
+          "Content-Type: application/json; charset=UTF-8",
+          "",
+          JSON.stringify({ name: nome, parents: [folderId] }),
+          "--" + boundary,
+          "Content-Type: application/json",
+          "",
+          conteudo,
+          "--" + boundary + "--"
+        ].join("\r\n");
+        const token = this.googleToken;
+        const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "multipart/related; boundary=" + boundary
+          },
+          body
+        });
+        const data = await res.json();
+        if (data.id) {
+          this.dataStore.dados.config.syncLastBackup = (/* @__PURE__ */ new Date()).toISOString();
+          this.dataStore.salvar();
+          esconderLoading();
+          mostrarToast("Backup enviado para Google Drive!");
+          return true;
+        }
+        esconderLoading();
+        mostrarToast("Erro: " + (data.error?.message || "Falha no upload"), "erro");
+        return false;
+      } catch (e) {
+        esconderLoading();
+        mostrarToast("Erro ao fazer backup no Google Drive: " + e.message, "erro");
+        return false;
+      }
+    }
+    async listarBackupsGoogle() {
+      if (!this.googleToken) return [];
+      try {
+        const res = await this._reqGoogle("files?q=name%20contains%20%27atelier-crm-backup%27&orderBy=createdTime%20desc&fields=files(id,name,createdTime,size)");
+        return (res.files || []).map((f) => ({
+          id: f.id,
+          nome: f.name,
+          data: f.createdTime,
+          tamanho: f.size
+        }));
+      } catch {
+        return [];
+      }
+    }
+    async restaurarGoogle(fileId) {
+      if (!this.googleToken) {
+        mostrarToast("Google Drive n\xE3o autenticado.", "erro");
+        return false;
+      }
+      mostrarLoading("Restaurando do Google Drive...");
+      try {
+        const res = await fetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", {
+          headers: { "Authorization": "Bearer " + this.googleToken }
+        });
+        if (!res.ok) throw new Error("Erro HTTP " + res.status);
+        const dados = await res.json();
+        if (dados && dados.obras) {
+          this.dataStore.dados = dados;
+          this.dataStore.salvar();
+          esconderLoading();
+          mostrarToast("Backup restaurado do Google Drive!");
+          return true;
+        }
+        esconderLoading();
+        mostrarToast("Arquivo inv\xE1lido no Google Drive.", "erro");
+        return false;
+      } catch (e) {
+        esconderLoading();
+        mostrarToast("Erro ao restaurar: " + e.message, "erro");
+        return false;
+      }
+    }
+    // ==================== WebDAV ====================
+    _webdavConfig() {
+      const c = this.dataStore.dados.config;
+      return { url: c.syncWebDAVUrl || "", user: c.syncWebDAVUser || "", pass: c.syncWebDAVPass || "" };
+    }
+    async _reqWebDAV(path, method, body) {
+      const cfg = this._webdavConfig();
+      if (!cfg.url) throw new Error("WebDAV n\xE3o configurado");
+      const url = cfg.url.replace(/\/+$/, "") + "/" + path.replace(/^\//, "");
+      const auth = btoa(cfg.user + ":" + cfg.pass);
+      const opts = { method: method || "GET", headers: { "Authorization": "Basic " + auth } };
+      if (body) opts.body = body;
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error("WebDAV HTTP " + res.status);
+      return res;
+    }
+    async testarWebDAV() {
+      try {
+        await this._reqWebDAV("", "PROPFIND");
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    async backupWebDAV() {
+      mostrarLoading("Enviando backup para WebDAV...");
+      try {
+        const conteudo = JSON.stringify(this.dataStore.dados);
+        const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+        const nome = `atelier-crm-backup-${timestamp}.json`;
+        await this._reqWebDAV(nome, "PUT", conteudo);
+        this.dataStore.dados.config.syncLastBackup = (/* @__PURE__ */ new Date()).toISOString();
+        this.dataStore.salvar();
+        esconderLoading();
+        mostrarToast("Backup enviado para WebDAV!");
+        return true;
+      } catch (e) {
+        esconderLoading();
+        mostrarToast("Erro WebDAV: " + e.message, "erro");
+        return false;
+      }
+    }
+    async listarBackupsWebDAV() {
+      try {
+        const res = await this._reqWebDAV("", "PROPFIND");
+        const text = await res.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "text/xml");
+        const responses = xml.querySelectorAll("response");
+        const files = [];
+        responses.forEach((r) => {
+          const href = r.querySelector("href")?.textContent || "";
+          const name = href.split("/").filter(Boolean).pop() || "";
+          if (name.startsWith("atelier-crm-backup")) {
+            const size = r.querySelector("getcontentlength")?.textContent || "0";
+            const date = r.querySelector("getlastmodified")?.textContent || "";
+            files.push({ nome: name, data: date, tamanho: size, href });
+          }
+        });
+        return files.reverse();
+      } catch {
+        return [];
+      }
+    }
+    async restaurarWebDAV(nomeArquivo) {
+      mostrarLoading("Restaurando do WebDAV...");
+      try {
+        const res = await this._reqWebDAV(nomeArquivo, "GET");
+        const dados = await res.json();
+        if (dados && dados.obras) {
+          this.dataStore.dados = dados;
+          this.dataStore.salvar();
+          esconderLoading();
+          mostrarToast("Backup restaurado do WebDAV!");
+          return true;
+        }
+        esconderLoading();
+        mostrarToast("Arquivo inv\xE1lido no WebDAV.", "erro");
+        return false;
+      } catch (e) {
+        esconderLoading();
+        mostrarToast("Erro ao restaurar WebDAV: " + e.message, "erro");
+        return false;
+      }
+    }
+    // ==================== Auto Backup ====================
+    iniciarAutoBackup() {
+      const cfg = this.dataStore.dados.config;
+      if (!cfg.syncAutoBackup) return;
+      const interval = (cfg.syncAutoBackupInterval || 30) * 60 * 1e3;
+      setInterval(() => {
+        this.salvarSnapshotIDB("Auto " + (/* @__PURE__ */ new Date()).toLocaleString("pt-BR"));
+      }, interval);
+    }
+  };
+  var pinia = createPinia();
+  var useObraStore = defineStore("obras", {
+    state: () => ({
+      items: [],
+      _loaded: false
+    }),
+    getters: {
+      porId: (state) => (id) => state.items.find((o) => o.id === id),
+      filtrados: (state) => (filtro) => filtro ? state.items.filter((o) => (o.titulo || "").toLowerCase().includes(filtro)) : state.items,
+      total: (state) => state.items.length,
+      valorAcervo: (state) => state.items.reduce((s, o) => s + (Number(o.preco) || 0), 0),
+      vendidas: (state) => state.items.filter((o) => o.status === "vendida"),
+      emEstoque: (state) => state.items.filter((o) => o.status !== "vendida")
+    },
+    actions: {
+      carregar(dados) {
+        this.items = dados;
+        this._loaded = true;
+      },
+      adicionar(obra) {
+        this.items.unshift(obra);
+        this._persistir();
+      },
+      atualizar(id, dados) {
+        const idx = this.items.findIndex((o) => o.id === id);
+        if (idx >= 0) {
+          this.items[idx] = { ...this.items[idx], ...dados };
+          this._persistir();
+        }
+      },
+      remover(id) {
+        this.items = this.items.filter((o) => o.id !== id);
+        this._persistir();
+      },
+      _persistir() {
+        try {
+          localStorage.setItem("atelier_crm_obras", JSON.stringify(this.items));
+          try {
+            window.dataStore && (window.dataStore.dados.obras = this.items);
+          } catch {
+          }
+        } catch (e) {
+          console.warn("Falha ao persistir obras", e);
+        }
+      }
+    }
+  });
+  var obraStore = () => useObraStore(pinia);
+  var useClienteStore = defineStore("clientes", {
+    state: () => ({
+      items: [],
+      _loaded: false
+    }),
+    getters: {
+      porId: (state) => (id) => state.items.find((c) => c.id === id),
+      total: (state) => state.items.length
+    },
+    actions: {
+      carregar(dados) {
+        this.items = dados;
+        this._loaded = true;
+      },
+      adicionar(cliente) {
+        this.items.unshift(cliente);
+        this._persistir();
+      },
+      atualizar(id, dados) {
+        const idx = this.items.findIndex((c) => c.id === id);
+        if (idx >= 0) {
+          this.items[idx] = { ...this.items[idx], ...dados };
+          this._persistir();
+        }
+      },
+      remover(id) {
+        this.items = this.items.filter((c) => c.id !== id);
+        this._persistir();
+      },
+      _persistir() {
+        try {
+          localStorage.setItem("atelier_crm_clientes", JSON.stringify(this.items));
+          try {
+            window.dataStore && (window.dataStore.dados.clientes = this.items);
+          } catch {
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }
+  });
+  var clienteStore = () => useClienteStore(pinia);
+  var useVendaStore = defineStore("vendas", {
+    state: () => ({
+      items: [],
+      _loaded: false
+    }),
+    getters: {
+      porId: (state) => (id) => state.items.find((v) => v.id === id),
+      total: (state) => state.items.length,
+      valorTotal: (state) => state.items.reduce((s, v) => s + (Number(v.valor) || 0), 0),
+      doCliente: (state) => (clienteId) => state.items.filter((v) => v.clienteId === clienteId)
+    },
+    actions: {
+      carregar(dados) {
+        this.items = dados;
+        this._loaded = true;
+      },
+      adicionar(venda) {
+        this.items.unshift(venda);
+        this._persistir();
+      },
+      atualizar(id, dados) {
+        const idx = this.items.findIndex((v) => v.id === id);
+        if (idx >= 0) {
+          this.items[idx] = { ...this.items[idx], ...dados };
+          this._persistir();
+        }
+      },
+      remover(id) {
+        this.items = this.items.filter((v) => v.id !== id);
+        this._persistir();
+      },
+      _persistir() {
+        try {
+          localStorage.setItem("atelier_crm_vendas", JSON.stringify(this.items));
+          try {
+            window.dataStore && (window.dataStore.dados.vendas = this.items);
+          } catch {
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }
+  });
+  var vendaStore = () => useVendaStore(pinia);
+  var CHAVE = "atelier_crm_config";
+  var useConfigStore = defineStore("config", {
+    state: () => ({
+      artista: { nome: "Meu Ateli\xEA", email: "", telefone: "", assinatura: "" },
+      tema: "classico",
+      idioma: "pt-BR",
+      altoContraste: false,
+      tamanhoFonte: "medio",
+      pin: "",
+      autoLock: false,
+      tourCompleted: false,
+      precificador: { valorHora: 60, multiplicadorExperiencia: 1.5, metaMensal: 1e4, metaAnual: 12e4, metaInicio: "" },
+      precificadorRegras: [],
+      moedaPadrao: "BRL",
+      taxasCambio: { USD: 5, EUR: 5.5, GBP: 6.3 },
+      contadorRecibos: {},
+      contadorPropostas: {},
+      contadorCertificados: {},
+      textoGarantia: "",
+      syncGoogleClientId: "",
+      syncGoogleToken: "",
+      syncWebDAVUrl: "",
+      syncWebDAVUser: "",
+      syncWebDAVPass: "",
+      syncAutoBackup: false,
+      syncAutoBackupInterval: 30,
+      syncLastBackup: ""
+    }),
+    actions: {
+      carregar() {
+        try {
+          const raw = localStorage.getItem(CHAVE);
+          if (raw) Object.assign(this, JSON.parse(raw));
+        } catch (e) {
+          console.warn("Falha ao carregar config", e);
+        }
+      },
+      salvar() {
+        try {
+          localStorage.setItem(CHAVE, JSON.stringify(this.$state));
+          try {
+            window.dataStore && (window.dataStore.dados.config = this.$state);
+          } catch {
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      },
+      atualizar(dados) {
+        Object.assign(this, dados);
+        this.salvar();
+      }
+    }
+  });
+  var configStore = () => useConfigStore(pinia);
+  var COLLECTION_STORE_MAP = {
+    obras: { get: useObraStore, single: obraStore },
+    clientes: { get: useClienteStore, single: clienteStore },
+    vendas: { get: useVendaStore, single: vendaStore }
+  };
+  var StoreBridge = class {
+    constructor(dataStore2) {
+      this.dataStore = dataStore2;
+      this.dados = dataStore2.dados;
+      this._initStores();
+    }
+    _initStores() {
+      obraStore().carregar(this.dataStore.listar("obras"));
+      clienteStore().carregar(this.dataStore.listar("clientes"));
+      vendaStore().carregar(this.dataStore.listar("vendas"));
+      configStore().carregar();
+    }
+    _piniaStore(colecao) {
+      const entry = COLLECTION_STORE_MAP[colecao];
+      return entry ? entry.get(pinia) : null;
+    }
+    listar(colecao) {
+      const store = this._piniaStore(colecao);
+      if (store) return store.items;
+      return this.dataStore.listar(colecao);
+    }
+    adicionar(colecao, item) {
+      const store = this._piniaStore(colecao);
+      if (store) {
+        item.id = "id_" + Date.now() + "_" + Math.floor(Math.random() * 1e3);
+        item.criadoEm = item.criadoEm || (/* @__PURE__ */ new Date()).toISOString();
+        store.adicionar({ ...item });
+        this.dataStore.dados[colecao] = store.items;
+        this.dataStore.salvar();
+        return item;
+      }
+      return this.dataStore.adicionar(colecao, item);
+    }
+    atualizar(colecao, id, novosCampos) {
+      const store = this._piniaStore(colecao);
+      if (store) {
+        store.atualizar(id, novosCampos);
+        this.dataStore.dados[colecao] = store.items;
+        this.dataStore.salvar();
+        return store.porId(id);
+      }
+      return this.dataStore.atualizar(colecao, id, novosCampos);
+    }
+    remover(colecao, id) {
+      const store = this._piniaStore(colecao);
+      if (store) {
+        store.remover(id);
+        this.dataStore.dados[colecao] = store.items;
+        this.dataStore.salvar();
+      } else {
+        this.dataStore.remover(colecao, id);
+      }
+    }
+    buscarPorId(colecao, id) {
+      const store = this._piniaStore(colecao);
+      if (store) return store.porId(id);
+      return this.dataStore.buscarPorId(colecao, id);
+    }
+    salvar() {
+      this.dataStore.salvar();
+      configStore().salvar();
+    }
+    exportarBackup() {
+      return this.dataStore.exportarBackup();
+    }
+    exportarColecao(n) {
+      return this.dataStore.exportarColecao(n);
+    }
+    importarBackup(j) {
+      return this.dataStore.importarBackup(j);
+    }
+    previewImport(j) {
+      return this.dataStore.previewImport(j);
+    }
+    obterHistoricoExport() {
+      return this.dataStore.obterHistoricoExport();
+    }
+  };
+  function renderizarDashboard(dataStore2) {
+    const obras = dataStore2.listar("obras");
+    const vendas = dataStore2.listar("vendas");
+    const clientes = dataStore2.listar("clientes");
+    const vendidas = obras.filter((o) => o.status === "vendida");
+    const emEstoque = obras.filter((o) => o.status !== "vendida");
+    const valorAcervo = emEstoque.reduce((soma, o) => soma + (Number(o.preco) || 0), 0);
+    const valorVendido = vendas.reduce((soma, v) => soma + (Number(v.valor) || 0), 0);
+    const dadosMeses = calcularObrasPorMes(obras);
+    const graficoSvg = gerarGraficoSVG(dadosMeses);
+    const tecnicaMaisComum = calcularTecnicaMaisComum(obras);
+    const ticketMedio = vendas.length > 0 ? valorVendido / vendas.length : 0;
+    const crescimentoMensal = calcularCrescimentoMensal(obras);
+    const obrasFavoritas = obras.filter((o) => o.favorita).length;
+    const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
+    const listaRecentesHtml = recentes.length ? recentes.map((o) => `
+    <li class="item-obra-recente">
+      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : o.emoji || "\xF0\x9F\x96\xBC\xEF\xB8\x8F"}</div>
+      <div class="info-obra-recente">
+        <div class="nome">${o.titulo}</div>
+        <div class="meta">${o.tecnica || ""} \xB7 ${formatarData(o.dataCadastro || o.criadoEm)}</div>
+      </div>
+      <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
+    </li>
+  `).join("") : `<div class="estado-vazio"><div class="icone-vazio">\xF0\x9F\x96\xBC\xEF\xB8\x8F</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para come\xE7ar.</p></div>`;
+    return `
+    <div class="view-cabecalho">
+      <div>
+        <h2>Dashboard</h2>
+        <p class="subtitulo">Vis\xE3o geral do seu ateli\xEA \xB7 ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+      </div>
+      <div class="dashboard-acoes">
+        <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados">\u{1F504}</button>
+      </div>
+    </div>
+    <div class="grid-cards stagger-in">
+      <div class="card card-destaque"><div class="rotulo-card">Total de Obras</div><div class="valor-card">${obras.length}</div><div class="card-tendencia ${crescimentoMensal >= 0 ? "positiva" : "negativa"}">${crescimentoMensal >= 0 ? "\xE2\x86\x91" : "\u2193"} ${Math.abs(crescimentoMensal).toFixed(1)}% este m\xEAs</div></div>
+      <div class="card"><div class="rotulo-card">Obras Vendidas</div><div class="valor-card">${vendidas.length}</div><div class="card-sub">${obras.length > 0 ? (vendidas.length / obras.length * 100).toFixed(1) : 0}% do total</div></div>
+      <div class="card"><div class="rotulo-card">Em Estoque</div><div class="valor-card">${emEstoque.length}</div><div class="card-sub">${obras.length > 0 ? (emEstoque.length / obras.length * 100).toFixed(1) : 0}% dispon\xEDvel</div></div>
+      <div class="card card-valor"><div class="rotulo-card">Valor do Acervo</div><div class="valor-card">${formatarMoeda(valorAcervo)}</div><div class="card-sub">Ticket m\xE9dio: ${formatarMoeda(ticketMedio)}</div></div>
+      <div class="card"><div class="rotulo-card">Total Vendido</div><div class="valor-card">${formatarMoeda(valorVendido)}</div><div class="card-sub">${vendas.length} venda${vendas.length === 1 ? "" : "s"}</div></div>
+      <div class="card"><div class="rotulo-card">Favoritas</div><div class="valor-card">${obrasFavoritas}</div><div class="card-sub">\u2B50 Obras marcadas</div></div>
+    </div>
+    <div class="grid-painel">
+      <div class="painel"><h3>\u{1F4CA} Produtividade Mensal</h3><div class="grafico-container">${graficoSvg}</div><div class="grafico-legenda"><span class="leg-item">\u{1F4CA} Obras criadas por m\xEAs</span></div></div>
+      <div class="painel"><h3>\xF0\x9F\x8E\xA8 T\xE9cnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join("") : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
+    </div>
+    <div class="grid-painel">
+      <div class="painel"><h3>\xF0\x9F\x95\x90 Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
+      <div class="painel"><h3>\u{1F4CB} Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map((a) => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join("") : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
+    </div>
+    <div class="painel"><h3>\u26A1 Atalhos r\xE1pidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">\xE2\x9C\x9A Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">\xE2\x9C\x9A Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">\xF0\x9F\xA7\xBE Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">\xF0\x9F\x91\xA4 Gerenciar Clientes</button></div></div>
+  `;
+  }
+  function sanitizarHTML(str) {
+    if (!str) return "";
+    const el = document.createElement("div");
+    el.textContent = str;
+    return el.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+  }
+  function sanitizarURL(str) {
+    if (!str) return "";
+    const s = String(str).trim();
+    try {
+      const u = new URL(s, window.location.origin);
+      return ["http:", "https:", "data:", "mailto:"].includes(u.protocol) ? s : "";
+    } catch {
+      return "";
+    }
+  }
+  function sanitizarRich(str) {
+    if (!str) return "";
+    const allowedTag = /<\/?(p|br|strong|em|b|i|u|ul|ol|li|span|div)(\s[^>]*)?>/gi;
+    const escMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;" };
+    const safeAttr = /\s+(style|class|id)\s*=\s*("[^"]*"|'[^']*')/gi;
+    let lastIdx = 0, partes = [];
+    for (let match; (match = allowedTag.exec(str)) !== null; ) {
+      const texto = str.slice(lastIdx, match.index);
+      if (texto) partes.push(texto.replace(/[&<>"']/g, (m) => escMap[m]));
+      const tag = match[0], tagName = match[1], attrs = match[2];
+      if (tag[1] === "/" || !attrs || !attrs.trim()) {
+        partes.push(tag);
+      } else {
+        const safe = [];
+        safeAttr.lastIndex = 0;
+        for (let a; (a = safeAttr.exec(attrs)) !== null; ) safe.push(a[0]);
+        partes.push(`<${tagName}${safe.join("")}>`);
+      }
+      lastIdx = allowedTag.lastIndex;
+    }
+    const resto = str.slice(lastIdx);
+    if (resto) partes.push(resto.replace(/[&<>"']/g, (m) => escMap[m]));
+    return partes.join("");
+  }
+  function comprimirImagem(file, maxW = 1200, quality = 0.8) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxW) {
+            h = h * maxW / w;
+            w = maxW;
+          }
+          const c = document.createElement("canvas");
+          c.width = w;
+          c.height = h;
+          const ctx = c.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL("image/jpeg", quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function observarImagens() {
+    if (!("IntersectionObserver" in window)) return;
+    const obs = new IntersectionObserver((entradas) => {
+      entradas.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src || img.src;
+          img.classList.add("carregado");
+          obs.unobserve(img);
+        }
+      });
+    }, { rootMargin: "200px" });
+    document.querySelectorAll(".lazy-img:not(.carregado)").forEach((img) => obs.observe(img));
+  }
+  var transicaoHistorico = [];
+  function aplicarTransicaoView(container, chave) {
+    const prev = transicaoHistorico.length > 1 ? transicaoHistorico[transicaoHistorico.length - 2] : null;
+    const isVolta = prev && transicaoHistorico.indexOf(chave) < transicaoHistorico.indexOf(prev);
+    container.classList.remove("view-enter-forward", "view-enter-back", "view-enter-fade", "view-transition");
+    void container.offsetWidth;
+    let animClass = "view-enter-fade";
+    if (transicaoHistorico.length > 1) {
+      const indices = transicaoHistorico.map((r, i) => r === chave ? i : -1).filter((i) => i >= 0);
+      const idxAtual = transicaoHistorico.length - 1;
+      const idxAnterior = transicaoHistorico.length - 2;
+      if (indices.length > 0 && indices[indices.length - 1] < idxAnterior) {
+        animClass = "view-enter-back";
+      } else if (indices.length > 0) {
+        animClass = "view-enter-forward";
+      }
+    }
+    container.classList.add(animClass, "view-transition");
+    if (!transicaoHistorico.includes(chave)) transicaoHistorico.push(chave);
+    else {
+      const idx = transicaoHistorico.indexOf(chave);
+      transicaoHistorico.splice(idx, 1);
+      transicaoHistorico.push(chave);
+    }
+    if (transicaoHistorico.length > 20) transicaoHistorico.shift();
+    requestAnimationFrame(() => {
+      const filhos = container.querySelectorAll(".stagger-in > *");
+      filhos.forEach((el, i) => {
+        el.style.animationDelay = `${i * 30}ms`;
+        el.style.animationDuration = "0.4s";
+      });
+    });
+  }
+  function debounce2(fn, ms = 200) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), ms);
+    };
+  }
+  var atalhos = [
+    { key: "k", ctrl: true, desc: "Busca global (spotlight)", acao: () => abrirSpotlight() },
+    { key: "n", ctrl: true, desc: "Nova obra", acao: () => {
+      router?.navegar("catalogo");
+      setTimeout(() => eventBus.emitir("abrir-nova-obra"), 200);
+    } },
+    { key: "v", ctrl: true, desc: "Nova venda", acao: () => {
+      router?.navegar("vendas");
+      setTimeout(() => eventBus.emitir("abrir-nova-venda"), 200);
+    } },
+    { key: "c", ctrl: true, desc: "Novo cliente", acao: () => {
+      router?.navegar("clientes");
+      setTimeout(() => eventBus.emitir("abrir-novo-cliente"), 200);
+    } },
+    { key: "d", ctrl: true, desc: "Dashboard", acao: () => router?.navegar("dashboard") },
+    { key: "g", ctrl: true, desc: "Galeria Virtual", acao: () => router?.navegar("galeriaVirtual") },
+    { key: "p", ctrl: true, desc: "Precificador", acao: () => router?.navegar("precificador") },
+    { key: "a", ctrl: true, desc: "Atelier/Estoque", acao: () => router?.navegar("atelier") },
+    { key: "f", ctrl: true, desc: "Financeiro", acao: () => router?.navegar("financeiro") },
+    { key: "r", ctrl: true, desc: "Rede Profissional", acao: () => router?.navegar("rede") },
+    { key: "j", ctrl: true, desc: "Di\xE1rio Criativo", acao: () => router?.navegar("diario") },
+    { key: "b", ctrl: true, desc: "Backup r\xE1pido", acao: () => {
+      dataStore?.exportarBackup();
+      mostrarToast("Backup exportado!");
+      activityLogger.registrar("export", "Backup exportado", "Backup completo do sistema", "export");
+    } },
+    { key: "s", ctrl: true, desc: "Salvar dados", acao: () => {
+      dataStore?.salvar();
+      mostrarToast("Dados salvos!");
+      activityLogger.registrar("atualizacao", "Dados salvos", "Salvamento manual", "atualizacao");
+    } },
+    { key: "Escape", desc: "Fechar modal", acao: () => fecharModal() },
+    { key: "/", desc: "Mostrar todos os atalhos", acao: () => mostrarAtalhos() },
+    { key: "?", desc: "Mostrar ajuda", acao: () => mostrarAtalhos() }
+  ];
+  document.addEventListener("keydown", (e) => {
+    if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) && e.key !== "Escape") return;
+    const ctrl = e.ctrlKey || e.metaKey;
+    for (const a of atalhos) {
+      if (a.key === e.key && (a.ctrl ? ctrl : true)) {
+        e.preventDefault();
+        a.acao();
+        return;
+      }
+    }
+    if (e.key === "Escape") {
+      if (document.querySelector(".spotlight-overlay")) document.querySelector(".spotlight-overlay").remove();
+      fecharModal();
+    }
+  });
+  function abrirSpotlight() {
+    const overlay = document.createElement("div");
+    overlay.className = "spotlight-overlay";
+    overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>\xE2\xAC\x86\xE2\xAC\x87 Navegar</span><span>\xE2\x8F\x8E Abrir</span><span>ESC Fechar</span></div></div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector(".spotlight-input");
+    const results = overlay.querySelector(".spotlight-results");
+    let destaqueIdx = -1;
+    function salvarHistorico(termo) {
+      if (!termo) return;
+      try {
+        let hist = JSON.parse(localStorage.getItem("atelier_spotlight_hist") || "[]");
+        hist = [termo, ...hist.filter((h) => h !== termo)].slice(0, 5);
+        localStorage.setItem("atelier_spotlight_hist", JSON.stringify(hist));
+      } catch (e) {
+      }
+    }
+    function atualizarDestaque() {
+      results.querySelectorAll(".spotlight-item").forEach((el, i) => {
+        el.classList.toggle("destaque", i === destaqueIdx);
+        if (i === destaqueIdx) el.scrollIntoView({ block: "nearest" });
+      });
+    }
+    function navegarParaItem(el) {
+      if (!el) return;
+      const rota = el.dataset.rota;
+      const payload = el.dataset.payload;
+      overlay.remove();
+      if (rota === "catalogo" && payload) {
+        salvarHistorico(input.value);
+        router?.navegar("catalogo");
+      } else if (rota) {
+        salvarHistorico(input.value);
+        router?.navegar(rota);
+      }
+    }
+    function secao(titulo, icone) {
+      return `<div class="sp-secao"><span>${icone}</span> ${titulo}</div>`;
+    }
+    const buscar = debounce2((termo) => {
+      destaqueIdx = -1;
+      if (!termo) {
+        try {
+          const hist = JSON.parse(localStorage.getItem("atelier_spotlight_hist") || "[]");
+          if (hist.length > 0) {
+            results.innerHTML = secao("Recentes", "\xF0\x9F\x95\x90") + hist.map((h) => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">\xF0\x9F\x95\x90</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join("");
+            results.querySelectorAll(".sp-historico").forEach((el) => el.addEventListener("click", () => {
+              input.value = el.dataset.termo;
+              buscar(el.dataset.termo);
+            }));
+            return;
+          }
+        } catch (e) {
+        }
+        results.innerHTML = '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Digite para buscar em todo o sistema...</div>';
+        return;
+      }
+      const t = termo.toLowerCase();
+      const obras = (dataStore?.listar("obras") || []).filter((o) => (o.titulo || "").toLowerCase().includes(t) || (o.descricao || "").toLowerCase().includes(t) || (o.tecnica || "").toLowerCase().includes(t) || (o.serie || "").toLowerCase().includes(t)).slice(0, 5);
+      const clientes = (dataStore?.listar("clientes") || []).filter((c) => (c.nome || "").toLowerCase().includes(t) || (c.email || "").toLowerCase().includes(t)).slice(0, 5);
+      const vendas = (dataStore?.listar("vendas") || []).filter((v) => (v.numeroRecibo || "").toLowerCase().includes(t) || (v.clienteNome || "").toLowerCase().includes(t)).slice(0, 5);
+      const contatos = (dataStore?.listar("contatosProfissionais") || []).filter((c) => (c.nome || "").toLowerCase().includes(t) || (c.instituicao || "").toLowerCase().includes(t)).slice(0, 5);
+      const encomendas = (dataStore?.listar("encomendas") || []).filter((e) => (e.cliente || "").toLowerCase().includes(t) || (e.descricao || "").toLowerCase().includes(t)).slice(0, 5);
+      const eventos = (dataStore?.listar("eventos") || []).filter((e) => (e.nome || "").toLowerCase().includes(t)).slice(0, 5);
+      let html = "";
+      if (obras.length) {
+        html += secao("Obras", "\xF0\x9F\x96\xBC\xEF\xB8\x8F") + obras.map((o) => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ""}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ""} \xB7 ${formatarMoeda(o.preco)}</span></div>`).join("");
+      }
+      if (clientes.length) {
+        html += secao("Clientes", "\xF0\x9F\x91\xA4") + clientes.map((c) => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">\xF0\x9F\x91\xA4</span><span>${c.nome}</span><span class="si-info">${c.email || ""}</span></div>`).join("");
+      }
+      if (vendas.length) {
+        html += secao("Vendas", "\xF0\x9F\x92\xB0") + vendas.map((v) => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">\xF0\x9F\x92\xB0</span><span>Recibo ${v.numeroRecibo || ""}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join("");
+      }
+      if (contatos.length) {
+        html += secao("Contatos", "\xF0\x9F\xA4\x9D") + contatos.map((c) => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">\xF0\x9F\xA4\x9D</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ""}</span></div>`).join("");
+      }
+      if (encomendas.length) {
+        html += secao("Encomendas", "\xF0\x9F\x93\xA6") + encomendas.map((e) => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">\xF0\x9F\x93\xA6</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ""}</span></div>`).join("");
+      }
+      if (eventos.length) {
+        html += secao("Eventos", "\xF0\x9F\x8E\xAA") + eventos.map((e) => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">\xF0\x9F\x8E\xAA</span><span>${e.nome}</span><span class="si-info">${e.tipo || ""}</span></div>`).join("");
+      }
+      results.innerHTML = html || '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Nenhum resultado encontrado.</div>';
+      results.querySelectorAll(".spotlight-item").forEach((el) => {
+        el.addEventListener("click", () => navegarParaItem(el));
+      });
+    }, 150);
+    input.addEventListener("input", () => buscar(input.value));
+    input.addEventListener("keydown", (e) => {
+      const itens = results.querySelectorAll(".spotlight-item:not(.sp-secao)");
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        destaqueIdx = Math.min(itens.length - 1, destaqueIdx + 1);
+        atualizarDestaque();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        destaqueIdx = Math.max(-1, destaqueIdx - 1);
+        atualizarDestaque();
+      } else if (e.key === "Enter" && destaqueIdx >= 0 && itens[destaqueIdx]) {
+        navegarParaItem(itens[destaqueIdx]);
+      } else if (e.key === "Enter" && itens.length === 1) {
+        navegarParaItem(itens[0]);
+      }
+    });
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+    setTimeout(() => input.focus(), 50);
+  }
+  function iniciarFab() {
+    const fabMain = document.getElementById("fabMain");
+    const fabSpeedial = document.getElementById("fabSpeedial");
+    const fabBackdrop = document.getElementById("fabBackdrop");
+    if (!fabMain) return;
+    function fecharFab() {
+      fabMain.classList.remove("ativo");
+      fabSpeedial.classList.remove("visivel");
+      fabBackdrop.classList.remove("visivel");
+    }
+    function toggleFab() {
+      const aberto = fabMain.classList.toggle("ativo");
+      fabSpeedial.classList.toggle("visivel", aberto);
+      fabBackdrop.classList.toggle("visivel", aberto);
+    }
+    fabMain.addEventListener("click", toggleFab);
+    fabBackdrop.addEventListener("click", fecharFab);
+    const acoes = {
+      obra: () => {
+        router?.navegar("catalogo");
+        setTimeout(() => eventBus.emitir("abrir-nova-obra"), 200);
+      },
+      venda: () => {
+        router?.navegar("vendas");
+        setTimeout(() => eventBus.emitir("abrir-nova-venda"), 200);
+      },
+      cliente: () => {
+        router?.navegar("clientes");
+        setTimeout(() => eventBus.emitir("abrir-novo-cliente"), 200);
+      },
+      encomenda: () => {
+        router?.navegar("encomendas");
+      },
+      contato: () => {
+        router?.navegar("rede");
+      },
+      evento: () => {
+        router?.navegar("exposicoes");
+      }
+    };
+    document.querySelectorAll("[data-fab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        fecharFab();
+        const acao = btn.dataset.fab;
+        if (acoes[acao]) acoes[acao]();
+      });
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && fabSpeedial?.classList.contains("visivel")) fecharFab();
+    });
+  }
+  function mostrarAtalhos() {
+    const categorias = {
+      "Navega\xE7\xE3o": ["d", "g", "p", "a", "f", "r", "j"],
+      "Cria\xE7\xE3o": ["n", "v", "c"],
+      "Dados": ["b", "s"],
+      "Ajuda": ["/", "?", "k", "Escape"]
+    };
+    const itensPorCategoria = Object.entries(categorias).map(([cat, keys]) => {
+      const itens = atalhos.filter((a) => keys.includes(a.key)).map((a) => {
+        const keyHtml = a.ctrl ? `<span class="sc-key">${navigator.platform?.includes("Mac") ? "\u2318" : "Ctrl"}</span><span class="sc-key">${a.key.toUpperCase()}</span>` : `<span class="sc-key">${a.key}</span>`;
+        return `<div class="sc-item"><span>${a.desc}</span><span>${keyHtml}</span></div>`;
+      }).join("");
+      return `<div class="sc-categoria"><h4>${cat}</h4><div class="shortcuts-grid">${itens}</div></div>`;
+    }).join("");
+    abrirModal(`<h3>\u2328\uFE0F Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
+    document.getElementById("btnCancelarModal")?.addEventListener("click", fecharModal);
+  }
+  var _inatividadeTimer = null;
+  var _telaBloqueada = false;
+  function iniciarMonitorInatividade() {
+    if (!dataStore?.dados?.config?.autoLock || !dataStore?.dados?.config?.pin) return;
+    const resetTimer = () => {
+      if (_telaBloqueada) return;
+      clearTimeout(_inatividadeTimer);
+      _inatividadeTimer = setTimeout(() => bloquearTela(), 10 * 60 * 1e3);
+    };
+    ["click", "keydown", "mousemove", "touchstart"].forEach((ev) => document.addEventListener(ev, resetTimer));
+    resetTimer();
+  }
+  function bloquearTela() {
+    if (_telaBloqueada) return;
+    _telaBloqueada = true;
+    const pin = dataStore.dados.config.pin;
+    if (!pin) return;
+    let tentativas = 0;
+    function mostrarPinModal() {
+      let entrada = "";
+      const render = () => {
+        abrirModal(`<h3>\u{1F512} Tela Bloqueada</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Digite seu PIN de 4 d\xEDgitos para continuar</p><div class="pin-display">${"\u2022".repeat(entrada.length).padEnd(4, "_")}</div>${tentativas > 0 ? '<p style="color:#ef4444;font-size:0.8rem;">PIN incorreto. Tente novamente.</p>' : ""}<div class="pin-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, "", 0, "\u232B"].map((v) => v === "" ? "<button disabled></button>" : `<button data-val="${v}">${v}</button>`).join("")}</div><div class="modal-acoes"><button class="btn-secundario" id="btnSairPin">Sair</button></div>`);
+        document.querySelectorAll(".pin-pad button[data-val]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (btn.dataset.val === "\u232B") {
+              entrada = entrada.slice(0, -1);
+              render();
+              return;
+            }
+            if (entrada.length >= 4) return;
+            entrada += btn.dataset.val;
+            if (entrada.length === 4) {
+              if (entrada === pin) {
+                _telaBloqueada = false;
+                fecharModal();
+                mostrarToast("Bem-vindo de volta!");
+                iniciarMonitorInatividade();
+              } else {
+                tentativas++;
+                entrada = "";
+                render();
+              }
+            } else {
+              render();
+            }
+          });
+        });
+        document.getElementById("btnSairPin")?.addEventListener("click", () => {
+          fecharModal();
+        });
+        document.getElementById("btnCancelarModal")?.addEventListener("click", fecharModal);
+      };
+      render();
+    }
+    mostrarPinModal();
+  }
+  function dispararConfetti() {
+    const canvas = document.createElement("canvas");
+    canvas.className = "confetti-canvas";
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = Array.from({ length: 80 }, () => ({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 8,
+      vy: -Math.random() * 10 - 4,
+      size: Math.random() * 6 + 3,
+      color: ["#ff0", "#f0f", "#0ff", "#f00", "#0f0", "#00f", "#ffa500", "#ff69b4"][Math.floor(Math.random() * 8)],
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.2 + Math.random() * 0.1
+    }));
+    let frame = 0;
+    const anim = () => {
+      frame++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.rotation += p.rotSpeed;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        ctx.restore();
+      });
+      if (frame < 90) requestAnimationFrame(anim);
+      else canvas.remove();
+    };
+    anim();
+  }
+  var _vendaObserver = new MutationObserver(() => {
+    if (document.querySelector(".toast")?.textContent?.includes("Venda registrada")) {
+      dispararConfetti();
+    }
+  });
+  _vendaObserver.observe(document.getElementById("toast"), { childList: true, subtree: true, characterData: true });
+  var dicasDiarias = [
+    "Reserve 15 minutos ao final do dia para registrar seu progresso no Di\xE1rio Criativo.",
+    "Uma obra bem documentada valoriza 30% mais no mercado secund\xE1rio.",
+    "Clientes que recebem atualiza\xE7\xF5es do processo criativo t\xEAm 2x mais chances de recomprar.",
+    "Experimente a t\xE9cnica dos 3 valores: luz, meia-tinta e sombra para dar volume.",
+    "Mantenha seu cat\xE1logo sempre atualizado \u2014 voc\xEA nunca sabe quando um comprador aparece.",
+    "Use o Precificador para calcular o valor justo da sua hora de trabalho art\xEDstico.",
+    "Tire fotos das suas obras com luz natural difusa para melhores resultados.",
+    "O descanso \xE9 parte do processo criativo. Respeite seus limites.",
+    "Analise suas estat\xEDsticas criativas todo m\xEAs para identificar padr\xF5es de produtividade.",
+    "Uma boa rela\xE7\xE3o com galeristas come\xE7a com um portf\xF3lio digital organizado.",
+    'Documente cada etapa do processo \u2014 o "making of" \xE9 t\xE3o valioso quanto a obra final.',
+    "Estabele\xE7a metas realistas. 3 horas de pintura por dia \xE9 mais sustent\xE1vel que 8.",
+    "Participe de pelo menos 2 editais ou exposi\xE7\xF5es por ano.",
+    "Materiais de qualidade fazem diferen\xE7a. Invista nos melhores pinc\xE9is que puder.",
+    "Fa\xE7a pausas a cada 50 minutos para evitar fadiga visual e manter a criatividade.",
+    "Seu di\xE1rio criativo \xE9 seu melhor instrumento de autoconhecimento art\xEDstico.",
+    'Compartilhe seu processo nas redes \u2014 o p\xFAblico ama ver o "antes e depois".',
+    "Uma paleta limitada (3-5 cores) for\xE7a solu\xE7\xF5es criativas e harmoniosas.",
+    "Artistas que diversificam t\xE9cnicas tendem a ter carreiras mais longas.",
+    "O networking n\xE3o \xE9 sobre quantidade, mas qualidade das conex\xF5es.",
+    "Recibos e certificados bem feitos transmitem profissionalismo e seguran\xE7a.",
+    "Revisite obras antigas periodicamente \u2014 sua evolu\xE7\xE3o t\xE9cnica vai te surpreender.",
+    "Crie uma s\xE9rie tem\xE1tica anual. Colecionadores valorizam coes\xE3o de portf\xF3lio.",
+    "Use o calend\xE1rio do Di\xE1rio para planejar seus ciclos criativos com anteced\xEAncia.",
+    "A luz do seu ateli\xEA muda com as esta\xE7\xF5es. Aproveite cada qualidade de luz.",
+    "Fa\xE7a um backup dos dados toda semana \u2014 seu registro criativo \xE9 precioso.",
+    "O mercado de arte valoriza hist\xF3rias. Cada obra tem uma \u2014 conte-a bem.",
+    "Estude um mestre por m\xEAs. Incorpore uma t\xE9cnica nova ao seu repert\xF3rio.",
+    "Clientes satisfeitos indicam. Invista no p\xF3s-venda e no relacionamento.",
+    "A arte \xE9 um m\xFAsculo: quanto mais voc\xEA pratica, mais forte sua voz criativa fica."
+  ];
+  function obterDicaDoDia() {
+    const diaDoAno = Math.floor((/* @__PURE__ */ new Date() - new Date((/* @__PURE__ */ new Date()).getFullYear(), 0, 0)) / 864e5);
+    return dicasDiarias[diaDoAno % dicasDiarias.length];
+  }
+  var tourPassos = [
+    { alvo: ".sidebar", titulo: "\xF0\x9F\x8E\xA8 Bem-vindo ao Atelier CRM!", desc: "Este \xE9 seu hub criativo. Navegue entre os m\xF3dulos pelo menu lateral.", pos: "right" },
+    { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 5 temas.", pos: "bottom" },
+    { alvo: "#btnBackup", titulo: "\u{1F4BE} Backup Seguro", desc: "Exporte seus dados periodicamente.", pos: "bottom" },
+    { alvo: '[data-rota="catalogo"]', titulo: "\xF0\x9F\x96\xBC\xEF\xB8\x8F Cat\xE1logo de Obras", desc: "Cadastre, edite e gerencie seu portf\xF3lio.", pos: "right" },
+    { alvo: '[data-rota="vendas"]', titulo: "\xF0\x9F\x92\xB0 Vendas e Recibos", desc: "Registre vendas e gere recibos em PDF.", pos: "right" },
+    { alvo: '[data-rota="diario"]', titulo: "\u{1F4D6} Di\xE1rio Criativo", desc: "Registre seu processo di\xE1rio.", pos: "right" },
+    { alvo: '[data-rota="configuracoes"]', titulo: "\u2699\uFE0F Configura\xE7\xF5es", desc: "Configure idioma, seguran\xE7a e dados do artista.", pos: "right" }
+  ];
+  function iniciarTour() {
+    if (dataStore?.dados?.config?.tourCompleted) return;
+    let passoAtual = 0;
+    function mostrarPasso() {
+      const passo = tourPassos[passoAtual];
+      const alvo = document.querySelector(passo.alvo);
+      if (!alvo) {
+        passoAtual++;
+        if (passoAtual < tourPassos.length) mostrarPasso();
+        else finalizarTour();
+        return;
+      }
+      document.querySelectorAll(".tour-highlight").forEach((el) => el.classList.remove("tour-highlight"));
+      document.querySelectorAll(".tour-tooltip").forEach((el) => el.remove());
+      alvo.classList.add("tour-highlight");
+      const rect = alvo.getBoundingClientRect();
+      const tooltip = document.createElement("div");
+      tooltip.className = "tour-tooltip";
+      let top, left;
+      if (passo.pos === "right") {
+        left = rect.right + 12;
+        top = rect.top;
+      } else if (passo.pos === "bottom") {
+        left = rect.left;
+        top = rect.bottom + 12;
+      } else {
+        left = rect.left;
+        top = rect.bottom + 12;
+      }
+      if (left + 320 > window.innerWidth) left = window.innerWidth - 340;
+      if (top < 10) top = 10;
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
+      const isUltimo = passoAtual === tourPassos.length - 1;
+      tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">\xE2\x86\x90 Anterior</button>' : ""}<button class="tt-btn-next" id="tourNext">${isUltimo ? "\xE2\x9C\x85 Finalizar" : "Pr\xF3ximo \xE2\x86\x92"}</button></div>`;
+      document.body.appendChild(tooltip);
+      document.getElementById("tourNext")?.addEventListener("click", () => {
+        if (isUltimo) finalizarTour();
+        else {
+          passoAtual++;
+          mostrarPasso();
+        }
+      });
+      document.getElementById("tourPrev")?.addEventListener("click", () => {
+        passoAtual--;
+        mostrarPasso();
+      });
+      document.getElementById("tourSkip")?.addEventListener("click", finalizarTour);
+    }
+    function finalizarTour() {
+      document.querySelectorAll(".tour-highlight").forEach((el) => el.classList.remove("tour-highlight"));
+      document.querySelectorAll(".tour-tooltip").forEach((el) => el.remove());
+      if (dataStore) {
+        dataStore.dados.config.tourCompleted = true;
+        dataStore.salvar();
+      }
+    }
+    setTimeout(mostrarPasso, 600);
+  }
+  var _dataStore = new DataStore();
+  var dataStore = new StoreBridge(_dataStore);
+  window.dataStore = dataStore;
+  var themeEngine = new ThemeEngine(dataStore);
+  var router = new Router(dataStore);
+  var eventBus = new EventBus();
+  var activityLogger = new ActivityLogger();
+  var dashboardView = new DashboardView(dataStore, router);
+  var catalogoView = new CatalogoView(dataStore, router);
+  var pdfGenerator = new PDFGenerator(dataStore);
+  var clientesView = new ClientesView(dataStore, router);
+  var vendasView = new VendasView(dataStore, router, pdfGenerator);
+  var certificadosView = new CertificadosView(dataStore, router);
+  var referenciasView = new ReferenciasView(dataStore, router);
+  var galeriaVirtualView = new GaleriaVirtualView(dataStore, router);
+  var precificadorView = new PrecificadorView(dataStore, router);
+  var atelierView = new AtelierView(dataStore, router);
+  var diarioView = new DiarioView(dataStore, router);
+  var redeView = new RedeView(dataStore, router);
+  var portalView = new PortalView(dataStore, router);
+  var cloudSync = new CloudSync(dataStore);
+  var encomendasView = new EncomendasView(dataStore, router);
+  var exposicoesView = new ExposicoesView(dataStore, router);
+  var financeiroView = new FinanceiroView(dataStore, router);
+  var configuracoesView = new ConfiguracoesView(dataStore, router);
+  var exportImportView = new ExportImportView(dataStore, router);
+  document.getElementById("viewPrincipal").addEventListener("click", (e) => {
+    const botaoModal = e.target.closest("[data-abrir-modal]");
+    if (botaoModal) {
+      abrirModalNovoItem(botaoModal.dataset.abrirModal, dataStore, router);
+      return;
+    }
+    if (e.target.id === "btnAtalhoNovaObra") {
+      eventBus.emitir("abrir-nova-obra");
+      return;
+    }
+    if (e.target.getAttribute("data-acao") === "irCatalogo") {
+      router.navegar("catalogo");
+      return;
+    }
+    if (e.target.id === "btnAtalhoVenda") {
+      eventBus.emitir("abrir-nova-venda");
+      return;
+    }
+    if (e.target.id === "btnAtalhoRecibo") {
+      eventBus.emitir("abrir-recibo-rapido");
+      return;
+    }
+  });
+  document.getElementById("btnColapsar").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("colapsada");
+  });
+  document.getElementById("btnBackup").addEventListener("click", () => {
+    dataStore.exportarBackup();
+    mostrarToast("Backup exportado com sucesso!");
+  });
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "modalOverlay") fecharModal();
+  });
+  if (window.innerWidth <= 860) {
+    document.getElementById("sidebar").classList.add("colapsada");
+  }
+  var _mostrarToastOriginal = window.mostrarToast;
+  window.mostrarToast = function(mensagem, tipo = "info") {
+    const toast = document.getElementById("toast");
+    if (!toast) return _mostrarToastOriginal?.(mensagem);
+    toast.textContent = mensagem;
+    toast.className = "toast " + tipo;
+    toast.classList.add("mostrar");
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => {
+      toast.classList.remove("mostrar");
+      toast.className = "toast";
+    }, 2800);
+  };
+  var _navegarOriginal = Router.prototype.navegar;
+  Router.prototype.navegar = function(chave) {
+    _navegarOriginal.call(this, chave);
+    aplicarTransicaoView(this.container, chave);
+  };
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+    });
+  }
+  themeEngine.inicializar();
+  router.inicializar();
+  setTimeout(() => iniciarMonitorInatividade(), 500);
+  setTimeout(() => cloudSync.iniciarAutoBackup(), 2e3);
+  iniciarFab();
+  if (dataStore && !dataStore.dados.config.tourCompleted) {
+    setTimeout(() => iniciarTour(), 1e3);
+  }
+  (function() {
+    const btnNotif = document.getElementById("btnNotificacoes");
+    const panel = document.getElementById("notifPanel");
+    const lista = document.getElementById("notifLista");
+    const badge = document.getElementById("notifBadge");
+    if (!btnNotif || !panel) return;
+    function lerLidas() {
+      try {
+        return JSON.parse(localStorage.getItem("atelier-notif-lidas") || "[]");
+      } catch {
+        return [];
+      }
+    }
+    function salvarLidas(ids) {
+      localStorage.setItem("atelier-notif-lidas", JSON.stringify(ids));
+    }
+    function atualizarBadge() {
+      const lidas = lerLidas();
+      const atividades = activityLogger.obterRecentes(20);
+      const naoLidas = atividades.filter((a) => !lidas.includes(a.id)).length;
+      if (naoLidas > 0) {
+        badge.textContent = naoLidas > 99 ? "99+" : String(naoLidas);
+        badge.style.display = "flex";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+    function renderizarNotif() {
+      const lidas = lerLidas();
+      const atividades = activityLogger.obterRecentes(20);
+      if (atividades.length === 0) {
+        lista.innerHTML = '<div class="notif-vazio">\xF0\x9F\x94\x94 Nenhuma notifica\xE7\xE3o ainda.</div>';
+        return;
+      }
+      lista.innerHTML = atividades.map((a) => `
+      <div class="notif-item ${lidas.includes(a.id) ? "" : "ni-nao-lida"}" data-id="${a.id}">
+        <span class="ni-icone">${activityLogger.obterIcone(a.tipo)}</span>
+        <div class="ni-conteudo">
+          <div class="ni-titulo">${sanitizarHTML(a.titulo)}</div>
+          <div class="ni-detalhes">${sanitizarHTML(a.detalhes || "")}</div>
+          <div class="ni-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
+        </div>
+        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">\xE2\x9C\x93</button>
+      </div>
+    `).join("");
+      lista.querySelectorAll(".ni-marcar").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          const lidas2 = lerLidas();
+          if (!lidas2.includes(id)) {
+            lidas2.push(id);
+            salvarLidas(lidas2);
+          }
+          renderizarNotif();
+          atualizarBadge();
+        });
+      });
+    }
+    btnNotif.addEventListener("click", (e) => {
+      e.stopPropagation();
+      panel.classList.toggle("visivel");
+      if (panel.classList.contains("visivel")) renderizarNotif();
+    });
+    document.addEventListener("click", (e) => {
+      if (!panel.contains(e.target) && e.target !== btnNotif && !btnNotif.contains(e.target)) panel.classList.remove("visivel");
+    });
+    document.getElementById("notifMarcarLidas")?.addEventListener("click", () => {
+      const atividades = activityLogger.obterRecentes(20);
+      const todosIds = atividades.map((a) => a.id);
+      salvarLidas(todosIds);
+      renderizarNotif();
+      atualizarBadge();
+    });
+    document.getElementById("notifLimpar")?.addEventListener("click", () => {
+      activityLogger.limpar();
+      salvarLidas([]);
+      renderizarNotif();
+      atualizarBadge();
+    });
+    eventBus?.on("nova-atividade", () => {
+      atualizarBadge();
+    });
+    atualizarBadge();
+  })();
+  (function() {
+    let overlay = document.getElementById("globalDropOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "globalDropOverlay";
+      overlay.className = "global-drop-overlay";
+      overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">\xF0\x9F\x93\xB8</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG \xB7 PNG \xE2\x80\x94 M\xFAltiplos arquivos</div></div>';
+      document.body.appendChild(overlay);
+    }
+    let dropTimer = 0;
+    document.addEventListener("dragenter", (e) => {
+      if (!e.dataTransfer.types?.includes("Files")) return;
+      clearTimeout(dropTimer);
+      overlay.classList.add("gdo-visivel");
+    });
+    document.addEventListener("dragover", (e) => {
+      if (e.dataTransfer.types?.includes("Files")) e.preventDefault();
+    });
+    document.addEventListener("dragleave", (e) => {
+      if (e.relatedTarget && overlay.contains(e.relatedTarget)) return;
+      clearTimeout(dropTimer);
+      dropTimer = setTimeout(() => overlay.classList.remove("gdo-visivel"), 100);
+    });
+    document.addEventListener("drop", (e) => {
+      e.preventDefault();
+      overlay.classList.remove("gdo-visivel");
+      const files = e.dataTransfer.files;
+      if (!files || files.length === 0) return;
+      const imagens = Array.from(files).filter((f) => f.type.startsWith("image/"));
+      if (imagens.length === 0) {
+        mostrarToast("\xE2\x9A\xA0\xEF\xB8\x8F Apenas imagens (JPG/PNG) s\xE3o suportadas.", "erro");
+        return;
+      }
+      if (imagens.length === 1) {
+        router?.navegar("catalogo");
+        setTimeout(() => eventBus.emitir("abrir-nova-obra"), 300);
+      } else {
+        router?.navegar("catalogo");
+        setTimeout(() => {
+          if (catalogoView && typeof catalogoView.abrirImportacaoLote === "function") {
+            catalogoView.abrirImportacaoLote();
+          }
+        }, 400);
+      }
+    });
+  })();
+  var _observerOrig = MutationObserver;
+  var _mutationObs = new _observerOrig(() => {
+    observarImagens();
+  });
+  _mutationObs.observe(document.getElementById("viewPrincipal"), { childList: true, subtree: true });
+  (function() {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#portal")) {
+      setTimeout(() => router.navegar("portal"), 200);
+    } else if (hash && hash.includes("galeria=virtual")) {
+      setTimeout(() => {
+        router.navegar("galeriaVirtual");
+        if (hash.includes("tour=obras-disponiveis") && galeriaVirtualView) {
+          setTimeout(() => galeriaVirtualView.iniciarTour(), 800);
+        }
+      }, 300);
+    }
+  })();
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+      DataStore,
+      StoreBridge,
+      pinia,
+      obraStore,
+      useObraStore,
+      clienteStore,
+      useClienteStore,
+      vendaStore,
+      useVendaStore,
+      configStore,
+      useConfigStore,
+      EventBus,
+      ThemeEngine,
+      Router,
+      DashboardView,
+      CatalogoView,
+      ClientesView,
+      VendasView,
+      CertificadosView,
+      ReferenciasView,
+      GaleriaVirtualView,
+      PrecificadorView,
+      AtelierView,
+      RedeView,
+      DiarioView,
+      PortalView,
+      CloudSync,
+      EncomendasView,
+      ExposicoesView,
+      FinanceiroView,
+      ConfiguracoesView,
+      ExportImportView,
+      ImageLightbox,
+      abrirLightbox,
+      imageLightbox,
+      formatarMoeda,
+      formatarData,
+      classeStatus,
+      rotuloStatus,
+      classeStatusVenda,
+      rotuloStatusVenda,
+      sanitizarHTML,
+      sanitizarURL,
+      sanitizarRich,
+      debounce: debounce2,
+      gerarImagemPlaceholder,
+      calcularObrasPorMes,
+      gerarGraficoSVG,
+      capitalizarTexto,
+      abrirModal,
+      fecharModal,
+      mostrarToast,
+      renderizarDashboard,
+      renderizarViewPlaceholder,
+      PDFGenerator,
+      gerarQRCodeDataUrl,
+      observarImagens,
+      aplicarTransicaoView,
+      iniciarMonitorInatividade,
+      bloquearTela,
+      dispararConfetti,
+      obterDicaDoDia,
+      iniciarTour
+    };
+  }
+})();
+/*! Bundled license information:
+
+@vue/shared/dist/shared.esm-bundler.js:
+  (**
+  * @vue/shared v3.5.40
+  * (c) 2018-present Yuxi (Evan) You and Vue contributors
+  * @license MIT
+  **)
+
+@vue/reactivity/dist/reactivity.esm-bundler.js:
+  (**
+  * @vue/reactivity v3.5.40
+  * (c) 2018-present Yuxi (Evan) You and Vue contributors
+  * @license MIT
+  **)
+
+@vue/runtime-core/dist/runtime-core.esm-bundler.js:
+  (**
+  * @vue/runtime-core v3.5.40
+  * (c) 2018-present Yuxi (Evan) You and Vue contributors
+  * @license MIT
+  **)
+
+vue/dist/vue.runtime.esm-bundler.js:
+  (**
+  * vue v3.5.40
+  * (c) 2018-present Yuxi (Evan) You and Vue contributors
+  * @license MIT
+  **)
+
+pinia/dist/pinia.js:
+  (*!
+   * pinia v4.0.2
+   * (c) 2026 Eduardo San Martin Morote
+   * @license MIT
+   *)
+
+pinia/dist/pinia.js:
+  (*! #__NO_SIDE_EFFECTS__ *)
+*/

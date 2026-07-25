@@ -1,0 +1,30 @@
+// Auto-generated barrel
+import './utils';
+import './data-store';
+import './event-bus';
+import './activity-logger';
+import './theme-engine';
+import './router';
+import './views/base-view';
+import './views/dashboard-view';
+import './views/catalogo-view';
+import './views/clientes-view';
+import './views/vendas-view';
+import './views/pdf-generator';
+import './views/certificados-view';
+import './views/referencias-view';
+import './views/galeria-virtual-view';
+import './views/precificador-view';
+import './views/atelier-view';
+import './views/rede-view';
+import './views/diario-view';
+import './views/portal-view';
+import './views/encomendas-view';
+import './views/image-lightbox';
+import './views/export-import-view';
+import './views/exposicoes-view';
+import './views/financeiro-view';
+import './views/configuracoes-view';
+import './cloud-sync';
+
+export {}
