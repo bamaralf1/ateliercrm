@@ -12169,16 +12169,16 @@ Only state can be modified.`);
     // Numeração sequencial por ano: ART-2026-001, ART-2026-002...
     gerarNumeroSerie() {
       const ano = (/* @__PURE__ */ new Date()).getFullYear();
-      const cfg = this.dataStore.dados.config;
+      const cfg = configStore();
       if (!cfg.contadorCertificados) cfg.contadorCertificados = {};
       cfg.contadorCertificados[ano] = (cfg.contadorCertificados[ano] || 0) + 1;
-      this.dataStore.salvar();
+      cfg.salvar();
       return `ART-${ano}-${String(cfg.contadorCertificados[ano]).padStart(3, "0")}`;
     }
     // Modal de emissão: a partir de obra existente (autopreenche) ou manual
     abrirFormulario() {
-      const obras = this.dataStore.listar("obras");
-      const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || "";
+      const obras = obraStore().items;
+      const assinaturaSalva = configStore().artista?.assinatura || "";
       abrirModal(`
       <h3>Novo Certificado de Autenticidade</h3>
       <form id="formCertificado">
@@ -12327,9 +12327,9 @@ Only state can be modified.`);
         };
         const assinaturaDataUrl = canvas.toDataURL("image/png");
         if (document.getElementById("campoSalvarAssinatura").checked) {
-          this.dataStore.dados.config.artista = this.dataStore.dados.config.artista || {};
-          this.dataStore.dados.config.artista.assinatura = assinaturaDataUrl;
-          this.dataStore.salvar();
+          configStore().artista = configStore().artista || {};
+          configStore().artista.assinatura = assinaturaDataUrl;
+          configStore().salvar();
         }
         const registrado = this.dataStore.adicionar("certificados", cert);
         fecharModal();
@@ -12342,7 +12342,7 @@ Only state can be modified.`);
     async baixarNovamente(id) {
       const cert = this.dataStore.buscarPorId("certificados", id);
       if (!cert) return;
-      const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || "";
+      const assinaturaSalva = configStore().artista?.assinatura || "";
       mostrarToast("Gerando PDF...");
       await this.gerarPdfCertificado(cert, assinaturaSalva);
     }
@@ -12357,7 +12357,7 @@ Only state can be modified.`);
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const w = doc.internal.pageSize.getWidth();
       const h = doc.internal.pageSize.getHeight();
-      const artista = this.dataStore.dados.config.artista || {};
+      const artista = configStore().artista || {};
       const nomeArtista = artista.nome || "Ateli\xEA do Artista";
       doc.setDrawColor(190);
       doc.setLineWidth(0.9);
@@ -12483,7 +12483,7 @@ Only state can be modified.`);
       const refs = this.referenciasFiltradas();
       const tags = this.tagsDisponiveis();
       const categorias = this.categoriasDisponiveis();
-      const obras = this.dataStore.listar("obras");
+      const obras = obraStore().items;
       const cardsHtml = refs.length ? `
       <div class="grid-referencias" id="gridReferencias">
         ${refs.map((r, indice) => this.renderCard(r, indice, obras)).join("")}
@@ -12648,7 +12648,7 @@ Only state can be modified.`);
     }
     // Modal de criação de referência (imagem / link / nota)
     abrirFormulario() {
-      const obras = this.dataStore.listar("obras");
+      const obras = obraStore().items;
       abrirModal(`
       <h3>Nova Refer\xEAncia</h3>
       <div class="grupo-botoes-toggle" id="grupoTipoReferencia">
@@ -14486,8 +14486,8 @@ Aprecie a exposi\xE7\xE3o!`;
       super(dataStore2, router2);
       this.tabAtiva = "estoque";
       this.filtroCategoria = "";
-      this.catIcones = { tintas: "\u{1F3A8}", superficies: "\u{1F4D0}", ferramentas: "\u{1F527}", molduras: "\u{1F5BC}\uFE0F" };
-      this.catLabels = { tintas: "Tintas", superficies: "Superf\xEDcies", ferramentas: "Ferramentas", molduras: "Molduras" };
+      this.catIcones = { tintas: "\xF0\u0178\u017D\xA8", superficies: "\xF0\u0178\u201C\x90", ferramentas: "\xF0\u0178\u201D\xA7", molduras: "\xF0\u0178\u2013\xBC\xEF\xB8\x8F" };
+      this.catLabels = { tintas: "Tintas", superficies: "Superf\xC3\xADcies", ferramentas: "Ferramentas", molduras: "Molduras" };
     }
     get materiais() {
       return this.dataStore.listar("materiais") || [];
@@ -14499,12 +14499,12 @@ Aprecie a exposi\xE7\xE3o!`;
       return this.dataStore.listar("consumos") || [];
     }
     get obras() {
-      return this.dataStore.listar("obras") || [];
+      return obraStore().items;
     }
     // --- RENDER ---
     render() {
       const tabs = ["estoque", "consumo", "compras", "fornecedores", "custo"];
-      const tabLabels = { estoque: "\u{1F4E6} Estoque", consumo: "\u{1F4CB} Consumo", compras: "\u{1F6D2} Compras", fornecedores: "\u{1F3EA} Fornecedores", custo: "\u{1F4B0} Custo p/ Obra" };
+      const tabLabels = { estoque: "\xF0\u0178\u201C\xA6 Estoque", consumo: "\xF0\u0178\u201C\u2039 Consumo", compras: "\xF0\u0178\u203A\u2019 Compras", fornecedores: "\xF0\u0178\x8F\xAA Fornecedores", custo: "\xF0\u0178\u2019\xB0 Custo p/ Obra" };
       const tabContent = {
         estoque: () => this.renderEstoque(),
         consumo: () => this.renderConsumo(),
@@ -14529,10 +14529,10 @@ Aprecie a exposi\xE7\xE3o!`;
       return `
       <div class="mat-filtros">
         <select id="filtroCatEstoque">
-          <option value="">\u{1F4DA} Todas as categorias</option>
+          <option value="">\xF0\u0178\u201C\u0161 Todas as categorias</option>
           ${cats.map((c) => `<option value="${c}" ${this.filtroCategoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("")}
         </select>
-        <button class="btn-primario" id="btnNovoMaterial" style="font-size:0.8rem;padding:6px 14px;">\u2795 Novo Material</button>
+        <button class="btn-primario" id="btnNovoMaterial" style="font-size:0.8rem;padding:6px 14px;">\xE2\u017E\u2022 Novo Material</button>
         <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">${filtrados.length} item(ns)</span>
       </div>
       <div class="mat-grid">
@@ -14545,15 +14545,15 @@ Aprecie a exposi\xE7\xE3o!`;
       const qtd = Number(m.quantidade) || 0;
       const min = Number(m.quantidadeMinima) || 0;
       const nivel = qtd <= 0 ? "baixo" : min > 0 && qtd <= min ? "baixo" : min > 0 && qtd <= min * 2 ? "medio" : "ok";
-      const badgeLabel = nivel === "baixo" ? "\u26A0\uFE0F Repor" : nivel === "medio" ? "\u26A0\uFE0F Aten\xE7\xE3o" : "\u2714 OK";
+      const badgeLabel = nivel === "baixo" ? "\xE2\u0161\xA0\xEF\xB8\x8F Repor" : nivel === "medio" ? "\xE2\u0161\xA0\xEF\xB8\x8F Aten\xC3\xA7\xC3\xA3o" : "\xE2\u0153\u201D OK";
       const categoria = m.categoria || "outros";
       return `
       <div class="mat-card">
         <div class="mat-faixa-alerta ${nivel}"></div>
         <div class="mat-header">
           <div>
-            <div class="mat-nome">${this.catIcones[categoria] || "\u{1F4E6}"} ${m.nome || ""}</div>
-            <span class="mat-cat ${categoria}">${this.catLabels[categoria] || categoria} ${m.subcategoria ? "\xB7 " + m.subcategoria : ""}</span>
+            <div class="mat-nome">${this.catIcones[categoria] || "\xF0\u0178\u201C\xA6"} ${m.nome || ""}</div>
+            <span class="mat-cat ${categoria}">${this.catLabels[categoria] || categoria} ${m.subcategoria ? "\xC2\xB7 " + m.subcategoria : ""}</span>
           </div>
           <div style="text-align:right;">
             <div class="mat-qtd ${nivel === "baixo" ? "alerta" : "ok"}">${qtd}</div>
@@ -14562,17 +14562,17 @@ Aprecie a exposi\xE7\xE3o!`;
           </div>
         </div>
         <div class="mat-detalhes">
-          ${m.marca ? `<span>\u{1F3F7}\uFE0F ${m.marca}</span>` : ""}
-          ${m.local ? `<span>\u{1F4CD} ${m.local}</span>` : ""}
-          ${m.precoUnitario ? `<span>\u{1F4B0} R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || "un"}</span>` : ""}
-          ${m.dataAquisicao ? `<span>\u{1F4C5} ${m.dataAquisicao}</span>` : ""}
-          ${m.validade ? `<span>\u23F3 Val: ${m.validade}</span>` : ""}
+          ${m.marca ? `<span>\xF0\u0178\x8F\xB7\xEF\xB8\x8F ${m.marca}</span>` : ""}
+          ${m.local ? `<span>\xF0\u0178\u201C\x8D ${m.local}</span>` : ""}
+          ${m.precoUnitario ? `<span>\xF0\u0178\u2019\xB0 R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || "un"}</span>` : ""}
+          ${m.dataAquisicao ? `<span>\xF0\u0178\u201C\u2026 ${m.dataAquisicao}</span>` : ""}
+          ${m.validade ? `<span>\xE2\x8F\xB3 Val: ${m.validade}</span>` : ""}
         </div>
-        ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${m.notas}</div>` : ""}
+        ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\xF0\u0178\u201C\x9D ${m.notas}</div>` : ""}
         <div class="mat-acoes">
-          <button data-acao="editarMaterial" data-id="${m.id}">\u270F\uFE0F Editar</button>
-          <button data-acao="consumirMaterial" data-id="${m.id}">\u{1F4C9} Consumir</button>
-          <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+          <button data-acao="editarMaterial" data-id="${m.id}">\xE2\u0153\x8F\xEF\xB8\x8F Editar</button>
+          <button data-acao="consumirMaterial" data-id="${m.id}">\xF0\u0178\u201C\u2030 Consumir</button>
+          <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
         </div>
       </div>
     `;
@@ -14590,7 +14590,7 @@ Aprecie a exposi\xE7\xE3o!`;
       }).reverse();
       return `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <button class="btn-primario" id="btnNovoConsumo" style="font-size:0.8rem;padding:6px 14px;">\u2795 Registrar Consumo</button>
+        <button class="btn-primario" id="btnNovoConsumo" style="font-size:0.8rem;padding:6px 14px;">\xE2\u017E\u2022 Registrar Consumo</button>
         <span style="font-size:0.8rem;color:var(--text-muted);">${consumos.length} registro(s)</span>
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum consumo registrado.</p>' : `
@@ -14601,10 +14601,10 @@ Aprecie a exposi\xE7\xE3o!`;
             <td class="cons-obra">${r.matNome}</td>
             <td>${r.obraTitulo}</td>
             <td>${r.quantidade}</td>
-            <td>${r.custo !== null ? formatarMoeda(r.custo) : "\u2014"}</td>
-            <td>${r.data || "\u2014"}</td>
+            <td>${r.custo !== null ? formatarMoeda(r.custo) : "\xE2\u20AC\u201D"}</td>
+            <td>${r.data || "\xE2\u20AC\u201D"}</td>
             <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${r.notas || ""}</td>
-            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;">\u{1F5D1}\uFE0F</button></td>
+            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button></td>
           </tr>
         `).join("")}
       </table>`}
@@ -14624,17 +14624,17 @@ Aprecie a exposi\xE7\xE3o!`;
       const totalEst = paraComprar.reduce((s, m) => s + (Number(m.precoUnitario) || 0) * Math.max(1, Math.ceil(((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)) / 1)), 0);
       return `
       <div class="compras-resumo">
-        <div class="cr-item"><div class="cr-valor">${abaixoMin.length}</div><div class="cr-label">\u26A0\uFE0F Abaixo do m\xEDnimo</div></div>
-        <div class="cr-item"><div class="cr-valor">${paraComprar.length}</div><div class="cr-label">\u{1F6D2} Para comprar</div></div>
-        <div class="cr-item"><div class="cr-valor">${comprados.length}</div><div class="cr-label">\u2714 Comprados</div></div>
-        <div class="cr-item"><div class="cr-valor">${formatarMoeda(Math.round(totalEst))}</div><div class="cr-label">\u{1F4B0} Custo estimado</div></div>
+        <div class="cr-item"><div class="cr-valor">${abaixoMin.length}</div><div class="cr-label">\xE2\u0161\xA0\xEF\xB8\x8F Abaixo do m\xC3\xADnimo</div></div>
+        <div class="cr-item"><div class="cr-valor">${paraComprar.length}</div><div class="cr-label">\xF0\u0178\u203A\u2019 Para comprar</div></div>
+        <div class="cr-item"><div class="cr-valor">${comprados.length}</div><div class="cr-label">\xE2\u0153\u201D Comprados</div></div>
+        <div class="cr-item"><div class="cr-valor">${formatarMoeda(Math.round(totalEst))}</div><div class="cr-label">\xF0\u0178\u2019\xB0 Custo estimado</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">\u26A1 Gerar lista autom\xE1tica</button>
-        <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">\u2795 Adicionar item manual</button>
-        <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">\u{1F4DE} Exportar TXT</button>
+        <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">\xE2\u0161\xA1 Gerar lista autom\xC3\xA1tica</button>
+        <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">\xE2\u017E\u2022 Adicionar item manual</button>
+        <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">\xF0\u0178\u201C\u017E Exportar TXT</button>
       </div>
-      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista autom\xE1tica".</p>' : ""}
+      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista autom\xC3\xA1tica".</p>' : ""}
       <ul class="lista-compras">
         ${paraComprar.map((m) => this.renderItemCompra(m, false)).join("")}
         ${comprados.map((m) => this.renderItemCompra(m, true)).join("")}
@@ -14646,14 +14646,14 @@ Aprecie a exposi\xE7\xE3o!`;
       return `
       <li class="${comprado ? "comprado" : ""}">
         <div class="lc-info">
-          <div class="lc-nome">${this.catIcones[m.categoria] || "\u{1F4E6}"} ${m.nome}</div>
-          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? "\xB7 " + m.marca : ""}</div>
+          <div class="lc-nome">${this.catIcones[m.categoria] || "\xF0\u0178\u201C\xA6"} ${m.nome}</div>
+          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? "\xC2\xB7 " + m.marca : ""}</div>
         </div>
-        <div class="lc-qtd">${comprado ? "\u2714\uFE0F" : `Qtd: ${qtdSugerida} ${m.unidade || "un"}`}</div>
+        <div class="lc-qtd">${comprado ? "\xE2\u0153\u201D\xEF\xB8\x8F" : `Qtd: ${qtdSugerida} ${m.unidade || "un"}`}</div>
         ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ""}
         <div class="lc-acoes">
-          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}">\u21A9\uFE0F</button>` : `<button data-acao="marcarComprado" data-id="${m.id}">\u2714</button>`}
-          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}">\xE2\u2020\xA9\xEF\xB8\x8F</button>` : `<button data-acao="marcarComprado" data-id="${m.id}">\xE2\u0153\u201D</button>`}
+          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
         </div>
       </li>
     `;
@@ -14663,7 +14663,7 @@ Aprecie a exposi\xE7\xE3o!`;
       const fornecedores = this.fornecedores;
       return `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <button class="btn-primario" id="btnNovoFornecedor" style="font-size:0.8rem;padding:6px 14px;">\u2795 Novo Fornecedor</button>
+        <button class="btn-primario" id="btnNovoFornecedor" style="font-size:0.8rem;padding:6px 14px;">\xE2\u017E\u2022 Novo Fornecedor</button>
         <span style="font-size:0.8rem;color:var(--text-muted);">${fornecedores.length} fornecedor(es)</span>
       </div>
       <div class="forn-grid">
@@ -14673,20 +14673,20 @@ Aprecie a exposi\xE7\xE3o!`;
         const totalGasto = hist.reduce((s, h) => s + Number(h.valor || 0), 0);
         return `
             <div class="forn-card">
-              <div class="forn-nome">\u{1F3EA} ${f.nome}</div>
-              <div class="forn-contato">${f.contato || ""}${f.email ? " \xB7 " + f.email : ""}</div>
-              <div class="forn-esp">\u{1F4D2} ${f.especialidade || "Sem especialidade"}</div>
-              ${f.avaliacao ? `<div class="forn-estrelas">${"\u2605".repeat(Math.min(5, Number(f.avaliacao)))}${"\u2606".repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ""}
-              ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DD} ${f.notas}</div>` : ""}
+              <div class="forn-nome">\xF0\u0178\x8F\xAA ${f.nome}</div>
+              <div class="forn-contato">${f.contato || ""}${f.email ? " \xC2\xB7 " + f.email : ""}</div>
+              <div class="forn-esp">\xF0\u0178\u201C\u2019 ${f.especialidade || "Sem especialidade"}</div>
+              ${f.avaliacao ? `<div class="forn-estrelas">${"\xE2\u02DC\u2026".repeat(Math.min(5, Number(f.avaliacao)))}${"\xE2\u02DC\u2020".repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ""}
+              ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\xF0\u0178\u201C\x9D ${f.notas}</div>` : ""}
               ${hist.length > 0 ? `
                 <div class="forn-hist">
-                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Hist\xF3rico (Total: ${formatarMoeda(totalGasto)})</div>
-                  ${hist.map((h) => `<div class="hist-item"><span>${h.data || ""} \u2014 ${h.itens || ""}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join("")}
+                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Hist\xC3\xB3rico (Total: ${formatarMoeda(totalGasto)})</div>
+                  ${hist.map((h) => `<div class="hist-item"><span>${h.data || ""} \xE2\u20AC\u201D ${h.itens || ""}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join("")}
                 </div>
               ` : ""}
               <div class="forn-acoes">
-                <button data-acao="editarFornecedor" data-id="${f.id}">\u270F\uFE0F Editar</button>
-                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button>
+                <button data-acao="editarFornecedor" data-id="${f.id}">\xE2\u0153\x8F\xEF\xB8\x8F Editar</button>
+                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
               </div>
             </div>
           `;
@@ -14702,8 +14702,8 @@ Aprecie a exposi\xE7\xE3o!`;
       return `
       <div style="margin-bottom:12px;">
         <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
-          <option value="">\u2014 Selecione uma obra \u2014</option>
-          ${obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"} ${o.preco ? "\u2014 " + formatarMoeda(o.preco) : ""}</option>`).join("")}
+          <option value="">\xE2\u20AC\u201D Selecione uma obra \xE2\u20AC\u201D</option>
+          ${obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"} ${o.preco ? "\xE2\u20AC\u201D " + formatarMoeda(o.preco) : ""}</option>`).join("")}
         </select>
       </div>
       <div id="custoObraDetalhe">
@@ -14712,8 +14712,8 @@ Aprecie a exposi\xE7\xE3o!`;
     `;
     }
     renderCustoDetalhe(obraId) {
-      const obra = this.dataStore.buscarPorId("obras", obraId);
-      if (!obra) return '<p style="color:var(--text-muted);">Obra n\xE3o encontrada.</p>';
+      const obra = obraStore().items.find((o) => o.id === obraId);
+      if (!obra) return '<p style="color:var(--text-muted);">Obra n\xC3\xA3o encontrada.</p>';
       const consumosObra = this.consumos.filter((c) => c.obraId === obraId);
       const materiais = this.materiais;
       let custoTotal = 0;
@@ -14730,25 +14730,25 @@ Aprecie a exposi\xE7\xE3o!`;
       <div class="custo-obra-header">
         <div class="custo-obra-card">
           <div class="co-valor">${formatarMoeda(Math.round(custoTotal))}</div>
-          <div class="co-label">\u{1F4B0} Custo de produ\xE7\xE3o</div>
+          <div class="co-label">\xF0\u0178\u2019\xB0 Custo de produ\xC3\xA7\xC3\xA3o</div>
         </div>
         <div class="custo-obra-card">
-          <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : "\u2014"}</div>
-          <div class="co-label">\u{1F3F7}\uFE0F Pre\xE7o de venda</div>
+          <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : "\xE2\u20AC\u201D"}</div>
+          <div class="co-label">\xF0\u0178\x8F\xB7\xEF\xB8\x8F Pre\xC3\xA7o de venda</div>
         </div>
         <div class="custo-obra-card">
-          <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + "%" : "\u2014"}</div>
-          ${margem > 0 ? `<div class="co-label">\u{1F4CA} Margem de lucro ${margem >= 60 ? "\u2714" : margem >= 30 ? "\u26A0\uFE0F" : "\u{1F53D}"}</div>` : '<div class="co-label">Sem venda definida</div>'}
+          <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + "%" : "\xE2\u20AC\u201D"}</div>
+          ${margem > 0 ? `<div class="co-label">\xF0\u0178\u201C\u0160 Margem de lucro ${margem >= 60 ? "\xE2\u0153\u201D" : margem >= 30 ? "\xE2\u0161\xA0\xEF\xB8\x8F" : "\xF0\u0178\u201D\xBD"}</div>` : '<div class="co-label">Sem venda definida</div>'}
         </div>
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `
       <table class="cons-table">
         <tr><th>Material</th><th>Qtd</th><th>Valor unit.</th><th>Custo</th><th>Data</th><th>Notas</th></tr>
-        ${rows.map((r) => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find((m) => m.id === r.materialId)?.precoUnitario ? "R$ " + Number(materiais.find((m) => m.id === r.materialId).precoUnitario).toFixed(2) : "\u2014"}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || "\u2014"}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ""}</td></tr>`).join("")}
+        ${rows.map((r) => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find((m) => m.id === r.materialId)?.precoUnitario ? "R$ " + Number(materiais.find((m) => m.id === r.materialId).precoUnitario).toFixed(2) : "\xE2\u20AC\u201D"}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || "\xE2\u20AC\u201D"}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ""}</td></tr>`).join("")}
         <tr style="font-weight:600;"><td>TOTAL</td><td></td><td></td><td>${formatarMoeda(Math.round(custoTotal))}</td><td></td><td></td></tr>
       </table>`}
       <div style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">
-        \u{1F4A1} Dica: Registre materiais usados na aba <strong>Consumo</strong> para ver o custo real de cada obra.
+        \xF0\u0178\u2019\xA1 Dica: Registre materiais usados na aba <strong>Consumo</strong> para ver o custo real de cada obra.
       </div>
     `;
     }
@@ -14815,7 +14815,7 @@ Aprecie a exposi\xE7\xE3o!`;
       const cats = Object.keys(this.catLabels);
       const catOpts = cats.map((c) => `<option value="${c}" ${mat && mat.categoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("");
       abrirModal(`
-      <h3>${mat ? "\u270F\uFE0F Editar" : isLista ? "\u2795 Adicionar \xE0 Lista" : "\u2795 Novo Material"}</h3>
+      <h3>${mat ? "\xE2\u0153\x8F\xEF\xB8\x8F Editar" : isLista ? "\xE2\u017E\u2022 Adicionar \xC3\xA0 Lista" : "\xE2\u017E\u2022 Novo Material"}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
@@ -14824,10 +14824,10 @@ Aprecie a exposi\xE7\xE3o!`;
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || "un" : "un"}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. m\xEDnima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Pre\xE7o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. m\xC3\xADnima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Pre\xC3\xA7o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisi\xE7\xE3o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisi\xC3\xA7\xC3\xA3o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || "" : ""}</textarea></div>
         </div>
         <div class="modal-acoes">
@@ -14853,7 +14853,7 @@ Aprecie a exposi\xE7\xE3o!`;
           notas: document.getElementById("fMatNotas").value.trim()
         };
         if (!dados.nome) {
-          mostrarToast("O nome \xE9 obrigat\xF3rio.");
+          mostrarToast("O nome \xC3\xA9 obrigat\xC3\xB3rio.");
           return;
         }
         if (isLista) dados.comprado = false;
@@ -14871,19 +14871,19 @@ Aprecie a exposi\xE7\xE3o!`;
     excluirMaterial(id) {
       if (!confirm("Excluir este material?")) return;
       this.dataStore.remover("materiais", id);
-      mostrarToast("Material exclu\xEDdo.");
+      mostrarToast("Material exclu\xC3\xADdo.");
       this.rerenderizar();
     }
     consumirRapido(id) {
       const mat = this.dataStore.buscarPorId("materiais", id);
       if (!mat) return;
       const obras = this.obras;
-      const opcoes = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
+      const opcoes = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"}</option>`).join("");
       abrirModal(`
-      <h3>\u{1F4C9} Consumir: ${mat.nome}</h3>
+      <h3>\xF0\u0178\u201C\u2030 Consumir: ${mat.nome}</h3>
       <form id="formModal">
         <div class="campo-form"><label>Obra</label><select id="fConsObra">${opcoes}</select></div>
-        <div class="campo-form"><label>Quantidade (${mat.unidade || "un"} \u2014 atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1"></div>
+        <div class="campo-form"><label>Quantidade (${mat.unidade || "un"} \xE2\u20AC\u201D atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1"></div>
         <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
         <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
@@ -14897,7 +14897,7 @@ Aprecie a exposi\xE7\xE3o!`;
         e.preventDefault();
         const qtd = Number(document.getElementById("fConsQtd").value) || 0;
         if (qtd <= 0) {
-          mostrarToast("Quantidade inv\xE1lida.");
+          mostrarToast("Quantidade inv\xC3\xA1lida.");
           return;
         }
         const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
@@ -14918,10 +14918,10 @@ Aprecie a exposi\xE7\xE3o!`;
     abrirFormConsumo() {
       const materiais = this.materiais;
       const obras = this.obras;
-      const matOpts = materiais.map((m) => `<option value="${m.id}">${this.catIcones[m.categoria] || "\u{1F4E6}"} ${m.nome} (${m.quantidade} ${m.unidade || "un"})</option>`).join("");
-      const obrOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
+      const matOpts = materiais.map((m) => `<option value="${m.id}">${this.catIcones[m.categoria] || "\xF0\u0178\u201C\xA6"} ${m.nome} (${m.quantidade} ${m.unidade || "un"})</option>`).join("");
+      const obrOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"}</option>`).join("");
       abrirModal(`
-      <h3>\u{1F4CB} Registrar Consumo</h3>
+      <h3>\xF0\u0178\u201C\u2039 Registrar Consumo</h3>
       <form id="formModal">
         <div class="campo-form"><label>Material</label><select id="fConsMat">${matOpts}</select></div>
         <div class="campo-form"><label>Obra</label><select id="fConsObraFull">${obrOpts}</select></div>
@@ -14940,7 +14940,7 @@ Aprecie a exposi\xE7\xE3o!`;
         const matId = document.getElementById("fConsMat").value;
         const qtd = Number(document.getElementById("fConsQtdFull").value) || 0;
         if (qtd <= 0) {
-          mostrarToast("Quantidade inv\xE1lida.");
+          mostrarToast("Quantidade inv\xC3\xA1lida.");
           return;
         }
         const mat = this.dataStore.buscarPorId("materiais", matId);
@@ -14963,21 +14963,21 @@ Aprecie a exposi\xE7\xE3o!`;
     excluirConsumo(id) {
       if (!confirm("Excluir este registro de consumo?")) return;
       this.dataStore.remover("consumos", id);
-      mostrarToast("Registro exclu\xEDdo.");
+      mostrarToast("Registro exclu\xC3\xADdo.");
       this.rerenderizar();
     }
     // --- Fornecedores ---
     abrirFormFornecedor(id = null) {
       const f = id ? this.dataStore.buscarPorId("fornecedores", id) : null;
       abrirModal(`
-      <h3>${f ? "\u270F\uFE0F Editar Fornecedor" : "\u2795 Novo Fornecedor"}</h3>
+      <h3>${f ? "\xE2\u0153\x8F\xEF\xB8\x8F Editar Fornecedor" : "\xE2\u017E\u2022 Novo Fornecedor"}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avalia\xE7\xE3o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avalia\xC3\xA7\xC3\xA3o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || "" : ""}</textarea></div>
         </div>
         <div class="modal-acoes">
@@ -14991,7 +14991,7 @@ Aprecie a exposi\xE7\xE3o!`;
         e.preventDefault();
         const nome = document.getElementById("fFornNome").value.trim();
         if (!nome) {
-          mostrarToast("O nome \xE9 obrigat\xF3rio.");
+          mostrarToast("O nome \xC3\xA9 obrigat\xC3\xB3rio.");
           return;
         }
         const dados = {
@@ -15017,7 +15017,7 @@ Aprecie a exposi\xE7\xE3o!`;
     excluirFornecedor(id) {
       if (!confirm("Excluir este fornecedor?")) return;
       this.dataStore.remover("fornecedores", id);
-      mostrarToast("Fornecedor exclu\xEDdo.");
+      mostrarToast("Fornecedor exclu\xC3\xADdo.");
       this.rerenderizar();
     }
     // --- Lista de Compras ---
@@ -15032,7 +15032,7 @@ Aprecie a exposi\xE7\xE3o!`;
           count++;
         }
       });
-      mostrarToast(`${count} item(ns) adicionado(s) \xE0 lista de compras!`);
+      mostrarToast(`${count} item(ns) adicionado(s) \xC3\xA0 lista de compras!`);
       this.rerenderizar();
     }
     marcarComprado(id, comprado) {
@@ -15051,7 +15051,7 @@ Aprecie a exposi\xE7\xE3o!`;
         mostrarToast("Lista vazia.");
         return;
       }
-      let txt = "=== LISTA DE COMPRAS \u2014 ATELIER ===\n";
+      let txt = "=== LISTA DE COMPRAS \xE2\u20AC\u201D ATELIER ===\n";
       txt += `Gerada em: ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")}
 
 `;
@@ -15060,7 +15060,7 @@ Aprecie a exposi\xE7\xE3o!`;
         const qtd = Math.max(1, Math.ceil((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)));
         const preco = (Number(m.precoUnitario) || 0) * qtd;
         total += preco;
-        txt += `\u25A1 ${m.nome}
+        txt += `\xE2\u2013\xA1 ${m.nome}
 `;
         txt += `   Qtd: ${qtd} ${m.unidade || "un"} | Cat: ${this.catLabels[m.categoria] || m.categoria}${m.marca ? " | Marca: " + m.marca : ""}
 `;
@@ -15105,7 +15105,7 @@ Aprecie a exposi\xE7\xE3o!`;
       return this.dataStore.listar("eventos") || [];
     }
     get clientes() {
-      return this.dataStore.listar("clientes") || [];
+      return clienteStore().items;
     }
     render() {
       const tabs = ["contatos", "pipeline", "interacoes", "eventos", "mapa"];
@@ -15229,7 +15229,7 @@ Aprecie a exposi\xE7\xE3o!`;
       </div>
       <div class="evt-grid">${eventos.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum evento cadastrado.</p>' : ""}${eventos.map((e) => {
         const obras = (e.obrasEnviadas || []).map((oId) => {
-          const o = this.dataStore.buscarPorId("obras", oId);
+          const o = obraStore().items.find((o2) => o2.id === oId);
           return o ? o.titulo : null;
         }).filter(Boolean);
         return `<div class="evt-card">
@@ -15487,7 +15487,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const e = id ? this.dataStore.buscarPorId("eventos", id) : null;
       const statusOpts = ["pesquisando", "inscrito", "selecionado", "participando", "finalizado"].map((s) => `<option value="${s}" ${e && e.status === s ? "selected" : ""}>${s}</option>`).join("");
       const tipoOpts = ["bienal", "feira", "mostra", "edital", "premio"].map((t) => `<option value="${t}" ${e && e.tipo === t ? "selected" : ""}>${t}</option>`).join("");
-      const obras = this.obras || this.dataStore.listar("obras") || [];
+      const obras = this.obras || obraStore().items;
       const obraOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem titulo"}</option>`).join("");
       abrirModal(`<h3>${e ? "\u270F\uFE0F Editar" : "\u2728 Novo"} Evento</h3>
       <form id="formModal"><div class="modal-form-grid">
@@ -15752,7 +15752,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       return this.dataStore.listar("etapasProcesso") || [];
     }
     get obras() {
-      return this.dataStore.listar("obras") || [];
+      return obraStore().items;
     }
     get encomendas() {
       return this.dataStore.listar("encomendas") || [];
@@ -15807,7 +15807,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const label = this.humorLabels[humor] || "";
       const data = e.data ? new Date(e.data).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" }) : "";
       const obrasNomes = (e.obrasTrabalhadas || []).map((id) => {
-        const o = this.dataStore.buscarPorId("obras", id);
+        const o = obraStore().items.find((o2) => o2.id === id);
         return o ? o.titulo : null;
       }).filter(Boolean);
       const fotos = e.fotos || [];
@@ -15978,7 +15978,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const tecnicas = {};
       entradas.forEach((e) => {
         (e.obrasTrabalhadas || []).forEach((oid) => {
-          const o = this.dataStore.buscarPorId("obras", oid);
+          const o = obraStore().items.find((o2) => o2.id === oid);
           if (o && o.tecnica) {
             tecnicas[o.tecnica] = (tecnicas[o.tecnica] || 0) + (e.horasTrabalhadas || 0);
           }
@@ -16442,7 +16442,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       }
       mostrarLoading("Exportando making of...");
       const obraId = this._filtroObraProc;
-      const obra = this.dataStore.buscarPorId("obras", obraId);
+      const obra = obraStore().items.find((o) => o.id === obraId);
       const proc = this.processos.find((p) => p.obraId === obraId);
       if (!obra || !proc) {
         mostrarToast("Selecione uma obra com processo documentado.");
@@ -16583,7 +16583,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         (e) => e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
       );
       const encomendasHtml = this.encomendas.length > 0 ? this.encomendas.map((e) => this.renderEncomendaCard(e)).join("") : '<div class="portal-vazio">Nenhuma encomenda encontrada para este cliente.</div>';
-      const artista = this.dataStore.dados.config.artista?.nome || "Artista";
+      const artista = configStore().artista?.nome || "Artista";
       return `
       <div class="portal-wrapper">
         <div class="portal-header">
@@ -16757,7 +16757,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     abrirModalForm(enc) {
       const e = enc || {};
       const isEdit = !!e.id;
-      const clientes = this.dataStore.listar("clientes") || [];
+      const clientes = clienteStore().items;
       const optsClientes = clientes.map((c) => `<option value="${c.id}" ${c.nome === e.clienteNome ? "selected" : ""}>${c.nome} (${c.email || ""})</option>`).join("");
       abrirModal(`
       <h3>${isEdit ? "\u270F\uFE0F Editar" : "\u{1F4E6} Nova"} Encomenda</h3>
@@ -16842,7 +16842,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     }
     abrirModalPortais() {
       const portais = this.dataStore.listar("portais") || [];
-      const clientes = this.dataStore.listar("clientes") || [];
+      const clientes = clienteStore().items;
       const encomendas = this.dataStore.listar("encomendas") || [];
       const portaisHtml = portais.length > 0 ? portais.map((p) => {
         const encCliente = encomendas.filter((e) => e.clienteNome === p.clienteNome).length;
@@ -16941,7 +16941,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         mostrarToast("Selecione um cliente.");
         return;
       }
-      const cliente = this.dataStore.buscarPorId("clientes", sel.value);
+      const cliente = clienteStore().items.find((c) => c.id === sel.value);
       if (!cliente) {
         mostrarToast("Cliente n\xE3o encontrado.");
         return;
@@ -18867,6 +18867,29 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
   });
   var vendaStore = () => useVendaStore(pinia);
   var CHAVE = "atelier_crm_config";
+  var _CHAVE_XOR = [65, 116, 101, 108, 105, 101, 114, 67, 82, 77];
+  function _codificar(texto) {
+    if (!texto) return "";
+    const bytes = [];
+    for (let i = 0; i < texto.length; i++) {
+      bytes.push(texto.charCodeAt(i) ^ _CHAVE_XOR[i % _CHAVE_XOR.length]);
+    }
+    return btoa(String.fromCharCode(...bytes));
+  }
+  function _decodificar(codificado) {
+    if (!codificado) return "";
+    try {
+      const bytes = atob(codificado);
+      let resultado = "";
+      for (let i = 0; i < bytes.length; i++) {
+        resultado += String.fromCharCode(bytes.charCodeAt(i) ^ _CHAVE_XOR[i % _CHAVE_XOR.length]);
+      }
+      return resultado;
+    } catch {
+      return "";
+    }
+  }
+  var _CAMPOS_SENSIVEIS = ["syncGoogleClientId", "syncGoogleToken", "syncWebDAVUrl", "syncWebDAVUser", "syncWebDAVPass"];
   var useConfigStore = defineStore("config", {
     state: () => ({
       artista: { nome: "Meu Ateli\xEA", email: "", telefone: "", assinatura: "" },
@@ -18898,14 +18921,24 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       carregar() {
         try {
           const raw = localStorage.getItem(CHAVE);
-          if (raw) Object.assign(this, JSON.parse(raw));
+          if (raw) {
+            const dados = JSON.parse(raw);
+            _CAMPOS_SENSIVEIS.forEach((c) => {
+              if (dados[c]) dados[c] = _decodificar(dados[c]);
+            });
+            Object.assign(this, dados);
+          }
         } catch (e) {
           console.warn("Falha ao carregar config", e);
         }
       },
       salvar() {
         try {
-          localStorage.setItem(CHAVE, JSON.stringify(this.$state));
+          const paraSalvar = { ...this.$state };
+          _CAMPOS_SENSIVEIS.forEach((c) => {
+            if (paraSalvar[c]) paraSalvar[c] = _codificar(paraSalvar[c]);
+          });
+          localStorage.setItem(CHAVE, JSON.stringify(paraSalvar));
           try {
             window.dataStore && (window.dataStore.dados.config = this.$state);
           } catch (e) {

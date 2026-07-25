@@ -31,8 +31,7 @@ export class ReferenciasView extends BaseView {
     const refs = this.referenciasFiltradas();
     const tags = this.tagsDisponiveis();
     const categorias = this.categoriasDisponiveis();
-    // ===== Integração com o Catálogo: permite vincular cada referência a uma obra =====
-    const obras = this.dataStore.listar('obras');
+    const obras = obraStore().items;
 
     const cardsHtml = refs.length ? `
       <div class="grid-referencias" id="gridReferencias">
@@ -201,7 +200,7 @@ export class ReferenciasView extends BaseView {
 
   // Modal de criação de referência (imagem / link / nota)
   abrirFormulario() {
-    const obras = this.dataStore.listar('obras');
+    const obras = obraStore().items;
 
     abrirModal(`
       <h3>Nova Referência</h3>

@@ -46,7 +46,7 @@ export class PortalView extends BaseView {
       ? this.encomendas.map(e => this.renderEncomendaCard(e)).join('')
       : '<div class="portal-vazio">Nenhuma encomenda encontrada para este cliente.</div>';
 
-    const artista = this.dataStore.dados.config.artista?.nome || 'Artista';
+    const artista = configStore().artista?.nome || 'Artista';
 
     return `
       <div class="portal-wrapper">

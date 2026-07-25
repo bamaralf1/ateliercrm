@@ -13,7 +13,7 @@ export class RedeView extends BaseView {
   get contatos() { return this.dataStore.listar('contatosProfissionais') || []; }
   get interacoes() { return this.dataStore.listar('interacoes') || []; }
   get eventos() { return this.dataStore.listar('eventos') || []; }
-  get clientes() { return this.dataStore.listar('clientes') || []; }
+  get clientes() { return clienteStore().items; }
 
   render() {
     const tabs = ['contatos', 'pipeline', 'interacoes', 'eventos', 'mapa'];
@@ -145,7 +145,7 @@ export class RedeView extends BaseView {
         <span style="font-size:0.8rem;color:var(--text-muted);">${eventos.length} evento(s)</span>
       </div>
       <div class="evt-grid">${eventos.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum evento cadastrado.</p>' : ''}${eventos.map(e => {
-        const obras = (e.obrasEnviadas || []).map(oId => { const o = this.dataStore.buscarPorId('obras', oId); return o ? o.titulo : null; }).filter(Boolean);
+        const obras = (e.obrasEnviadas || []).map(oId => { const o = obraStore().items.find(o => o.id === oId); return o ? o.titulo : null; }).filter(Boolean);
         return `<div class="evt-card">
           <span class="evt-tipo-tag ${e.tipo || 'mostra'}">${tiposEvento[e.tipo] || e.tipo}</span>
           <div class="evt-nome" style="margin-top:4px;">${e.nome}</div>
@@ -453,7 +453,7 @@ export class RedeView extends BaseView {
     const e = id ? this.dataStore.buscarPorId('eventos', id) : null;
     const statusOpts = ['pesquisando','inscrito','selecionado','participando','finalizado'].map(s => `<option value="${s}" ${e && e.status === s ? 'selected' : ''}>${s}</option>`).join('');
     const tipoOpts = ['bienal','feira','mostra','edital','premio'].map(t => `<option value="${t}" ${e && e.tipo === t ? 'selected' : ''}>${t}</option>`).join('');
-    const obras = this.obras || this.dataStore.listar('obras') || [];
+    const obras = this.obras || obraStore().items;
     const obraOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem titulo'}</option>`).join('');
 
     abrirModal(`<h3>${e ? '✏️ Editar' : '✨ Novo'} Evento</h3>

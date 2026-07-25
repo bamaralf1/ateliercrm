@@ -105,7 +105,7 @@ export class EncomendasView extends BaseView {
   abrirModalForm(enc) {
     const e = enc || {};
     const isEdit = !!e.id;
-    const clientes = this.dataStore.listar('clientes') || [];
+    const clientes = clienteStore().items;
     const optsClientes = clientes.map(c => `<option value="${c.id}" ${c.nome === e.clienteNome ? 'selected' : ''}>${c.nome} (${c.email || ''})</option>`).join('');
     abrirModal(`
       <h3>${isEdit ? '✏️ Editar' : '📦 Nova'} Encomenda</h3>
@@ -189,7 +189,7 @@ export class EncomendasView extends BaseView {
 
   abrirModalPortais() {
     const portais = this.dataStore.listar('portais') || [];
-    const clientes = this.dataStore.listar('clientes') || [];
+    const clientes = clienteStore().items;
     const encomendas = this.dataStore.listar('encomendas') || [];
 
     const portaisHtml = portais.length > 0 ? portais.map(p => {
@@ -290,7 +290,7 @@ export class EncomendasView extends BaseView {
   gerarLinkPortal() {
     const sel = document.getElementById('selClientePortal');
     if (!sel || !sel.value) { mostrarToast('Selecione um cliente.'); return; }
-    const cliente = this.dataStore.buscarPorId('clientes', sel.value);
+    const cliente = clienteStore().items.find(c => c.id === sel.value);
     if (!cliente) { mostrarToast('Cliente não encontrado.'); return; }
 
     const portais = this.dataStore.listar('portais') || [];

@@ -75,18 +75,18 @@ export class CertificadosView extends BaseView {
   // Numeração sequencial por ano: ART-2026-001, ART-2026-002...
   gerarNumeroSerie() {
     const ano = new Date().getFullYear();
-    const cfg = this.dataStore.dados.config;
+    const cfg = configStore();
     if (!cfg.contadorCertificados) cfg.contadorCertificados = {};
     cfg.contadorCertificados[ano] = (cfg.contadorCertificados[ano] || 0) + 1;
-    this.dataStore.salvar();
+    cfg.salvar();
     return `ART-${ano}-${String(cfg.contadorCertificados[ano]).padStart(3, '0')}`;
   }
 
   // Modal de emissão: a partir de obra existente (autopreenche) ou manual
   abrirFormulario() {
     // ===== Integração com o Catálogo: lista as obras cadastradas para autopreenchimento =====
-    const obras = this.dataStore.listar('obras');
-    const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || '';
+    const obras = obraStore().items;
+    const assinaturaSalva = configStore().artista?.assinatura || '';
 
     abrirModal(`
       <h3>Novo Certificado de Autenticidade</h3>
@@ -226,9 +226,9 @@ export class CertificadosView extends BaseView {
 
       // Salva a assinatura como padrão do artista, se solicitado (reaproveitada nos próximos certificados)
       if (document.getElementById('campoSalvarAssinatura').checked) {
-        this.dataStore.dados.config.artista = this.dataStore.dados.config.artista || {};
-        this.dataStore.dados.config.artista.assinatura = assinaturaDataUrl;
-        this.dataStore.salvar();
+        configStore().artista = configStore().artista || {};
+        configStore().artista.assinatura = assinaturaDataUrl;
+        configStore().salvar();
       }
 
       const registrado = this.dataStore.adicionar('certificados', cert);
@@ -243,7 +243,7 @@ export class CertificadosView extends BaseView {
   async baixarNovamente(id) {
     const cert = this.dataStore.buscarPorId('certificados', id);
     if (!cert) return;
-    const assinaturaSalva = (this.dataStore.dados.config.artista || {}).assinatura || '';
+    const assinaturaSalva = configStore().artista?.assinatura || '';
     mostrarToast('Gerando PDF...');
     await this.gerarPdfCertificado(cert, assinaturaSalva);
   }
@@ -257,7 +257,7 @@ export class CertificadosView extends BaseView {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const w = doc.internal.pageSize.getWidth();
     const h = doc.internal.pageSize.getHeight();
-    const artista = this.dataStore.dados.config.artista || {};
+    const artista = configStore().artista || {};
     const nomeArtista = artista.nome || 'Ateliê do Artista';
 
     // Borda decorativa sutil (moldura dupla)

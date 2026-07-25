@@ -126,7 +126,7 @@ export class DiarioView extends BaseView {
   // --- Getters ---
   get entradas() { return this.dataStore.listar('entradasDiario') || []; }
   get processos() { return this.dataStore.listar('etapasProcesso') || []; }
-  get obras() { return this.dataStore.listar('obras') || []; }
+  get obras() { return obraStore().items; }
   get encomendas() { return this.dataStore.listar('encomendas') || []; }
 
   // --- RENDER PRINCIPAL ---
@@ -176,7 +176,7 @@ export class DiarioView extends BaseView {
     const emoji = this.humorEmojis[humor] || '😐';
     const label = this.humorLabels[humor] || '';
     const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
-    const obrasNomes = (e.obrasTrabalhadas || []).map(id => { const o = this.dataStore.buscarPorId('obras', id); return o ? o.titulo : null; }).filter(Boolean);
+    const obrasNomes = (e.obrasTrabalhadas || []).map(id => { const o = obraStore().items.find(o => o.id === id); return o ? o.titulo : null; }).filter(Boolean);
     const fotos = e.fotos || [];
 
     return `
@@ -376,7 +376,7 @@ export class DiarioView extends BaseView {
     const tecnicas = {};
     entradas.forEach(e => {
       (e.obrasTrabalhadas || []).forEach(oid => {
-        const o = this.dataStore.buscarPorId('obras', oid);
+        const o = obraStore().items.find(o => o.id === oid);
         if (o && o.tecnica) {
           tecnicas[o.tecnica] = (tecnicas[o.tecnica] || 0) + (e.horasTrabalhadas || 0);
         }
@@ -868,7 +868,7 @@ export class DiarioView extends BaseView {
     if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) { mostrarToast('jsPDF não carregado.'); return; }
     mostrarLoading('Exportando making of...');
     const obraId = this._filtroObraProc;
-    const obra = this.dataStore.buscarPorId('obras', obraId);
+    const obra = obraStore().items.find(o => o.id === obraId);
     const proc = this.processos.find(p => p.obraId === obraId);
     if (!obra || !proc) { mostrarToast('Selecione uma obra com processo documentado.'); return; }
 
