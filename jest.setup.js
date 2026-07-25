@@ -26,3 +26,6 @@ global.AtelierCRMTranslations = { locale: 'pt-BR' };
 
 // Mock window.print
 global.print = () => {};
+
+// Mock scrollIntoView for jsdom
+Element.prototype.scrollIntoView = () => {};

@@ -153,7 +153,7 @@ export class RedeView extends BaseView {
           <div class="evt-info">${e.dataEvento ? '📅 '+e.dataEvento : ''}${e.dataInscricao ? ' · Inscricao: '+e.dataInscricao : ''}${e.investimento ? '<br>💰 R$ '+Number(e.investimento).toFixed(2) : ''}${e.retorno && Number(e.retorno) > 0 ? ' · Retorno: R$ '+Number(e.retorno).toFixed(2) : ''}</div>
           ${e.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${e.notas}</div>` : ''}
           ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🖼️ Obras: ${obras.join(', ')}</div>` : ''}
-          ${e.documentacao && e.documentacion.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📞 Docs: ${e.documentacao.join(', ')}</div>` : ''}
+          ${e.documentacao && e.documentacao.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📞 Docs: ${e.documentacao.join(', ')}</div>` : ''}
           ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">🏆 ${e.resultado}</div>` : ''}
           <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">✏️ Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;">🗑️</button></div>
         </div>`;

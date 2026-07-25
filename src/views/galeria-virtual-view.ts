@@ -511,14 +511,14 @@ export class GaleriaVirtualView {
 
   _mostrarHudTour(visivel) {
     const hud = document.getElementById('hudTour');
-    if (hud) hud.classList.toggle('visivel', visivel);
+    if (hud && hud.classList) hud.classList.toggle('visivel', visivel);
   }
 
   _atualizarBotaoTour() {
     const btn = document.getElementById('btnTourToggle');
-    if (btn) { btn.classList.toggle('ativo', this.tourAtivo); btn.textContent = this.tourAtivo ? '⏹ Tour' : '🎧 Tour'; }
+    if (btn && btn.classList) { btn.classList.toggle('ativo', this.tourAtivo); btn.textContent = this.tourAtivo ? '⏹ Tour' : '🎧 Tour'; }
     const pp = document.getElementById('tourPlayPause');
-    if (pp) { pp.classList.toggle('ativo', this.tourAtivo); pp.textContent = this.tourAtivo ? '⏸' : '▶'; }
+    if (pp && pp.classList) { pp.classList.toggle('ativo', this.tourAtivo); pp.textContent = this.tourAtivo ? '⏸' : '▶'; }
   }
 
   // --- Zoom (via Lightbox Premium) ---

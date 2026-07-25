@@ -41,11 +41,13 @@ describe('formatarData', () => {
 describe('classeStatus / rotuloStatus', () => {
   test('mapeia status de obra corretamente', () => {
     expect(classeStatus('disponivel')).toBe('disponivel');
+    expect(classeStatus('disponível')).toBe('disponivel');
     expect(rotuloStatus('disponivel')).toBe('Disponível');
+    expect(rotuloStatus('disponível')).toBe('Disponível');
     expect(rotuloStatus('vendida')).toBe('Vendida');
   });
   test('fallback para status desconhecido', () => {
-    expect(rotuloStatus('fake')).toBe('fake');
+    expect(rotuloStatus('fake')).toBe('Disponível');
   });
 });
 

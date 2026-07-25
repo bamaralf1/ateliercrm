@@ -43,22 +43,24 @@ export function fecharModal() {
 
 export function classeStatus(status) {
   const mapa = {
-    'disponivel': 'disponivel', 'disponível': 'disponivel',
+    'disponível': 'disponivel',
     'vendida': 'vendida',
     'reservada': 'reservada',
-    'em exposicao': 'exposicao', 'em exposição': 'exposicao'
+    'em exposição': 'exposicao',
+    'em exposicao': 'exposicao'
   };
   return mapa[status] || 'disponivel';
 }
 
 export function rotuloStatus(status) {
   const mapa = {
-    'disponivel': 'Disponível', 'disponível': 'Disponível',
+    'disponível': 'Disponível',
     'vendida': 'Vendida',
     'reservada': 'Reservada',
-    'em exposicao': 'Em Exposição', 'em exposição': 'Em Exposição'
+    'em exposição': 'Em Exposição',
+    'em exposicao': 'Em Exposição'
   };
-  return mapa[status] || status;
+  return mapa[status] || 'Disponível';
 }
 
 export function gerarImagemPlaceholder(cor, emoji) {
