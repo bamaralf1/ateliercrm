@@ -8329,6 +8329,15 @@ Only state can be modified.`);
   }
   function gerarQRCodeDataUrl(texto) {
     const tamanho = 200;
+    if (typeof QRCode !== "undefined") {
+      const div = document.createElement("div");
+      const qr = new QRCode(div, { text: texto, width: tamanho, height: tamanho, correctLevel: QRCode.CorrectLevel.H });
+      const canvas2 = div.querySelector("canvas");
+      const dataUrl = canvas2 ? canvas2.toDataURL() : "";
+      qr.clear();
+      div.remove();
+      return dataUrl;
+    }
     const canvas = document.createElement("canvas");
     canvas.width = tamanho;
     canvas.height = tamanho;
@@ -19578,7 +19587,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
   }
   var tourPassos = [
     { alvo: ".sidebar", titulo: "\u{1F3A8} Bem-vindo ao Atelier CRM!", desc: "Este \xE9 seu hub criativo. Navegue entre os m\xF3dulos pelo menu lateral.", pos: "right" },
-    { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 5 temas.", pos: "bottom" },
+    { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 6 temas.", pos: "bottom" },
     { alvo: "#btnBackup", titulo: "\u{1F4BE} Backup Seguro", desc: "Exporte seus dados periodicamente.", pos: "bottom" },
     { alvo: '[data-rota="catalogo"]', titulo: "\u{1F5BC}\uFE0F Cat\xE1logo de Obras", desc: "Cadastre, edite e gerencie seu portf\xF3lio.", pos: "right" },
     { alvo: '[data-rota="vendas"]', titulo: "\u{1F4B0} Vendas e Recibos", desc: "Registre vendas e gere recibos em PDF.", pos: "right" },

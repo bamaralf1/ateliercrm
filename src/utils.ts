@@ -196,6 +196,14 @@ export function rotuloStatusVenda(status) {
 
 export function gerarQRCodeDataUrl(texto) {
   const tamanho = 200;
+  if (typeof QRCode !== 'undefined') {
+    const div = document.createElement('div');
+    const qr = new QRCode(div, { text: texto, width: tamanho, height: tamanho, correctLevel: QRCode.CorrectLevel.H });
+    const canvas = div.querySelector('canvas');
+    const dataUrl = canvas ? canvas.toDataURL() : '';
+    qr.clear(); div.remove();
+    return dataUrl;
+  }
   const canvas = document.createElement('canvas');
   canvas.width = tamanho;
   canvas.height = tamanho;

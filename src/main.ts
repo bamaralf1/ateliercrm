@@ -485,7 +485,7 @@ export function obterDicaDoDia() {
 // Tour
 const tourPassos = [
   { alvo: '.sidebar', titulo: '🎨 Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
-  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 5 temas.', pos: 'bottom' },
+  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 6 temas.', pos: 'bottom' },
   { alvo: '#btnBackup', titulo: '💾 Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
   { alvo: '[data-rota="catalogo"]', titulo: '🖼️ Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
   { alvo: '[data-rota="vendas"]', titulo: '💰 Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
