@@ -303,8 +303,7 @@ export function abrirModalNovoItem(colecao, dataStore, router) {
         dados.altura = Number(document.getElementById('campoAltura')?.value) || 0;
         dados.largura = Number(document.getElementById('campoLargura')?.value) || 0;
         dados.profundidade = Number(document.getElementById('campoProfundidade')?.value) || 0;
-      } else if (c.tipo === 'file') {
-      } else {
+      } else if (c.tipo === 'file') { /* file inputs handled separately */ } else {
         dados[c.nome] = document.getElementById('campo_' + c.nome)?.value || '';
       }
     });

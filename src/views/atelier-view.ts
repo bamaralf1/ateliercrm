@@ -3,8 +3,8 @@
     super(dataStore, router);
     this.tabAtiva = 'estoque';
     this.filtroCategoria = '';
-    this.catIcones = { tintas: 'ðŸŽ¨', superficies: 'ðŸ“', ferramentas: 'ðŸ”§', molduras: 'ðŸ–¼ï¸' };
-    this.catLabels = { tintas: 'Tintas', superficies: 'SuperfÃ­cies', ferramentas: 'Ferramentas', molduras: 'Molduras' };
+    this.catIcones = { tintas: '🎨', superficies: '📐', ferramentas: '🔧', molduras: '🖼️' };
+    this.catLabels = { tintas: 'Tintas', superficies: 'Superfícies', ferramentas: 'Ferramentas', molduras: 'Molduras' };
   }
 
   get materiais() { return this.dataStore.listar('materiais') || []; }
@@ -43,10 +43,10 @@
     return `
       <div class="mat-filtros">
         <select id="filtroCatEstoque">
-          <option value="">ðŸ“š Todas as categorias</option>
+          <option value="">📚 Todas as categorias</option>
           ${cats.map(c => `<option value="${c}" ${this.filtroCategoria === c ? 'selected' : ''}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join('')}
         </select>
-        <button class="btn-primario" id="btnNovoMaterial" style="font-size:0.8rem;padding:6px 14px;">âž• Novo Material</button>
+        <button class="btn-primario" id="btnNovoMaterial" style="font-size:0.8rem;padding:6px 14px;">➕ Novo Material</button>
         <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">${filtrados.length} item(ns)</span>
       </div>
       <div class="mat-grid">
@@ -60,7 +60,7 @@
     const qtd = Number(m.quantidade) || 0;
     const min = Number(m.quantidadeMinima) || 0;
     const nivel = qtd <= 0 ? 'baixo' : (min > 0 && qtd <= min ? 'baixo' : (min > 0 && qtd <= min * 2 ? 'medio' : 'ok'));
-    const badgeLabel = nivel === 'baixo' ? 'âš ï¸ Repor' : (nivel === 'medio' ? 'âš ï¸ AtenÃ§Ã£o' : 'âœ” OK');
+    const badgeLabel = nivel === 'baixo' ? '⚠️ Repor' : (nivel === 'medio' ? '⚠️ Atenção' : '✅ OK');
     const categoria = m.categoria || 'outros';
 
     return `
@@ -68,8 +68,8 @@
         <div class="mat-faixa-alerta ${nivel}"></div>
         <div class="mat-header">
           <div>
-            <div class="mat-nome">${this.catIcones[categoria] || 'ðŸ“¦'} ${m.nome || ''}</div>
-            <span class="mat-cat ${categoria}">${this.catLabels[categoria] || categoria} ${m.subcategoria ? 'Â· '+m.subcategoria : ''}</span>
+            <div class="mat-nome">${this.catIcones[categoria] || '📦'} ${m.nome || ''}</div>
+            <span class="mat-cat ${categoria}">${this.catLabels[categoria] || categoria} ${m.subcategoria ? '· '+m.subcategoria : ''}</span>
           </div>
           <div style="text-align:right;">
             <div class="mat-qtd ${nivel === 'baixo' ? 'alerta' : 'ok'}">${qtd}</div>
@@ -78,11 +78,11 @@
           </div>
         </div>
         <div class="mat-detalhes">
-          ${m.marca ? `<span>ðŸ·ï¸ ${m.marca}</span>` : ''}
-          ${m.local ? `<span>ðŸ“ ${m.local}</span>` : ''}
-          ${m.precoUnitario ? `<span>ðŸ’° R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || 'un'}</span>` : ''}
-          ${m.dataAquisicao ? `<span>ðŸ“… ${m.dataAquisicao}</span>` : ''}
-          ${m.validade ? `<span>â³ Val: ${m.validade}</span>` : ''}
+          ${m.marca ? `<span>🏷️ ${m.marca}</span>` : ''}
+          ${m.local ? `<span>📍 ${m.local}</span>` : ''}
+          ${m.precoUnitario ? `<span>💰 R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || 'un'}</span>` : ''}
+          ${m.dataAquisicao ? `<span>📅 ${m.dataAquisicao}</span>` : ''}
+          ${m.validade ? `<span>⏳ Val: ${m.validade}</span>` : ''}
         </div>
         ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">ðŸ“ ${m.notas}</div>` : ''}
         <div class="mat-acoes">
@@ -134,21 +134,20 @@
   renderCompras() {
     const materiais = this.materiais;
     const abaixoMin = materiais.filter(m => { const q = Number(m.quantidade) || 0; const min = Number(m.quantidadeMinima) || 0; return min > 0 && q <= min; });
-    const todosItens = materiais.filter(m => m.comprado !== undefined);
     const paraComprar = materiais.filter(m => m.comprado === false);
     const comprados = materiais.filter(m => m.comprado === true);
     const totalEst = paraComprar.reduce((s, m) => s + (Number(m.precoUnitario) || 0) * Math.max(1, Math.ceil(((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0)) / 1)), 0);
 
     return `
       <div class="compras-resumo">
-        <div class="cr-item"><div class="cr-valor">${abaixoMin.length}</div><div class="cr-label">âš ï¸ Abaixo do mÃ­nimo</div></div>
-        <div class="cr-item"><div class="cr-valor">${paraComprar.length}</div><div class="cr-label">ðŸ›’ Para comprar</div></div>
-        <div class="cr-item"><div class="cr-valor">${comprados.length}</div><div class="cr-label">âœ” Comprados</div></div>
-        <div class="cr-item"><div class="cr-valor">${formatarMoeda(Math.round(totalEst))}</div><div class="cr-label">ðŸ’° Custo estimado</div></div>
+        <div class="cr-item"><div class="cr-valor">${abaixoMin.length}</div><div class="cr-label">⚠️ Abaixo do mínimo</div></div>
+        <div class="cr-item"><div class="cr-valor">${paraComprar.length}</div><div class="cr-label">🛒 Para comprar</div></div>
+        <div class="cr-item"><div class="cr-valor">${comprados.length}</div><div class="cr-label">✅ Comprados</div></div>
+        <div class="cr-item"><div class="cr-valor">${formatarMoeda(Math.round(totalEst))}</div><div class="cr-label">💰 Custo estimado</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">âš¡ Gerar lista automÃ¡tica</button>
-        <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">âž• Adicionar item manual</button>
+        <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">⚡ Gerar lista automática</button>
+        <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">➕ Adicionar item manual</button>
         <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">ðŸ“ž Exportar TXT</button>
       </div>
       ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista automÃ¡tica".</p>' : ''}
@@ -567,7 +566,7 @@
         count++;
       }
     });
-    mostrarToast(`${count} item(ns) adicionado(s) Ã  lista de compras!`);
+    mostrarToast(`${count} item(ns) adicionado(s) à lista de compras!`);
     this.rerenderizar();
   }
 

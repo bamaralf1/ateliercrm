@@ -32,7 +32,7 @@ export const useClienteStore = defineStore('clientes', {
     _persistir() {
       try {
         localStorage.setItem('atelier_crm_clientes', JSON.stringify(this.items))
-        try { (window as any).dataStore && ((window as any).dataStore.dados.clientes = this.items) } catch (e) { console.warn('Falha ao sincronizar clientes com DataStore', e) }
+        try { if ((window as any).dataStore) { (window as any).dataStore.dados.clientes = this.items } } catch (e) { console.warn('Falha ao sincronizar clientes com DataStore', e) }
       } catch (e) { console.warn(e) }
     },
   },

@@ -5,6 +5,8 @@ const path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 const ORDER = [
   'utils.ts',
+  'icones.ts',
+  'carregar-bibliotecas.ts',
   'data-store.ts',
   'event-bus.ts',
   'activity-logger.ts',

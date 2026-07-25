@@ -109,7 +109,7 @@ export class ImageLightbox {
         <div class="lb-top-actions">
           <button class="lb-btn lb-ctrl-autoplay" title="Slideshow">▶</button>
           <button class="lb-btn lb-ctrl-download" title="Download">⬇</button>
-          <button class="lb-btn lb-ctrl-share" title="Compartilhar">🔗</button>
+          <button class="lb-btn lb-ctrl-share" title="Compartilhar"><i class="fas fa-link"></i></button>
           <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)">✕</button>
         </div>
       </div>
@@ -261,9 +261,9 @@ export class ImageLightbox {
     if (navigator.share) {
       navigator.share({ title: text, text }).catch(() => {});
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => this._toast('🔗 Info copiada!')).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => this._toast('<i class="fas fa-link"></i> Info copiada!')).catch(() => {});
     } else {
-      this._toast('📋 ' + text);
+      this._toast('<i class="fas fa-clipboard"></i> ' + text);
     }
   }
 

@@ -19,14 +19,14 @@ export function renderizarDashboard(dataStore) {
   const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
   const listaRecentesHtml = recentes.length ? recentes.map(o => `
     <li class="item-obra-recente">
-      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || '🖼️')}</div>
+      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || '<i class="fas fa-images"></i>')}</div>
       <div class="info-obra-recente">
         <div class="nome">${o.titulo}</div>
         <div class="meta">${o.tecnica || ''} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
       </div>
       <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
     </li>
-  `).join('') : `<div class="estado-vazio"><div class="icone-vazio">🖼️</div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para começar.</p></div>`;
+  `).join('') : `<div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma obra cadastrada ainda. Clique em "Nova Obra" para começar.</p></div>`;
   return `
     <div class="view-cabecalho">
       <div>
@@ -34,7 +34,7 @@ export function renderizarDashboard(dataStore) {
         <p class="subtitulo">Visão geral do seu ateliê · ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
       <div class="dashboard-acoes">
-        <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados">🔄</button>
+        <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados"><i class="fas fa-sync"></i></button>
       </div>
     </div>
     <div class="grid-cards stagger-in">
@@ -43,17 +43,17 @@ export function renderizarDashboard(dataStore) {
       <div class="card"><div class="rotulo-card">Em Estoque</div><div class="valor-card">${emEstoque.length}</div><div class="card-sub">${obras.length > 0 ? ((emEstoque.length / obras.length) * 100).toFixed(1) : 0}% disponível</div></div>
       <div class="card card-valor"><div class="rotulo-card">Valor do Acervo</div><div class="valor-card">${formatarMoeda(valorAcervo)}</div><div class="card-sub">Ticket médio: ${formatarMoeda(ticketMedio)}</div></div>
       <div class="card"><div class="rotulo-card">Total Vendido</div><div class="valor-card">${formatarMoeda(valorVendido)}</div><div class="card-sub">${vendas.length} venda${vendas.length === 1 ? '' : 's'}</div></div>
-      <div class="card"><div class="rotulo-card">Favoritas</div><div class="valor-card">${obrasFavoritas}</div><div class="card-sub">⭐ Obras marcadas</div></div>
+      <div class="card"><div class="rotulo-card">Favoritas</div><div class="valor-card">${obrasFavoritas}</div><div class="card-sub"><i class="fas fa-star"></i> Obras marcadas</div></div>
     </div>
     <div class="grid-painel">
-      <div class="painel"><h3>📊 Produtividade Mensal</h3><div class="grafico-container">${graficoSvg}</div><div class="grafico-legenda"><span class="leg-item">📊 Obras criadas por mês</span></div></div>
-      <div class="painel"><h3>🎨 Técnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join('') : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
+      <div class="painel"><h3><i class="fas fa-chart-bar"></i> Produtividade Mensal</h3><div class="grafico-container">${graficoSvg}</div><div class="grafico-legenda"><span class="leg-item"><i class="fas fa-chart-bar"></i> Obras criadas por mês</span></div></div>
+      <div class="painel"><h3><i class="fas fa-palette"></i> Técnicas Mais Usadas</h3><div class="tecnicas-container">${tecnicaMaisComum.length > 0 ? tecnicaMaisComum.map((t, i) => `<div class="barra-tecnica"><div class="tecnica-nome">${capitalizarTexto(t.tecnica)}</div><div class="tecnica-barra-wrapper"><div class="tecnica-barra" style="width: ${t.porcentagem}%"></div></div><div class="tecnica-valor">${t.quantidade} (${t.porcentagem.toFixed(0)}%)</div></div>`).join('') : '<div class="estado-vazio"><p>Sem dados suficientes</p></div>'}</div></div>
     </div>
     <div class="grid-painel">
       <div class="painel"><h3>🕐 Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
-      <div class="painel"><h3>📋 Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map(a => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join('') : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
+      <div class="painel"><h3><i class="fas fa-clipboard"></i> Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map(a => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join('') : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
     </div>
-    <div class="painel"><h3>⚡ Atalhos rápidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">✚ Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">✚ Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">🧾 Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes">👤 Gerenciar Clientes</button></div></div>
+    <div class="painel"><h3>⚡ Atalhos rápidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">✚ Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">✚ Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">🧾 Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes"><i class="fas fa-user"></i> Gerenciar Clientes</button></div></div>
   `;
 }
 
@@ -79,7 +79,7 @@ export function sanitizarRich(str) {
   const allowedTag = /<\/?(p|br|strong|em|b|i|u|ul|ol|li|span|div)(\s[^>]*)?>/gi;
   const escMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' };
   const safeAttr = /\s+(style|class|id)\s*=\s*("[^"]*"|'[^']*')/gi;
-  let lastIdx = 0, partes = [];
+  let lastIdx = 0; const partes = [];
   for (let match; (match = allowedTag.exec(str)) !== null; ) {
     const texto = str.slice(lastIdx, match.index);
     if (texto) partes.push(texto.replace(/[&<>"']/g, (m) => escMap[m]));
@@ -222,7 +222,7 @@ export function abrirSpotlight() {
       let hist = JSON.parse(localStorage.getItem('atelier_spotlight_hist') || '[]');
       hist = [termo, ...hist.filter(h => h !== termo)].slice(0, 5);
       localStorage.setItem('atelier_spotlight_hist', JSON.stringify(hist));
-    } catch (e) {}
+    } catch (e) { console.warn(e) }
   }
 
   function atualizarDestaque() {
@@ -260,7 +260,7 @@ export function abrirSpotlight() {
           results.querySelectorAll('.sp-historico').forEach(el => el.addEventListener('click', () => { input.value = el.dataset.termo; buscar(el.dataset.termo); }));
           return;
         }
-      } catch (e) {}
+      } catch (e) { console.warn(e) }
       results.innerHTML = '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Digite para buscar em todo o sistema...</div>';
       return;
     }
@@ -273,11 +273,11 @@ export function abrirSpotlight() {
     const eventos = (dataStore?.listar('eventos') || []).filter(e => (e.nome || '').toLowerCase().includes(t)).slice(0, 5);
 
     let html = '';
-    if (obras.length) { html += secao('Obras', '🖼️') + obras.map(o => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ''}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ''} · ${formatarMoeda(o.preco)}</span></div>`).join(''); }
-    if (clientes.length) { html += secao('Clientes', '👤') + clientes.map(c => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone">👤</span><span>${c.nome}</span><span class="si-info">${c.email || ''}</span></div>`).join(''); }
-    if (vendas.length) { html += secao('Vendas', '💰') + vendas.map(v => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone">💰</span><span>Recibo ${v.numeroRecibo || ''}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join(''); }
+    if (obras.length) { html += secao('Obras', '<i class="fas fa-images"></i>') + obras.map(o => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ''}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ''} · ${formatarMoeda(o.preco)}</span></div>`).join(''); }
+    if (clientes.length) { html += secao('Clientes', '<i class="fas fa-user"></i>') + clientes.map(c => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone"><i class="fas fa-user"></i></span><span>${c.nome}</span><span class="si-info">${c.email || ''}</span></div>`).join(''); }
+    if (vendas.length) { html += secao('Vendas', '<i class="fas fa-dollar-sign"></i>') + vendas.map(v => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone"><i class="fas fa-dollar-sign"></i></span><span>Recibo ${v.numeroRecibo || ''}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join(''); }
     if (contatos.length) { html += secao('Contatos', '🤝') + contatos.map(c => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">🤝</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ''}</span></div>`).join(''); }
-    if (encomendas.length) { html += secao('Encomendas', '📦') + encomendas.map(e => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone">📦</span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ''}</span></div>`).join(''); }
+    if (encomendas.length) { html += secao('Encomendas', '<i class="fas fa-box"></i>') + encomendas.map(e => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone"><i class="fas fa-box"></i></span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ''}</span></div>`).join(''); }
     if (eventos.length) { html += secao('Eventos', '🎪') + eventos.map(e => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">🎪</span><span>${e.nome}</span><span class="si-info">${e.tipo || ''}</span></div>`).join(''); }
     results.innerHTML = html || '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Nenhum resultado encontrado.</div>';
     results.querySelectorAll('.spotlight-item').forEach(el => { el.addEventListener('click', () => navegarParaItem(el)); });
@@ -381,7 +381,7 @@ export function bloquearTela() {
   function mostrarPinModal() {
     let entrada = '';
     const render = () => {
-      abrirModal(`<h3>🔒 Tela Bloqueada</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Digite seu PIN de 4 dígitos para continuar</p><div class="pin-display">${'•'.repeat(entrada.length).padEnd(4, '_')}</div>${tentativas > 0 ? '<p style="color:#ef4444;font-size:0.8rem;">PIN incorreto. Tente novamente.</p>' : ''}<div class="pin-pad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(v => v === '' ? '<button disabled></button>' : `<button data-val="${v}">${v}</button>`).join('')}</div><div class="modal-acoes"><button class="btn-secundario" id="btnSairPin">Sair</button></div>`);
+      abrirModal(`<h3><i class="fas fa-lock"></i> Tela Bloqueada</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Digite seu PIN de 4 dígitos para continuar</p><div class="pin-display">${'•'.repeat(entrada.length).padEnd(4, '_')}</div>${tentativas > 0 ? '<p style="color:#ef4444;font-size:0.8rem;">PIN incorreto. Tente novamente.</p>' : ''}<div class="pin-pad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(v => v === '' ? '<button disabled></button>' : `<button data-val="${v}">${v}</button>`).join('')}</div><div class="modal-acoes"><button class="btn-secundario" id="btnSairPin">Sair</button></div>`);
       document.querySelectorAll('.pin-pad button[data-val]').forEach(btn => {
         btn.addEventListener('click', () => {
           if (btn.dataset.val === '⌫') { entrada = entrada.slice(0, -1); render(); return; }
@@ -484,12 +484,12 @@ export function obterDicaDoDia() {
 
 // Tour
 const tourPassos = [
-  { alvo: '.sidebar', titulo: '🎨 Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
+  { alvo: '.sidebar', titulo: '<i class="fas fa-palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
   { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 6 temas.', pos: 'bottom' },
-  { alvo: '#btnBackup', titulo: '💾 Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
-  { alvo: '[data-rota="catalogo"]', titulo: '🖼️ Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
-  { alvo: '[data-rota="vendas"]', titulo: '💰 Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
-  { alvo: '[data-rota="diario"]', titulo: '📖 Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
+  { alvo: '#btnBackup', titulo: '<i class="fas fa-save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
+  { alvo: '[data-rota="catalogo"]', titulo: '<i class="fas fa-images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
+  { alvo: '[data-rota="vendas"]', titulo: '<i class="fas fa-dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
+  { alvo: '[data-rota="diario"]', titulo: '<i class="fas fa-book-open"></i> Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
   { alvo: '[data-rota="configuracoes"]', titulo: '⚙️ Configurações', desc: 'Configure idioma, segurança e dados do artista.', pos: 'right' }
 ];
 
@@ -514,7 +514,7 @@ export function iniciarTour() {
     if (top < 10) top = 10;
     tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
     const isUltimo = passoAtual === tourPassos.length - 1;
-    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '✅ Finalizar' : 'Próximo →'}</button></div>`;
+    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '<i class="fas fa-check"></i> Finalizar' : 'Próximo →'}</button></div>`;
     document.body.appendChild(tooltip);
     document.getElementById('tourNext')?.addEventListener('click', () => { if (isUltimo) finalizarTour(); else { passoAtual++; mostrarPasso(); } });
     document.getElementById('tourPrev')?.addEventListener('click', () => { passoAtual--; mostrarPasso(); });
@@ -536,6 +536,7 @@ const themeEngine = new ThemeEngine(dataStore);
 const router = new Router(dataStore);
 const eventBus = new EventBus();
 const activityLogger = new ActivityLogger();
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const dashboardView = new DashboardView(dataStore, router);
 const catalogoView = new CatalogoView(dataStore, router);
 const pdfGenerator = new PDFGenerator(dataStore);
@@ -555,6 +556,7 @@ const exposicoesView = new ExposicoesView(dataStore, router);
 const financeiroView = new FinanceiroView(dataStore, router);
 const configuracoesView = new ConfiguracoesView(dataStore, router);
 const exportImportView = new ExportImportView(dataStore, router);
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 // Event listeners
 document.getElementById('viewPrincipal').addEventListener('click', (e) => {
@@ -635,7 +637,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     const lidas = lerLidas();
     const atividades = activityLogger.obterRecentes(20);
     if (atividades.length === 0) {
-      lista.innerHTML = '<div class="notif-vazio">🔔 Nenhuma notificação ainda.</div>';
+      lista.innerHTML = '<div class="notif-vazio"><i class="fas fa-bell"></i> Nenhuma notificação ainda.</div>';
       return;
     }
     lista.innerHTML = atividades.map(a => `
@@ -695,7 +697,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     overlay = document.createElement('div');
     overlay.id = 'globalDropOverlay';
     overlay.className = 'global-drop-overlay';
-    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon">📸</div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
+    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon"><i class="fas fa-camera"></i></div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
     document.body.appendChild(overlay);
   }
   let dropTimer = 0;
@@ -716,7 +718,7 @@ if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => inici
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
     const imagens = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (imagens.length === 0) { mostrarToast('⚠️ Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
+    if (imagens.length === 0) { mostrarToast('<i class="fas fa-exclamation-triangle"></i> Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
     if (imagens.length === 1) {
       router?.navegar('catalogo');
       setTimeout(() => eventBus.emitir('abrir-nova-obra'), 300);

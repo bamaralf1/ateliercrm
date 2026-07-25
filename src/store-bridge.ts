@@ -2,7 +2,7 @@ import { DataStore } from './data-store'
 import { obraStore, useObraStore } from './stores/obraStore'
 import { clienteStore, useClienteStore } from './stores/clienteStore'
 import { vendaStore, useVendaStore } from './stores/vendaStore'
-import { configStore, useConfigStore } from './stores/configStore'
+import { configStore } from './stores/configStore'
 import { pinia } from './stores/pinia'
 
 const COLLECTION_STORE_MAP = {

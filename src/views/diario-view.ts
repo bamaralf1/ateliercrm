@@ -132,7 +132,7 @@ export class DiarioView extends BaseView {
   // --- RENDER PRINCIPAL ---
   render() {
     const tabs = ['entradas', 'cronograma', 'processo', 'estatisticas', 'inspiracao'];
-    const tabLabels = { entradas: '📋 Entradas', cronograma: '📅 Cronograma', processo: '📝 Processo', estatisticas: '📊 Estatísticas', inspiracao: '💡 Inspiração' };
+    const tabLabels = { entradas: '<i class="fas fa-clipboard"></i> Entradas', cronograma: '<i class="fas fa-calendar-alt"></i> Cronograma', processo: '<i class="fas fa-pencil-alt"></i> Processo', estatisticas: '<i class="fas fa-chart-bar"></i> Estatísticas', inspiracao: '<i class="fas fa-lightbulb"></i> Inspiração' };
     const content = {
       entradas: () => this.renderEntradas(),
       cronograma: () => this.renderCronograma(),
@@ -143,11 +143,11 @@ export class DiarioView extends BaseView {
     return `
       <div class="diario-header">
         <div>
-          <h2>📋 Diário Criativo</h2>
+          <h2><i class="fas fa-clipboard"></i> Diário Criativo</h2>
           <div class="diario-sub">Registro íntimo do seu processo artístico  ·  ${new Date().toLocaleDateString('pt-BR')}</div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn-primario" id="btnNovaEntrada" style="font-size:0.8rem;padding:6px 14px;">➕ Nova Entrada</button>
+          <button class="btn-primario" id="btnNovaEntrada" style="font-size:0.8rem;padding:6px 14px;"><i class="fas fa-plus"></i> Nova Entrada</button>
         </div>
       </div>
       <div class="diario-tabs">
@@ -164,7 +164,7 @@ export class DiarioView extends BaseView {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
         <span style="font-size:0.85rem;color:var(--text-muted);">${entradas.length} registro(s)  ·  última semana: ${entradas.filter(e => { const d = new Date(); d.setDate(d.getDate() - 7); return new Date(e.data) >= d; }).length} entrada(s)</span>
       </div>
-      ${entradas.length === 0 ? '<div class="diario-card" style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;margin-bottom:6px;">📝</p><p>Nenhuma entrada no diário ainda.<br>Clique em "Nova Entrada" para começar seu registro criativo.</p></div>' : ''}
+      ${entradas.length === 0 ? '<div class="diario-card" style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;margin-bottom:6px;"><i class="fas fa-pencil-alt"></i></p><p>Nenhuma entrada no diário ainda.<br>Clique em "Nova Entrada" para começar seu registro criativo.</p></div>' : ''}
       <div class="diario-entry-grid">
         ${entradas.map(e => this.renderCardEntrada(e)).join('')}
       </div>
@@ -185,14 +185,14 @@ export class DiarioView extends BaseView {
         <div class="dc-humor" title="${label}">${emoji} <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">${label}</span></div>
         <div class="dc-horas"><strong>⏰ ${e.horasTrabalhadas || 0}h</strong> trabalhadas</div>
         <div class="dc-texto">${e.oQueTrabalhou || ''}</div>
-        ${obrasNomes.length > 0 ? `<div class="dc-obras">${obrasNomes.map(n => `<span>🖼️ ${n}</span>`).join('')}</div>` : ''}
-        ${e.bloqueios ? `<div class="dc-bloqueios">⚠️ ${e.bloqueios}</div>` : ''}
-        ${e.avancos ? `<div class="dc-avancos">✅ ${e.avancos}</div>` : ''}
-        ${e.descobertas ? `<div class="dc-descobertas">💡 ${e.descobertas}</div>` : ''}
+        ${obrasNomes.length > 0 ? `<div class="dc-obras">${obrasNomes.map(n => `<span><i class="fas fa-images"></i> ${n}</span>`).join('')}</div>` : ''}
+        ${e.bloqueios ? `<div class="dc-bloqueios"><i class="fas fa-exclamation-triangle"></i> ${e.bloqueios}</div>` : ''}
+        ${e.avancos ? `<div class="dc-avancos"><i class="fas fa-check"></i> ${e.avancos}</div>` : ''}
+        ${e.descobertas ? `<div class="dc-descobertas"><i class="fas fa-lightbulb"></i> ${e.descobertas}</div>` : ''}
         ${fotos.length > 0 ? `<div class="dc-fotos">${fotos.map(f => `<img src="${f}" onclick="window.open('${f}')">`).join('')}</div>` : ''}
         <div class="diario-acoes">
-          <button data-acao="editarEntrada" data-id="${e.id}">✏️ Editar</button>
-          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;">🗑️</button>
+          <button data-acao="editarEntrada" data-id="${e.id}"><i class="fas fa-pen"></i> Editar</button>
+          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     `;
@@ -290,7 +290,7 @@ export class DiarioView extends BaseView {
             <div class="${classes.join(' ')}" ${cel.dataStr ? `data-data="${cel.dataStr}"` : ''}>
               <div class="cal-num">${cel.dia}</div>
               ${cel.cores ? `<div class="cal-atividades">${cel.cores.map(c => `<span class="cal-dot ${c}" title="${c}"></span>`).join('')}${cel.prazos ? cel.prazos.map(() => `<span class="cal-dot prazo" title="Prazo"></span>`).join('') : ''}</div>` : ''}
-              ${cel.prazos && cel.prazos.length > 0 ? `<div style="font-size:0.55rem;color:#ef4444;font-weight:600;margin-top:1px;">⚠️ ${cel.prazos.length}</div>` : ''}
+              ${cel.prazos && cel.prazos.length > 0 ? `<div style="font-size:0.55rem;color:#ef4444;font-weight:600;margin-top:1px;"><i class="fas fa-exclamation-triangle"></i> ${cel.prazos.length}</div>` : ''}
               ${cel.metaText ? `<div class="cal-meta-text">${cel.metaText}</div>` : ''}
             </div>
           `;
@@ -320,7 +320,7 @@ export class DiarioView extends BaseView {
     return `
       <div class="proc-worksel">
         <select id="selObraProcesso">${opcoes}</select>
-        <button class="btn-primario" id="btnNovaEtapa" style="font-size:0.75rem;padding:5px 12px;margin-left:8px;" ${!obraId ? 'disabled' : ''}>➕ Nova Etapa</button>
+        <button class="btn-primario" id="btnNovaEtapa" style="font-size:0.75rem;padding:5px 12px;margin-left:8px;" ${!obraId ? 'disabled' : ''}><i class="fas fa-plus"></i> Nova Etapa</button>
         ${obraId ? `<button class="btn-secundario" id="btnExportarProcessoPDF" style="font-size:0.75rem;padding:5px 12px;margin-left:4px;">📤 Exportar Making Of PDF</button>` : ''}
       </div>
       ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : (
@@ -332,14 +332,14 @@ export class DiarioView extends BaseView {
           ${etapas.sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)).map((et, i) => `
             <div class="proc-step">
               <div class="ps-titulo">${i + 1}. ${et.titulo || 'Etapa'}</div>
-              <div class="ps-data">📅 ${et.data ? new Date(et.data).toLocaleDateString('pt-BR') : '—'}</div>
+              <div class="ps-data"><i class="fas fa-calendar-alt"></i> ${et.data ? new Date(et.data).toLocaleDateString('pt-BR') : '—'}</div>
               <div class="ps-desc">${et.descricao || ''}</div>
-              ${et.notasTecnicas ? `<div class="ps-notas">📝 ${et.notasTecnicas}</div>` : ''}
+              ${et.notasTecnicas ? `<div class="ps-notas"><i class="fas fa-pencil-alt"></i> ${et.notasTecnicas}</div>` : ''}
               ${et.foto ? `<div class="ps-foto"><img src="${et.foto}" onclick="window.open('${et.foto}')"></div>` : ''}
               ${et.videoLink ? `<div class="ps-video">📉 <a href="${et.videoLink}" target="_blank">Ver vídeo time-lapse</a></div>` : ''}
               <div class="diario-acoes">
-                <button data-acao="editarEtapa" data-id="${et.id}">✏️ Editar</button>
-                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;">🗑️</button>
+                <button data-acao="editarEtapa" data-id="${et.id}"><i class="fas fa-pen"></i> Editar</button>
+                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           `).join('')}
@@ -438,12 +438,12 @@ export class DiarioView extends BaseView {
           <div class="stats-sub">${entradas.length} dias registrados</div>
         </div>
         <div class="stats-card">
-          <h4>📅 Média Diária</h4>
+          <h4><i class="fas fa-calendar-alt"></i> Média Diária</h4>
           <div class="stats-valor">${entradas.length > 0 ? (totalHoras / entradas.length).toFixed(1) : 0}h</div>
           <div class="stats-sub">por dia de trabalho</div>
         </div>
         <div class="stats-card">
-          <h4>📝 Média p/ Obra</h4>
+          <h4><i class="fas fa-pencil-alt"></i> Média p/ Obra</h4>
           <div class="stats-valor">${Object.values(mediasObra).length > 0 ? (Object.values(mediasObra).reduce((s, m) => s + m.total / m.count, 0) / Object.values(mediasObra).length).toFixed(0) : '—'}</div>
           <div class="stats-sub">dias em média (${Object.keys(mediasObra).length} técnicas)</div>
         </div>
@@ -453,7 +453,7 @@ export class DiarioView extends BaseView {
         </div>
         ${tecArray.length > 0 ? `
         <div class="stats-card" style="grid-column:1/-1;">
-          <h4>📝 Produtividade por Técnica</h4>
+          <h4><i class="fas fa-pencil-alt"></i> Produtividade por Técnica</h4>
           ${tecArray.map(([tec, horas]) => `
             <div style="margin-bottom:8px;">
               <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:2px;">
@@ -473,7 +473,7 @@ export class DiarioView extends BaseView {
           `).join('')}
         </div>
         <div class="stats-card">
-          <h4>🎨 Por Técnica — Dias Médios</h4>
+          <h4><i class="fas fa-palette"></i> Por Técnica — Dias Médios</h4>
           ${Object.entries(mediasObra).length === 0 ? '<p style="font-size:0.8rem;color:var(--text-muted);">Dados insuficientes.</p>' : Object.entries(mediasObra).map(([tec, m]) => `
             <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);">
               <span>${tec}</span><span><strong>${(m.total / m.count).toFixed(0)}</strong> dias (${m.count} obra(s))</span>
@@ -482,7 +482,7 @@ export class DiarioView extends BaseView {
         </div>
       </div>
       <div style="margin-top:14px;font-size:0.8rem;color:var(--text-muted);">
-        💡 Registre entradas diárias com humor e horas para estatísticas mais precisas.
+        <i class="fas fa-lightbulb"></i> Registre entradas diárias com humor e horas para estatísticas mais precisas.
       </div>
     `;
   }
@@ -503,15 +503,15 @@ export class DiarioView extends BaseView {
       <div class="inspiracao-card">
         <div class="ic-citacao">"${cit.texto}"</div>
         <div class="ic-autor">— ${cit.autor}</div>
-        <div class="ic-prompt">💡 Prompt criativo de hoje: <strong>${prompt}</strong></div>
-        ${desafio ? `<div class="ic-desafio">🎯 Desafio da semana: ${desafio}</div>` : ''}
+        <div class="ic-prompt"><i class="fas fa-lightbulb"></i> Prompt criativo de hoje: <strong>${prompt}</strong></div>
+        ${desafio ? `<div class="ic-desafio"><i class="fas fa-bullseye"></i> Desafio da semana: ${desafio}</div>` : ''}
       </div>
       <div style="margin-top:16px;">
-        <button class="btn-primario" id="btnNovaCitacao" style="font-size:0.8rem;padding:6px 14px;">➕ Nova citação</button>
-        <button class="btn-secundario" id="btnNovoPrompt" style="font-size:0.8rem;padding:6px 14px;margin-left:6px;">➕ Novo prompt</button>
+        <button class="btn-primario" id="btnNovaCitacao" style="font-size:0.8rem;padding:6px 14px;"><i class="fas fa-plus"></i> Nova citação</button>
+        <button class="btn-secundario" id="btnNovoPrompt" style="font-size:0.8rem;padding:6px 14px;margin-left:6px;"><i class="fas fa-plus"></i> Novo prompt</button>
       </div>
       <div style="margin-top:24px;">
-        <h4 style="font-size:0.9rem;margin-bottom:8px;">📋 Todas as citação</h4>
+        <h4 style="font-size:0.9rem;margin-bottom:8px;"><i class="fas fa-clipboard"></i> Todas as citação</h4>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;">
           ${this.citacoes.map(c => `
             <div style="font-size:0.75rem;padding:8px 10px;background:var(--card);border-radius:6px;border:1px solid var(--border);">
@@ -588,7 +588,7 @@ export class DiarioView extends BaseView {
   abrirFormEntrada(id = null, dataPrefill = null) {
     const entrada = id ? this.dataStore.buscarPorId('entradasDiario', id) : null;
     const obras = this.obras;
-    const obraOpts = obras.map(o => `<option value="${o.id}">🖼️ ${o.titulo || 'Sem título'}</option>`).join('');
+    const obraOpts = obras.map(o => `<option value="${o.id}"><i class="fas fa-images"></i> ${o.titulo || 'Sem título'}</option>`).join('');
     const selObras = entrada ? (entrada.obrasTrabalhadas || []) : [];
     const fotos = entrada ? (entrada.fotos || []) : [];
 
@@ -608,10 +608,10 @@ export class DiarioView extends BaseView {
     ).join('');
 
     abrirModal(`
-      <h3>${entrada ? '✏️ Editar Entrada' : '➕ Nova Entrada do Diário'}</h3>
+      <h3>${entrada ? '<i class="fas fa-pen"></i> Editar Entrada' : '<i class="fas fa-plus"></i> Nova Entrada do Diário'}</h3>
       <form id="formModal" class="diario-form-grid">
         <div class="campo-full">
-          <label style="font-size:0.8rem;color:var(--text-muted);">📅 Data</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-calendar-alt"></i> Data</label>
           <input type="date" id="fEntData" value="${dataVal}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div class="campo-full">
@@ -619,7 +619,7 @@ export class DiarioView extends BaseView {
           <div class="humor-selector" id="humorSelector">${humorBtns}</div>
         </div>
         <div class="campo-full">
-          <label style="font-size:0.8rem;color:var(--text-muted);">📝 O que trabalhou hoje</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-pencil-alt"></i> O que trabalhou hoje</label>
           <div style="margin-bottom:4px;display:flex;gap:4px;flex-wrap:wrap;">
             <button type="button" class="btn-toolbar" data-insere="<p></p>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;">Parágrafo</button>
             <button type="button" class="btn-toolbar" data-insere="<strong></strong>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><strong>Negrito</strong></button>
@@ -628,7 +628,7 @@ export class DiarioView extends BaseView {
           <textarea id="fEntTexto" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
         </div>
         <div class="campo-full">
-          <label style="font-size:0.8rem;color:var(--text-muted);">🖼️ Obras trabalhadas (segure Ctrl para múltiplas)</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-images"></i> Obras trabalhadas (segure Ctrl para múltiplas)</label>
           <select multiple id="fEntObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
           <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Selecione as obras que trabalhou hoje</div>
         </div>
@@ -637,15 +637,15 @@ export class DiarioView extends BaseView {
           <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);">⚠️ Bloqueios criativos</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> Bloqueios criativos</label>
           <textarea id="fEntBloqueios" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
         </div>
         <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);">✅ Avanços</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-check"></i> Avanços</label>
           <textarea id="fEntAvancos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
         </div>
         <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);">💡 Descobertas</label>
+          <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-lightbulb"></i> Descobertas</label>
           <textarea id="fEntDescobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
         </div>
         <div class="campo-full">
@@ -766,7 +766,7 @@ export class DiarioView extends BaseView {
     const obraId = this._filtroObraProc;
     if (!obraId) { mostrarToast('Selecione uma obra primeiro.'); return; }
 
-    let proc = this.processos.find(p => p.obraId === obraId);
+    const proc = this.processos.find(p => p.obraId === obraId);
     let etapa = null;
     if (id && proc) etapa = (proc.etapas || []).find(e => e.id === id);
 
@@ -775,13 +775,13 @@ export class DiarioView extends BaseView {
     ).join('');
 
     abrirModal(`
-      <h3>${etapa ? '✏️ Editar Etapa' : '➕ Nova Etapa do Processo'}</h3>
+      <h3>${etapa ? '<i class="fas fa-pen"></i> Editar Etapa' : '<i class="fas fa-plus"></i> Nova Etapa do Processo'}</h3>
       <form id="formModal">
         <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo"><option value="">→ Personalizada —</option>${etapaOpts}</select></div>
         <div class="campo-form"><label>Ou digite título personalizado</label><input type="text" id="fEtpTituloCustom" value="${etapa && !this.etapasPadrao.includes(etapa.titulo) ? (etapa.titulo || '') : ''}" placeholder="Ex.: Aplicação de verniz" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
-        <div class="campo-form"><label>📅 Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || '' : new Date().toISOString().slice(0, 10)}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div class="campo-form"><label>📝 Descrição</label><textarea id="fEtpDesc" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || '' : ''}</textarea></div>
-        <div class="campo-form"><label>📝 Notas técnicas (cores, pincéis, misturas)</label><textarea id="fEtpNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || '' : ''}</textarea></div>
+        <div class="campo-form"><label><i class="fas fa-calendar-alt"></i> Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || '' : new Date().toISOString().slice(0, 10)}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Descrição</label><textarea id="fEtpDesc" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || '' : ''}</textarea></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Notas técnicas (cores, pincéis, misturas)</label><textarea id="fEtpNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || '' : ''}</textarea></div>
         <div class="campo-form"><label>📷 Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*"></div>
         ${etapa && etapa.foto ? `<div style="margin-bottom:8px;"><img src="${etapa.foto}" style="max-width:150px;max-height:100px;border-radius:4px;"></div>` : ''}
         <div class="campo-form"><label>📉 Link de vídeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || '' : ''}" placeholder="https://..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
@@ -895,14 +895,14 @@ export class DiarioView extends BaseView {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
       doc.text(`${i + 1}. ${et.titulo || 'Etapa'}`, margem, y); y += 5;
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-      if (et.data) { doc.text(`📅 ${new Date(et.data).toLocaleDateString('pt-BR')}`, margem, y); y += 4; }
+      if (et.data) { doc.text(`<i class="fas fa-calendar-alt"></i> ${new Date(et.data).toLocaleDateString('pt-BR')}`, margem, y); y += 4; }
       if (et.descricao) {
         const lines = doc.splitTextToSize(et.descricao, larg);
         lines.forEach(l => { if (y > 270) { doc.addPage(); y = 20; } doc.text(l, margem + 2, y); y += 4; });
       }
       if (et.notasTecnicas) {
         if (y > 265) { doc.addPage(); y = 20; }
-        doc.text(`📝 Técnica: ${et.notasTecnicas}`, margem + 2, y); y += 5;
+        doc.text(`<i class="fas fa-pencil-alt"></i> Técnica: ${et.notasTecnicas}`, margem + 2, y); y += 5;
       }
       if (i < etapas.length - 1) {
         doc.setDrawColor(220); doc.line(margem, y, margem + larg, y); y += 4;
@@ -916,7 +916,7 @@ export class DiarioView extends BaseView {
     doc.text('Dados da Obra', margem, y); y += 5;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
     if (obra.preco) { doc.text(`💵 Preço: ${formatarMoeda(obra.preco)}`, margem, y); y += 4; }
-    if (obra.serie) { doc.text(`📁 Série: ${obra.serie}`, margem, y); y += 4; }
+    if (obra.serie) { doc.text(`<i class="fas fa-folder"></i> Série: ${obra.serie}`, margem, y); y += 4; }
     if (obra.descricao) {
       const lines = doc.splitTextToSize(obra.descricao, larg);
       lines.forEach(l => { doc.text(l, margem, y); y += 4; });

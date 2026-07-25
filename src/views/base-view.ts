@@ -14,10 +14,10 @@ export class BaseView {
   }
   removerListeners() {
     Object.values(this._bindCache).forEach(({ el, handler, type }) => {
-      try { el.removeEventListener(type, handler); } catch (e) {}
+      try { el.removeEventListener(type, handler); } catch (e) { console.warn(e) }
     });
     this._bindCache = {};
-    this._eventoCleanups.forEach(fn => { try { fn(); } catch (e) {} });
+    this._eventoCleanups.forEach(fn => { try { fn(); } catch (e) { console.warn(e) } });
     this._eventoCleanups = [];
   }
   rerenderizar() {

@@ -16,8 +16,8 @@ export class ExposicoesView extends BaseView {
         <td>${formatarData(ex.data)}</td>
         <td><span class="tag-status ${ex.status === 'confirmada' ? 'exposicao' : ex.status === 'encerrada' ? 'vendida' : ''}" style="background:${ex.status === 'confirmada' ? '#16a34a20' : ex.status === 'encerrada' ? '#6b728020' : '#f59e0b20'};color:${ex.status === 'confirmada' ? '#16a34a' : ex.status === 'encerrada' ? '#6b7280' : '#f59e0b'};">${ex.status || 'planejada'}</span></td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar">✏️</button>
-          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" style="color:#dc2626;">🗑️</button>
+          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar"><i class="fas fa-pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
@@ -44,7 +44,7 @@ export class ExposicoesView extends BaseView {
         </table>
       </div>` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio">🖼️</div><p>Nenhuma exposicao encontrada.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma exposicao encontrada.</p></div>
       </div>`}
     `;
   }
@@ -61,7 +61,7 @@ export class ExposicoesView extends BaseView {
   abrirFormExposicao(existente) {
     const e = existente || {};
     abrirModal(`
-      <h3>${e.id ? '✏️ Editar' : '✚ Nova'} Exposicao</h3>
+      <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : '✚ Nova'} Exposicao</h3>
       <form id="formExposicao">
         <div class="campo-form"><label>Nome *</label><input type="text" id="expoNome" value="${sanitizarHTML(e.nome || '')}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">

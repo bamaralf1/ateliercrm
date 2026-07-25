@@ -218,7 +218,11 @@ export class RedeView extends BaseView {
 
     // Iniciar D3 map if tab is mapa
     if (this.tabAtiva === 'mapa' && this.contatos.length > 0) {
-      setTimeout(() => this.iniciarMapaD3(), 50);
+      if (typeof d3 === 'undefined') {
+        carregarD3().then(() => this.iniciarMapaD3()).catch(() => {});
+      } else {
+        setTimeout(() => this.iniciarMapaD3(), 50);
+      }
     }
 
     this.verificarLembretes();
@@ -499,14 +503,14 @@ export class RedeView extends BaseView {
     });
     if (pendentes.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
       pendentes.slice(0, 3).forEach(p => {
-        try { new Notification('🔝 Rede Profissional', { body: `Voce nao contata ${p.nome} ha ${p.dias} dias. Sugestao: ${p.passo}` }); } catch (e) {}
+        try { new Notification('🔝 Rede Profissional', { body: `Voce nao contata ${p.nome} ha ${p.dias} dias. Sugestao: ${p.passo}` }); } catch (e) { console.warn(e) }
       });
     }
   }
 
   solicitarNotificacao(titulo, corpo) {
     if (!('Notification' in window) || Notification.permission === 'denied') return;
-    if (Notification.permission === 'granted') { try { new Notification(titulo, { body: corpo }); } catch (e) {} }
+    if (Notification.permission === 'granted') { try { new Notification(titulo, { body: corpo }); } catch (e) { console.warn(e) } }
     else { Notification.requestPermission(); }
   }
 

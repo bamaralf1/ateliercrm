@@ -69,7 +69,7 @@ export const useConfigStore = defineStore('config', {
         const paraSalvar = { ...this.$state }
         _CAMPOS_SENSIVEIS.forEach(c => { if (paraSalvar[c]) paraSalvar[c] = _codificar(paraSalvar[c]) })
         localStorage.setItem(CHAVE, JSON.stringify(paraSalvar))
-        try { (window as any).dataStore && ((window as any).dataStore.dados.config = this.$state) } catch (e) { console.warn('Falha ao sincronizar config com DataStore', e) }
+        try { if ((window as any).dataStore) { (window as any).dataStore.dados.config = this.$state } } catch (e) { console.warn('Falha ao sincronizar config com DataStore', e) }
       } catch (e) { console.warn(e) }
     },
     atualizar(dados: Partial<any>) {

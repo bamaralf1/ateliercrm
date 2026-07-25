@@ -7,23 +7,23 @@ export class Router {
     this.container = document.getElementById('viewPrincipal');
 
     this.rotas = {
-      dashboard:    { rotulo: 'Dashboard',    icone: '📊', render: () => dashboardView.render(), aposRender: () => dashboardView.aposRenderizar() },
-      portal:       { rotulo: 'Portal',       icone: '🔗', render: () => portalView.render(), aposRender: () => portalView.aposRenderizar(), oculta: true },
-      catalogo:     { rotulo: 'Catálogo',     icone: '🖼️', render: () => catalogoView.render(), aposRender: () => catalogoView.aposRenderizar() },
-      clientes:     { rotulo: 'Clientes',     icone: '👤', render: () => clientesView.render(), aposRender: () => clientesView.aposRenderizar() },
-      vendas:       { rotulo: 'Vendas',       icone: '💰', render: () => vendasView.render(), aposRender: () => vendasView.aposRenderizar() },
-      certificados: { rotulo: 'Certificados', icone: '📜', render: () => certificadosView.render(), aposRender: () => certificadosView.aposRenderizar() },
-      referencias:  { rotulo: 'Referências',  icone: '📚', render: () => referenciasView.render(), aposRender: () => referenciasView.aposRenderizar() },
-      encomendas:   { rotulo: 'Encomendas',   icone: '📦', render: () => encomendasView.render(), aposRender: () => encomendasView.aposRenderizar() },
-      exposicoes:   { rotulo: 'Exposições',   icone: '🏛️', render: () => exposicoesView.render(), aposRender: () => exposicoesView.aposRenderizar() },
-      galeriaVirtual:{ rotulo: 'Galeria Virtual',icone: '🥽', render: () => galeriaVirtualView.render(), aposRender: () => galeriaVirtualView.aposRenderizar() },
-      precificador: { rotulo: 'Precificador', icone: '💎', render: () => precificadorView.render(), aposRender: () => precificadorView.aposRenderizar() },
-      atelier:      { rotulo: 'Atelier',      icone: '🔧', render: () => atelierView.render(), aposRender: () => atelierView.aposRenderizar() },
-      diario:       { rotulo: 'Diário',      icone: '📖', render: () => diarioView.render(), aposRender: () => diarioView.aposRenderizar() },
-      rede:         { rotulo: 'Rede',         icone: '🤝', render: () => redeView.render(), aposRender: () => redeView.aposRenderizar() },
-      financeiro:   { rotulo: 'Financeiro',   icone: '📈', render: () => financeiroView.render(), aposRender: () => financeiroView.aposRenderizar() },
-      configuracoes:{ rotulo: 'Configurações',icone: '⚙️', render: () => configuracoesView.render(), aposRender: () => configuracoesView.aposRenderizar() },
-      exportar:     { rotulo: 'Exportar/Importar', icone: '📦', render: () => exportImportView.render(), aposRender: () => exportImportView.aposRenderizar() }
+      dashboard:    { rotulo: 'Dashboard',    icone: ICONES.dashboard, render: () => dashboardView.render(), aposRender: () => dashboardView.aposRenderizar() },
+      portal:       { rotulo: 'Portal',       icone: ICONES.portal, render: () => portalView.render(), aposRender: () => portalView.aposRenderizar(), oculta: true },
+      catalogo:     { rotulo: 'Catálogo',     icone: ICONES.catalogo, render: () => catalogoView.render(), aposRender: () => catalogoView.aposRenderizar() },
+      clientes:     { rotulo: 'Clientes',     icone: ICONES.clientes, render: () => clientesView.render(), aposRender: () => clientesView.aposRenderizar() },
+      vendas:       { rotulo: 'Vendas',       icone: ICONES.vendas, render: () => vendasView.render(), aposRender: () => vendasView.aposRenderizar() },
+      certificados: { rotulo: 'Certificados', icone: ICONES.certificados, render: () => certificadosView.render(), aposRender: () => certificadosView.aposRenderizar() },
+      referencias:  { rotulo: 'Referências',  icone: ICONES.referencias, render: () => referenciasView.render(), aposRender: () => referenciasView.aposRenderizar() },
+      encomendas:   { rotulo: 'Encomendas',   icone: ICONES.encomendas, render: () => encomendasView.render(), aposRender: () => encomendasView.aposRenderizar() },
+      exposicoes:   { rotulo: 'Exposições',   icone: ICONES.exposicoes, render: () => exposicoesView.render(), aposRender: () => exposicoesView.aposRenderizar() },
+      galeriaVirtual:{ rotulo: 'Galeria Virtual',icone: ICONES.galeria, render: () => galeriaVirtualView.render(), aposRender: () => galeriaVirtualView.aposRenderizar() },
+      precificador: { rotulo: 'Precificador', icone: ICONES.precificador, render: () => precificadorView.render(), aposRender: () => precificadorView.aposRenderizar() },
+      atelier:      { rotulo: 'Atelier',      icone: ICONES.atelier, render: () => atelierView.render(), aposRender: () => atelierView.aposRenderizar() },
+      diario:       { rotulo: 'Diário',      icone: ICONES.diario, render: () => diarioView.render(), aposRender: () => diarioView.aposRenderizar() },
+      rede:         { rotulo: 'Rede',         icone: ICONES.rede, render: () => redeView.render(), aposRender: () => redeView.aposRenderizar() },
+      financeiro:   { rotulo: 'Financeiro',   icone: ICONES.financeiro, render: () => financeiroView.render(), aposRender: () => financeiroView.aposRenderizar() },
+      configuracoes:{ rotulo: 'Configurações',icone: ICONES.configuracoes, render: () => configuracoesView.render(), aposRender: () => configuracoesView.aposRenderizar() },
+      exportar:     { rotulo: 'Exportar/Importar', icone: ICONES.exportar, render: () => exportImportView.render(), aposRender: () => exportImportView.aposRenderizar() }
     };
   }
 

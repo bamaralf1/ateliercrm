@@ -59,8 +59,8 @@ export class PrecificadorView extends BaseView {
             </select>
             <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de câmbio">💱</button>
           </div>
-          <button class="btn-secundario" id="btnAbrirRegras">📋 Regras de Precificação</button>
-          <button class="btn-primario" id="btnExportarRelatorio">📞 Relatório PDF</button>
+          <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precificação</button>
+          <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relatório PDF</button>
         </div>
 
         <div class="card">
@@ -71,7 +71,7 @@ export class PrecificadorView extends BaseView {
               <select class="sel-obra-calc" id="selObraCalc"><option value="">— Selecionar obra —</option>${opcoesObra}</select>
             </div>
             <div class="campo-calc">
-              <label>💰 Custo materiais (${this.moeda})</label>
+              <label><i class="fas fa-dollar-sign"></i> Custo materiais (${this.moeda})</label>
               <input type="number" id="calcMateriais" value="${this.calc.materiais}" min="0" step="0.1">
             </div>
             <div class="campo-calc">
@@ -91,7 +91,7 @@ export class PrecificadorView extends BaseView {
               </div>
             </div>
             <div class="campo-calc">
-              <label>⭐ Complexidade</label>
+              <label><i class="fas fa-star"></i> Complexidade</label>
               <div class="estrelas-input" id="estrelasInput">
                 ${[1,2,3,4,5].map(i =>
                   `<span class="estrela ${i <= this.calc.complexidade ? 'preenchida' : ''}" data-val="${i}">★</span>`
@@ -108,7 +108,7 @@ export class PrecificadorView extends BaseView {
           </div>
 
           <div id="faixaComparativa">${this.renderFaixaComparativa(obras)}</div>
-          <button class="btn-primario" id="btnSalvarPrecoCalc" style="margin-top:12px;width:100%;">💾 Salvar preço sugerido na obra</button>
+          <button class="btn-primario" id="btnSalvarPrecoCalc" style="margin-top:12px;width:100%;"><i class="fas fa-save"></i> Salvar preço sugerido na obra</button>
         </div>
 
         ${temObras ? this.renderBreakEven(obras) : ''}
@@ -116,12 +116,12 @@ export class PrecificadorView extends BaseView {
         ${temObras ? this.renderProjecao(obras) : ''}
 
         <div class="card card-full">
-          <h3>📊 Análise do Portfólio</h3>
+          <h3><i class="fas fa-chart-bar"></i> Análise do Portfólio</h3>
           ${temObras ? this.renderAnalise(obras, vendas) : '<p style="color:var(--text-muted);font-size:0.85rem;">Adicione obras no Catálogo para ver análises.</p>'}
         </div>
 
         <div class="card card-full">
-          <h3>🎯 Metas Financeiras</h3>
+          <h3><i class="fas fa-bullseye"></i> Metas Financeiras</h3>
           ${this.renderMetas(obras, vendas)}
         </div>
       </div>
@@ -206,7 +206,7 @@ export class PrecificadorView extends BaseView {
 
     return `
       <div class="card card-full">
-        <h3>📊 Análise de Break-Even</h3>
+        <h3><i class="fas fa-chart-bar"></i> Análise de Break-Even</h3>
         <div class="be-tabela-wrapper">
           <table class="be-tabela">
             <thead><tr>
@@ -372,7 +372,7 @@ export class PrecificadorView extends BaseView {
             <div class="proj-numero">${this.fmt(p.projetado)}</div>
             <div class="proj-rotulo">Em ${p.anos} ano${p.anos > 1 ? 's' : ''}</div>
             <div class="proj-apreciacao ${p.aprecAnual > 0 ? 'proj-positiva' : 'proj-negativa'}">
-              ${p.aprecAnual > 0 ? '📈' : '📉'} ${p.aprecAnual.toFixed(1)}% a.a.
+              ${p.aprecAnual > 0 ? '<i class="fas fa-chart-line"></i>' : '📉'} ${p.aprecAnual.toFixed(1)}% a.a.
             </div>
           </div>
         `).join('')}
@@ -391,7 +391,7 @@ export class PrecificadorView extends BaseView {
     return `
       <div class="widget-config-overlay" id="regrasOverlay" style="display:none">
         <div class="widget-config-modal" style="max-width:800px;">
-          <h3>📋 Regras de Precificação</h3>
+          <h3><i class="fas fa-clipboard"></i> Regras de Precificação</h3>
           <p class="texto-ajuda">Defina regras automáticas: técnica + dimensão → preço sugerido. Use "qualquer" para técnica.</p>
           <div class="regras-lista" id="regrasLista">
             ${regras.length === 0 ? '<p style="color:var(--text-muted);text-align:center;">Nenhuma regra cadastrada.</p>' : ''}
@@ -502,7 +502,7 @@ export class PrecificadorView extends BaseView {
 
     return `
       <div class="card">
-        <h3>📋 Histórico de Preços</h3>
+        <h3><i class="fas fa-clipboard"></i> Histórico de Preços</h3>
         <div style="margin-bottom:12px;">
           <select id="selHistoricoObra" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
             ${selOpts}
@@ -590,8 +590,8 @@ export class PrecificadorView extends BaseView {
 
     return `
       <div class="analise-grid" style="margin-bottom:16px;">
-        <div class="analise-card"><div class="analise-valor">${this.fmt(precoMedio)}</div><div class="analise-rotulo">💰 Preço médio</div></div>
-        <div class="analise-card"><div class="analise-valor">${this.fmt(valorTotal)}</div><div class="analise-rotulo">📦 Valor total do portfólio</div></div>
+        <div class="analise-card"><div class="analise-valor">${this.fmt(precoMedio)}</div><div class="analise-rotulo"><i class="fas fa-dollar-sign"></i> Preço médio</div></div>
+        <div class="analise-card"><div class="analise-valor">${this.fmt(valorTotal)}</div><div class="analise-rotulo"><i class="fas fa-box"></i> Valor total do portfólio</div></div>
         <div class="analise-card"><div class="analise-valor">${precos.length}</div><div class="analise-rotulo">🗃️ Obras precificadas</div></div>
         <div class="analise-card"><div class="analise-valor">${this.fmt(menorPreco)} — ${this.fmt(maiorPreco)}</div><div class="analise-rotulo">📐 Faixa de preços</div></div>
         <div class="analise-card"><div class="analise-valor">${tempoMedio !== null ? tempoMedio + ' dias' : '—'}</div><div class="analise-rotulo">⏱ Tempo médio p/ vender</div></div>
@@ -690,8 +690,8 @@ export class PrecificadorView extends BaseView {
             <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100">
             <button class="btn-secundario" id="btnSalvarMetaMensal">Salvar</button>
           </div>
-          ${projecao ? `<div class="meta-projecao">📈 ${projecao}</div>` : ''}
-          ${sugestao ? `<div class="meta-sugestao">💡 ${sugestao}</div>` : ''}
+          ${projecao ? `<div class="meta-projecao"><i class="fas fa-chart-line"></i> ${projecao}</div>` : ''}
+          ${sugestao ? `<div class="meta-sugestao"><i class="fas fa-lightbulb"></i> ${sugestao}</div>` : ''}
         </div>
         <div class="card meta-card">
           <div class="meta-rotulo">Meta Anual</div>

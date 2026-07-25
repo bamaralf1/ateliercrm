@@ -35,7 +35,7 @@ export class ActivityLogger {
   }
 
   obterIcone(tipo) {
-    const icones = { criacao: '✨', atualizacao: '✏️', exclusao: '🗑️', venda: '💰', favorita: '⭐', export: '📄', import: '📥', status: '📝' };
-    return icones[tipo] || '📌';
+    const icones = { criacao: '✨', atualizacao: '<i class="fas fa-pen"></i>', exclusao: '<i class="fas fa-trash"></i>', venda: '<i class="fas fa-dollar-sign"></i>', favorita: '<i class="fas fa-star"></i>', export: '<i class="fas fa-file"></i>', import: '📥', status: '<i class="fas fa-pencil-alt"></i>' };
+    return icones[tipo] || '<i class="fas fa-thumbtack"></i>';
   }
 }

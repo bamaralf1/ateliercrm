@@ -32,7 +32,7 @@ export class GaleriaVirtualView {
     this.autoRotate = false;
     this.autoRotateSpeed = 0.15;
     this.wallGroups = [];
-    this.threeReady = typeof THREE !== 'undefined' && this._checkWebGL();
+    this.threeReady = this._checkWebGL();
     this._boundResize = null;
     this._boundKeyDown = null;
   }
@@ -70,13 +70,13 @@ export class GaleriaVirtualView {
         <div class="barra-topo">
           <h2>🏛️ Galeria Virtual</h2>
           <div class="acoes-barra">
-            <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria">🔗 Compartilhar</button>
+            <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria"><i class="fas fa-link"></i> Compartilhar</button>
             <button class="btn-bar ${this.tourAtivo ? 'ativo' : ''}" id="btnTourToggle" title="Iniciar tour guiado">🎧 Tour</button>
-            <button class="btn-bar" id="btnAutoRotate" title="Rotação automática">🔄 Auto</button>
+            <button class="btn-bar" id="btnAutoRotate" title="Rotação automática"><i class="fas fa-sync"></i> Auto</button>
             <select class="ambiente-select" id="selectAmbiente">
               <option value="branca" ${this.ambienteAtual === 'branca' ? 'selected' : ''}>🏛️ Galeria Branca</option>
               <option value="classico" ${this.ambienteAtual === 'classico' ? 'selected' : ''}>🪵 Atelier Clássico</option>
-              <option value="moderno" ${this.ambienteAtual === 'moderno' ? 'selected' : ''}>🖼️ Museu Moderno</option>
+              <option value="moderno" ${this.ambienteAtual === 'moderno' ? 'selected' : ''}><i class="fas fa-images"></i> Museu Moderno</option>
             </select>
           </div>
         </div>
@@ -96,7 +96,7 @@ export class GaleriaVirtualView {
       </div>`;
   }
 
-  aposRenderizar() {
+  async aposRenderizar() {
     this.pararTour();
     this.fecharZoom();
     this.destruirThree();
@@ -107,6 +107,15 @@ export class GaleriaVirtualView {
     this.container = document.getElementById('threeContainer');
     const loading = document.getElementById('loading3d');
     if (!this.container) return;
+
+    if (typeof THREE === 'undefined') {
+      try {
+        await carregarThreeJS();
+      } catch {
+        if (loading) loading.textContent = 'Erro ao carregar Three.js';
+        return;
+      }
+    }
 
     this._initThree();
     this._construirSala();
@@ -444,7 +453,7 @@ export class GaleriaVirtualView {
 
   // --- Tour ---
   toggleTour() {
-    this.tourAtivo ? this.pararTour() : this.iniciarTour();
+    if (this.tourAtivo) { this.pararTour(); } else { this.iniciarTour(); }
   }
 
   iniciarTour() {
@@ -543,7 +552,7 @@ export class GaleriaVirtualView {
   compartilhar() {
     const hash = '#galeria=virtual&tour=obras-disponiveis';
     const url = window.location.origin + window.location.pathname + hash;
-    const msg = `Olá! 🎨 Convido você para um tour virtual pela minha galeria de obras:\n${url}\n\nAprecie a exposição!`;
+    const msg = `Olá! <i class="fas fa-palette"></i> Convido você para um tour virtual pela minha galeria de obras:\n${url}\n\nAprecie a exposição!`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(msg).then(() => this._mostrarToastCompartilhar(url)).catch(() => this._fallbackCompartilhar(url, msg));
@@ -568,7 +577,7 @@ export class GaleriaVirtualView {
     const toast = document.createElement('div');
     toast.className = 'toast-compartilhar';
     toast.innerHTML = `
-      <span>✅ Link copiado!</span>
+      <span><i class="fas fa-check"></i> Link copiado!</span>
       <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
       <button class="btn-toast" id="btnAbrirLinkCompartilhado">Abrir</button>`;
     document.body.appendChild(toast);

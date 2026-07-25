@@ -30,7 +30,7 @@ export class ClientesView extends BaseView {
     const clientes = this.clientesFiltrados();
     const conteudo = clientes.length
       ? (this.modo === 'lista' ? this.renderTabela(clientes) : this.renderCards(clientes))
-      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio">👤</div><p>Nenhum cliente encontrado.</p></div></div>`;
+      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-user"></i></div><p>Nenhum cliente encontrado.</p></div></div>`;
 
     const totalCompras = clientes.reduce((s, c) => s + (c.aquisicoes || 0), 0);
     return `
@@ -67,7 +67,7 @@ export class ClientesView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} cliente${this.selecionados.size === 1 ? '' : 's'} selecionado${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportCli">📄 Exportar</button>
+          <button class="btn-secundario" id="bulkExportCli"><i class="fas fa-file"></i> Exportar</button>
           <button class="btn-secundario btn-danger" id="bulkExcluirCli">🗑 Excluir</button>
           <button class="btn-secundario" id="bulkCancelarCli">✕ Cancelar</button>
         </div>
@@ -87,8 +87,8 @@ export class ClientesView extends BaseView {
         <td>${c.aquisicoes || 0}</td>
         <td>${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('') || '-'}</td>
         <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
-          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar">✏️</button>
-          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir">🗑️</button>
+          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
@@ -120,8 +120,8 @@ export class ClientesView extends BaseView {
               <div class="cc-tags">${(c.tags || []).slice(0, 2).map(t => `<span class="badge-tag">${t}</span>`).join('')}</div>
             </div>
             <div class="cc-acoes">
-              <button data-editar-cliente="${c.id}" title="Editar">✏️</button>
-              <button data-excluir-cliente="${c.id}" title="Excluir">🗑️</button>
+              <button data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
+              <button data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         `).join('')}
@@ -317,7 +317,7 @@ export class ClientesView extends BaseView {
       <ul class="timeline-cliente">${timelineHtml}</ul>
       <div class="modal-acoes">
         <button class="btn-secundario" id="btnFecharFichaCliente">Fechar</button>
-        <button class="btn-primario" id="btnEditarFichaCliente">✏️ Editar</button>
+        <button class="btn-primario" id="btnEditarFichaCliente"><i class="fas fa-pen"></i> Editar</button>
       </div>
     `);
     document.getElementById('btnFecharFichaCliente').addEventListener('click', fecharModal);

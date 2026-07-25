@@ -61,8 +61,8 @@ export class CatalogoView extends BaseView {
             <input type="checkbox" id="selectAll" ${this.selecionados.size === obras.length && obras.length > 0 ? 'checked' : ''}>
             <label for="selectAll">Selecionar todos</label>
           </div>
-          <button class="btn-secundario" id="btnComparar" title="Comparar obras selecionadas" ${this.selecionados.size < 2 ? 'disabled' : ''}>📊 Comparar</button>
-          <button class="btn-secundario" id="btnImportacaoLote" title="Importar múltiplas obras">📸 Importar</button>
+          <button class="btn-secundario" id="btnComparar" title="Comparar obras selecionadas" ${this.selecionados.size < 2 ? 'disabled' : ''}><i class="fas fa-chart-bar"></i> Comparar</button>
+          <button class="btn-secundario" id="btnImportacaoLote" title="Importar múltiplas obras"><i class="fas fa-camera"></i> Importar</button>
           <div class="toggle-visualizacao">
             <button id="btnModoGrid" class="${this.modo === 'grid' ? 'ativo' : ''}" title="Visualização em grid">☰ Grid</button>
             <button id="btnModoLista" class="${this.modo === 'lista' ? 'ativo' : ''}" title="Visualização em lista">☰ Lista</button>
@@ -75,14 +75,14 @@ export class CatalogoView extends BaseView {
       ${this.renderFiltros(anos)}
 
       <div class="catalogo-acoes-rapidas">
-        <button class="btn-ghost" id="btnNovaObraRapida">➕ Nova Obra</button>
+        <button class="btn-ghost" id="btnNovaObraRapida"><i class="fas fa-plus"></i> Nova Obra</button>
         <button class="btn-ghost" id="btnSlideshowTodas">▶ Slideshow Geral</button>
         <button class="btn-ghost" id="btnExportarTodas">📥 Exportar Tudo</button>
       </div>
 
       ${conteudoLista}
 
-      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra">➕</button>
+      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra"><i class="fas fa-plus"></i></button>
     `;
   }
 
@@ -90,7 +90,7 @@ export class CatalogoView extends BaseView {
     return `
       <div class="tabela-wrapper">
         <div class="estado-vazio">
-          <div class="icone-vazio">🖼️</div>
+          <div class="icone-vazio"><i class="fas fa-images"></i></div>
           <p>Nenhuma obra encontrada com os filtros atuais.</p>
           <p class="texto-ajuda">Tente limpar os filtros ou cadastrar uma nova obra.</p>
         </div>
@@ -103,11 +103,11 @@ export class CatalogoView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} obra${this.selecionados.size === 1 ? '' : 's'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkMarcarFavorita">⭐ Favoritar</button>
+          <button class="btn-secundario" id="bulkMarcarFavorita"><i class="fas fa-star"></i> Favoritar</button>
           <button class="btn-secundario" id="bulkDesmarcarFavorita">☆ Desfavoritar</button>
-          <button class="btn-secundario" id="bulkMudarStatus">📝 Mudar Status</button>
-          <button class="btn-secundario" id="bulkExportar">📊 Exportar</button>
-          <button class="btn-secundario" id="bulkExportarPDF">📄 Catálogo PDF</button>
+          <button class="btn-secundario" id="bulkMudarStatus"><i class="fas fa-pencil-alt"></i> Mudar Status</button>
+          <button class="btn-secundario" id="bulkExportar"><i class="fas fa-chart-bar"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkExportarPDF"><i class="fas fa-file"></i> Catálogo PDF</button>
           <button class="btn-secundario btn-danger" id="bulkExcluir">🗑 Excluir</button>
           <button class="btn-secundario" id="bulkCancelar">✕ Cancelar</button>
         </div>
@@ -169,15 +169,15 @@ export class CatalogoView extends BaseView {
           </select>
         </div>
         <button class="btn-secundario" id="btnLimparFiltros">Limpar filtros</button>
-        <button class="btn-secundario" id="btnSalvarFiltro" title="Salvar filtro atual">💾 Salvar</button>
+        <button class="btn-secundario" id="btnSalvarFiltro" title="Salvar filtro atual"><i class="fas fa-save"></i> Salvar</button>
       </div>
 
       <div class="filtros-rapidos">
         <span class="rotulo-filtros">Filtros rápidos:</span>
         <button class="chip-filtro ${this.filtroRapido === 'disponiveis' ? 'ativo' : ''}" data-filtro="disponiveis">🟢 Disponíveis</button>
         <button class="chip-filtro ${this.filtroRapido === 'vendidas' ? 'ativo' : ''}" data-filtro="vendidas">🟡 Vendidas</button>
-        <button class="chip-filtro ${this.filtroRapido === 'recentes' ? 'ativo' : ''}" data-filtro="recentes">📅 Este mês</button>
-        <button class="chip-filtro ${this.filtroRapido === 'favoritas' ? 'ativo' : ''}" data-filtro="favoritas">⭐ Favoritas</button>
+        <button class="chip-filtro ${this.filtroRapido === 'recentes' ? 'ativo' : ''}" data-filtro="recentes"><i class="fas fa-calendar-alt"></i> Este mês</button>
+        <button class="chip-filtro ${this.filtroRapido === 'favoritas' ? 'ativo' : ''}" data-filtro="favoritas"><i class="fas fa-star"></i> Favoritas</button>
       </div>
 
       ${this.filtrosSalvos.length > 0 ? `
@@ -199,7 +199,7 @@ export class CatalogoView extends BaseView {
             <div class="checkbox-bulk">
               <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
-            ${o.favorita ? '<div class="badge-favorita">⭐</div>' : ''}
+            ${o.favorita ? '<div class="badge-favorita"><i class="fas fa-star"></i></div>' : ''}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
               <img class="imagem-obra lazy-img" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
               ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
@@ -215,7 +215,7 @@ export class CatalogoView extends BaseView {
             </div>
             <div class="acoes-card-obra">
               <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação">📊</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação"><i class="fas fa-chart-bar"></i></button>
               <button data-editar-obra="${o.id}">✎ Editar</button>
               <button class="btn-excluir-obra" data-excluir-obra="${o.id}">🗑 Excluir</button>
             </div>
@@ -233,7 +233,7 @@ export class CatalogoView extends BaseView {
             <div class="checkbox-bulk-lista">
               <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
-            ${o.favorita ? '<span class="icone-favorita-lista">⭐</span>' : ''}
+            ${o.favorita ? '<span class="icone-favorita-lista"><i class="fas fa-star"></i></span>' : ''}
             <img class="thumb-lista lazy-img" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
             <div class="info-lista" data-abrir-ficha="${o.id}">
               <div class="titulo-obra">${o.titulo}</div>
@@ -243,7 +243,7 @@ export class CatalogoView extends BaseView {
             <span class="preco-lista">${formatarMoeda(o.preco)}</span>
             <div class="acoes-lista">
               <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação">📊</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação"><i class="fas fa-chart-bar"></i></button>
               <button data-editar-obra="${o.id}">✎</button>
               <button data-excluir-obra="${o.id}">🗑</button>
             </div>
@@ -254,7 +254,7 @@ export class CatalogoView extends BaseView {
   }
 
   obterImagem(obra) {
-    return obra.imagemDestacada || (obra.imagens && obra.imagens[0]) || obra.imagem || gerarImagemPlaceholder('#cccccc', '🖼️');
+    return obra.imagemDestacada || (obra.imagens && obra.imagens[0]) || obra.imagem || gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>');
   }
 
   formatarDimensoes(dim) {
@@ -715,7 +715,7 @@ export class CatalogoView extends BaseView {
         descricao: document.getElementById('campoDescricao').value.trim(),
         preco: Number(preco),
         status: document.getElementById('campoStatus').value,
-        imagem: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || gerarImagemPlaceholder('#cccccc', '🖼️')),
+        imagem: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>')),
         imagens: this.imagensFormAtual,
         imagemDestacada: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || ''),
         serie: document.getElementById('campoSerie').value.trim()
@@ -823,7 +823,7 @@ export class CatalogoView extends BaseView {
           <div class="miniatura-imagem ${img === this.imagemDestacadaAtual ? 'destacada' : ''}" draggable="true" data-idx="${i}">
             <img src="${img}" alt="Imagem ${i + 1}">
             <div class="miniaturas-acoes">
-              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? 'ativo' : ''}" data-destacar="${i}" title="Marcar como destacada">⭐</button>
+              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? 'ativo' : ''}" data-destacar="${i}" title="Marcar como destacada"><i class="fas fa-star"></i></button>
               <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem">✎</button>
               <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem">✕</button>
             </div>
@@ -831,7 +831,7 @@ export class CatalogoView extends BaseView {
           </div>
         `).join('')}
       </div>
-      <p class="texto-ajuda">⭐ = imagem destacada (capa). Arraste as imagens para reordenar.</p>
+      <p class="texto-ajuda"><i class="fas fa-star"></i> = imagem destacada (capa). Arraste as imagens para reordenar.</p>
     `;
 
     // Drag-to-reorder
@@ -892,7 +892,7 @@ export class CatalogoView extends BaseView {
 
   abrirImportacaoLote() {
     abrirModal(`
-      <h3>📸 Importar Múltiplas Obras</h3>
+      <h3><i class="fas fa-camera"></i> Importar Múltiplas Obras</h3>
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Arraste imagens ou clique para selecionar. Cada imagem se tornará uma nova obra.</p>
       <div class="dropzone-imagens batch-dropzone" id="batchDropzone">
         <div class="dropzone-placeholder">
@@ -923,7 +923,7 @@ export class CatalogoView extends BaseView {
   iniciarBatchDrop() {
     const dropzone = document.getElementById('batchDropzone');
     const fileInput = document.getElementById('batchFileInput');
-    let imagensLote = [];
+    const imagensLote = [];
 
     if (!dropzone) return;
 
@@ -1021,12 +1021,12 @@ export class CatalogoView extends BaseView {
     const imgSrc = this.imagensFormAtual[idx];
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    let imgObj = new Image();
+    const imgObj = new Image();
     let angulo = 0;
     let brilho = 0;
     let crop = { x: 0, y: 0, w: 0, h: 0 };
     let cropAtivo = false;
-    let cropInicio = null;
+    const cropInicio = null;
 
     imgObj.onload = () => {
       canvas.width = imgObj.width;
@@ -1088,8 +1088,8 @@ export class CatalogoView extends BaseView {
       const rotRad = (angulo * Math.PI) / 180;
       const cos = Math.abs(Math.cos(rotRad));
       const sin = Math.abs(Math.sin(rotRad));
-      let w = imgObj.width;
-      let h = imgObj.height;
+      const w = imgObj.width;
+      const h = imgObj.height;
 
       if (angulo % 180 !== 0) {
         const novoW = h * cos + w * sin;
@@ -1164,8 +1164,8 @@ export class CatalogoView extends BaseView {
           <div class="ficha-qrcode" id="fichaQRCode"></div>
           <div class="acoes-ficha">
             <button class="btn-secundario" id="btnEditarFicha">✎ Editar</button>
-            <button class="btn-primario" id="btnExportarPdfFicha">📄 Exportar PDF</button>
-            <button class="btn-secundario" id="btnCompartilharObra">🔗 Compartilhar</button>
+            <button class="btn-primario" id="btnExportarPdfFicha"><i class="fas fa-file"></i> Exportar PDF</button>
+            <button class="btn-secundario" id="btnCompartilharObra"><i class="fas fa-link"></i> Compartilhar</button>
           </div>
         </div>
       </div>
@@ -1283,13 +1283,13 @@ export class CatalogoView extends BaseView {
 
     const totalColunas = Math.min(obras.length, 4);
     abrirModal(`
-      <h3>📊 Comparação de Obras</h3>
+      <h3><i class="fas fa-chart-bar"></i> Comparação de Obras</h3>
       <div class="comparacao-container" style="grid-template-columns: repeat(${totalColunas}, 1fr)">
         ${colunas}
       </div>
       <div class="modal-acoes">
         <button class="btn-secundario" id="btnFecharComparacao">Fechar</button>
-        <button class="btn-primario" id="btnExportarComparacao">📄 Exportar Comparação</button>
+        <button class="btn-primario" id="btnExportarComparacao"><i class="fas fa-file"></i> Exportar Comparação</button>
       </div>
     `);
 
@@ -1338,7 +1338,7 @@ export class CatalogoView extends BaseView {
       if (/^data:image\/(png|jpe?g)/i.test(imgSrc || '')) {
         try {
           doc.addImage(imgSrc, /png/i.test(imgSrc) ? 'PNG' : 'JPEG', x + 2, y, colW - 8, 35, undefined, 'FAST');
-        } catch (e) {}
+        } catch (e) { console.warn(e) }
       }
       y += 40;
 

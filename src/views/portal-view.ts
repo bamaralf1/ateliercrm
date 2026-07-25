@@ -12,7 +12,7 @@ export class PortalView extends BaseView {
       return `
         <div class="portal-wrapper">
           <div class="portal-card portal-erro">
-            <div class="portal-icone">🔒</div>
+            <div class="portal-icone"><i class="fas fa-lock"></i></div>
             <h2>Link inválido</h2>
             <p>O link de acesso não é válido ou expirou. Entre em contato com o artista para obter um novo link.</p>
           </div>
@@ -25,7 +25,7 @@ export class PortalView extends BaseView {
       return `
         <div class="portal-wrapper">
           <div class="portal-card portal-erro">
-            <div class="portal-icone">🔒</div>
+            <div class="portal-icone"><i class="fas fa-lock"></i></div>
             <h2>Acesso não autorizado</h2>
             <p>Este link não está mais ativo ou é inválido. Solicite um novo link ao artista.</p>
           </div>
@@ -52,7 +52,7 @@ export class PortalView extends BaseView {
       <div class="portal-wrapper">
         <div class="portal-header">
           <div class="portal-header-info">
-            <h2>📦 Acompanhamento de Encomendas</h2>
+            <h2><i class="fas fa-box"></i> Acompanhamento de Encomendas</h2>
             <p class="portal-sub">${portal.clienteNome} · via ${artista}</p>
           </div>
         </div>
@@ -77,14 +77,14 @@ export class PortalView extends BaseView {
 
   renderEncomendaCard(enc) {
     const statusMap = {
-      'criado': { rotulo: 'Pedido Recebido', cor: '#3b82f6', icone: '📋' },
-      'em_andamento': { rotulo: 'Em Andamento', cor: '#f59e0b', icone: '🎨' },
-      'aprovacao': { rotulo: 'Aguardando Aprovação', cor: '#8b5cf6', icone: '✅' },
+      'criado': { rotulo: 'Pedido Recebido', cor: '#3b82f6', icone: '<i class="fas fa-clipboard"></i>' },
+      'em_andamento': { rotulo: 'Em Andamento', cor: '#f59e0b', icone: '<i class="fas fa-palette"></i>' },
+      'aprovacao': { rotulo: 'Aguardando Aprovação', cor: '#8b5cf6', icone: '<i class="fas fa-check"></i>' },
       'finalizado': { rotulo: 'Finalizado', cor: '#16a34a', icone: '✨' },
-      'entregue': { rotulo: 'Entregue', cor: '#065f46', icone: '📦' },
-      'cancelado': { rotulo: 'Cancelado', cor: '#dc2626', icone: '❌' }
+      'entregue': { rotulo: 'Entregue', cor: '#065f46', icone: '<i class="fas fa-box"></i>' },
+      'cancelado': { rotulo: 'Cancelado', cor: '#dc2626', icone: '<i class="fas fa-times"></i>' }
     };
-    const st = statusMap[enc.status] || { rotulo: enc.status, cor: '#6b7280', icone: '📋' };
+    const st = statusMap[enc.status] || { rotulo: enc.status, cor: '#6b7280', icone: '<i class="fas fa-clipboard"></i>' };
     const diasRestantes = enc.prazo ? Math.ceil((new Date(enc.prazo) - new Date()) / 86400000) : null;
     const prazoLabel = diasRestantes !== null
       ? (diasRestantes > 0 ? `${diasRestantes} dia${diasRestantes > 1 ? 's' : ''} restante${diasRestantes > 1 ? 's' : ''}` : 'Prazo encerrado')
@@ -113,8 +113,8 @@ export class PortalView extends BaseView {
             </span>
           </div>
           <div class="portal-encomenda-meta">
-            <span>💰 ${formatarMoeda(enc.valor || 0)}</span>
-            <span>📅 ${prazoLabel}</span>
+            <span><i class="fas fa-dollar-sign"></i> ${formatarMoeda(enc.valor || 0)}</span>
+            <span><i class="fas fa-calendar-alt"></i> ${prazoLabel}</span>
             ${enc.clienteEmail ? `<span>✉️ ${sanitizarHTML(enc.clienteEmail)}</span>` : ''}
           </div>
         </div>

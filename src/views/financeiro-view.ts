@@ -15,11 +15,11 @@ export class FinanceiroView extends BaseView {
     const linhas = transacoes.map(t => `
       <tr>
         <td>${sanitizarRich(t.descricao)}</td>
-        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '💰 Entrada' : '💸 Saida'}</span></td>
+        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '<i class="fas fa-dollar-sign"></i> Entrada' : '💸 Saida'}</span></td>
         <td style="font-weight:600;color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '+' : '-'}${formatarMoeda(t.valor)}</td>
         <td>${formatarData(t.data)}</td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir">🗑️</button>
+          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
@@ -40,7 +40,7 @@ export class FinanceiroView extends BaseView {
       </div>
     ` : `
       <div class="tabela-wrapper" style="margin-top:16px;">
-        <div class="estado-vazio"><div class="icone-vazio">📊</div><p>Nenhuma transacao encontrada.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-chart-bar"></i></div><p>Nenhuma transacao encontrada.</p></div>
       </div>
     `;
 
@@ -53,7 +53,7 @@ export class FinanceiroView extends BaseView {
         <button class="btn-gradient" id="btnNovaTransacao">✚ Nova Transacao</button>
       </div>
       <div class="grid-cards">
-        <div class="card"><div class="rotulo-card" style="color:#16a34a;">💰 Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
+        <div class="card"><div class="rotulo-card" style="color:#16a34a;"><i class="fas fa-dollar-sign"></i> Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
         <div class="card"><div class="rotulo-card" style="color:#dc2626;">💸 Saidas</div><div class="valor-card">${formatarMoeda(saidas)}</div></div>
         <div class="card"><div class="rotulo-card">🏦 Saldo</div><div class="valor-card" style="color:${saldo >= 0 ? '#16a34a' : '#dc2626'};">${formatarMoeda(saldo)}</div></div>
       </div>
@@ -89,13 +89,13 @@ export class FinanceiroView extends BaseView {
   abrirFormTransacao(existente) {
     const e = existente || {};
     abrirModal(`
-      <h3>${e.id ? '✏️ Editar' : '✚ Nova'} Transacao</h3>
+      <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : '✚ Nova'} Transacao</h3>
       <form id="formTransacao">
         <div class="campo-form"><label>Descricao *</label><input type="text" id="transDescricao" value="${sanitizarHTML(e.descricao || '')}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div><label>Tipo *</label>
             <select id="transTipo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
-              <option value="entrada" ${e.tipo === 'entrada' || !e.tipo ? 'selected' : ''}>💰 Entrada</option>
+              <option value="entrada" ${e.tipo === 'entrada' || !e.tipo ? 'selected' : ''}><i class="fas fa-dollar-sign"></i> Entrada</option>
               <option value="saida" ${e.tipo === 'saida' ? 'selected' : ''}>💸 Saida</option>
             </select>
           </div>

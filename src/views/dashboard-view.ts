@@ -4,15 +4,15 @@ export class DashboardView extends BaseView {
     this.charts = {};
     this.widgetOrdem = this.carregarOrdemWidgets();
     this.widgetsDisponiveis = [
-      { id: 'producao', rotulo: 'Produção Mensal', icone: '📈', visivel: true },
-      { id: 'tecnicas', rotulo: 'Técnicas', icone: '🎨', visivel: true },
-      { id: 'receita', rotulo: 'Receita', icone: '💰', visivel: true },
+      { id: 'producao', rotulo: 'Produção Mensal', icone: '<i class="fas fa-chart-line"></i>', visivel: true },
+      { id: 'tecnicas', rotulo: 'Técnicas', icone: '<i class="fas fa-palette"></i>', visivel: true },
+      { id: 'receita', rotulo: 'Receita', icone: '<i class="fas fa-dollar-sign"></i>', visivel: true },
       { id: 'previsao', rotulo: 'Previsão de Faturamento', icone: '🔮', visivel: true },
-      { id: 'notificacoes', rotulo: 'Notificações Inteligentes', icone: '🔔', visivel: true },
-      { id: 'metas', rotulo: 'Metas Financeiras', icone: '🎯', visivel: true },
-      { id: 'recentes', rotulo: 'Obras Recentes', icone: '🖼️', visivel: true },
-      { id: 'atividades', rotulo: 'Atividades', icone: '📋', visivel: true },
-      { id: 'dica', rotulo: 'Dica do Dia', icone: '💡', visivel: true }
+      { id: 'notificacoes', rotulo: 'Notificações Inteligentes', icone: '<i class="fas fa-bell"></i>', visivel: true },
+      { id: 'metas', rotulo: 'Metas Financeiras', icone: '<i class="fas fa-bullseye"></i>', visivel: true },
+      { id: 'recentes', rotulo: 'Obras Recentes', icone: '<i class="fas fa-images"></i>', visivel: true },
+      { id: 'atividades', rotulo: 'Atividades', icone: '<i class="fas fa-clipboard"></i>', visivel: true },
+      { id: 'dica', rotulo: 'Dica do Dia', icone: '<i class="fas fa-lightbulb"></i>', visivel: true }
     ];
   }
 
@@ -67,12 +67,12 @@ export class DashboardView extends BaseView {
     const variacaoObras = obrasMesPassado > 0 ? ((obrasMes - obrasMesPassado) / obrasMesPassado * 100) : 0;
 
     const kpis = [
-      { rotulo: 'Total de Obras', valor: obras.length, tendencia: crescimentoMensal, icone: '🖼️', cor: '#2563eb', sparkline: this.gerarSparkline(obras, 'criacao'), variacao: obras.length > 0 ? variacaoObras : null },
-      { rotulo: 'Obras Vendidas', valor: vendidas.length, sub: `${obras.length > 0 ? ((vendidas.length / obras.length) * 100).toFixed(1) : 0}% do total`, icone: '✅', cor: '#16a34a', sparkline: '' },
-      { rotulo: 'Valor do Acervo', valor: formatarMoeda(valorAcervo), sub: `Ticket médio: ${formatarMoeda(ticketMedio)}`, icone: '💰', cor: '#d97706', sparkline: '' },
-      { rotulo: 'Total Vendido', valor: formatarMoeda(valorVendido), sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + ' este mês' : vendas.length + ' venda(s)'}`, icone: '📊', cor: '#7c3aed', sparkline: this.gerarSparkline(vendas, 'receita'), variacao: variacaoReceita },
+      { rotulo: 'Total de Obras', valor: obras.length, tendencia: crescimentoMensal, icone: '<i class="fas fa-images"></i>', cor: '#2563eb', sparkline: this.gerarSparkline(obras, 'criacao'), variacao: obras.length > 0 ? variacaoObras : null },
+      { rotulo: 'Obras Vendidas', valor: vendidas.length, sub: `${obras.length > 0 ? ((vendidas.length / obras.length) * 100).toFixed(1) : 0}% do total`, icone: '<i class="fas fa-check"></i>', cor: '#16a34a', sparkline: '' },
+      { rotulo: 'Valor do Acervo', valor: formatarMoeda(valorAcervo), sub: `Ticket médio: ${formatarMoeda(ticketMedio)}`, icone: '<i class="fas fa-dollar-sign"></i>', cor: '#d97706', sparkline: '' },
+      { rotulo: 'Total Vendido', valor: formatarMoeda(valorVendido), sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + ' este mês' : vendas.length + ' venda(s)'}`, icone: '<i class="fas fa-chart-bar"></i>', cor: '#7c3aed', sparkline: this.gerarSparkline(vendas, 'receita'), variacao: variacaoReceita },
       { rotulo: 'Clientes', valor: clientes.length, sub: `${this.contarClientesAtivos(clientes)} ativos`, icone: '👥', cor: '#0891b2', sparkline: '' },
-      { rotulo: 'Favoritas', valor: obrasFavoritas, sub: '⭐ obras marcadas', icone: '⭐', cor: '#dc2626', sparkline: '' }
+      { rotulo: 'Favoritas', valor: obrasFavoritas, sub: '<i class="fas fa-star"></i> obras marcadas', icone: '<i class="fas fa-star"></i>', cor: '#dc2626', sparkline: '' }
     ];
 
     const widgetsVisiveis = this.obterWidgetsOrdenados();
@@ -85,9 +85,9 @@ export class DashboardView extends BaseView {
           <p class="subtitulo">Visão geral do seu ateliê · ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div class="dashboard-acoes">
-          <button class="btn-gradient" id="btnDownloadDashboard" title="Baixar dashboard como imagem">📸 Exportar</button>
+          <button class="btn-gradient" id="btnDownloadDashboard" title="Baixar dashboard como imagem"><i class="fas fa-camera"></i> Exportar</button>
           <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets">⚙️</button>
-          <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados">🔄</button>
+          <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados"><i class="fas fa-sync"></i></button>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ export class DashboardView extends BaseView {
       </div>
 
       <div class="widgets-toolbar">
-        <span class="widgets-toolbar-dica">💡 Arraste os widgets para reordenar. Clique em ⚙️ para mostrar/ocultar.</span>
+        <span class="widgets-toolbar-dica"><i class="fas fa-lightbulb"></i> Arraste os widgets para reordenar. Clique em ⚙️ para mostrar/ocultar.</span>
       </div>
 
       <div class="widgets-grid" id="widgetsGrid">
@@ -134,7 +134,7 @@ export class DashboardView extends BaseView {
           <button class="btn-gradient" id="btnAtalhoNovaObra">✚ Nova Obra</button>
           <button class="btn-ghost" id="btnAtalhoVenda">✚ Nova Venda</button>
           <button class="btn-ghost" id="btnAtalhoRecibo">🧾 Gerar Recibo</button>
-          <button class="btn-ghost" id="btnAtalhoClientes">👤 Gerenciar Clientes</button>
+          <button class="btn-ghost" id="btnAtalhoClientes"><i class="fas fa-user"></i> Gerenciar Clientes</button>
         </div>
       </div>
 
@@ -249,12 +249,12 @@ export class DashboardView extends BaseView {
           </div>
           <div class="previsao-barra-item">
             <span>Projeção próximos 6 meses</span>
-            <span class="previsao-numero-peq ${dados.tendencia > 0 ? 'positiva' : 'negativa'}">${formatarMoeda(Math.abs(dados.projecao6M))} ${dados.tendencia > 0 ? '📈' : '📉'}</span>
+            <span class="previsao-numero-peq ${dados.tendencia > 0 ? 'positiva' : 'negativa'}">${formatarMoeda(Math.abs(dados.projecao6M))} ${dados.tendencia > 0 ? '<i class="fas fa-chart-line"></i>' : '📉'}</span>
           </div>
         </div>
         <div class="previsao-detalhe">
           <span class="texto-ajuda">Baseado em regressão linear simples sobre os últimos meses</span>
-          ${dados.tendencia > 0 ? `<span class="tag-status disponivel">Tendência positiva 📈</span>` : `<span class="tag-status vendida">Tendência negativa 📉</span>`}
+          ${dados.tendencia > 0 ? `<span class="tag-status disponivel">Tendência positiva <i class="fas fa-chart-line"></i></span>` : `<span class="tag-status vendida">Tendência negativa 📉</span>`}
         </div>
         <canvas id="chartPrevisao" height="120"></canvas>
       </div>
@@ -303,7 +303,7 @@ export class DashboardView extends BaseView {
 
     materiais.forEach(m => {
       if (m.quantidade <= m.quantidadeMinima) {
-        notificacoes.push({ tipo: 'estoque', gravidade: m.quantidade <= (m.quantidadeMinima || 0) / 2 ? 'alta' : 'media', icone: '⚠️', mensagem: `"${m.nome}" está com estoque crítico (${m.quantidade} ${m.unidade || 'un'})`, acao: 'Ir para Atelier', rota: 'atelier' });
+        notificacoes.push({ tipo: 'estoque', gravidade: m.quantidade <= (m.quantidadeMinima || 0) / 2 ? 'alta' : 'media', icone: '<i class="fas fa-exclamation-triangle"></i>', mensagem: `"${m.nome}" está com estoque crítico (${m.quantidade} ${m.unidade || 'un'})`, acao: 'Ir para Atelier', rota: 'atelier' });
       }
     });
 
@@ -312,7 +312,7 @@ export class DashboardView extends BaseView {
         const dataRef = c.ultimoContato || c.criadoEm;
         const dias = Math.floor((hoje - new Date(dataRef)) / 86400000);
         if (dias > 60) {
-          notificacoes.push({ tipo: 'cliente', gravidade: dias > 180 ? 'alta' : 'media', icone: '👤', mensagem: `"${c.nome}" sem contato há ${dias} dias`, acao: 'Ver cliente', rota: 'clientes' });
+          notificacoes.push({ tipo: 'cliente', gravidade: dias > 180 ? 'alta' : 'media', icone: '<i class="fas fa-user"></i>', mensagem: `"${c.nome}" sem contato há ${dias} dias`, acao: 'Ver cliente', rota: 'clientes' });
         }
       }
     });
@@ -321,7 +321,7 @@ export class DashboardView extends BaseView {
       if (e.dataEvento) {
         const dias = Math.floor((new Date(e.dataEvento) - hoje) / 86400000);
         if (dias > 0 && dias <= 60) {
-          notificacoes.push({ tipo: 'evento', gravidade: dias <= 15 ? 'alta' : 'media', icone: '📅', mensagem: `"${e.nome}" em ${dias} dias (${e.status})`, acao: 'Ver eventos', rota: 'exposicoes' });
+          notificacoes.push({ tipo: 'evento', gravidade: dias <= 15 ? 'alta' : 'media', icone: '<i class="fas fa-calendar-alt"></i>', mensagem: `"${e.nome}" em ${dias} dias (${e.status})`, acao: 'Ver eventos', rota: 'exposicoes' });
         }
       }
     });
@@ -331,13 +331,13 @@ export class DashboardView extends BaseView {
         const ultimo = o.historicoPrecos[o.historicoPrecos.length - 1];
         const penultimo = o.historicoPrecos[o.historicoPrecos.length - 2];
         if (ultimo.preco < penultimo.preco) {
-          notificacoes.push({ tipo: 'preco', gravidade: 'media', icone: '🏷️', mensagem: `"${o.titulo}" teve redução de preço (${formatarMoeda(penultimo.preco)} → ${formatarMoeda(ultimo.preco)})`, acao: 'Ver obra', rota: 'catalogo' });
+          notificacoes.push({ tipo: 'preco', gravidade: 'media', icone: '<i class="fas fa-tag"></i>', mensagem: `"${o.titulo}" teve redução de preço (${formatarMoeda(penultimo.preco)} → ${formatarMoeda(ultimo.preco)})`, acao: 'Ver obra', rota: 'catalogo' });
         }
       }
     });
 
     if (notificacoes.length === 0) {
-      return '<div class="estado-vazio"><div class="icone-vazio">✅</div><p>Tudo em ordem! Nenhuma notificação pendente.</p></div>';
+      return '<div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-check"></i></div><p>Tudo em ordem! Nenhuma notificação pendente.</p></div>';
     }
 
     return `
@@ -388,9 +388,9 @@ export class DashboardView extends BaseView {
           <div class="meta-barra"><div class="meta-barra-preenchimento" style="width:${pctMes}%"></div></div>
           <div class="meta-footer">
             <span>${pctMes.toFixed(1)}% concluído</span>
-            <span class="${pctMes >= 100 ? 'positiva' : ''}">${pctMes >= 100 ? '✅ Meta atingida!' : `Faltam ${formatarMoeda(metaMensal - faturamentoMes)}`}</span>
+            <span class="${pctMes >= 100 ? 'positiva' : ''}">${pctMes >= 100 ? '<i class="fas fa-check"></i> Meta atingida!' : `Faltam ${formatarMoeda(metaMensal - faturamentoMes)}`}</span>
           </div>
-          ${pctMes < 100 ? `<div class="meta-diaria">🎯 Meta diária necessária: ${formatarMoeda(metaDiaria)}/dia (${diasRestantes} dias restantes)</div>` : ''}
+          ${pctMes < 100 ? `<div class="meta-diaria"><i class="fas fa-bullseye"></i> Meta diária necessária: ${formatarMoeda(metaDiaria)}/dia (${diasRestantes} dias restantes)</div>` : ''}
         </div>
         <div class="meta-card">
           <div class="meta-header">
@@ -400,7 +400,7 @@ export class DashboardView extends BaseView {
           <div class="meta-barra"><div class="meta-barra-preenchimento anual" style="width:${pctAno}%"></div></div>
           <div class="meta-footer">
             <span>${pctAno.toFixed(1)}% concluído</span>
-            <span class="${pctAno >= 100 ? 'positiva' : ''}">${pctAno >= 100 ? '✅ Parabéns!' : `Faltam ${formatarMoeda(metaAnual - faturamentoAno)}`}</span>
+            <span class="${pctAno >= 100 ? 'positiva' : ''}">${pctAno >= 100 ? '<i class="fas fa-check"></i> Parabéns!' : `Faltam ${formatarMoeda(metaAnual - faturamentoAno)}`}</span>
           </div>
         </div>
       </div>
@@ -412,7 +412,7 @@ export class DashboardView extends BaseView {
     const obras = obraStore().items;
     const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
     if (recentes.length === 0) {
-      return '<div class="estado-vazio"><div class="icone-vazio">🖼️</div><p>Nenhuma obra cadastrada ainda.</p></div>';
+      return '<div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma obra cadastrada ainda.</p></div>';
     }
     return `
       <ul class="lista-obras-recentes stagger-in">
@@ -420,7 +420,7 @@ export class DashboardView extends BaseView {
           const imgSrc = o.imagemDestacada || (o.imagens && o.imagens[0]) || o.imagem || '';
           return `
             <li class="item-obra-recente">
-              <div class="thumb-obra">${imgSrc ? `<img src="${imgSrc}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '🖼️'}</div>
+              <div class="thumb-obra">${imgSrc ? `<img src="${imgSrc}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '<i class="fas fa-images"></i>'}</div>
               <div class="info-obra-recente">
                 <div class="nome">${o.titulo}</div>
                 <div class="meta">${o.tecnica || ''} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
@@ -457,7 +457,7 @@ export class DashboardView extends BaseView {
   /* ---- Widget: Dica do Dia ---- */
   renderWidgetDica() {
     const dica = obterDicaDoDia() || 'Reserve 15 minutos ao final do dia para registrar seu progresso no Diário Criativo.';
-    return `<div class="dica-card"><div class="dica-icone">💡</div><div class="dica-texto"><p>${dica}</p><span class="texto-ajuda">Dica do dia · Atualiza automaticamente</span></div></div>`;
+    return `<div class="dica-card"><div class="dica-icone"><i class="fas fa-lightbulb"></i></div><div class="dica-texto"><p>${dica}</p><span class="texto-ajuda">Dica do dia · Atualiza automaticamente</span></div></div>`;
   }
 
   /* ---- Lifecycle ---- */
@@ -490,7 +490,11 @@ export class DashboardView extends BaseView {
 
     this.initDragDrop();
     this.initConfigModal();
-    this.initCharts();
+    if (typeof Chart === 'undefined') {
+      carregarChartJS().then(() => this.initCharts()).catch(() => {});
+    } else {
+      this.initCharts();
+    }
   }
 
   initCharts() {
@@ -503,7 +507,7 @@ export class DashboardView extends BaseView {
       return;
     }
 
-    Object.values(this.charts).forEach(c => { try { c.destroy(); } catch (e) {} });
+    Object.values(this.charts).forEach(c => { try { c.destroy(); } catch (e) { console.warn(e) } });
     this.charts = {};
 
     const obras = obraStore().items;
@@ -657,7 +661,7 @@ export class DashboardView extends BaseView {
   }
 
   destruir() {
-    Object.values(this.charts).forEach(c => { try { c.destroy(); } catch (e) {} });
+    Object.values(this.charts).forEach(c => { try { c.destroy(); } catch (e) { console.warn(e) } });
     this.charts = {};
     super.destruir();
   }

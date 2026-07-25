@@ -31,7 +31,7 @@ export const useVendaStore = defineStore('vendas', {
     _persistir() {
       try {
         localStorage.setItem('atelier_crm_vendas', JSON.stringify(this.items))
-        try { (window as any).dataStore && ((window as any).dataStore.dados.vendas = this.items) } catch (e) { console.warn('Falha ao sincronizar vendas com DataStore', e) }
+        try { if ((window as any).dataStore) { (window as any).dataStore.dados.vendas = this.items } } catch (e) { console.warn('Falha ao sincronizar vendas com DataStore', e) }
       } catch (e) { console.warn(e) }
     },
   },

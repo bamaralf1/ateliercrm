@@ -51,7 +51,7 @@ export class ReferenciasView extends BaseView {
         </div>
         <div class="barra-acoes-referencias">
           <button class="btn-secundario" id="btnApresentarReferencias">📺 Apresentar</button>
-          <button class="btn-primario" id="btnNovaReferencia">➕ Nova Referência</button>
+          <button class="btn-primario" id="btnNovaReferencia"><i class="fas fa-plus"></i> Nova Referência</button>
         </div>
       </div>
 
@@ -88,12 +88,12 @@ export class ReferenciasView extends BaseView {
     const obraVinculada = r.obraVinculada ? obras.find(o => o.id === r.obraVinculada) : null;
     const tagsHtml = (r.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('');
 
-    let corpoHtml = '';
+    let corpoHtml;
     if (r.tipo === 'imagem') {
       corpoHtml = `
         <img class="imagem-referencia" data-apresentar="${indice}" src="${r.imagem}" alt="${r.titulo || 'Referência'}">
         <div class="corpo-referencia">
-          <div class="icone-tipo-referencia">🖼️ Imagem</div>
+          <div class="icone-tipo-referencia"><i class="fas fa-images"></i> Imagem</div>
           ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ''}
         </div>
       `;
@@ -101,7 +101,7 @@ export class ReferenciasView extends BaseView {
       corpoHtml = `
         <img class="imagem-referencia" data-apresentar="${indice}" src="${r.url}" alt="${r.titulo || 'Link de referência'}" onerror="this.style.display='none'">
         <div class="corpo-referencia">
-          <div class="icone-tipo-referencia">🔗 Link externo</div>
+          <div class="icone-tipo-referencia"><i class="fas fa-link"></i> Link externo</div>
           ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ''}
           <a class="link-referencia" href="${r.url}" target="_blank" rel="noopener">${r.url}</a>
         </div>
@@ -109,7 +109,7 @@ export class ReferenciasView extends BaseView {
     } else {
       corpoHtml = `
         <div class="corpo-referencia" data-apresentar="${indice}" style="cursor:pointer;">
-          <div class="icone-tipo-referencia">📝 Nota</div>
+          <div class="icone-tipo-referencia"><i class="fas fa-pencil-alt"></i> Nota</div>
           ${r.titulo ? `<div class="titulo-referencia">${r.titulo}</div>` : ''}
           <div class="nota-referencia">${r.nota || ''}</div>
         </div>
@@ -124,7 +124,7 @@ export class ReferenciasView extends BaseView {
           ${obraVinculada ? `<span class="badge-obra-vinculada">Usado em: ${obraVinculada.titulo}</span>` : ''}
         </div>
         <div class="acoes-referencia">
-          <button class="btn-icone-tabela" data-excluir-referencia="${r.id}" style="flex:1;">🗑️ Excluir</button>
+          <button class="btn-icone-tabela" data-excluir-referencia="${r.id}" style="flex:1;"><i class="fas fa-trash"></i> Excluir</button>
         </div>
       </div>
     `;
@@ -205,9 +205,9 @@ export class ReferenciasView extends BaseView {
     abrirModal(`
       <h3>Nova Referência</h3>
       <div class="grupo-botoes-toggle" id="grupoTipoReferencia">
-        <button type="button" class="ativo" data-tipo-ref="imagem">🖼️ Imagem</button>
-        <button type="button" data-tipo-ref="link">🔗 Link</button>
-        <button type="button" data-tipo-ref="nota">📝 Nota</button>
+        <button type="button" class="ativo" data-tipo-ref="imagem"><i class="fas fa-images"></i> Imagem</button>
+        <button type="button" data-tipo-ref="link"><i class="fas fa-link"></i> Link</button>
+        <button type="button" data-tipo-ref="nota"><i class="fas fa-pencil-alt"></i> Nota</button>
       </div>
       <form id="formReferencia">
         <div class="campo-form"><label>Título (opcional)</label><input type="text" id="campoTituloRef"></div>
@@ -352,7 +352,7 @@ export class ReferenciasView extends BaseView {
     if (!overlay) return;
     const item = this.itensApresentacao[this.indiceApresentacao];
 
-    let midiaHtml = '';
+    let midiaHtml;
     if (item.tipo === 'imagem') midiaHtml = `<img class="midia-apresentacao" src="${item.imagem}" alt="${item.titulo || ''}">`;
     else if (item.tipo === 'link') midiaHtml = `<img class="midia-apresentacao" src="${item.url}" alt="${item.titulo || ''}" onerror="this.outerHTML='<div class=\\'nota-apresentacao\\'>Link: ${item.url}</div>'">`;
     else midiaHtml = `<div class="nota-apresentacao">${item.nota || ''}</div>`;

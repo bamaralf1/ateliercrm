@@ -40,7 +40,7 @@ export const useObraStore = defineStore('obras', {
     _persistir() {
       try {
         localStorage.setItem('atelier_crm_obras', JSON.stringify(this.items))
-        try { (window as any).dataStore && ((window as any).dataStore.dados.obras = this.items) } catch (e) { console.warn('Falha ao sincronizar obras com DataStore', e) }
+        try { if ((window as any).dataStore) { (window as any).dataStore.dados.obras = this.items } } catch (e) { console.warn('Falha ao sincronizar obras com DataStore', e) }
       } catch (e) { console.warn('Falha ao persistir obras', e) }
     },
   },

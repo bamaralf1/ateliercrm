@@ -32,9 +32,9 @@ export class EncomendasView extends BaseView {
       </div>
       ${chipsStatus ? `<div class="vendas-summary">${chipsStatus}</div>` : ''}
       <div class="filtros-linha">
-        <input type="text" id="buscaEncomenda" placeholder="🔍 Buscar por cliente ou descrição..." value="${sanitizarHTML(this.busca)}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        <input type="text" id="buscaEncomenda" placeholder="<i class="fas fa-search"></i> Buscar por cliente ou descrição..." value="${sanitizarHTML(this.busca)}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         <select id="filtroStatusEncomenda" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${statusOpts}</select>
-        <button class="btn-secundario" id="btnPortaisCliente">🔗 Links de Acesso</button>
+        <button class="btn-secundario" id="btnPortaisCliente"><i class="fas fa-link"></i> Links de Acesso</button>
       </div>
       ${encomendas.length > 0 ? `
       <div class="tabela-wrapper">
@@ -46,7 +46,7 @@ export class EncomendasView extends BaseView {
         </table>
       </div>` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio">📦</div><p>Nenhuma encomenda encontrada.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-box"></i></div><p>Nenhuma encomenda encontrada.</p></div>
       </div>`}
     `;
   }
@@ -93,9 +93,9 @@ export class EncomendasView extends BaseView {
         <td>${prazoHtml}</td>
         <td><span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span></td>
         <td>
-          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar">✏️</button>
-          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualização">📝</button>
-          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" style="color:#dc2626;">🗑️</button>
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar"><i class="fas fa-pen"></i></button>
+          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualização"><i class="fas fa-pencil-alt"></i></button>
+          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `;
@@ -108,7 +108,7 @@ export class EncomendasView extends BaseView {
     const clientes = clienteStore().items;
     const optsClientes = clientes.map(c => `<option value="${c.id}" ${c.nome === e.clienteNome ? 'selected' : ''}>${c.nome} (${c.email || ''})</option>`).join('');
     abrirModal(`
-      <h3>${isEdit ? '✏️ Editar' : '📦 Nova'} Encomenda</h3>
+      <h3>${isEdit ? '<i class="fas fa-pen"></i> Editar' : '<i class="fas fa-box"></i> Nova'} Encomenda</h3>
       <form id="formEncomenda">
         <div class="campo-form"><label>Cliente</label>
           <div style="display:flex;gap:6px;">
@@ -163,7 +163,7 @@ export class EncomendasView extends BaseView {
       `<option value="${s}" ${enc.status === s ? 'selected' : ''}>${this.rotuloStatus(s)}</option>`
     ).join('');
     abrirModal(`
-      <h3>📝 Atualizar Status — ${sanitizarHTML(enc.descricao)}</h3>
+      <h3><i class="fas fa-pencil-alt"></i> Atualizar Status — ${sanitizarHTML(enc.descricao)}</h3>
       <form id="formAtualizacao">
         <div class="campo-form"><label>Novo Status</label>
           <select id="atuStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">${statusOpts}</select>
@@ -172,7 +172,7 @@ export class EncomendasView extends BaseView {
           <textarea id="atuMensagem" placeholder="Ex: Iniciei a pintura, as cores estão secando..." style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:80px;background:var(--bg);color:var(--text);"></textarea>
         </div>
         <div class="campo-form" style="font-size:0.8rem;color:var(--text-muted);">
-          💡 Esta atualização ficará visível no portal do cliente.
+          <i class="fas fa-lightbulb"></i> Esta atualização ficará visível no portal do cliente.
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarAtu">Cancelar</button>
@@ -203,9 +203,9 @@ export class EncomendasView extends BaseView {
           </div>
           <div class="portal-item-acoes">
             <input type="text" readonly value="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.75rem;width:240px;background:var(--bg);color:var(--text);" onclick="this.select()">
-            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link">📋</button>
-            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? 'Desativar' : 'Ativar'}">${p.ativo ? '🔓' : '🔒'}</button>
-            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" style="color:#dc2626;">🗑️</button>
+            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link"><i class="fas fa-clipboard"></i></button>
+            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? 'Desativar' : 'Ativar'}">${p.ativo ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>'}</button>
+            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       `;
@@ -215,7 +215,7 @@ export class EncomendasView extends BaseView {
     const clientesOpts = clientesComEncomenda.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
     abrirModal(`
-      <h3>🔗 Links de Acesso do Cliente</h3>
+      <h3><i class="fas fa-link"></i> Links de Acesso do Cliente</h3>
       <p class="texto-ajuda" style="margin-bottom:12px;">Gere links para que seus clientes acompanhem o status das encomendas.</p>
       <div class="portais-lista">${portaisHtml}</div>
       <hr style="margin:12px 0;border-color:var(--border);">
@@ -224,7 +224,7 @@ export class EncomendasView extends BaseView {
         <select id="selClientePortal" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
           ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
         </select>
-        <button class="btn-primario" id="btnGerarPortal">🔗 Gerar Link</button>
+        <button class="btn-primario" id="btnGerarPortal"><i class="fas fa-link"></i> Gerar Link</button>
       </div>
       <div class="modal-acoes" style="margin-top:16px;">
         <button class="btn-secundario" id="btnFecharPortais">Fechar</button>
