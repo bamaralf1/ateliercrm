@@ -82,6 +82,11 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - Integrado na Galeria Virtual (substitui o overlay antigo) e no Catálogo (clique na imagem abre lightbox, botão slideshow usa lightbox)
 - CSS responsivo para mobile com navegação adaptada
 
+### Correção de Dupla Codificação UTF-8 em Emoji/Símbolos
+- **Problema**: 45 sequências de emoji/símbolos (🖼️, ✅, ⚠️, →, 📸, etc.) em `src/main.ts`, `src/views/vendas-view.ts`, `src/data-store.ts` foram duplamente codificadas durante refatoração — cada byte de um caractere UTF-8 multibyte foi interpretado como Latin-1 e re-encodado, gerando runas `C3 XX C2 YY...`
+- **Solução algorítmica** (`tools/fix-emoji.ps1`): varre bytes procurando runas de 3+ pares consecutivos `C2/C3 [80-BF]`, decodifica os bytes originais, valida que formam um caractere UTF-8 multibyte válido (com suporte a VS16), e substitui pela codificação correta. Seguro para acentos portugueses porque estes são pares `C3 XX` isolados (runas de 1 par, ignoradas)
+- **Commit**: `3107391` (5 arquivos, +177/-62 linhas)
+
 ### Mapa de Rede com D3.js (rede-view.ts)
 - D3.js 7.8.5 force-directed graph substitui SVG com círculo fixo anterior
 - `forceSimulation` com `forceLink`, `forceManyBody` (-300), `forceCenter`, `forceCollide`

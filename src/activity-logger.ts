@@ -5,7 +5,7 @@ export class ActivityLogger {
 
   carregarAtividades() {
     try { const salvas = localStorage.getItem('atelier-activities'); return salvas ? JSON.parse(salvas) : []; }
-    catch { return []; }
+    catch (e) { console.warn('Falha ao carregar atividades do localStorage', e); return []; }
   }
 
   salvarAtividades() { localStorage.setItem('atelier-activities', JSON.stringify(this.atividades.slice(0, 50))); }

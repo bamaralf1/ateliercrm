@@ -4,8 +4,8 @@ export class VendasView extends BaseView {
     this.pdfGenerator = pdfGenerator; // ===== Integração com o Gerador de PDF =====
     this.filtros = { cliente: '', status: '', dataInicio: '', dataFim: '' };
     this.selecionados = new Set();
-    eventBus.on('abrir-nova-venda', () => this.abrirFormulario());
-    eventBus.on('abrir-recibo-rapido', () => this.abrirEscolhaRapida());
+    this._escutarEvento('abrir-nova-venda', () => this.abrirFormulario());
+    this._escutarEvento('abrir-recibo-rapido', () => this.abrirEscolhaRapida());
   }
 
   // Aplica filtros de cliente, status e período, ordenando por data mais recente

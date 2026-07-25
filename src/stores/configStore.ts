@@ -41,7 +41,7 @@ export const useConfigStore = defineStore('config', {
     salvar() {
       try {
         localStorage.setItem(CHAVE, JSON.stringify(this.$state))
-        try { (window as any).dataStore && ((window as any).dataStore.dados.config = this.$state) } catch {}
+        try { (window as any).dataStore && ((window as any).dataStore.dados.config = this.$state) } catch (e) { console.warn('Falha ao sincronizar config com DataStore', e) }
       } catch (e) { console.warn(e) }
     },
     atualizar(dados: Partial<any>) {

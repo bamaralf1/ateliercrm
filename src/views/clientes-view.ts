@@ -4,7 +4,7 @@ export class ClientesView extends BaseView {
     this.busca = '';
     this.modo = 'lista';
     this.selecionados = new Set();
-    eventBus.on('abrir-novo-cliente', () => this.abrirFormulario());
+    this._escutarEvento('abrir-novo-cliente', () => this.abrirFormulario());
   }
 
   clientesFiltrados() {

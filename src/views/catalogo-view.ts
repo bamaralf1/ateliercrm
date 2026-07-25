@@ -10,7 +10,7 @@ export class CatalogoView extends BaseView {
     this.imagemDestacadaAtual = null;
     this.modoComparacao = false;
     this.idsComparacao = [];
-    eventBus.on('abrir-nova-obra', () => this.abrirFormulario());
+    this._escutarEvento('abrir-nova-obra', () => this.abrirFormulario());
   }
 
   obrasFiltradas() {

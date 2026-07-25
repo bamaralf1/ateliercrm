@@ -65,6 +65,21 @@
     --font-principal: 'Crimson Text', serif;
   }
 
+  /* 6. Clean Minimalista */
+  [data-tema="clean"] {
+    --bg: #ffffff;
+    --text: #222222;
+    --text-muted: #888888;
+    --accent: #1a1a1a;
+    --accent-contrast: #ffffff;
+    --card: #f5f5f5;
+    --border: rgba(0,0,0,0.06);
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #666666;
+    --sidebar-text-active: #000000;
+    --font-principal: 'Inter', sans-serif;
+  }
+
   /* ==========================================================================
      RESET E BASE
      ========================================================================== */
@@ -2346,6 +2361,9 @@
   body[data-tema="boho"][data-font-size="pequeno"] { --font-principal: 'Crimson Text', serif; font-size: 13px; }
   body[data-tema="boho"][data-font-size="medio"] { --font-principal: 'Crimson Text', serif; font-size: 15px; }
   body[data-tema="boho"][data-font-size="grande"] { --font-principal: 'Crimson Text', serif; font-size: 17px; }
+  body[data-tema="clean"][data-font-size="pequeno"] { font-size: 13px; }
+  body[data-tema="clean"][data-font-size="medio"] { font-size: 15px; }
+  body[data-tema="clean"][data-font-size="grande"] { font-size: 17px; }
 
   /* Alto contraste */
   body[data-high-contrast="true"] {
@@ -2412,11 +2430,6 @@
     pointer-events: none;
   }
   .btn-primario:hover::after { opacity: 1; }
-
-  /* Magnetic button effect */
-  .btn-magnetic {
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
 
   /* Toasts refinados com animações premium */
   .toast {
@@ -2686,14 +2699,6 @@
     background-clip: text;
   }
 
-  /* Icon bounce on hover */
-  .icon-bounce:hover {
-    animation: iconBounce 0.4s ease;
-  }
-  @keyframes iconBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
 
   /* Tooltip contextual */
   [data-tooltip] { position: relative; }
@@ -2781,14 +2786,6 @@
 
   @media (max-width: 700px) { .ficha-premium { grid-template-columns: 1fr; } }
 
-  /* Editor de imagem */
-  .editor-imagem-container { display: flex; flex-direction: column; gap: 16px; }
-  .editor-imagem-tela { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--card); text-align: center; }
-  .editor-imagem-tela img { max-width: 100%; max-height: 400px; }
-  .editor-imagem-controles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 16px; background: var(--card); border-radius: var(--radius); }
-  .editor-controle-grupo { display: flex; flex-direction: column; gap: 8px; }
-  .editor-controle-grupo label { font-weight: 600; font-size: 0.85rem; }
-
   /* Slideshow */
   .slideshow-container { display: flex; flex-direction: column; gap: 12px; max-width: 90vw; max-height: 90vh; }
   .slideshow-topo { display: flex; justify-content: space-between; align-items: center; }
@@ -2805,23 +2802,11 @@
   .slideshow-thumb:hover { border-color: var(--accent); }
   .slideshow-thumb.ativo { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 
-  /* Comparação lado a lado */
-  .comparacao-container { display: grid; gap: 16px; max-width: 90vw; max-height: 70vh; overflow-y: auto; padding: 4px; }
-  .comparacao-coluna { background: var(--card); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-  .comparacao-imagem { border-radius: 8px; overflow: hidden; aspect-ratio: 4/3; background: var(--bg); }
-  .comparacao-imagem img { width: 100%; height: 100%; object-fit: cover; }
-  .comparacao-titulo { font-weight: 600; font-size: 1rem; margin: 0; }
-  .comparacao-serie { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
-  .comparacao-tabela { width: 100%; font-size: 0.8rem; }
-  .comparacao-tabela td { padding: 3px 0; border-bottom: 1px solid var(--border); }
-  .comparacao-tabela td:first-child { font-weight: 600; color: var(--text-muted); width: 40%; }
-
   /* Bulk PDF */
   .btn-danger { background: var(--danger, #dc2626) !important; color: white !important; }
 
   /* Responsivo */
   @media (max-width: 700px) {
-    .comparacao-container { grid-template-columns: 1fr !important; }
     .grade-miniaturas { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
   }
   /* ===== DASHBOARD PREMIUM ===== */

@@ -4,7 +4,9 @@ $root = "C:\Users\PICHAU\Desktop\ateliercrm"
 $targets = @(
     "$root\src\main.ts",
     "$root\src\views\vendas-view.ts",
-    "$root\src\data-store.ts"
+    "$root\src\data-store.ts",
+    "$root\index.html",
+    "$root\dist\index.html"
 )
 
 # Reconstruct original bytes from a double-encoded sequence.

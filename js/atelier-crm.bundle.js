@@ -8828,7 +8828,8 @@ Only state can be modified.`);
       try {
         const salvas = localStorage.getItem("atelier-activities");
         return salvas ? JSON.parse(salvas) : [];
-      } catch {
+      } catch (e) {
+        console.warn("Falha ao carregar atividades do localStorage", e);
         return [];
       }
     }
@@ -8957,6 +8958,11 @@ Only state can be modified.`);
       this.dataStore = dataStore2;
       this.router = router2;
       this._bindCache = {};
+      this._eventoCleanups = [];
+    }
+    _escutarEvento(evento, callback) {
+      const cleanup = eventBus.on(evento, callback);
+      this._eventoCleanups.push(cleanup);
     }
     removerListeners() {
       Object.values(this._bindCache).forEach(({ el, handler, type }) => {
@@ -8966,6 +8972,13 @@ Only state can be modified.`);
         }
       });
       this._bindCache = {};
+      this._eventoCleanups.forEach((fn) => {
+        try {
+          fn();
+        } catch (e) {
+        }
+      });
+      this._eventoCleanups = [];
     }
     rerenderizar() {
       const c = document.getElementById("viewPrincipal");
@@ -9671,7 +9684,7 @@ Only state can be modified.`);
       this.imagemDestacadaAtual = null;
       this.modoComparacao = false;
       this.idsComparacao = [];
-      eventBus.on("abrir-nova-obra", () => this.abrirFormulario());
+      this._escutarEvento("abrir-nova-obra", () => this.abrirFormulario());
     }
     obrasFiltradas() {
       const f = this.filtros;
@@ -11165,7 +11178,7 @@ Only state can be modified.`);
       this.busca = "";
       this.modo = "lista";
       this.selecionados = /* @__PURE__ */ new Set();
-      eventBus.on("abrir-novo-cliente", () => this.abrirFormulario());
+      this._escutarEvento("abrir-novo-cliente", () => this.abrirFormulario());
     }
     clientesFiltrados() {
       let clientes = clienteStore().items;
@@ -11512,8 +11525,8 @@ Only state can be modified.`);
       this.pdfGenerator = pdfGenerator2;
       this.filtros = { cliente: "", status: "", dataInicio: "", dataFim: "" };
       this.selecionados = /* @__PURE__ */ new Set();
-      eventBus.on("abrir-nova-venda", () => this.abrirFormulario());
-      eventBus.on("abrir-recibo-rapido", () => this.abrirEscolhaRapida());
+      this._escutarEvento("abrir-nova-venda", () => this.abrirFormulario());
+      this._escutarEvento("abrir-recibo-rapido", () => this.abrirEscolhaRapida());
     }
     // Aplica filtros de cliente, status e período, ordenando por data mais recente
     vendasFiltradas() {
@@ -18349,6 +18362,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
   };
   var CloudSync = class {
     constructor(dataStore2) {
+      // ==================== Auto Backup ====================
+      this._backupEmAndamento = false;
       this.dataStore = dataStore2;
       this._db = null;
       this._dbPromise = null;
@@ -18485,6 +18500,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
               }
             }
           } catch (e) {
+            console.warn("Polling Google Auth:", e);
           }
         }, 500);
       });
@@ -18574,7 +18590,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           data: f.createdTime,
           tamanho: f.size
         }));
-      } catch {
+      } catch (e) {
+        console.warn("Falha ao listar backups Google Drive", e);
         return [];
       }
     }
@@ -18626,7 +18643,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       try {
         await this._reqWebDAV("", "PROPFIND");
         return true;
-      } catch {
+      } catch (e) {
+        console.warn("Falha ao testar WebDAV", e);
         return false;
       }
     }
@@ -18666,7 +18684,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           }
         });
         return files.reverse();
-      } catch {
+      } catch (e) {
+        console.warn("Falha ao listar backups WebDAV", e);
         return [];
       }
     }
@@ -18691,13 +18710,20 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         return false;
       }
     }
-    // ==================== Auto Backup ====================
     iniciarAutoBackup() {
       const cfg = this.dataStore.dados.config;
       if (!cfg.syncAutoBackup) return;
       const interval = (cfg.syncAutoBackupInterval || 30) * 60 * 1e3;
-      setInterval(() => {
-        this.salvarSnapshotIDB("Auto " + (/* @__PURE__ */ new Date()).toLocaleString("pt-BR"));
+      setInterval(async () => {
+        if (this._backupEmAndamento) return;
+        this._backupEmAndamento = true;
+        try {
+          await this.salvarSnapshotIDB("Auto " + (/* @__PURE__ */ new Date()).toLocaleString("pt-BR"));
+        } catch (e) {
+          console.warn("Auto-backup falhou", e);
+        } finally {
+          this._backupEmAndamento = false;
+        }
       }, interval);
     }
   };
@@ -18740,7 +18766,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           localStorage.setItem("atelier_crm_obras", JSON.stringify(this.items));
           try {
             window.dataStore && (window.dataStore.dados.obras = this.items);
-          } catch {
+          } catch (e) {
+            console.warn("Falha ao sincronizar obras com DataStore", e);
           }
         } catch (e) {
           console.warn("Falha ao persistir obras", e);
@@ -18783,7 +18810,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           localStorage.setItem("atelier_crm_clientes", JSON.stringify(this.items));
           try {
             window.dataStore && (window.dataStore.dados.clientes = this.items);
-          } catch {
+          } catch (e) {
+            console.warn("Falha ao sincronizar clientes com DataStore", e);
           }
         } catch (e) {
           console.warn(e);
@@ -18828,7 +18856,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           localStorage.setItem("atelier_crm_vendas", JSON.stringify(this.items));
           try {
             window.dataStore && (window.dataStore.dados.vendas = this.items);
-          } catch {
+          } catch (e) {
+            console.warn("Falha ao sincronizar vendas com DataStore", e);
           }
         } catch (e) {
           console.warn(e);
@@ -18879,7 +18908,8 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           localStorage.setItem(CHAVE, JSON.stringify(this.$state));
           try {
             window.dataStore && (window.dataStore.dados.config = this.$state);
-          } catch {
+          } catch (e) {
+            console.warn("Falha ao sincronizar config com DataStore", e);
           }
         } catch (e) {
           console.warn(e);

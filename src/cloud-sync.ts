@@ -126,7 +126,7 @@ export class CloudSync {
               resolve(true);
             }
           }
-        } catch (e) { /* cross-origin, aguardando redirect */ }
+        } catch (e) { console.warn('Polling Google Auth:', e) }
       }, 500);
     });
   }
@@ -215,7 +215,7 @@ export class CloudSync {
       return (res.files || []).map(f => ({
         id: f.id, nome: f.name, data: f.createdTime, tamanho: f.size
       }));
-    } catch { return []; }
+    } catch (e) { console.warn('Falha ao listar backups Google Drive', e); return []; }
   }
 
   async restaurarGoogle(fileId) {
@@ -266,7 +266,7 @@ export class CloudSync {
     try {
       await this._reqWebDAV('', 'PROPFIND');
       return true;
-    } catch { return false; }
+    } catch (e) { console.warn('Falha ao testar WebDAV', e); return false; }
   }
 
   async backupWebDAV() {
@@ -306,7 +306,7 @@ export class CloudSync {
         }
       });
       return files.reverse();
-    } catch { return []; }
+    } catch (e) { console.warn('Falha ao listar backups WebDAV', e); return []; }
   }
 
   async restaurarWebDAV(nomeArquivo) {
@@ -332,12 +332,18 @@ export class CloudSync {
   }
 
   // ==================== Auto Backup ====================
+  _backupEmAndamento = false
   iniciarAutoBackup() {
     const cfg = this.dataStore.dados.config;
     if (!cfg.syncAutoBackup) return;
     const interval = (cfg.syncAutoBackupInterval || 30) * 60 * 1000;
-    setInterval(() => {
-      this.salvarSnapshotIDB('Auto ' + new Date().toLocaleString('pt-BR'));
+    setInterval(async () => {
+      if (this._backupEmAndamento) return;
+      this._backupEmAndamento = true;
+      try {
+        await this.salvarSnapshotIDB('Auto ' + new Date().toLocaleString('pt-BR'));
+      } catch (e) { console.warn('Auto-backup falhou', e) }
+      finally { this._backupEmAndamento = false; }
     }, interval);
   }
 }
