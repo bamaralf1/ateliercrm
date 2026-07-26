@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal do Cliente — Atelier CRM</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8f6f2;
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #4a4a5a;
+  --text-muted: #9a9aae;
+  --border: #e2ddd4;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --radius: 14px;
+  --accent: #8b5cf6;
+  --accent-bg: #f0ecfe;
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
+
+/* Header */
+.portal-header { text-align: center; padding: 32px 0 24px; }
+.portal-header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+.portal-header .artista { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+.portal-header .artista i { color: var(--accent); }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+.card h2 i { color: var(--accent); margin-right: 6px; }
+
+/* Client greeting */
+.greeting-card { text-align: center; padding: 28px 20px; }
+.greeting-card .greeting-icon { font-size: 2.4rem; color: var(--accent); margin-bottom: 8px; }
+.greeting-card h2 { font-size: 1.3rem; margin-bottom: 4px; }
+.greeting-card p { color: var(--text-secondary); font-size: 0.9rem; }
+
+/* Status badge */
+.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+
+/* Progress bar */
+.stage-grid { display: flex; gap: 4px; margin: 16px 0; }
+.stage-item { flex: 1; text-align: center; position: relative; }
+.stage-dot { width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border: 2px solid var(--border); background: var(--card); color: var(--text-muted); transition: all 0.4s ease; position: relative; z-index: 2; }
+.stage-dot.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+.stage-dot.done { border-color: #16a34a; background: #16a34a; color: #fff; }
+.stage-label { font-size: 0.65rem; color: var(--text-muted); line-height: 1.2; max-width: 72px; margin: 0 auto; }
+.stage-label.active { color: var(--text); font-weight: 600; }
+.progress-track { position: relative; height: 4px; background: var(--border); border-radius: 2px; margin: 0 14px 12px; }
+.progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), #16a34a); transition: width 0.6s ease; }
+
+/* Countdown */
+.countdown { display: flex; gap: 12px; justify-content: center; margin: 16px 0; }
+.countdown-item { text-align: center; min-width: 56px; }
+.countdown-num { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
+.countdown-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+.countdown-over { color: #dc2626; font-weight: 600; text-align: center; padding: 8px; border-radius: 8px; background: #fef2f2; }
+
+/* Order info grid */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.info-item { }
+.info-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.info-value { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
+
+/* Photo gallery */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+.gallery-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; position: relative; }
+.gallery-item:hover { border-color: var(--accent); }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-item .gallery-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: #fff; font-size: 0.6rem; padding: 4px 6px; text-align: center; }
+.gallery-empty { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ''; position: absolute; left: 10px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+.timeline-item { position: relative; margin-bottom: 18px; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-dot { position: absolute; left: -22px; top: 4px; width: 16px; height: 16px; border-radius: 50%; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; }
+.timeline-content { }
+.timeline-status { font-weight: 600; font-size: 0.85rem; }
+.timeline-msg { font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px; }
+.timeline-data { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Contact */
+.contact-card { text-align: center; }
+.contact-card .contact-row { margin: 4px 0; font-size: 0.85rem; color: var(--text-secondary); }
+.contact-card .contact-row i { width: 20px; color: var(--accent); }
+
+/* Lightbox */
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; }
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+.lightbox-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer; opacity: 0.7; }
+.lightbox-close:hover { opacity: 1; }
+.lightbox-caption { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #ccc; font-size: 0.85rem; padding: 8px; }
+
+/* Footer */
+.portal-footer { text-align: center; padding: 20px; font-size: 0.75rem; color: var(--text-muted); }
+.portal-footer .pwa-hint { margin-top: 4px; font-size: 0.65rem; }
+
+/* Error / Loading */
+.error-card { text-align: center; padding: 40px 20px; }
+.error-card .error-icon { font-size: 3rem; color: var(--text-muted); margin-bottom: 12px; }
+.error-card h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.error-card p { color: var(--text-muted); font-size: 0.85rem; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container { padding: 12px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .stage-label { font-size: 0.55rem; }
+  .countdown-item { min-width: 44px; }
+  .countdown-num { font-size: 1.3rem; }
+  .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Print */
+@media print {
+  .portal-header { padding: 16px 0; }
+  .card { break-inside: avoid; box-shadow: none; }
+}
+
+/* Dark mode via prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --card: #1e1e2e;
+    --text: #e8e6e3;
+    --text-secondary: #b0aeaa;
+    --text-muted: #7a7875;
+    --border: #2e2c3a;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --accent: #a78bfa;
+    --accent-bg: #1e1a3a;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app"></div>
+
+<script id="portalData" type="application/json">
+{
+  "artista": "Seu Nome",
+  "contatoEmail": "artista@exemplo.com",
+  "contatoTel": "(21) 99999-0000",
+  "encomendas": [],
+  "token": ""
+}
+</script>
+
+<script>
+const STAGES = [
+  { key: 'criado',     label: 'Pedido Recebido',   icon: 'fa-clipboard',    pct: 0  },
+  { key: 'em_andamento', label: 'Em Andamento',      icon: 'fa-paint-brush', pct: 25 },
+  { key: 'aprovacao',  label: 'Aprovação',          icon: 'fa-check',        pct: 50 },
+  { key: 'finalizado', label: 'Finalizado',         icon: 'fa-star',         pct: 75 },
+  { key: 'entregue',   label: 'Entregue',           icon: 'fa-box',          pct: 100 }
+];
+
+const STATUS_STYLE = {
+  criado:     { cor: '#3b82f6', bg: '#eff6ff' },
+  em_andamento: { cor: '#f59e0b', bg: '#fffbeb' },
+  aprovacao:  { cor: '#8b5cf6', bg: '#f5f3ff' },
+  finalizado: { cor: '#16a34a', bg: '#f0fdf4' },
+  entregue:   { cor: '#065f46', bg: '#ecfdf5' },
+  cancelado:  { cor: '#dc2626', bg: '#fef2f2' }
+};
+
+function $(id) { return document.getElementById(id); }
+
+function render() {
+  const data = JSON.parse(document.getElementById('portalData').textContent);
+  const token = new URLSearchParams(window.location.search).get('token') || data.token;
+  const encomendas = token ? data.encomendas.filter(e => token === data.token || e.clienteEmail === token) : data.encomendas;
+  const app = document.getElementById('app');
+
+  if (!encomendas.length) {
+    app.innerHTML = `
+      <div class="portal-header">
+        <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${sanitizar(data.artista)}</h1>
+        <p class="artista">Portal do Cliente</p>
+      </div>
+      <div class="card error-card">
+        <div class="error-icon"><i class="fas fa-search"></i></div>
+        <h2>Nada encontrado</h2>
+        <p>Verifique o link de acesso ou entre em contato com o artista.</p>
+      </div>`;
+    return;
+  }
+
+  const html = `
+    <div class="portal-header">
+      <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${sanitizar(data.artista)}</h1>
+      <p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomendas</p>
+    </div>
+    ${encomendas.map(e => renderCard(e, data)).join('')}
+    <div class="contact-card card">
+      <h2><i class="fas fa-envelope"></i> Contato</h2>
+      <div class="contact-row"><i class="fas fa-user"></i> ${sanitizar(data.artista)}</div>
+      ${data.contatoEmail ? `<div class="contact-row"><i class="fas fa-envelope"></i> ${sanitizar(data.contatoEmail)}</div>` : ''}
+      ${data.contatoTel ? `<div class="contact-row"><i class="fas fa-phone"></i> ${sanitizar(data.contatoTel)}</div>` : ''}
+    </div>
+    <div class="portal-footer">
+      <p>Dúvidas? Entre em contato direto com o artista.</p>
+      <p class="pwa-hint"><i class="fas fa-sync"></i> Atualize esta página para ver o progresso mais recente</p>
+    </div>`;
+
+  app.innerHTML = html;
+  initLightbox();
+}
+
+function renderCard(e, data) {
+  const st = STATUS_STYLE[e.status] || { cor: '#6b7280', bg: '#f9fafb' };
+  const stageIdx = STAGES.findIndex(s => s.key === e.status);
+  const currentPct = stageIdx >= 0 ? stageIdx / (STAGES.length - 1) * 100 : 0;
+
+  const diasPrazo = e.prazo ? Math.ceil((new Date(e.prazo) - new Date()) / 86400000) : null;
+  const isAtrasado = diasPrazo !== null && diasPrazo < 0;
+  const prazoLabel = e.prazo ? formatarData(e.prazo) : '—';
+
+  const imagens = e.imagens || [];
+
+  return `
+    <div class="card greeting-card">
+      <div class="greeting-icon"><i class="fas fa-paint-brush"></i></div>
+      <h2>Olá, ${sanitizar(e.clienteNome || 'Cliente')}!</h2>
+      <p>Aqui está o progresso da sua encomenda.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+        <h2 style="margin:0;flex:1;min-width:150px;"><i class="fas fa-box"></i> ${sanitizar(e.descricao || 'Encomenda')}</h2>
+        <span class="status-badge" style="background:${st.bg};color:${st.cor};border:1px solid ${st.cor}30;">
+          <i class="fas ${STAGES[stageIdx]?.icon || 'fa-clipboard'}"></i> ${STAGES[stageIdx]?.label || e.status}
+        </span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-chart-line"></i> Progresso</h2>
+      <div class="progress-track"><div class="progress-fill" style="width:${currentPct}%"></div></div>
+      <div class="stage-grid">
+        ${STAGES.map((s, i) => {
+          const isActive = i === stageIdx;
+          const isDone = i < stageIdx || (isActive && e.status === 'entregue');
+          const cls = isDone ? 'done' : (isActive ? 'active' : '');
+          return `
+            <div class="stage-item">
+              <div class="stage-dot ${cls}"><i class="fas ${s.icon}"></i></div>
+              <div class="stage-label ${cls ? 'active' : ''}">${s.label}</div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-info-circle"></i> Detalhes</h2>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Valor</div><div class="info-value">${formatarMoeda(e.valor || 0)}</div></div>
+        <div class="info-item"><div class="info-label">Previsão de Entrega</div><div class="info-value">${prazoLabel}</div></div>
+      </div>
+      ${diasPrazo !== null ? (diasPrazo > 0 ? renderCountdown(diasPrazo) : `<div class="countdown-over"><i class="fas fa-clock"></i> Prazo encerrado — Entre em contato com o artista</div>`) : ''}
+    </div>
+
+    ${imagens.length > 0 ? `
+    <div class="card">
+      <h2><i class="fas fa-camera"></i> Fotos</h2>
+      <div class="gallery-grid" id="gallery-${e.id}">
+        ${imagens.map((img, i) => `
+          <div class="gallery-item" data-src="${img}" onclick="abrirLightbox('${sanitizar(e.descricao || '')}', ${i})">
+            <img src="${img}" alt="Foto ${i+1}" loading="lazy">
+            <div class="gallery-label"><i class="fas fa-camera"></i> Foto ${i+1}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="card">
+      <h2><i class="fas fa-history"></i> Atualizações</h2>
+      <div class="timeline">
+        ${(e.atualizacoes || []).length > 0 ? e.atualizacoes.map(a => {
+          const s = STATUS_STYLE[a.status] || { cor: '#6b7280', bg: '#f9fafb' };
+          const stage = STAGES.find(x => x.key === a.status);
+          return `
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background:${s.cor};color:#fff;font-size:0.5rem;"><i class="fas ${stage?.icon || 'fa-circle'}"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-status">${stage?.label || a.status}</div>
+                ${a.mensagem ? `<div class="timeline-msg">${a.mensagem}</div>` : ''}
+                <div class="timeline-data">${formatarData(a.data)}</div>
+              </div>
+            </div>`;
+        }).join('') : '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:0.85rem;"><i class="fas fa-hourglass"></i> Nenhuma atualização ainda.</div>'}
+      </div>
+    </div>`;
+}
+
+function renderCountdown(dias) {
+  return `
+    <div class="countdown">
+      <div class="countdown-item"><div class="countdown-num">${dias}</div><div class="countdown-label">Dias</div></div>
+      <div class="countdown-item"><div class="countdown-num">${Math.floor(dias / 7)}</div><div class="countdown-label">Semanas</div></div>
+    </div>`;
+}
+
+let lightboxIdx = 0;
+let lightboxSrcs = [];
+
+function initLightbox() {
+  lightboxSrcs = [];
+  document.querySelectorAll('.gallery-item[data-src]').forEach(el => {
+    lightboxSrcs.push(el.dataset.src);
+  });
+  const lb = document.getElementById('portalLightbox');
+  if (!lb) {
+    const div = document.createElement('div');
+    div.id = 'portalLightbox';
+    div.className = 'lightbox';
+    div.innerHTML = '<button class="lightbox-close" onclick="fecharLightbox()">&times;</button><img id="lbImg" src=""><div class="lightbox-caption" id="lbCaption"></div>';
+    div.addEventListener('click', (e) => { if (e.target === div) fecharLightbox(); });
+    document.body.appendChild(div);
+  }
+}
+
+function abrirLightbox(caption, idx) {
+  const srcs = lightboxSrcs.length ? lightboxSrcs : [];
+  if (!srcs.length) return;
+  const img = document.getElementById('lbImg');
+  const cap = document.getElementById('lbCaption');
+  img.src = srcs[idx] || '';
+  cap.textContent = caption || '';
+  document.getElementById('portalLightbox').classList.add('open');
+}
+
+function fecharLightbox() {
+  document.getElementById('portalLightbox').classList.remove('open');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') fecharLightbox();
+});
+
+function sanitizar(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function formatarData(data) {
+  if (!data) return '—';
+  try {
+    return new Date(data).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return data; }
+}
+
+function formatarMoeda(v) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+}
+
+// After the page scripts run, check for dynamic load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', render);
+} else {
+  render();
+}
+</script>
+</body>
+</html>

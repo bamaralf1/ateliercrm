@@ -155,6 +155,109 @@ export function resolverImagensIDB(container?: HTMLElement) {
   });
 }
 
+export function downloadHTML(html, nomeArquivo) {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+export function gerarPortalHTML(dados) {
+  const d = JSON.stringify(dados).replace(/<\/script>/g, '<\\/script>');
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Portal do Cliente</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f8f6f2;--card:#fff;--text:#1a1a2e;--text-sec:#4a4a5a;--text-mu:#9a9aae;--border:#e2ddd4;--radius:14px;--accent:#8b5cf6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.container{max-width:720px;margin:0 auto;padding:20px 16px}.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;border:1px solid var(--border)}
+.card h2{font-size:1rem;margin-bottom:12px}.card h2 i{color:var(--accent);margin-right:6px}
+.ph{text-align:center;padding:32px 0 24px}.ph h1{font-size:1.6rem}.ph .artista{color:var(--text-mu);font-size:0.9rem}
+.sb{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:0.85rem;font-weight:600}
+.sg{display:flex;gap:4px;margin:16px 0}.si{flex:1;text-align:center}
+.sd{width:28px;height:28px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid var(--border);background:var(--card);color:var(--text-mu)}
+.sd.active{border-color:var(--accent);background:var(--accent);color:#fff}.sd.done{border-color:#16a34a;background:#16a34a;color:#fff}
+.sl{font-size:0.65rem;color:var(--text-mu);line-height:1.2}.sl.active{color:var(--text);font-weight:600}
+.pt{height:4px;background:var(--border);border-radius:2px;margin:0 14px 12px}.pf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#16a34a);transition:width 0.6s ease}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px}.il{font-size:0.7rem;color:var(--text-mu);text-transform:uppercase;letter-spacing:0.5px}.iv{font-size:0.95rem;font-weight:600;margin-top:2px}
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.gi{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative}
+.gi img{width:100%;height:100%;object-fit:cover}.gl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.6));color:#fff;font-size:0.6rem;padding:4px 6px;text-align:center}
+.tl{position:relative;padding-left:28px}.tl::before{content:'';position:absolute;left:10px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.ti{position:relative;margin-bottom:18px}.td{position:absolute;left:-22px;top:4px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.5rem}
+.ts{font-weight:600;font-size:0.85rem}.tm{font-size:0.82rem;color:var(--text-sec)}.tda{font-size:0.7rem;color:var(--text-mu)}
+.cc{text-align:center}.cr{margin:4px 0;font-size:0.85rem}.cr i{width:20px;color:var(--accent)}
+.pf2{text-align:center;padding:20px;font-size:0.75rem;color:var(--text-mu)}
+@media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e2e;--text:#e8e6e3;--text-sec:#b0aeaa;--text-mu:#7a7875;--border:#2e2c3a;--accent:#a78bfa}}
+</style>
+</head>
+<body><div class="container" id="app"></div>
+<script id="portalData" type="application/json">${d}</script>
+<script>
+const STAGES=[
+{key:'criado',label:'Pedido Recebido',icon:'fa-clipboard',pct:0},
+{key:'em_andamento',label:'Em Andamento',icon:'fa-paint-brush',pct:25},
+{key:'aprovacao',label:'Aprova\u00e7\u00e3o',icon:'fa-check',pct:50},
+{key:'finalizado',label:'Finalizado',icon:'fa-star',pct:75},
+{key:'entregue',label:'Entregue',icon:'fa-box',pct:100}];
+const SS={criado:{cor:'#3b82f6',bg:'#eff6ff'},em_andamento:{cor:'#f59e0b',bg:'#fffbeb'},aprovacao:{cor:'#8b5cf6',bg:'#f5f3ff'},finalizado:{cor:'#16a34a',bg:'#f0fdf4'},entregue:{cor:'#065f46',bg:'#ecfdf5'},cancelado:{cor:'#dc2626',bg:'#fef2f2'}};
+function $(id){return document.getElementById(id)}
+function render(){
+var data=JSON.parse(document.getElementById('portalData').textContent);
+var token=new URLSearchParams(window.location.search).get('token')||data.token;
+var encs=token?data.encomendas.filter(function(e){return token===data.token||e.clienteEmail===token}):data.encomendas;
+var app=document.getElementById('app');
+if(!encs.length){app.innerHTML='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista">Portal do Cliente</p></div><div class="card" style="text-align:center;padding:40px;color:var(--text-mu)"><p><i class="fas fa-search"></i> Nada encontrado. Verifique o link.</p></div>';return}
+var h='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomendas</p></div>';
+encs.forEach(function(e){h+=rc(e,data)});
+h+='<div class="card cc"><h2><i class="fas fa-envelope"></i> Contato</h2>';
+if(data.contatoEmail)h+='<div class="cr"><i class="fas fa-envelope"></i> '+s(data.contatoEmail)+'</div>';
+if(data.contatoTel)h+='<div class="cr"><i class="fas fa-phone"></i> '+s(data.contatoTel)+'</div>';
+h+='</div><div class="pf2"><p>D\u00favidas? Entre em contato direto com o artista.</p></div>';
+app.innerHTML=h
+}
+function rc(e,data){
+var st=SS[e.status]||{cor:'#6b7280',bg:'#f9fafb'};
+var si=STAGES.findIndex(function(x){return x.key===e.status});
+var pct=si>=0?si/(STAGES.length-1)*100:0;
+var dp=e.prazo?Math.ceil((new Date(e.prazo)-new Date())/86400000):null;
+var imgs=e.imagens||[];
+var h='<div class="card" style="text-align:center;padding:28px 20px"><div style="font-size:2.4rem;color:var(--accent);margin-bottom:8px"><i class="fas fa-paint-brush"></i></div><h2>Ol\u00e1, '+s(e.clienteNome||'Cliente')+'!</h2><p style="color:var(--text-sec);font-size:0.9rem">Aqui est\u00e1 o progresso da sua encomenda.</p></div>';
+h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0"><i class="fas fa-box"></i> '+s(e.descricao||'Encomenda')+'</h2><span class="sb" style="background:'+st.bg+';color:'+st.cor+'"><i class="fas '+(STAGES[si]?STAGES[si].icon:'fa-clipboard')+'"></i> '+(STAGES[si]?STAGES[si].label:e.status)+'</span></div></div>';
+h+='<div class="card"><h2><i class="fas fa-chart-line"></i> Progresso</h2><div class="pt"><div class="pf" style="width:'+pct+'%"></div></div><div class="sg">';
+STAGES.forEach(function(s,i){var c=i<si||(i===si&&e.status==='entregue')?'done':i===si?'active':'';h+='<div class="si"><div class="sd '+c+'"><i class="fas '+s.icon+'"></i></div><div class="sl '+(c?'active':'')+'">'+s.label+'</div></div>'});
+h+='</div></div>';
+h+='<div class="card"><h2><i class="fas fa-info-circle"></i> Detalhes</h2><div class="ig"><div class="il">Valor</div><div class="iv">'+fm(e.valor||0)+'</div><div class="il">Previs\u00e3o</div><div class="iv">'+(e.prazo?fd(e.prazo):'—')+'</div></div>';
+if(dp!==null&&dp>0)h+='<div style="display:flex;gap:12px;justify-content:center;margin-top:12px"><div style="text-align:center"><div style="font-size:1.6rem;font-weight:700">'+dp+'</div><div style="font-size:0.65rem;color:var(--text-mu)">Dias</div></div></div>';
+else if(dp!==null&&dp<=0)h+='<div style="color:#dc2626;text-align:center;padding:8px;margin-top:8px;background:#fef2f2;border-radius:8px"><i class="fas fa-clock"></i> Prazo encerrado</div>';
+h+='</div>';
+if(imgs.length){h+='<div class="card"><h2><i class="fas fa-camera"></i> Fotos</h2><div class="gg">';
+imgs.forEach(function(img,i){h+='<div class="gi"><img src="'+img+'" alt="Foto" loading="lazy"><div class="gl"><i class="fas fa-camera"></i> Foto '+(i+1)+'</div></div>'});
+h+='</div></div>'}
+h+='<div class="card"><h2><i class="fas fa-history"></i> Atualiza\u00e7\u00f5es</h2><div class="tl">';
+var atu=e.atualizacoes||[];
+if(atu.length){atu.forEach(function(a){var s2=SS[a.status]||{cor:'#6b7280',bg:'#f9fafb'};var sg2=STAGES.find(function(x){return x.key===a.status});h+='<div class="ti"><div class="td" style="background:'+s2.cor+';color:#fff"><i class="fas '+(sg2?sg2.icon:'fa-circle')+'"></i></div><div class="ts">'+(sg2?sg2.label:a.status)+'</div>'+(a.mensagem?'<div class="tm">'+s(a.mensagem)+'</div>':'')+'<div class="tda">'+fd(a.data)+'</div></div>'})}
+else{h+='<div style="text-align:center;padding:12px;color:var(--text-mu)"><i class="fas fa-hourglass"></i> Nenhuma atualiza\u00e7\u00e3o ainda.</div>'}
+h+='</div></div>';return h
+}
+function s(str){if(!str)return '';var d=document.createElement('div');d.textContent=str;return d.innerHTML}
+function fd(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}catch{return d}}
+function fm(v){try{return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0)}catch{return 'R$ 0,00'}}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',render)}else{render()}
+</script>
+</body></html>`;
+}
+
 const transicaoHistorico = [];
 export function aplicarTransicaoView(container, chave) {
   const prev = transicaoHistorico.length > 1 ? transicaoHistorico[transicaoHistorico.length - 2] : null;

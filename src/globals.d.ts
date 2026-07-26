@@ -18,6 +18,8 @@ declare function lerArquivoComoBase64(file: File): Promise<string>;
 declare function sanitizarHTML(str: string): string;
 declare function salvarHistorico(termo: string): void;
 declare function resolverImagensIDB(container?: HTMLElement): void;
+declare function downloadHTML(html: string, nomeArquivo: string): void;
+declare function gerarPortalHTML(dados: { artista: string; contatoEmail: string; contatoTel: string; token: string; encomendas: any[] }): string;
 declare const IDB_IMG_PLACEHOLDER: string;
 
 interface ImageStore {

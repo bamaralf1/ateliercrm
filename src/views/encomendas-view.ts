@@ -106,6 +106,8 @@ export class EncomendasView extends BaseView {
     const e = enc || {};
     const isEdit = !!e.id;
     const clientes = clienteStore().items;
+    this._encImagens = e.imagens ? [...e.imagens] : [];
+    this._encImagensRef = [];
     const optsClientes = clientes.map(c => `<option value="${c.id}" ${c.nome === e.clienteNome ? 'selected' : ''}>${c.nome} (${c.email || ''})</option>`).join('');
     abrirModal(`
       <h3>${isEdit ? '<i class="fas fa-pen"></i> Editar' : '<i class="fas fa-box"></i> Nova'} Encomenda</h3>
@@ -135,6 +137,21 @@ export class EncomendasView extends BaseView {
             ).join('')}
           </select>
         </div>
+        <div class="campo-form">
+          <label>Fotos da obra/referências</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="file" id="encImagens" accept="image/*" multiple style="display:none">
+            <button type="button" class="btn-secundario" id="btnEncAddImagens" style="font-size:0.8rem;padding:6px 12px;"><i class="fas fa-camera"></i> Adicionar Fotos</button>
+            <span id="encContagemImagens" style="font-size:0.8rem;color:var(--text-muted);">${(e.imagens || []).length > 0 ? `${e.imagens.length} foto(s)` : ''}</span>
+          </div>
+          <div id="encPreviewImagens" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+            ${(e.imagens && e.imagens.length > 0) ? e.imagens.map((img, i) => `
+              <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
+                <img src="${img.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : img}" style="width:100%;height:100%;object-fit:cover;">
+                <button type="button" class="btn-remover-foto-enc" data-idx="${i}" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+              </div>`).join('') : ''}
+          </div>
+        </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarEnc">Cancelar</button>
           <button type="submit" class="btn-primario">${isEdit ? 'Salvar' : 'Criar'}</button>
@@ -150,10 +167,58 @@ export class EncomendasView extends BaseView {
         document.getElementById('encClienteTel').value = c.telefone || '';
       }
     });
-    document.getElementById('formEncomenda')?.addEventListener('submit', (ev) => {
-      ev.preventDefault();
-      this.salvarEncomenda(enc);
+
+    const inputFotos = document.getElementById('encImagens');
+    document.getElementById('btnEncAddImagens')?.addEventListener('click', () => inputFotos?.click());
+    inputFotos?.addEventListener('change', (ev) => {
+      const files = Array.from(ev.target.files).filter(f => f.type.startsWith('image/'));
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = async (ev2) => {
+          const base64 = ev2.target.result;
+          try {
+            const ref = await imageStore.salvar(base64);
+            const url = await imageStore.carregar(ref.medium);
+            this._encImagens.push(url);
+            this._encImagensRef.push(ref.medium);
+          } catch {
+            this._encImagens.push(base64);
+            this._encImagensRef.push('');
+          }
+          this._renderEncPreview();
+        };
+        reader.readAsDataURL(f);
+      });
+      ev.target.value = '';
     });
+
+    document.getElementById('encPreviewImagens')?.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.btn-remover-foto-enc');
+      if (btn) {
+        const idx = parseInt(btn.dataset.idx);
+        this._encImagens.splice(idx, 1);
+        this._encImagensRef.splice(idx, 1);
+        this._renderEncPreview();
+      }
+    });
+
+    document.getElementById('formEncomenda')?.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      await this.salvarEncomenda(enc);
+    });
+  }
+
+  _renderEncPreview() {
+    const container = document.getElementById('encPreviewImagens');
+    const contagem = document.getElementById('encContagemImagens');
+    if (!container) return;
+    if (this._encImagens.length === 0) { container.innerHTML = ''; if (contagem) contagem.textContent = ''; return; }
+    container.innerHTML = this._encImagens.map((img, i) => `
+      <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
+        <img src="${img}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        <button type="button" class="btn-remover-foto-enc" data-idx="${i}" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>`).join('');
+    if (contagem) contagem.textContent = `${this._encImagens.length} foto(s)`;
   }
 
   abrirModalAtualizacao(encId) {
@@ -226,6 +291,16 @@ export class EncomendasView extends BaseView {
         </select>
         <button class="btn-primario" id="btnGerarPortal"><i class="fas fa-link"></i> Gerar Link</button>
       </div>
+      <hr style="margin:12px 0;border-color:var(--border);">
+      <h4 style="font-size:0.85rem;margin:0 0 8px;">Página autônoma do portal</h4>
+      <p class="texto-ajuda" style="margin-bottom:8px;">Gere um arquivo HTML completo para hospedar em serviços gratuitos como GitHub Pages ou Vercel.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select id="selClientePortalExport" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
+        </select>
+        <button class="btn-primario" id="btnExportarPortal"><i class="fas fa-download"></i> Baixar HTML</button>
+        <button class="btn-secundario" id="btnCopiarInstrucoes"><i class="fas fa-copy"></i> Instruções</button>
+      </div>
       <div class="modal-acoes" style="margin-top:16px;">
         <button class="btn-secundario" id="btnFecharPortais">Fechar</button>
       </div>
@@ -233,6 +308,11 @@ export class EncomendasView extends BaseView {
 
     document.getElementById('btnFecharPortais')?.addEventListener('click', fecharModal);
     document.getElementById('btnGerarPortal')?.addEventListener('click', () => this.gerarLinkPortal());
+    document.getElementById('btnExportarPortal')?.addEventListener('click', () => this.exportarPortalHTML());
+    document.getElementById('btnCopiarInstrucoes')?.addEventListener('click', () => {
+      const texto = `Para hospedar a página do portal:\n\n1. Crie um repositório no GitHub\n2. Faça upload do arquivo portal-cliente.html\n3. Ative o GitHub Pages em Settings > Pages\n4. Use o link: https://seuusuario.github.io/seurepo/portal-cliente.html\n\nOu hospede no Vercel arrastando o arquivo para vercel.com/new`;
+      navigator.clipboard.writeText(texto).then(() => mostrarToast('Instruções copiadas!')).catch(() => mostrarToast('Erro ao copiar.'));
+    });
     document.querySelector('.portais-lista')?.addEventListener('click', (e) => {
       if (e.target.closest('.btn-copiar-link')) {
         const link = e.target.closest('.btn-copiar-link').dataset.link;
@@ -248,7 +328,7 @@ export class EncomendasView extends BaseView {
   }
 
   // --- Ações ---
-  salvarEncomenda(encExistente) {
+  async salvarEncomenda(encExistente) {
     const dados = {
       clienteNome: document.getElementById('encClienteNome')?.value?.trim() || '',
       clienteEmail: document.getElementById('encClienteEmail')?.value?.trim() || '',
@@ -260,13 +340,25 @@ export class EncomendasView extends BaseView {
     };
     if (!dados.clienteNome || !dados.descricao) { mostrarToast('Preencha nome do cliente e descrição.'); return; }
 
+    const imagens = [];
+    for (let i = 0; i < (this._encImagens || []).length; i++) {
+      const img = this._encImagens[i];
+      const ref = this._encImagensRef?.[i];
+      if (ref) { imagens.push(ref); }
+      else if (img && img.startsWith('data:')) {
+        try { const r = await imageStore.salvar(img); imagens.push(r.medium); } catch { imagens.push(img); }
+      } else { imagens.push(img || ''); }
+    }
+    dados.imagens = imagens;
+
     if (encExistente && encExistente.id) {
+      const atual = this.dataStore.buscarPorId('encomendas', encExistente.id);
+      dados.atualizacoes = atual?.atualizacoes || [];
       this.dataStore.atualizar('encomendas', encExistente.id, dados);
       mostrarToast('Encomenda atualizada!');
       activityLogger.registrar('atualizacao', 'Encomenda atualizada', dados.clienteNome, 'atualizacao');
     } else {
       dados.atualizacoes = [{ data: new Date().toISOString(), status: 'criado', mensagem: 'Pedido registrado.' }];
-      dados.imagens = [];
       this.dataStore.adicionar('encomendas', dados);
       mostrarToast('Encomenda criada!');
       activityLogger.registrar('criacao', 'Nova encomenda', dados.clienteNome, 'criacao');
@@ -338,6 +430,50 @@ export class EncomendasView extends BaseView {
     this.dataStore.salvar();
     this.rerenderizar();
     fecharModal();
+  }
+
+  exportarPortalHTML() {
+    const sel = document.getElementById('selClientePortalExport');
+    if (!sel || !sel.value) { mostrarToast('Selecione um cliente.'); return; }
+    const cliente = clienteStore().items.find(c => c.id === sel.value);
+    if (!cliente) { mostrarToast('Cliente não encontrado.'); return; }
+
+    const encomendas = this.dataStore.listar('encomendas').filter(e => e.clienteNome === cliente.nome);
+    if (encomendas.length === 0) { mostrarToast('Este cliente não possui encomendas.'); return; }
+
+    mostrarLoading(true);
+    Promise.all(encomendas.map(async (e) => {
+      const imgs = [];
+      for (const img of (e.imagens || [])) {
+        if (img && img.startsWith('idb:')) { try { const url = await imageStore.carregar(img); imgs.push(url || img); } catch { imgs.push(img); } }
+        else { imgs.push(img || ''); }
+      }
+      return { ...e, imagens: imgs.filter(Boolean) };
+    })).then((encs) => {
+      const config = this.dataStore.obter('configuracoes') || {};
+      const dados = {
+        artista: config.nomeArtista || 'Artista',
+        contatoEmail: config.email || '',
+        contatoTel: config.contato || '',
+        token: cliente.id,
+        encomendas: encs
+      };
+
+      fetch('portal-cliente.html')
+        .then(r => r.text())
+        .then(html => {
+          const dataStr = JSON.stringify(dados);
+          const tag = '<script id="portalData" type="application/json">';
+          const s = html.indexOf(tag);
+          const e = html.indexOf('</script>', s);
+          const novo = html.slice(0, s + tag.length) + '\n' + dataStr + '\n' + html.slice(e);
+          downloadHTML(novo, `portal-${cliente.nome.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.html`);
+        })
+        .catch(() => {
+          const html = gerarPortalHTML(dados);
+          downloadHTML(html, `portal-${cliente.nome.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.html`);
+        });
+    });
   }
 
   excluirEncomenda(id) {
