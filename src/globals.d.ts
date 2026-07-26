@@ -17,6 +17,18 @@ declare function gerarId(): string;
 declare function lerArquivoComoBase64(file: File): Promise<string>;
 declare function sanitizarHTML(str: string): string;
 declare function salvarHistorico(termo: string): void;
+declare function resolverImagensIDB(container?: HTMLElement): void;
+declare const IDB_IMG_PLACEHOLDER: string;
+
+interface ImageStore {
+  salvar(base64: string): Promise<{ id: string; thumb: string; medium: string; full: string }>;
+  carregar(referencia: string): Promise<string>;
+  remover(referencia: string): Promise<void>;
+  liberar(referencia: string): void;
+  liberarTodas(): void;
+  migrar(obras: any[]): Promise<number>;
+}
+declare const imageStore: ImageStore;
 
 // Biblioteca de códigos de barras / QR Code
 declare class QRCode {

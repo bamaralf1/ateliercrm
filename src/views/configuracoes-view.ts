@@ -140,6 +140,13 @@ export class ConfiguracoesView extends BaseView {
         <button class="btn-secundario" id="btnEditarAtalhos"><i class="fas fa-pen"></i> Personalizar Atalhos</button>
       </div>
 
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3><i class="fas fa-database"></i> Gerenciamento de Imagens</h3>
+        <p class="texto-ajuda" style="margin-bottom:8px;">Armazene imagens no IndexedDB (sem limite de 5MB do localStorage).</p>
+        <button class="btn-secundario" id="btnMigrarImagens"><i class="fas fa-arrow-up"></i> Migrar imagens para IndexedDB</button>
+        <span id="migracaoStatus" style="margin-left:8px;font-size:0.8rem;color:var(--text-muted);"></span>
+      </div>
+
       <!-- Sincronização -->
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3><i class="fas fa-cloud"></i> Sincronização na Nuvem</h3>
@@ -239,6 +246,19 @@ export class ConfiguracoesView extends BaseView {
 
     // Atalhos
     document.getElementById('btnEditarAtalhos')?.addEventListener('click', () => editarAtalhos());
+
+    // Migração de imagens
+    document.getElementById('btnMigrarImagens')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btnMigrarImagens');
+      const status = document.getElementById('migracaoStatus');
+      if (btn) btn.disabled = true;
+      if (status) status.textContent = 'Migrando...';
+      const obras = obraStore().items;
+      const count = await imageStore.migrar(obras);
+      obras.forEach(o => obraStore().atualizar(o.id, o));
+      if (status) status.textContent = `✓ ${count} imagem(ns) migrada(s) para IndexedDB.`;
+      if (btn) btn.disabled = false;
+    });
 
     // IndexedDB
     document.getElementById('btnIDBSnapshot')?.addEventListener('click', () => {

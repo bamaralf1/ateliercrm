@@ -133,6 +133,28 @@ export function observarImagens() {
   document.querySelectorAll('.lazy-img:not(.carregado)').forEach(img => obs.observe(img));
 }
 
+export const IDB_IMG_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23e0e0e0" width="200" height="200"/%3E%3Ctext x="100" y="105" text-anchor="middle" fill="%23999" font-size="14" font-family="sans-serif"%3E...%3C/text%3E%3C/svg%3E';
+
+export function resolverImagensIDB(container?: HTMLElement) {
+  const root = container || document;
+  const imgs = root.querySelectorAll<HTMLImageElement>('img[data-img-idb]');
+  imgs.forEach(async (img) => {
+    const ref = img.dataset.imgIdb;
+    if (!ref || img.dataset.idbResolvido) return;
+    img.dataset.idbResolvido = '1';
+    try {
+      const url = await imageStore.carregar(ref);
+      if (url) {
+        img.src = url;
+        img.classList.remove('idb-placeholder');
+        img.classList.add('carregado');
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar imagem IDB:', e);
+    }
+  });
+}
+
 const transicaoHistorico = [];
 export function aplicarTransicaoView(container, chave) {
   const prev = transicaoHistorico.length > 1 ? transicaoHistorico[transicaoHistorico.length - 2] : null;

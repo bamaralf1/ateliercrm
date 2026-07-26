@@ -7,7 +7,9 @@ export class CatalogoView extends BaseView {
     this.filtrosSalvos = [];
     this.selecionados = new Set();
     this.imagensFormAtual = [];
+    this.imagensRefAtual = [];
     this.imagemDestacadaAtual = null;
+    this.imagemDestacadaRef = '';
     this.modoComparacao = false;
     this.idsComparacao = [];
     this._escutarEvento('abrir-nova-obra', () => this.abrirFormulario());
@@ -201,7 +203,7 @@ export class CatalogoView extends BaseView {
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i class="fas fa-star"></i></div>' : ''}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
-              <img class="imagem-obra lazy-img" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+              <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
               ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
               <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria">▶</button>
             </div>
@@ -234,7 +236,7 @@ export class CatalogoView extends BaseView {
               <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<span class="icone-favorita-lista"><i class="fas fa-star"></i></span>' : ''}
-            <img class="thumb-lista lazy-img" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+            <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
             <div class="info-lista" data-abrir-ficha="${o.id}">
               <div class="titulo-obra">${o.titulo}</div>
               <div class="meta-obra">${capitalizarTexto(o.tecnica)} · ${this.formatarDimensoes(o.dimensoes)} · ${o.ano || '-'}</div>
@@ -254,7 +256,15 @@ export class CatalogoView extends BaseView {
   }
 
   obterImagem(obra) {
-    return obra.imagemDestacada || (obra.imagens && obra.imagens[0]) || obra.imagem || gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>');
+    const src = obra.imagemDestacada || (obra.imagens && obra.imagens[0]) || obra.imagem || '';
+    if (!src) return gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>');
+    if (src.startsWith('idb:')) return IDB_IMG_PLACEHOLDER;
+    return src;
+  }
+
+  imgDataIdb(obra) {
+    const src = obra.imagemDestacada || (obra.imagens && obra.imagens[0]) || obra.imagem || '';
+    return src.startsWith('idb:') ? ` data-img-idb="${src}"` : '';
   }
 
   formatarDimensoes(dim) {
@@ -414,6 +424,8 @@ export class CatalogoView extends BaseView {
 
     const btnSalvarFiltro = document.getElementById('btnSalvarFiltro');
     if (btnSalvarFiltro) btnSalvarFiltro.addEventListener('click', () => this.salvarFiltroAtual());
+
+    resolverImagensIDB(container);
   }
 
   aplicarFiltroRapido() {
@@ -606,10 +618,36 @@ export class CatalogoView extends BaseView {
   /* ------------------------------------------------------------------------
      CADASTRO / EDIÇÃO DE OBRA (com múltiplas imagens, drag & drop, editor)
      ------------------------------------------------------------------------ */
-  abrirFormulario(id = null) {
+  async abrirFormulario(id = null) {
     const obraExistente = id ? obraStore().porId(id) : null;
-    this.imagensFormAtual = obraExistente ? [...(obraExistente.imagens || [])] : [];
-    this.imagemDestacadaAtual = obraExistente ? obraExistente.imagemDestacada || (obraExistente.imagens && obraExistente.imagens[0]) || obraExistente.imagem : null;
+    this.imagensFormAtual = [];
+    this.imagensRefAtual = [];
+    this.imagemDestacadaAtual = null;
+    this.imagemDestacadaRef = '';
+
+    if (obraExistente) {
+      const imgs = obraExistente.imagens?.length ? obraExistente.imagens : (obraExistente.imagem ? [obraExistente.imagem] : []);
+      for (const img of imgs) {
+        if (img && img.startsWith('idb:')) {
+          try {
+            const url = await imageStore.carregar(img);
+            this.imagensFormAtual.push(url || IDB_IMG_PLACEHOLDER);
+            this.imagensRefAtual.push(img);
+          } catch { this.imagensFormAtual.push(IDB_IMG_PLACEHOLDER); this.imagensRefAtual.push(''); }
+        } else {
+          this.imagensFormAtual.push(img || '');
+          this.imagensRefAtual.push('');
+        }
+      }
+      const dest = obraExistente.imagemDestacada || (obraExistente.imagens && obraExistente.imagens[0]) || obraExistente.imagem || '';
+      if (dest.startsWith('idb:')) {
+        try { this.imagemDestacadaAtual = await imageStore.carregar(dest); } catch { this.imagemDestacadaAtual = IDB_IMG_PLACEHOLDER; }
+        this.imagemDestacadaRef = dest;
+      } else {
+        this.imagemDestacadaAtual = dest || this.imagensFormAtual[0] || null;
+        this.imagemDestacadaRef = '';
+      }
+    }
     const dim = (obraExistente && obraExistente.dimensoes) || {};
 
     abrirModal(`
@@ -693,7 +731,7 @@ export class CatalogoView extends BaseView {
     this.iniciarDropzone();
     this.renderizarPreviewGaleria();
 
-    document.getElementById('formObra').addEventListener('submit', (e) => {
+    document.getElementById('formObra').addEventListener('submit', async (e) => {
       e.preventDefault();
       const titulo = document.getElementById('campoTitulo').value.trim();
       const tecnica = document.getElementById('campoTecnica').value;
@@ -701,6 +739,19 @@ export class CatalogoView extends BaseView {
       if (!titulo || !tecnica || preco === '') {
         mostrarToast('Preencha os campos obrigatórios: título, técnica e preço.');
         return;
+      }
+
+      const imagensRef = [...this.imagensRefAtual];
+      const imgPrincRef = this.imagemDestacadaRef || imagensRef[0] || '';
+
+      for (let i = 0; i < this.imagensFormAtual.length; i++) {
+        const img = this.imagensFormAtual[i];
+        if (!imagensRef[i] && img && img.startsWith('data:')) {
+          try {
+            const ref = await imageStore.salvar(img);
+            imagensRef[i] = ref.medium;
+          } catch { imagensRef[i] = img; }
+        }
       }
 
       const dadosObra = {
@@ -715,9 +766,9 @@ export class CatalogoView extends BaseView {
         descricao: document.getElementById('campoDescricao').value.trim(),
         preco: Number(preco),
         status: document.getElementById('campoStatus').value,
-        imagem: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>')),
-        imagens: this.imagensFormAtual,
-        imagemDestacada: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || ''),
+        imagem: imgPrincRef || gerarImagemPlaceholder('#cccccc', '<i class="fas fa-images"></i>'),
+        imagens: imagensRef.filter(Boolean),
+        imagemDestacada: imgPrincRef,
         serie: document.getElementById('campoSerie').value.trim()
       };
 
@@ -771,12 +822,24 @@ export class CatalogoView extends BaseView {
     Array.from(files).forEach(arquivo => {
       if (!arquivo.type.startsWith('image/')) return;
       const leitor = new FileReader();
-      leitor.onload = (ev) => {
+      leitor.onload = async (ev) => {
         const imgBase64 = ev.target.result;
-        this.comprimirImagem(imgBase64, 1200, 0.8, (comprimida) => {
-          this.imagensFormAtual.push(comprimida);
-          if (!this.imagemDestacadaAtual) {
-            this.imagemDestacadaAtual = comprimida;
+        this.comprimirImagem(imgBase64, 1200, 0.8, async (comprimida) => {
+          try {
+            const ref = await imageStore.salvar(comprimida);
+            const thumbURL = await imageStore.carregar(ref.thumb);
+            this.imagensFormAtual.push(thumbURL);
+            this.imagensRefAtual.push(ref.medium);
+            if (!this.imagemDestacadaAtual) {
+              this.imagemDestacadaAtual = thumbURL;
+              this.imagemDestacadaRef = ref.medium;
+            }
+          } catch (e) {
+            this.imagensFormAtual.push(comprimida);
+            this.imagensRefAtual.push('');
+            if (!this.imagemDestacadaAtual) {
+              this.imagemDestacadaAtual = comprimida;
+            }
           }
           this.renderizarPreviewGaleria();
         });
@@ -855,6 +918,8 @@ export class CatalogoView extends BaseView {
         if (dragSrcIdx >= 0 && targetIdx >= 0 && dragSrcIdx !== targetIdx) {
           const [item] = this.imagensFormAtual.splice(dragSrcIdx, 1);
           this.imagensFormAtual.splice(targetIdx, 0, item);
+          const [ref] = this.imagensRefAtual.splice(dragSrcIdx, 1);
+          this.imagensRefAtual.splice(targetIdx, 0, ref);
           this.renderizarPreviewGaleria();
         }
       });
@@ -865,6 +930,7 @@ export class CatalogoView extends BaseView {
         e.preventDefault();
         const idx = parseInt(btn.dataset.destacar);
         this.imagemDestacadaAtual = this.imagensFormAtual[idx];
+        this.imagemDestacadaRef = this.imagensRefAtual[idx] || '';
         this.renderizarPreviewGaleria();
       });
     });
@@ -874,8 +940,10 @@ export class CatalogoView extends BaseView {
         e.preventDefault();
         const idx = parseInt(btn.dataset.removerImg);
         this.imagensFormAtual.splice(idx, 1);
+        this.imagensRefAtual.splice(idx, 1);
         if (this.imagemDestacadaAtual === this.imagensFormAtual[idx] || !this.imagensFormAtual.includes(this.imagemDestacadaAtual)) {
           this.imagemDestacadaAtual = this.imagensFormAtual[0] || null;
+          this.imagemDestacadaRef = this.imagensRefAtual[0] || '';
         }
         this.renderizarPreviewGaleria();
       });
@@ -996,15 +1064,17 @@ export class CatalogoView extends BaseView {
       if (campos) campos.style.display = imagens.length > 0 ? 'block' : 'none';
       if (acoes) acoes.style.display = imagens.length > 0 ? 'flex' : 'none';
       document.getElementById('batchCancelar')?.addEventListener('click', fecharModal);
-      document.getElementById('batchCriar')?.addEventListener('click', () => {
+      document.getElementById('batchCriar')?.addEventListener('click', async () => {
         const tecnica = document.getElementById('batchTecnica')?.value || '';
         const status = document.getElementById('batchStatus')?.value || 'disponível';
         const ano = parseInt(document.getElementById('batchAno')?.value) || new Date().getFullYear();
         const serie = document.getElementById('batchSerie')?.value.trim() || '';
-        const obras = imagens.map(img => ({
-          titulo: `Obra ${Date.now()}`, tecnica, ano, status, serie,
-          imagem: img, imagens: [img], imagemDestacada: img,
-          preco: 0, dataCadastro: new Date().toISOString()
+        const obras = await Promise.all(imagens.map(async (img) => {
+          let ref = img;
+          if (img.startsWith('data:')) {
+            try { const r = await imageStore.salvar(img); ref = r.medium; } catch { /* empty */ }
+          }
+          return { titulo: `Obra ${Date.now()}`, tecnica, ano, status, serie, imagem: ref, imagens: [ref], imagemDestacada: ref, preco: 0, dataCadastro: new Date().toISOString() };
         }));
         obras.forEach(o => obraStore().adicionar(o));
         fecharModal();
@@ -1130,11 +1200,14 @@ export class CatalogoView extends BaseView {
     const imagens = (o.imagens && o.imagens.length > 0) ? o.imagens : [o.imagem];
     const temMultiplas = imagens.length > 1;
 
+    const imgPrinc = this.obterImagem(o);
+    const imgPrincIdb = (o.imagemDestacada || (o.imagens && o.imagens[0]) || o.imagem || '').startsWith('idb:') ? ` data-img-idb="${o.imagemDestacada || (o.imagens && o.imagens[0]) || o.imagem}"` : '';
+
     abrirModal(`
       <div class="ficha-tecnica-obra ficha-premium">
         <div class="ficha-galeria">
           <div class="ficha-imagem-principal">
-            <img id="fichaImgPrincipal" src="${this.obterImagem(o)}" alt="${o.titulo}">
+            <img id="fichaImgPrincipal" class="idb-placeholder" src="${imgPrinc}" alt="${o.titulo}"${imgPrincIdb}>
             ${temMultiplas ? `
             <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev">◀</button>
             <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext">▶</button>
@@ -1144,7 +1217,7 @@ export class CatalogoView extends BaseView {
           ${temMultiplas ? `
           <div class="ficha-miniaturas" id="fichaMiniaturas">
             ${imagens.map((img, i) => `
-              <img src="${img}" class="ficha-thumb ${i === 0 ? 'ativo' : ''}" data-ficha-indice="${i}" alt="Imagem ${i + 1}">
+              <img src="${img.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : img}" class="ficha-thumb ${i === 0 ? 'ativo' : ''}"${img.startsWith('idb:') ? ` data-img-idb="${img}"` : ''} data-ficha-indice="${i}" alt="Imagem ${i + 1}">
             `).join('')}
           </div>
           ` : ''}
@@ -1180,9 +1253,13 @@ export class CatalogoView extends BaseView {
       const imgPrincipal = document.getElementById('fichaImgPrincipal');
       const thumbs = document.querySelectorAll('.ficha-thumb');
 
-      const mostrarImagem = (idx) => {
+      const mostrarImagem = async (idx) => {
         indiceAtual = idx;
-        imgPrincipal.src = imagens[idx];
+        const src = imagens[idx];
+        imgPrincipal.src = src.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : src;
+        if (src.startsWith('idb:')) {
+          try { imgPrincipal.src = await imageStore.carregar(src); } catch { /* empty */ }
+        }
         thumbs.forEach((t, i) => t.classList.toggle('ativo', i === idx));
       };
 
@@ -1200,6 +1277,7 @@ export class CatalogoView extends BaseView {
       });
     }
 
+    resolverImagensIDB(document.getElementById('modalOverlay'));
     this.gerarQRCodeObra(o);
   }
 
@@ -1239,12 +1317,16 @@ export class CatalogoView extends BaseView {
   /* ------------------------------------------------------------------------
      SLIDESHOW (modo galeria)
      ------------------------------------------------------------------------ */
-  abrirSlideshow(id) {
+  async abrirSlideshow(id) {
     const obra = obraStore().porId(id);
     if (!obra) return;
     const imagens = (obra.imagens && obra.imagens.length > 0) ? obra.imagens : [obra.imagem];
     if (!imagens || imagens.length === 0) return;
-    const images = imagens.map((src, i) => ({
+    const resolved = await Promise.all(imagens.map(async (src) => {
+      if (src.startsWith('idb:')) { try { return await imageStore.carregar(src); } catch { /* empty */ } }
+      return src;
+    }));
+    const images = resolved.map((src, i) => ({
       src,
       title: obra.titulo || 'Sem título',
       subtitle: [obra.tecnica, obra.ano].filter(Boolean).join(' · ') + (imagens.length > 1 ? ` — Imagem ${i + 1}/${imagens.length}` : ''),
@@ -1263,10 +1345,13 @@ export class CatalogoView extends BaseView {
     const obras = ids.map(id => obraStore().porId(id)).filter(Boolean);
     if (obras.length < 2) return;
 
-    const colunas = obras.map(o => `
+    const colunas = obras.map(o => {
+      const imgSrc = this.obterImagem(o);
+      const imgIdb = this.imgDataIdb(o);
+      return `
       <div class="comparacao-coluna">
         <div class="comparacao-imagem">
-          <img src="${this.obterImagem(o)}" alt="${o.titulo}">
+          <img src="${imgSrc}" alt="${o.titulo}" class="idb-placeholder"${imgIdb}>
         </div>
         <h3 class="comparacao-titulo">${o.titulo}</h3>
         ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ''}
@@ -1279,7 +1364,7 @@ export class CatalogoView extends BaseView {
           <tr><td>Série</td><td>${o.serie || '-'}</td></tr>
         </table>
       </div>
-    `).join('');
+    `}).join('');
 
     const totalColunas = Math.min(obras.length, 4);
     abrirModal(`
@@ -1297,6 +1382,8 @@ export class CatalogoView extends BaseView {
     document.getElementById('btnExportarComparacao').addEventListener('click', () => {
       this.exportarComparacaoPDF(obras);
     });
+
+    resolverImagensIDB(document.getElementById('modalOverlay'));
   }
 
   adicionarComparacao(id) {

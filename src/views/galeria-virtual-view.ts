@@ -339,18 +339,27 @@ export class GaleriaVirtualView {
       group.add(imgMesh);
       this.obraMeshes.push(imgMesh);
       this.obraData.push(obra);
-      this._carregarTextura(imgMesh, obra.imagem);
+      const texUrl = obra.imagem?.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : (obra.imagem || '');
+      this._carregarTextura(imgMesh, texUrl, obra.imagem);
     });
   }
 
-  _carregarTextura(mesh, url) {
-    if (!url || !mesh.material) return;
+  _carregarTextura(mesh, placeholderUrl, idbRef) {
+    if (!idbRef || !mesh.material) return;
     const loader = new THREE.TextureLoader();
-    loader.load(url, (tex) => {
-      tex.encoding = THREE.sRGBEncoding;
-      mesh.material.map = tex;
-      mesh.material.needsUpdate = true;
-    }, undefined, () => {});
+    const carregar = (url) => {
+      loader.load(url, (tex) => {
+        tex.encoding = THREE.sRGBEncoding;
+        mesh.material.map = tex;
+        mesh.material.needsUpdate = true;
+      }, undefined, () => {});
+    };
+    if (idbRef.startsWith('idb:')) {
+      carregar(placeholderUrl);
+      imageStore.carregar(idbRef).then(url => { if (url && url !== placeholderUrl) carregar(url); }).catch(() => {});
+    } else {
+      carregar(idbRef);
+    }
   }
 
   _aplicarAmbiente() {

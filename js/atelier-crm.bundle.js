@@ -8524,6 +8524,153 @@ Only state can be modified.`);
     estrela: '<i class="fas fa-star"></i>',
     coracao: '<i class="fas fa-heart"></i>'
   };
+  var DB_NAME = "AtelierCRM_Images";
+  var DB_VERSION = 1;
+  var STORE_NAME = "images";
+  var _dbPromise = null;
+  function abrirDB() {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return _dbPromise;
+  }
+  var blobCache = /* @__PURE__ */ new Map();
+  function base64ToBlob(base64) {
+    const [meta, data] = base64.split(",");
+    const mime = meta && meta.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const bytes = atob(data);
+    const arr = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+  function comprimirBase64(base64, maxLargura, qualidade) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxLargura) {
+          h = h * maxLargura / w;
+          w = maxLargura;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", qualidade));
+      };
+      img.onerror = () => resolve(base64);
+      img.src = base64;
+    });
+  }
+  async function salvarRecord(base64) {
+    const id = crypto.randomUUID();
+    const [thumb, medium, full] = await Promise.all([
+      comprimirBase64(base64, 200, 0.7),
+      comprimirBase64(base64, 600, 0.75),
+      base64
+      // full = original já comprimida a 1200px
+    ]);
+    const db = await abrirDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      tx.objectStore(STORE_NAME).put({ id, thumb, medium, full, criadoEm: (/* @__PURE__ */ new Date()).toISOString() });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    blobCache.forEach((url, key) => {
+      if (key.startsWith(`idb:${id}`)) {
+        URL.revokeObjectURL(url);
+        blobCache.delete(key);
+      }
+    });
+    return { id: `idb:${id}`, thumb: `idb:${id}:thumb`, medium: `idb:${id}:medium`, full: `idb:${id}:full` };
+  }
+  async function loadRecord(referencia) {
+    if (!referencia || !referencia.startsWith("idb:")) return referencia || "";
+    const cached = blobCache.get(referencia);
+    if (cached) return cached;
+    const parts = referencia.replace("idb:", "").split(":");
+    const id = parts[0];
+    const size = parts[1] || "medium";
+    const db = await abrirDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const record = await new Promise((resolve, reject) => {
+      const req = tx.objectStore(STORE_NAME).get(id);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    if (!record) return "";
+    const data = record[size] || record.medium || record.full || record.thumb || "";
+    if (!data) return "";
+    const blob = base64ToBlob(data);
+    const url = URL.createObjectURL(blob);
+    blobCache.set(referencia, url);
+    return url;
+  }
+  function freeOne(referencia) {
+    const url = blobCache.get(referencia);
+    if (url) {
+      URL.revokeObjectURL(url);
+      blobCache.delete(referencia);
+    }
+  }
+  function freeAll() {
+    blobCache.forEach((url) => URL.revokeObjectURL(url));
+    blobCache.clear();
+  }
+  async function removeRecord(referencia) {
+    const id = referencia.replace("idb:", "").replace(/:(thumb|medium|full)$/, "");
+    const db = await abrirDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      tx.objectStore(STORE_NAME).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    freeOne(referencia);
+  }
+  async function migrateAll(obras) {
+    let count = 0;
+    for (const obra of obras) {
+      const toMigrate = /* @__PURE__ */ new Set();
+      if (obra.imagem && !obra.imagem.startsWith("idb:")) toMigrate.add(obra.imagem);
+      if (obra.imagemDestacada && !obra.imagemDestacada.startsWith("idb:")) toMigrate.add(obra.imagemDestacada);
+      if (obra.imagens) {
+        obra.imagens.forEach((i) => {
+          if (i && !i.startsWith("idb:")) toMigrate.add(i);
+        });
+      }
+      if (toMigrate.size === 0) continue;
+      const idMap = /* @__PURE__ */ new Map();
+      for (const img of toMigrate) {
+        if (img.startsWith("data:")) {
+          const r = await salvarRecord(img);
+          idMap.set(img, r.medium);
+        }
+      }
+      if (idMap.size === 0) continue;
+      if (obra.imagem && idMap.has(obra.imagem)) obra.imagem = idMap.get(obra.imagem);
+      if (obra.imagemDestacada && idMap.has(obra.imagemDestacada)) obra.imagemDestacada = idMap.get(obra.imagemDestacada);
+      if (obra.imagens) {
+        obra.imagens = obra.imagens.map((i) => idMap.get(i) || i);
+      }
+      count += idMap.size;
+    }
+    return count;
+  }
+  window.imageStore = { salvar: salvarRecord, carregar: loadRecord, remover: removeRecord, liberar: freeOne, liberarTodas: freeAll, migrar: migrateAll };
   var _cache = /* @__PURE__ */ new Map();
   function carregarScript(url) {
     if (_cache.has(url)) return _cache.get(url);
@@ -9813,7 +9960,9 @@ Only state can be modified.`);
       this.filtrosSalvos = [];
       this.selecionados = /* @__PURE__ */ new Set();
       this.imagensFormAtual = [];
+      this.imagensRefAtual = [];
       this.imagemDestacadaAtual = null;
+      this.imagemDestacadaRef = "";
       this.modoComparacao = false;
       this.idsComparacao = [];
       this._escutarEvento("abrir-nova-obra", () => this.abrirFormulario());
@@ -9991,7 +10140,7 @@ Only state can be modified.`);
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i class="fas fa-star"></i></div>' : ""}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
-              <img class="imagem-obra lazy-img" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+              <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
               ${o.imagens && o.imagens.length > 1 ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ""}
               <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria">\u25B6</button>
             </div>
@@ -10023,7 +10172,7 @@ Only state can be modified.`);
               <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? "checked" : ""}>
             </div>
             ${o.favorita ? '<span class="icone-favorita-lista"><i class="fas fa-star"></i></span>' : ""}
-            <img class="thumb-lista lazy-img" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy">
+            <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
             <div class="info-lista" data-abrir-ficha="${o.id}">
               <div class="titulo-obra">${o.titulo}</div>
               <div class="meta-obra">${capitalizarTexto(o.tecnica)} \xB7 ${this.formatarDimensoes(o.dimensoes)} \xB7 ${o.ano || "-"}</div>
@@ -10042,7 +10191,14 @@ Only state can be modified.`);
     `;
     }
     obterImagem(obra) {
-      return obra.imagemDestacada || obra.imagens && obra.imagens[0] || obra.imagem || gerarImagemPlaceholder("#cccccc", '<i class="fas fa-images"></i>');
+      const src = obra.imagemDestacada || obra.imagens && obra.imagens[0] || obra.imagem || "";
+      if (!src) return gerarImagemPlaceholder("#cccccc", '<i class="fas fa-images"></i>');
+      if (src.startsWith("idb:")) return IDB_IMG_PLACEHOLDER;
+      return src;
+    }
+    imgDataIdb(obra) {
+      const src = obra.imagemDestacada || obra.imagens && obra.imagens[0] || obra.imagem || "";
+      return src.startsWith("idb:") ? ` data-img-idb="${src}"` : "";
     }
     formatarDimensoes(dim) {
       if (!dim || !dim.altura && !dim.largura && !dim.profundidade) return "-";
@@ -10227,6 +10383,7 @@ Only state can be modified.`);
       this._bindCache["delegCatalogo"] = { el: container, handler: delegHandler, type: "click" };
       const btnSalvarFiltro = document.getElementById("btnSalvarFiltro");
       if (btnSalvarFiltro) btnSalvarFiltro.addEventListener("click", () => this.salvarFiltroAtual());
+      resolverImagensIDB(container);
     }
     aplicarFiltroRapido() {
       const agora = /* @__PURE__ */ new Date();
@@ -10448,10 +10605,42 @@ Only state can be modified.`);
     /* ------------------------------------------------------------------------
        CADASTRO / EDIÇÃO DE OBRA (com múltiplas imagens, drag & drop, editor)
        ------------------------------------------------------------------------ */
-    abrirFormulario(id = null) {
+    async abrirFormulario(id = null) {
       const obraExistente = id ? obraStore().porId(id) : null;
-      this.imagensFormAtual = obraExistente ? [...obraExistente.imagens || []] : [];
-      this.imagemDestacadaAtual = obraExistente ? obraExistente.imagemDestacada || obraExistente.imagens && obraExistente.imagens[0] || obraExistente.imagem : null;
+      this.imagensFormAtual = [];
+      this.imagensRefAtual = [];
+      this.imagemDestacadaAtual = null;
+      this.imagemDestacadaRef = "";
+      if (obraExistente) {
+        const imgs = obraExistente.imagens?.length ? obraExistente.imagens : obraExistente.imagem ? [obraExistente.imagem] : [];
+        for (const img of imgs) {
+          if (img && img.startsWith("idb:")) {
+            try {
+              const url = await imageStore.carregar(img);
+              this.imagensFormAtual.push(url || IDB_IMG_PLACEHOLDER);
+              this.imagensRefAtual.push(img);
+            } catch {
+              this.imagensFormAtual.push(IDB_IMG_PLACEHOLDER);
+              this.imagensRefAtual.push("");
+            }
+          } else {
+            this.imagensFormAtual.push(img || "");
+            this.imagensRefAtual.push("");
+          }
+        }
+        const dest = obraExistente.imagemDestacada || obraExistente.imagens && obraExistente.imagens[0] || obraExistente.imagem || "";
+        if (dest.startsWith("idb:")) {
+          try {
+            this.imagemDestacadaAtual = await imageStore.carregar(dest);
+          } catch {
+            this.imagemDestacadaAtual = IDB_IMG_PLACEHOLDER;
+          }
+          this.imagemDestacadaRef = dest;
+        } else {
+          this.imagemDestacadaAtual = dest || this.imagensFormAtual[0] || null;
+          this.imagemDestacadaRef = "";
+        }
+      }
       const dim = obraExistente && obraExistente.dimensoes || {};
       abrirModal(`
       <h3>${obraExistente ? "Editar Obra" : "Nova Obra"}</h3>
@@ -10532,7 +10721,7 @@ Only state can be modified.`);
       document.getElementById("btnCancelarObra").addEventListener("click", fecharModal);
       this.iniciarDropzone();
       this.renderizarPreviewGaleria();
-      document.getElementById("formObra").addEventListener("submit", (e) => {
+      document.getElementById("formObra").addEventListener("submit", async (e) => {
         e.preventDefault();
         const titulo = document.getElementById("campoTitulo").value.trim();
         const tecnica = document.getElementById("campoTecnica").value;
@@ -10540,6 +10729,19 @@ Only state can be modified.`);
         if (!titulo || !tecnica || preco === "") {
           mostrarToast("Preencha os campos obrigat\xF3rios: t\xEDtulo, t\xE9cnica e pre\xE7o.");
           return;
+        }
+        const imagensRef = [...this.imagensRefAtual];
+        const imgPrincRef = this.imagemDestacadaRef || imagensRef[0] || "";
+        for (let i = 0; i < this.imagensFormAtual.length; i++) {
+          const img = this.imagensFormAtual[i];
+          if (!imagensRef[i] && img && img.startsWith("data:")) {
+            try {
+              const ref2 = await imageStore.salvar(img);
+              imagensRef[i] = ref2.medium;
+            } catch {
+              imagensRef[i] = img;
+            }
+          }
         }
         const dadosObra = {
           titulo,
@@ -10553,9 +10755,9 @@ Only state can be modified.`);
           descricao: document.getElementById("campoDescricao").value.trim(),
           preco: Number(preco),
           status: document.getElementById("campoStatus").value,
-          imagem: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || gerarImagemPlaceholder("#cccccc", '<i class="fas fa-images"></i>')),
-          imagens: this.imagensFormAtual,
-          imagemDestacada: this.imagemDestacadaAtual || (this.imagensFormAtual[0] || ""),
+          imagem: imgPrincRef || gerarImagemPlaceholder("#cccccc", '<i class="fas fa-images"></i>'),
+          imagens: imagensRef.filter(Boolean),
+          imagemDestacada: imgPrincRef,
           serie: document.getElementById("campoSerie").value.trim()
         };
         if (obraExistente) {
@@ -10600,12 +10802,24 @@ Only state can be modified.`);
       Array.from(files).forEach((arquivo) => {
         if (!arquivo.type.startsWith("image/")) return;
         const leitor = new FileReader();
-        leitor.onload = (ev) => {
+        leitor.onload = async (ev) => {
           const imgBase64 = ev.target.result;
-          this.comprimirImagem(imgBase64, 1200, 0.8, (comprimida) => {
-            this.imagensFormAtual.push(comprimida);
-            if (!this.imagemDestacadaAtual) {
-              this.imagemDestacadaAtual = comprimida;
+          this.comprimirImagem(imgBase64, 1200, 0.8, async (comprimida) => {
+            try {
+              const ref2 = await imageStore.salvar(comprimida);
+              const thumbURL = await imageStore.carregar(ref2.thumb);
+              this.imagensFormAtual.push(thumbURL);
+              this.imagensRefAtual.push(ref2.medium);
+              if (!this.imagemDestacadaAtual) {
+                this.imagemDestacadaAtual = thumbURL;
+                this.imagemDestacadaRef = ref2.medium;
+              }
+            } catch (e) {
+              this.imagensFormAtual.push(comprimida);
+              this.imagensRefAtual.push("");
+              if (!this.imagemDestacadaAtual) {
+                this.imagemDestacadaAtual = comprimida;
+              }
             }
             this.renderizarPreviewGaleria();
           });
@@ -10683,6 +10897,8 @@ Only state can be modified.`);
           if (dragSrcIdx >= 0 && targetIdx >= 0 && dragSrcIdx !== targetIdx) {
             const [item] = this.imagensFormAtual.splice(dragSrcIdx, 1);
             this.imagensFormAtual.splice(targetIdx, 0, item);
+            const [ref2] = this.imagensRefAtual.splice(dragSrcIdx, 1);
+            this.imagensRefAtual.splice(targetIdx, 0, ref2);
             this.renderizarPreviewGaleria();
           }
         });
@@ -10692,6 +10908,7 @@ Only state can be modified.`);
           e.preventDefault();
           const idx = parseInt(btn.dataset.destacar);
           this.imagemDestacadaAtual = this.imagensFormAtual[idx];
+          this.imagemDestacadaRef = this.imagensRefAtual[idx] || "";
           this.renderizarPreviewGaleria();
         });
       });
@@ -10700,8 +10917,10 @@ Only state can be modified.`);
           e.preventDefault();
           const idx = parseInt(btn.dataset.removerImg);
           this.imagensFormAtual.splice(idx, 1);
+          this.imagensRefAtual.splice(idx, 1);
           if (this.imagemDestacadaAtual === this.imagensFormAtual[idx] || !this.imagensFormAtual.includes(this.imagemDestacadaAtual)) {
             this.imagemDestacadaAtual = this.imagensFormAtual[0] || null;
+            this.imagemDestacadaRef = this.imagensRefAtual[0] || "";
           }
           this.renderizarPreviewGaleria();
         });
@@ -10831,22 +11050,21 @@ Only state can be modified.`);
         if (campos) campos.style.display = imagens.length > 0 ? "block" : "none";
         if (acoes) acoes.style.display = imagens.length > 0 ? "flex" : "none";
         document.getElementById("batchCancelar")?.addEventListener("click", fecharModal);
-        document.getElementById("batchCriar")?.addEventListener("click", () => {
+        document.getElementById("batchCriar")?.addEventListener("click", async () => {
           const tecnica = document.getElementById("batchTecnica")?.value || "";
           const status = document.getElementById("batchStatus")?.value || "dispon\xEDvel";
           const ano = parseInt(document.getElementById("batchAno")?.value) || (/* @__PURE__ */ new Date()).getFullYear();
           const serie = document.getElementById("batchSerie")?.value.trim() || "";
-          const obras = imagens.map((img) => ({
-            titulo: `Obra ${Date.now()}`,
-            tecnica,
-            ano,
-            status,
-            serie,
-            imagem: img,
-            imagens: [img],
-            imagemDestacada: img,
-            preco: 0,
-            dataCadastro: (/* @__PURE__ */ new Date()).toISOString()
+          const obras = await Promise.all(imagens.map(async (img) => {
+            let ref2 = img;
+            if (img.startsWith("data:")) {
+              try {
+                const r = await imageStore.salvar(img);
+                ref2 = r.medium;
+              } catch {
+              }
+            }
+            return { titulo: `Obra ${Date.now()}`, tecnica, ano, status, serie, imagem: ref2, imagens: [ref2], imagemDestacada: ref2, preco: 0, dataCadastro: (/* @__PURE__ */ new Date()).toISOString() };
           }));
           obras.forEach((o) => obraStore().adicionar(o));
           fecharModal();
@@ -10974,11 +11192,13 @@ Only state can be modified.`);
       if (!o) return;
       const imagens = o.imagens && o.imagens.length > 0 ? o.imagens : [o.imagem];
       const temMultiplas = imagens.length > 1;
+      const imgPrinc = this.obterImagem(o);
+      const imgPrincIdb = (o.imagemDestacada || o.imagens && o.imagens[0] || o.imagem || "").startsWith("idb:") ? ` data-img-idb="${o.imagemDestacada || o.imagens && o.imagens[0] || o.imagem}"` : "";
       abrirModal(`
       <div class="ficha-tecnica-obra ficha-premium">
         <div class="ficha-galeria">
           <div class="ficha-imagem-principal">
-            <img id="fichaImgPrincipal" src="${this.obterImagem(o)}" alt="${o.titulo}">
+            <img id="fichaImgPrincipal" class="idb-placeholder" src="${imgPrinc}" alt="${o.titulo}"${imgPrincIdb}>
             ${temMultiplas ? `
             <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev">\u25C0</button>
             <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext">\u25B6</button>
@@ -10988,7 +11208,7 @@ Only state can be modified.`);
           ${temMultiplas ? `
           <div class="ficha-miniaturas" id="fichaMiniaturas">
             ${imagens.map((img, i) => `
-              <img src="${img}" class="ficha-thumb ${i === 0 ? "ativo" : ""}" data-ficha-indice="${i}" alt="Imagem ${i + 1}">
+              <img src="${img.startsWith("idb:") ? IDB_IMG_PLACEHOLDER : img}" class="ficha-thumb ${i === 0 ? "ativo" : ""}"${img.startsWith("idb:") ? ` data-img-idb="${img}"` : ""} data-ficha-indice="${i}" alt="Imagem ${i + 1}">
             `).join("")}
           </div>
           ` : ""}
@@ -11024,9 +11244,16 @@ Only state can be modified.`);
         let indiceAtual = 0;
         const imgPrincipal = document.getElementById("fichaImgPrincipal");
         const thumbs = document.querySelectorAll(".ficha-thumb");
-        const mostrarImagem = (idx) => {
+        const mostrarImagem = async (idx) => {
           indiceAtual = idx;
-          imgPrincipal.src = imagens[idx];
+          const src = imagens[idx];
+          imgPrincipal.src = src.startsWith("idb:") ? IDB_IMG_PLACEHOLDER : src;
+          if (src.startsWith("idb:")) {
+            try {
+              imgPrincipal.src = await imageStore.carregar(src);
+            } catch {
+            }
+          }
           thumbs.forEach((t, i) => t.classList.toggle("ativo", i === idx));
         };
         document.getElementById("fichaNavPrev").addEventListener("click", () => {
@@ -11042,6 +11269,7 @@ Only state can be modified.`);
           t.addEventListener("click", () => mostrarImagem(parseInt(t.dataset.fichaIndice)));
         });
       }
+      resolverImagensIDB(document.getElementById("modalOverlay"));
       this.gerarQRCodeObra(o);
     }
     compartilharObra(obra) {
@@ -11080,12 +11308,21 @@ Only state can be modified.`);
     /* ------------------------------------------------------------------------
        SLIDESHOW (modo galeria)
        ------------------------------------------------------------------------ */
-    abrirSlideshow(id) {
+    async abrirSlideshow(id) {
       const obra = obraStore().porId(id);
       if (!obra) return;
       const imagens = obra.imagens && obra.imagens.length > 0 ? obra.imagens : [obra.imagem];
       if (!imagens || imagens.length === 0) return;
-      const images = imagens.map((src, i) => ({
+      const resolved = await Promise.all(imagens.map(async (src) => {
+        if (src.startsWith("idb:")) {
+          try {
+            return await imageStore.carregar(src);
+          } catch {
+          }
+        }
+        return src;
+      }));
+      const images = resolved.map((src, i) => ({
         src,
         title: obra.titulo || "Sem t\xEDtulo",
         subtitle: [obra.tecnica, obra.ano].filter(Boolean).join(" \xB7 ") + (imagens.length > 1 ? ` \u2014 Imagem ${i + 1}/${imagens.length}` : ""),
@@ -11105,10 +11342,13 @@ Only state can be modified.`);
       }
       const obras = ids.map((id) => obraStore().porId(id)).filter(Boolean);
       if (obras.length < 2) return;
-      const colunas = obras.map((o) => `
+      const colunas = obras.map((o) => {
+        const imgSrc = this.obterImagem(o);
+        const imgIdb = this.imgDataIdb(o);
+        return `
       <div class="comparacao-coluna">
         <div class="comparacao-imagem">
-          <img src="${this.obterImagem(o)}" alt="${o.titulo}">
+          <img src="${imgSrc}" alt="${o.titulo}" class="idb-placeholder"${imgIdb}>
         </div>
         <h3 class="comparacao-titulo">${o.titulo}</h3>
         ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ""}
@@ -11121,7 +11361,8 @@ Only state can be modified.`);
           <tr><td>S\xE9rie</td><td>${o.serie || "-"}</td></tr>
         </table>
       </div>
-    `).join("");
+    `;
+      }).join("");
       const totalColunas = Math.min(obras.length, 4);
       abrirModal(`
       <h3><i class="fas fa-chart-bar"></i> Compara\xE7\xE3o de Obras</h3>
@@ -11137,6 +11378,7 @@ Only state can be modified.`);
       document.getElementById("btnExportarComparacao").addEventListener("click", () => {
         this.exportarComparacaoPDF(obras);
       });
+      resolverImagensIDB(document.getElementById("modalOverlay"));
     }
     adicionarComparacao(id) {
       if (this.idsComparacao.includes(id)) {
@@ -13283,18 +13525,30 @@ Only state can be modified.`);
         group.add(imgMesh);
         this.obraMeshes.push(imgMesh);
         this.obraData.push(obra);
-        this._carregarTextura(imgMesh, obra.imagem);
+        const texUrl = obra.imagem?.startsWith("idb:") ? IDB_IMG_PLACEHOLDER : obra.imagem || "";
+        this._carregarTextura(imgMesh, texUrl, obra.imagem);
       });
     }
-    _carregarTextura(mesh, url) {
-      if (!url || !mesh.material) return;
+    _carregarTextura(mesh, placeholderUrl, idbRef) {
+      if (!idbRef || !mesh.material) return;
       const loader = new THREE.TextureLoader();
-      loader.load(url, (tex) => {
-        tex.encoding = THREE.sRGBEncoding;
-        mesh.material.map = tex;
-        mesh.material.needsUpdate = true;
-      }, void 0, () => {
-      });
+      const carregar = (url) => {
+        loader.load(url, (tex) => {
+          tex.encoding = THREE.sRGBEncoding;
+          mesh.material.map = tex;
+          mesh.material.needsUpdate = true;
+        }, void 0, () => {
+        });
+      };
+      if (idbRef.startsWith("idb:")) {
+        carregar(placeholderUrl);
+        imageStore.carregar(idbRef).then((url) => {
+          if (url && url !== placeholderUrl) carregar(url);
+        }).catch(() => {
+        });
+      } else {
+        carregar(idbRef);
+      }
     }
     _aplicarAmbiente() {
       if (!this.scene) return;
@@ -18322,6 +18576,13 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         <button class="btn-secundario" id="btnEditarAtalhos"><i class="fas fa-pen"></i> Personalizar Atalhos</button>
       </div>
 
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3><i class="fas fa-database"></i> Gerenciamento de Imagens</h3>
+        <p class="texto-ajuda" style="margin-bottom:8px;">Armazene imagens no IndexedDB (sem limite de 5MB do localStorage).</p>
+        <button class="btn-secundario" id="btnMigrarImagens"><i class="fas fa-arrow-up"></i> Migrar imagens para IndexedDB</button>
+        <span id="migracaoStatus" style="margin-left:8px;font-size:0.8rem;color:var(--text-muted);"></span>
+      </div>
+
       <!-- Sincroniza\xE7\xE3o -->
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3><i class="fas fa-cloud"></i> Sincroniza\xE7\xE3o na Nuvem</h3>
@@ -18416,6 +18677,17 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         });
       });
       document.getElementById("btnEditarAtalhos")?.addEventListener("click", () => editarAtalhos());
+      document.getElementById("btnMigrarImagens")?.addEventListener("click", async () => {
+        const btn = document.getElementById("btnMigrarImagens");
+        const status = document.getElementById("migracaoStatus");
+        if (btn) btn.disabled = true;
+        if (status) status.textContent = "Migrando...";
+        const obras = obraStore().items;
+        const count = await imageStore.migrar(obras);
+        obras.forEach((o) => obraStore().atualizar(o.id, o));
+        if (status) status.textContent = `\u2713 ${count} imagem(ns) migrada(s) para IndexedDB.`;
+        if (btn) btn.disabled = false;
+      });
       document.getElementById("btnIDBSnapshot")?.addEventListener("click", () => {
         cloudSync.salvarSnapshotIDB().then(() => this._mostrarIDBSnapshots());
       });
@@ -19342,6 +19614,26 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       });
     }, { rootMargin: "200px" });
     document.querySelectorAll(".lazy-img:not(.carregado)").forEach((img) => obs.observe(img));
+  }
+  var IDB_IMG_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23e0e0e0" width="200" height="200"/%3E%3Ctext x="100" y="105" text-anchor="middle" fill="%23999" font-size="14" font-family="sans-serif"%3E...%3C/text%3E%3C/svg%3E';
+  function resolverImagensIDB(container) {
+    const root = container || document;
+    const imgs = root.querySelectorAll("img[data-img-idb]");
+    imgs.forEach(async (img) => {
+      const ref2 = img.dataset.imgIdb;
+      if (!ref2 || img.dataset.idbResolvido) return;
+      img.dataset.idbResolvido = "1";
+      try {
+        const url = await imageStore.carregar(ref2);
+        if (url) {
+          img.src = url;
+          img.classList.remove("idb-placeholder");
+          img.classList.add("carregado");
+        }
+      } catch (e) {
+        console.warn("Erro ao carregar imagem IDB:", e);
+      }
+    });
   }
   var transicaoHistorico = [];
   function aplicarTransicaoView(container, chave) {
