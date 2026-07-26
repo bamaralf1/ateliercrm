@@ -134,9 +134,15 @@ export class ConfiguracoesView extends BaseView {
         </div>
       </div>
 
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3><i class="fas fa-keyboard"></i> Atalhos de Teclado</h3>
+        <p class="texto-ajuda" style="margin-bottom:8px;">Personalize os atalhos para navegar mais rápido.</p>
+        <button class="btn-secundario" id="btnEditarAtalhos"><i class="fas fa-pen"></i> Personalizar Atalhos</button>
+      </div>
+
       <!-- Sincronização -->
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3>☁️ Sincronização na Nuvem</h3>
+        <h3><i class="fas fa-cloud"></i> Sincronização na Nuvem</h3>
         <p class="texto-ajuda" style="margin-bottom:12px;">Último backup: ${ultimoBackup}</p>
 
         <div class="sync-tabs" style="display:flex;gap:4px;margin-bottom:12px;">
@@ -230,6 +236,9 @@ export class ConfiguracoesView extends BaseView {
         if (panel) panel.style.display = 'block';
       });
     });
+
+    // Atalhos
+    document.getElementById('btnEditarAtalhos')?.addEventListener('click', () => editarAtalhos());
 
     // IndexedDB
     document.getElementById('btnIDBSnapshot')?.addEventListener('click', () => {

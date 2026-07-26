@@ -8158,12 +8158,34 @@ Only state can be modified.`);
     const d = new Date(isoStr);
     return d.toLocaleDateString("pt-BR");
   }
-  function mostrarToast(mensagem) {
+  function mostrarToast(mensagem, tipo) {
     const toast = document.getElementById("toast");
-    toast.textContent = mensagem;
+    const msgEl = document.getElementById("toastMsg");
+    if (!toast || !msgEl) return;
+    const icones = { sucesso: "fa-check-circle", erro: "fa-times-circle", aviso: "fa-exclamation-triangle", info: "fa-info-circle" };
+    const iconEl = toast.querySelector("i");
+    if (iconEl && tipo && icones[tipo]) {
+      iconEl.className = "fas " + icones[tipo];
+    }
+    msgEl.textContent = mensagem;
+    toast.className = "toast" + (tipo && icones[tipo] ? " " + tipo : "");
     toast.classList.add("mostrar");
     clearTimeout(window._toastTimeout);
-    window._toastTimeout = setTimeout(() => toast.classList.remove("mostrar"), 2800);
+    window._toastTimeout = setTimeout(() => {
+      toast.classList.add("saindo");
+      setTimeout(() => {
+        toast.classList.remove("mostrar", "saindo");
+      }, 250);
+    }, 2800);
+  }
+  function skeletonHTML(tipo) {
+    const mapas = {
+      grafico: '<div class="skeleton skeleton-quadro"></div>',
+      lista: '<div class="skeleton skeleton-linha"></div><div class="skeleton skeleton-linha w60"></div><div class="skeleton skeleton-linha"></div><div class="skeleton skeleton-linha w40"></div>',
+      grid: '<div class="skeleton-grid">' + Array(4).fill('<div class="skeleton skeleton-card"></div>').join("") + "</div>",
+      mapa: '<div class="skeleton skeleton-quadro" style="height:400px"></div>'
+    };
+    return mapas[tipo] || mapas.lista;
   }
   function mostrarLoading(msg = "Aguarde...") {
     document.getElementById("loadingTexto").textContent = msg;
@@ -9036,6 +9058,8 @@ Only state can be modified.`);
       if (typeof this.rotas[chave].aposRender === "function") {
         this.rotas[chave].aposRender();
       }
+      const bc = document.getElementById("breadcrumbAtual");
+      if (bc) bc.textContent = this.rotas[chave].rotulo;
       if (window.innerWidth <= 860) {
         document.getElementById("sidebar").classList.add("colapsada");
       }
@@ -9583,6 +9607,11 @@ Only state can be modified.`);
       this.initDragDrop();
       this.initConfigModal();
       if (typeof Chart === "undefined") {
+        document.querySelectorAll('[id^="chart"]').forEach((el) => {
+          if (el.tagName === "CANVAS") {
+            el.parentElement.innerHTML = '<div class="skeleton skeleton-quadro" style="height:200px;margin:8px 0"></div>';
+          }
+        });
         carregarChartJS().then(() => this.initCharts()).catch(() => {
         });
       } else {
@@ -13017,7 +13046,7 @@ Only state can be modified.`);
           </div>
         </div>
         <div class="three-container" id="threeContainer">
-          <div class="loading-3d" id="loading3d">${this.threeReady ? "Carregando galeria 3D..." : "WebGL n\xE3o dispon\xEDvel \u2014 use um navegador moderno."}</div>
+          <div class="loading-3d" id="loading3d">${this.threeReady ? '<div class="skeleton skeleton-quadro" style="height:400px"></div>' : '<p style="text-align:center;padding:40px;color:var(--text-muted)">WebGL n\xE3o dispon\xEDvel \u2014 use um navegador moderno.</p>'}</div>
         </div>
         <div class="hud-navegacao" id="hudNavegacao">
           <span class="nav-indicador" id="navIndicador">${this.obrasVisiveis.length} obras</span>
@@ -15372,7 +15401,7 @@ Aprecie a exposi\xE7\xE3o!`;
       <div class="mapa-container" id="d3MapaContainer">
         <svg id="d3MapaSVG"></svg>
       </div>
-      <div id="d3MapaHubs" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">\u{1F4A1} Processando rede...</div>`;
+      <div id="d3MapaHubs" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);"></div>`;
     }
     // --- EVENT BINDING ---
     aposRenderizar() {
@@ -15438,8 +15467,13 @@ Aprecie a exposi\xE7\xE3o!`;
         this._bindCache["delegatedRede"] = { el: container, handler: h, type: "click" };
       }
       if (this.tabAtiva === "mapa" && this.contatos.length > 0) {
+        const mapaContainer = document.getElementById("d3MapaContainer");
         if (typeof d3 === "undefined") {
-          carregarD3().then(() => this.iniciarMapaD3()).catch(() => {
+          if (mapaContainer) mapaContainer.innerHTML = '<div class="skeleton skeleton-quadro" style="height:400px"></div>';
+          carregarD3().then(() => {
+            if (mapaContainer) mapaContainer.innerHTML = '<svg id="d3MapaSVG"></svg>';
+            this.iniciarMapaD3();
+          }).catch(() => {
           });
         } else {
           setTimeout(() => this.iniciarMapaD3(), 50);
@@ -18282,9 +18316,15 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         </div>
       </div>
 
+      <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3><i class="fas fa-keyboard"></i> Atalhos de Teclado</h3>
+        <p class="texto-ajuda" style="margin-bottom:8px;">Personalize os atalhos para navegar mais r\xE1pido.</p>
+        <button class="btn-secundario" id="btnEditarAtalhos"><i class="fas fa-pen"></i> Personalizar Atalhos</button>
+      </div>
+
       <!-- Sincroniza\xE7\xE3o -->
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3>\u2601\uFE0F Sincroniza\xE7\xE3o na Nuvem</h3>
+        <h3><i class="fas fa-cloud"></i> Sincroniza\xE7\xE3o na Nuvem</h3>
         <p class="texto-ajuda" style="margin-bottom:12px;">\xDAltimo backup: ${ultimoBackup}</p>
 
         <div class="sync-tabs" style="display:flex;gap:4px;margin-bottom:12px;">
@@ -18375,6 +18415,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           if (panel) panel.style.display = "block";
         });
       });
+      document.getElementById("btnEditarAtalhos")?.addEventListener("click", () => editarAtalhos());
       document.getElementById("btnIDBSnapshot")?.addEventListener("click", () => {
         cloudSync.salvarSnapshotIDB().then(() => this._mostrarIDBSnapshots());
       });
@@ -19342,41 +19383,59 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       t = setTimeout(() => fn(...args), ms);
     };
   }
-  var atalhos = [
-    { key: "k", ctrl: true, desc: "Busca global (spotlight)", acao: () => abrirSpotlight() },
-    { key: "n", ctrl: true, desc: "Nova obra", acao: () => {
+  var ATALHOS_PADRAO = {
+    "ctrl+k": { desc: "Busca global (spotlight)", acao: () => abrirSpotlight() },
+    "ctrl+n": { desc: "Nova obra", acao: () => {
       router?.navegar("catalogo");
       setTimeout(() => eventBus.emitir("abrir-nova-obra"), 200);
     } },
-    { key: "v", ctrl: true, desc: "Nova venda", acao: () => {
+    "ctrl+v": { desc: "Nova venda", acao: () => {
       router?.navegar("vendas");
       setTimeout(() => eventBus.emitir("abrir-nova-venda"), 200);
     } },
-    { key: "c", ctrl: true, desc: "Novo cliente", acao: () => {
+    "ctrl+c": { desc: "Novo cliente", acao: () => {
       router?.navegar("clientes");
       setTimeout(() => eventBus.emitir("abrir-novo-cliente"), 200);
     } },
-    { key: "d", ctrl: true, desc: "Dashboard", acao: () => router?.navegar("dashboard") },
-    { key: "g", ctrl: true, desc: "Galeria Virtual", acao: () => router?.navegar("galeriaVirtual") },
-    { key: "p", ctrl: true, desc: "Precificador", acao: () => router?.navegar("precificador") },
-    { key: "a", ctrl: true, desc: "Atelier/Estoque", acao: () => router?.navegar("atelier") },
-    { key: "f", ctrl: true, desc: "Financeiro", acao: () => router?.navegar("financeiro") },
-    { key: "r", ctrl: true, desc: "Rede Profissional", acao: () => router?.navegar("rede") },
-    { key: "j", ctrl: true, desc: "Di\xE1rio Criativo", acao: () => router?.navegar("diario") },
-    { key: "b", ctrl: true, desc: "Backup r\xE1pido", acao: () => {
+    "ctrl+d": { desc: "Dashboard", acao: () => router?.navegar("dashboard") },
+    "ctrl+g": { desc: "Galeria Virtual", acao: () => router?.navegar("galeriaVirtual") },
+    "ctrl+p": { desc: "Precificador", acao: () => router?.navegar("precificador") },
+    "ctrl+a": { desc: "Atelier/Estoque", acao: () => router?.navegar("atelier") },
+    "ctrl+f": { desc: "Financeiro", acao: () => router?.navegar("financeiro") },
+    "ctrl+r": { desc: "Rede Profissional", acao: () => router?.navegar("rede") },
+    "ctrl+j": { desc: "Di\xE1rio Criativo", acao: () => router?.navegar("diario") },
+    "ctrl+b": { desc: "Backup r\xE1pido", acao: () => {
       dataStore?.exportarBackup();
-      mostrarToast("Backup exportado!");
+      mostrarToast("Backup exportado!", "sucesso");
       activityLogger.registrar("export", "Backup exportado", "Backup completo do sistema", "export");
     } },
-    { key: "s", ctrl: true, desc: "Salvar dados", acao: () => {
+    "ctrl+s": { desc: "Salvar dados", acao: () => {
       dataStore?.salvar();
-      mostrarToast("Dados salvos!");
+      mostrarToast("Dados salvos!", "sucesso");
       activityLogger.registrar("atualizacao", "Dados salvos", "Salvamento manual", "atualizacao");
     } },
-    { key: "Escape", desc: "Fechar modal", acao: () => fecharModal() },
-    { key: "/", desc: "Mostrar todos os atalhos", acao: () => mostrarAtalhos() },
-    { key: "?", desc: "Mostrar ajuda", acao: () => mostrarAtalhos() }
-  ];
+    "Escape": { desc: "Fechar modal", acao: () => fecharModal() },
+    "/": { desc: "Mostrar todos os atalhos", acao: () => mostrarAtalhos() },
+    "?": { desc: "Mostrar ajuda", acao: () => mostrarAtalhos() }
+  };
+  function carregarAtalhos() {
+    let personalizados = {};
+    try {
+      personalizados = JSON.parse(localStorage.getItem("atelier_atalhos") || "{}");
+    } catch (e) {
+      console.warn(e);
+    }
+    const atalhos2 = [];
+    for (const [chave, cfg] of Object.entries(ATALHOS_PADRAO)) {
+      const personalizado = personalizados[chave];
+      const tecla = personalizado || chave;
+      const ctrl = tecla.startsWith("ctrl+");
+      const key = ctrl ? tecla.slice(5) : tecla;
+      atalhos2.push({ key, ctrl, desc: cfg.desc, acao: cfg.acao, chave });
+    }
+    return atalhos2;
+  }
+  var atalhos = carregarAtalhos();
   document.addEventListener("keydown", (e) => {
     if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) && e.key !== "Escape") return;
     const ctrl = e.ctrlKey || e.metaKey;
@@ -19569,8 +19628,69 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       }).join("");
       return `<div class="sc-categoria"><h4>${cat}</h4><div class="shortcuts-grid">${itens}</div></div>`;
     }).join("");
-    abrirModal(`<h3>\u2328\uFE0F Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
+    abrirModal(`<h3>\u2328\uFE0F Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnPersonalizarAtalhos"><i class="fas fa-pen"></i> Personalizar</button><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
     document.getElementById("btnCancelarModal")?.addEventListener("click", fecharModal);
+    document.getElementById("btnPersonalizarAtalhos")?.addEventListener("click", () => {
+      fecharModal();
+      setTimeout(editarAtalhos, 300);
+    });
+  }
+  function editarAtalhos() {
+    const items = atalhos.filter((a) => a.chave).map((a) => {
+      const teclaAtual = (a.ctrl ? "Ctrl+" : "") + a.key;
+      return `<div class="sc-edit-item"><span class="sc-edit-desc">${a.desc}</span><input class="sc-edit-input" data-chave="${a.chave}" value="${teclaAtual}" readonly><button class="btn-pequeno sc-edit-btn" data-chave="${a.chave}"><i class="fas fa-sync"></i></button></div>`;
+    }).join("");
+    abrirModal(`<h3>\u2328\uFE0F Personalizar Atalhos</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Clique no bot\xE3o ao lado do atalho e pressione a nova combina\xE7\xE3o de teclas. Ctrl+Letra ou apenas uma tecla.</p><div class="sc-edit-lista">${items}</div><div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnResetarAtalhos"><i class="fas fa-undo"></i> Restaurar Padr\xF5es</button><button class="btn-primario" id="btnSalvarAtalhos"><i class="fas fa-save"></i> Salvar</button></div>`);
+    let capturando = null;
+    document.querySelectorAll(".sc-edit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const chave = btn.dataset.chave;
+        if (capturando === chave) {
+          capturando = null;
+          btn.innerHTML = '<i class="fas fa-sync"></i>';
+          return;
+        }
+        capturando = chave;
+        btn.innerHTML = "...";
+        const input = document.querySelector(`.sc-edit-input[data-chave="${chave}"]`);
+        if (input) {
+          input.value = "Pressione uma tecla...";
+          input.focus();
+        }
+      });
+    });
+    document.addEventListener("keydown", function capturar(e) {
+      if (!capturando) return;
+      e.preventDefault();
+      const input = document.querySelector(`.sc-edit-input[data-chave="${capturando}"]`);
+      const btn = document.querySelector(`.sc-edit-btn[data-chave="${capturando}"]`);
+      if (input) {
+        const ctrl = e.ctrlKey || e.metaKey;
+        input.value = ctrl ? "Ctrl+" + e.key.toLowerCase() : e.key;
+        input.dataset.novo = input.value;
+      }
+      if (btn) btn.innerHTML = '<i class="fas fa-check" style="color:#22c55e"></i>';
+      capturando = null;
+    });
+    document.getElementById("btnResetarAtalhos")?.addEventListener("click", () => {
+      localStorage.removeItem("atelier_atalhos");
+      atalhos = carregarAtalhos();
+      mostrarToast("Atalhos restaurados!", "sucesso");
+      fecharModal();
+    });
+    document.getElementById("btnSalvarAtalhos")?.addEventListener("click", () => {
+      const personalizados = {};
+      document.querySelectorAll(".sc-edit-input").forEach((inp) => {
+        const novo = inp.dataset.novo;
+        if (novo && novo !== inp.value && inp.dataset.chave) {
+          personalizados[inp.dataset.chave] = novo;
+        }
+      });
+      localStorage.setItem("atelier_atalhos", JSON.stringify(personalizados));
+      atalhos = carregarAtalhos();
+      mostrarToast("Atalhos personalizados salvos!", "sucesso");
+      fecharModal();
+    });
   }
   var _inatividadeTimer = null;
   var _telaBloqueada = false;
@@ -20018,6 +20138,29 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       }, 300);
     }
   })();
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {
+      });
+    });
+  }
+  var deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById("btnInstalarPWA");
+    if (btn) btn.style.display = "flex";
+  });
+  window.instalarPWA = async function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if (result.outcome === "accepted") {
+      deferredPrompt = null;
+      const btn = document.getElementById("btnInstalarPWA");
+      if (btn) btn.style.display = "none";
+    }
+  };
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
       DataStore,

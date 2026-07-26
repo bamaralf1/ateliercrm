@@ -173,7 +173,7 @@ export class RedeView extends BaseView {
       <div class="mapa-container" id="d3MapaContainer">
         <svg id="d3MapaSVG"></svg>
       </div>
-      <div id="d3MapaHubs" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">💡 Processando rede...</div>`;
+      <div id="d3MapaHubs" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);"></div>`;
   }
 
   // --- EVENT BINDING ---
@@ -218,8 +218,10 @@ export class RedeView extends BaseView {
 
     // Iniciar D3 map if tab is mapa
     if (this.tabAtiva === 'mapa' && this.contatos.length > 0) {
+      const mapaContainer = document.getElementById('d3MapaContainer');
       if (typeof d3 === 'undefined') {
-        carregarD3().then(() => this.iniciarMapaD3()).catch(() => {});
+        if (mapaContainer) mapaContainer.innerHTML = '<div class="skeleton skeleton-quadro" style="height:400px"></div>';
+        carregarD3().then(() => { if (mapaContainer) mapaContainer.innerHTML = '<svg id="d3MapaSVG"></svg>'; this.iniciarMapaD3(); }).catch(() => {});
       } else {
         setTimeout(() => this.iniciarMapaD3(), 50);
       }

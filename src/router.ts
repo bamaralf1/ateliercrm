@@ -51,6 +51,8 @@ export class Router {
     if (typeof this.rotas[chave].aposRender === 'function') {
       this.rotas[chave].aposRender();
     }
+    const bc = document.getElementById('breadcrumbAtual');
+    if (bc) bc.textContent = this.rotas[chave].rotulo;
     if (window.innerWidth <= 860) { document.getElementById('sidebar').classList.add('colapsada'); }
     this.container.scrollTop = 0;
   }

@@ -491,6 +491,11 @@ export class DashboardView extends BaseView {
     this.initDragDrop();
     this.initConfigModal();
     if (typeof Chart === 'undefined') {
+      document.querySelectorAll('[id^="chart"]').forEach(el => {
+        if (el.tagName === 'CANVAS') {
+          el.parentElement.innerHTML = '<div class="skeleton skeleton-quadro" style="height:200px;margin:8px 0"></div>';
+        }
+      });
       carregarChartJS().then(() => this.initCharts()).catch(() => {});
     } else {
       this.initCharts();

@@ -81,7 +81,7 @@ export class GaleriaVirtualView {
           </div>
         </div>
         <div class="three-container" id="threeContainer">
-          <div class="loading-3d" id="loading3d">${this.threeReady ? 'Carregando galeria 3D...' : 'WebGL não disponível — use um navegador moderno.'}</div>
+          <div class="loading-3d" id="loading3d">${this.threeReady ? '<div class="skeleton skeleton-quadro" style="height:400px"></div>' : '<p style="text-align:center;padding:40px;color:var(--text-muted)">WebGL não disponível — use um navegador moderno.</p>'}</div>
         </div>
         <div class="hud-navegacao" id="hudNavegacao">
           <span class="nav-indicador" id="navIndicador">${this.obrasVisiveis.length} obras</span>

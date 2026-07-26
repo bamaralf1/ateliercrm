@@ -1,5 +1,5 @@
-const CACHE = 'atelier-crm-v2';
-const ASSETS = ['/', '/index.html', '/js/atelier-crm.js'];
+const CACHE = 'atelier-crm-v3';
+const ASSETS = ['/', '/index.html', '/js/atelier-crm.bundle.js', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

@@ -10,12 +10,31 @@ export function formatarData(isoStr) {
   return d.toLocaleDateString('pt-BR');
 }
 
-export function mostrarToast(mensagem) {
+export function mostrarToast(mensagem, tipo) {
   const toast = document.getElementById('toast');
-  toast.textContent = mensagem;
+  const msgEl = document.getElementById('toastMsg');
+  if (!toast || !msgEl) return;
+  const icones = { sucesso: 'fa-check-circle', erro: 'fa-times-circle', aviso: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+  const iconEl = toast.querySelector('i');
+  if (iconEl && tipo && icones[tipo]) { iconEl.className = 'fas ' + icones[tipo]; }
+  msgEl.textContent = mensagem;
+  toast.className = 'toast' + (tipo && icones[tipo] ? ' ' + tipo : '');
   toast.classList.add('mostrar');
   clearTimeout(window._toastTimeout);
-  window._toastTimeout = setTimeout(() => toast.classList.remove('mostrar'), 2800);
+  window._toastTimeout = setTimeout(() => {
+    toast.classList.add('saindo');
+    setTimeout(() => { toast.classList.remove('mostrar', 'saindo'); }, 250);
+  }, 2800);
+}
+
+export function skeletonHTML(tipo) {
+  const mapas = {
+    grafico: '<div class="skeleton skeleton-quadro"></div>',
+    lista: '<div class="skeleton skeleton-linha"></div><div class="skeleton skeleton-linha w60"></div><div class="skeleton skeleton-linha"></div><div class="skeleton skeleton-linha w40"></div>',
+    grid: '<div class="skeleton-grid">' + Array(4).fill('<div class="skeleton skeleton-card"></div>').join('') + '</div>',
+    mapa: '<div class="skeleton skeleton-quadro" style="height:400px"></div>',
+  };
+  return mapas[tipo] || mapas.lista;
 }
 
 export function mostrarLoading(msg = 'Aguarde...') {
