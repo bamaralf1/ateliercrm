@@ -34,8 +34,8 @@ export class VendasView extends BaseView {
           <td onclick="event.stopPropagation()">
             <input type="checkbox" class="checkbox-item-vend" aria-label="Selecionar venda" data-id="${v.id}" ${this.selecionados.has(v.id) ? 'checked' : ''}>
           </td>
-          <td>${obra ? obra.titulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
-          <td>${cliente ? cliente.nome : '-'}</td>
+          <td>${obra ? obra.titulo : (v.obraTitulo ? v.obraTitulo : '<span style="color:var(--text-muted)">Obra removida</span>')}</td>
+          <td>${cliente ? cliente.nome : (v.clienteNome ? v.clienteNome : '-')}</td>
           <td>${formatarMoeda(v.precoFinal)}</td>
           <td>${formatarData(v.data)}</td>
           <td>${capitalizarTexto(v.formaPagamento)}</td>
@@ -375,7 +375,7 @@ export class VendasView extends BaseView {
       const cliente = clientes.find(c => c.id === v.clienteId);
       return `
         <li class="item-escolha-venda">
-          <span>${obra ? obra.titulo : '-'} — ${cliente ? cliente.nome : '-'} (${formatarMoeda(v.precoFinal)})</span>
+          <span>${obra ? obra.titulo : (v.obraTitulo ? v.obraTitulo : '-')} — ${cliente ? cliente.nome : (v.clienteNome ? v.clienteNome : '-')} (${formatarMoeda(v.precoFinal)})</span>
           <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
         </li>
       `;

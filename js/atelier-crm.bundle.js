@@ -8520,6 +8520,59 @@ Only state can be modified.`);
     Chart2.defaults.scales.linear.grid = { drawBorder: false };
     Chart2.defaults.scales.category.grid = { drawBorder: false };
   }
+  function confirmarAcao(mensagem, opcoes = {}) {
+    const { textoConfirmar = "Excluir", titulo = "Confirmar", perigoso = true } = opcoes;
+    return new Promise((resolve) => {
+      const classeBtn = perigoso ? "btn-danger" : "btn-primario";
+      abrirModal(`
+      <h3>${titulo}</h3>
+      <p style="margin:14px 0;font-size:0.9rem;line-height:1.5;color:var(--text);">${mensagem}</p>
+      <div class="modal-acoes">
+        <button type="button" class="btn-secundario" id="btnConfirmarCancelar">Cancelar</button>
+        <button type="button" class="${classeBtn}" id="btnConfirmarAcao">${textoConfirmar}</button>
+      </div>
+    `);
+      const limpar = (resultado) => {
+        document.removeEventListener("keydown", onKeydown);
+        fecharModal();
+        resolve(resultado);
+      };
+      const onKeydown = (e) => {
+        if (e.key === "Escape") limpar(false);
+      };
+      document.getElementById("btnConfirmarCancelar").addEventListener("click", () => limpar(false));
+      document.getElementById("btnConfirmarAcao").addEventListener("click", () => limpar(true));
+      document.addEventListener("keydown", onKeydown);
+      document.getElementById("btnConfirmarCancelar").focus();
+    });
+  }
+  function mostrarToastComDesfazer(mensagem, aoDesfazer) {
+    const toast = document.getElementById("toast");
+    const msgEl = document.getElementById("toastMsg");
+    if (!toast || !msgEl) return;
+    const fechar = () => {
+      toast.classList.add("saindo");
+      setTimeout(() => {
+        toast.classList.remove("mostrar", "saindo");
+      }, 250);
+    };
+    clearTimeout(window._toastTimeout);
+    msgEl.innerHTML = `${mensagem} <button class="btn-toast-desfazer" id="btnDesfazerExclusao">Desfazer</button>`;
+    toast.className = "toast aviso";
+    toast.classList.add("mostrar");
+    const timeout = setTimeout(fechar, 6e3);
+    window._toastTimeout = timeout;
+    const btn = document.getElementById("btnDesfazerExclusao");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        clearTimeout(timeout);
+        window._toastTimeout = null;
+        aoDesfazer();
+        msgEl.innerHTML = "Item restaurado!";
+        window._toastTimeout = setTimeout(fechar, 2800);
+      });
+    }
+  }
   var ICONES = {
     dashboard: '<i class="fas fa-chart-bar"></i>',
     catalogo: '<i class="fas fa-images"></i>',
@@ -12063,8 +12116,8 @@ Only state can be modified.`);
           <td onclick="event.stopPropagation()">
             <input type="checkbox" class="checkbox-item-vend" aria-label="Selecionar venda" data-id="${v.id}" ${this.selecionados.has(v.id) ? "checked" : ""}>
           </td>
-          <td>${obra ? obra.titulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
-          <td>${cliente ? cliente.nome : "-"}</td>
+          <td>${obra ? obra.titulo : v.obraTitulo ? v.obraTitulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
+          <td>${cliente ? cliente.nome : v.clienteNome ? v.clienteNome : "-"}</td>
           <td>${formatarMoeda(v.precoFinal)}</td>
           <td>${formatarData(v.data)}</td>
           <td>${capitalizarTexto(v.formaPagamento)}</td>
@@ -12404,7 +12457,7 @@ Only state can be modified.`);
         const cliente = clientes.find((c) => c.id === v.clienteId);
         return `
         <li class="item-escolha-venda">
-          <span>${obra ? obra.titulo : "-"} \u2014 ${cliente ? cliente.nome : "-"} (${formatarMoeda(v.precoFinal)})</span>
+          <span>${obra ? obra.titulo : v.obraTitulo ? v.obraTitulo : "-"} \u2014 ${cliente ? cliente.nome : v.clienteNome ? v.clienteNome : "-"} (${formatarMoeda(v.precoFinal)})</span>
           <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
         </li>
       `;
@@ -13971,11 +14024,31 @@ Aprecie a exposi\xE7\xE3o!`;
       this.destruirThree();
     }
   };
+  var ORC_STATUS = [
+    { status: "rascunho", rotulo: "Rascunho", cor: "#6b7280" },
+    { status: "enviado", rotulo: "Enviado", cor: "#3b82f6" },
+    { status: "aprovado", rotulo: "Aprovado", cor: "#16a34a" },
+    { status: "recusado", rotulo: "Recusado", cor: "#dc2626" }
+  ];
   var PrecificadorView = class extends BaseView {
     constructor(dataStore2, router2) {
       super(dataStore2, router2);
-      this.calc = { materiais: 0, horas: 0, valorHora: 60, largura: 0, altura: 0, complexidade: 3, obraId: "" };
+      this.calc = {
+        nome: "",
+        clienteId: "",
+        tecnica: "",
+        materiais: 0,
+        horas: 0,
+        valorHora: 60,
+        largura: 0,
+        altura: 0,
+        profundidade: 0,
+        complexidade: 3,
+        multiplicador: 1.5,
+        arredondamento: 0
+      };
       this.fatoresComplexidade = [0, 0.7, 0.85, 1, 1.2, 1.5];
+      this.modoOrcamentos = localStorage.getItem("atelier-crm-view-mode-orcamentos") || "kanban";
     }
     get config() {
       return configStore().precificador || {};
@@ -13991,6 +14064,9 @@ Aprecie a exposi\xE7\xE3o!`;
     }
     get regras() {
       return this.cfgRoot.precificadorRegras || [];
+    }
+    get orcamentos() {
+      return this.cfgRoot.precificadorOrcamentos || [];
     }
     salvarConfig(cfg) {
       const c = this.cfgRoot;
@@ -14018,10 +14094,17 @@ Aprecie a exposi\xE7\xE3o!`;
     render() {
       const obras = obraStore().items || [];
       const vendas = vendaStore().items || [];
+      const clientes = clienteStore().items || [];
       const temObras = obras.length > 0;
-      this.calc.valorHora = this.config.valorHora || 60;
-      const opcoesObra = obras.map(
-        (o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"} \u2014 ${this.fmt(o.preco)}</option>`
+      this.calc.valorHora = Number(this.calc.valorHora) || this.config.valorHora || 60;
+      this.calc.multiplicador = Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5;
+      this.calc.arredondamento = Number(this.calc.arredondamento) || this.config.arredondamento || 0;
+      const opcoesClientes = clientes.map(
+        (c) => `<option value="${c.id}" ${this.calc.clienteId === c.id ? "selected" : ""}>${c.nome}${c.email ? " \u2014 " + c.email : ""}</option>`
+      ).join("");
+      const tecnicas = ["", "\xF3leo", "acr\xEDlica", "aquarela", "guache", "t\xEAmpera", "desenho", "gravura", "escultura", "cer\xE2mica", "t\xEAxtil", "outra"];
+      const opcoesTecnica = tecnicas.map(
+        (t) => `<option value="${t}" ${this.calc.tecnica === t ? "selected" : ""}>${t ? capitalizarTexto(t) : "T\xE9cnica livre"}</option>`
       ).join("");
       return `
       <div class="precificador" id="precificadorContainer">
@@ -14040,30 +14123,40 @@ Aprecie a exposi\xE7\xE3o!`;
         </div>
 
         <div class="card">
-          <h3>\u{1F9EE} Calculadora de Pre\xE7o</h3>
+          <h3>\u{1F9EE} Calculadora de Pre\xE7o <span class="badge">Or\xE7amento</span></h3>
           <div class="calc-grid">
             <div class="campo-calc" style="grid-column:1/-1">
-              <label>Obra de refer\xEAncia</label>
-               <select class="sel-obra-calc" id="selObraCalc" aria-label="Obra de refer\xEAncia"><option value="">\u2014 Selecionar obra \u2014</option>${opcoesObra}</select>
+              <label>\u{1F5BC}\uFE0F Obra / pe\xE7a <span class="texto-ajuda">(nome do or\xE7amento)</span></label>
+              <input type="text" id="calcNome" placeholder="Ex.: Pintura acr\xEDlica sobre tela \u2014 S\xE9rie Horizonte" value="${this.calc.nome || ""}">
+            </div>
+            <div class="campo-calc">
+              <label><i class="fas fa-user"></i> Cliente</label>
+              <select id="calcCliente" aria-label="Cliente"><option value="">\u2014 Cliente avulso \u2014</option>${opcoesClientes}</select>
+            </div>
+            <div class="campo-calc">
+              <label>\u{1F3A8} T\xE9cnica</label>
+              <select id="calcTecnica" aria-label="T\xE9cnica">${opcoesTecnica}</select>
             </div>
             <div class="campo-calc">
               <label><i class="fas fa-dollar-sign"></i> Custo materiais (${this.moeda})</label>
-               <input type="number" id="calcMateriais" aria-label="Custo materiais" value="${this.calc.materiais}" min="0" step="0.1">
+              <input type="number" id="calcMateriais" aria-label="Custo materiais" value="${this.calc.materiais}" min="0" step="0.1">
             </div>
             <div class="campo-calc">
               <label>\u23F1 Horas trabalhadas</label>
-               <input type="number" id="calcHoras" aria-label="Horas trabalhadas" value="${this.calc.horas}" min="0" step="0.5">
+              <input type="number" id="calcHoras" aria-label="Horas trabalhadas" value="${this.calc.horas}" min="0" step="0.5">
             </div>
             <div class="campo-calc">
               <label>\u{1F675} Valor hora (${this.moeda})</label>
-               <input type="number" id="calcValorHora" aria-label="Valor hora" value="${this.calc.valorHora}" min="0" step="1">
+              <input type="number" id="calcValorHora" aria-label="Valor hora" value="${this.calc.valorHora}" min="0" step="1">
             </div>
             <div class="campo-calc">
               <label>\u{1F4D0} Dimens\xF5es (cm)</label>
-              <div style="display:flex;gap:6px;">
-                 <input type="number" id="calcLargura" aria-label="Largura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
-                <span style="align-self:center;color:var(--text-muted);font-size:0.8rem;">\xD7</span>
-                <input type="number" id="calcAltura" aria-label="Altura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
+              <div class="calc-dims">
+                <input type="number" id="calcLargura" aria-label="Largura" value="${this.calc.largura}" min="0" placeholder="Larg.">
+                <span>\xD7</span>
+                <input type="number" id="calcAltura" aria-label="Altura" value="${this.calc.altura}" min="0" placeholder="Alt.">
+                <span>\xD7</span>
+                <input type="number" id="calcProfundidade" aria-label="Profundidade" value="${this.calc.profundidade}" min="0" placeholder="Prof.">
               </div>
             </div>
             <div class="campo-calc">
@@ -14074,6 +14167,20 @@ Aprecie a exposi\xE7\xE3o!`;
       ).join("")}
               </div>
             </div>
+            <div class="campo-calc">
+              <label>\u26A1 Multiplicador <span class="texto-ajuda">(experi\xEAncia/marca)</span></label>
+              <input type="number" id="calcMultiplicador" aria-label="Multiplicador" value="${this.calc.multiplicador}" min="1" step="0.1">
+            </div>
+            <div class="campo-calc">
+              <label>\u{1F522} Arredondamento</label>
+              <select id="calcArredondamento" aria-label="Arredondamento">
+                <option value="0" ${this.calc.arredondamento === 0 ? "selected" : ""}>Sem arredondamento</option>
+                <option value="50" ${this.calc.arredondamento === 50 ? "selected" : ""}>M\xFAltiplos de 50</option>
+                <option value="100" ${this.calc.arredondamento === 100 ? "selected" : ""}>M\xFAltiplos de 100</option>
+                <option value="250" ${this.calc.arredondamento === 250 ? "selected" : ""}>M\xFAltiplos de 250</option>
+                <option value="500" ${this.calc.arredondamento === 500 ? "selected" : ""}>M\xFAltiplos de 500</option>
+              </select>
+            </div>
           </div>
 
           <div class="resultado-preco" id="resultadoPreco">
@@ -14083,9 +14190,24 @@ Aprecie a exposi\xE7\xE3o!`;
             <div id="conversoesMultiMoeda" class="conversoes-multi"></div>
           </div>
 
+          <div class="breakdown-grid" id="breakdownGrid">${this.renderBreakdown(this.calcularBreakdown(this.calc))}</div>
+          <div id="regraAuto">${this.renderRegraAuto()}</div>
           <div id="faixaComparativa">${this.renderFaixaComparativa(obras)}</div>
-          <button class="btn-primario" id="btnSalvarPrecoCalc" style="margin-top:12px;width:100%;"><i class="fas fa-save"></i> Salvar pre\xE7o sugerido na obra</button>
+
+          <div class="orcamento-acoes">
+            <select id="selTemplateProposta" class="orc-status-select" aria-label="Template da proposta PDF" title="Template da proposta PDF">
+              <option value="classico" ${(this.config.templateProposta || "classico") === "classico" ? "selected" : ""}>\u{1F4DC} Cl\xE1ssico serifado</option>
+              <option value="moderno" ${this.config.templateProposta === "moderno" ? "selected" : ""}>\u{1F3A8} Moderno</option>
+              <option value="minimalista" ${this.config.templateProposta === "minimalista" ? "selected" : ""}>\u25FD Minimalista</option>
+            </select>
+            <button class="btn-secundario" id="btnCopiarPreco"><i class="fas fa-copy"></i> Copiar</button>
+            <button class="btn-primario" id="btnSalvarOrcamento"><i class="fas fa-save"></i> Salvar Or\xE7amento</button>
+            <button class="btn-secundario" id="btnPropostaPDF"><i class="fas fa-file-pdf"></i> Proposta PDF</button>
+            <button class="btn-secundario" id="btnCriarEncomenda"><i class="fas fa-box-open"></i> Criar Encomenda</button>
+          </div>
         </div>
+
+        ${this.renderOrcamentos()}
 
         ${temObras ? this.renderBreakEven(obras) : ""}
         ${temObras ? this.renderMLCard(obras, vendas) : ""}
@@ -14106,29 +14228,168 @@ Aprecie a exposi\xE7\xE3o!`;
       ${this.renderModalTaxas()}
     `;
     }
+    // --- Orçamentos Salvos ---
+    renderOrcamentos() {
+      const lista = this.orcamentos;
+      const corpo = lista.length === 0 ? `<div class="estado-vazio"><div class="icone-vazio">\u{1F9FE}</div><p>Nenhum or\xE7amento salvo ainda. Preencha a calculadora e clique em <strong>Salvar Or\xE7amento</strong>.</p></div>` : this.modoOrcamentos === "lista" ? this.renderOrcamentosLista(lista) : this.renderOrcamentosKanban(lista);
+      return `
+      <div class="card card-full" id="orcamentosContainer">
+        <div class="orc-toolbar">
+          <h3>\u{1F5C2}\uFE0F Or\xE7amentos Salvos <span class="badge">${lista.length}</span></h3>
+          <div class="toggle-visualizacao">
+            <button id="btnKanbanOrc" class="${this.modoOrcamentos === "kanban" ? "ativo" : ""}" aria-label="Visualizar como kanban"><i class="fas fa-columns"></i> Kanban</button>
+            <button id="btnListaOrc" class="${this.modoOrcamentos === "lista" ? "ativo" : ""}" aria-label="Visualizar como lista"><i class="fas fa-list"></i> Lista</button>
+          </div>
+        </div>
+        ${corpo}
+      </div>
+    `;
+    }
+    renderOrcamentosKanban(lista) {
+      const colunas = ORC_STATUS.map((s) => {
+        const orcs = lista.filter((o) => (o.status || "rascunho") === s.status);
+        return `
+        <div class="kanban-coluna" data-status="${s.status}" style="border-top: 3px solid ${s.cor};">
+          <div class="kanban-coluna-header" style="color:${s.cor};">
+            <span class="kanban-coluna-titulo">${s.rotulo}</span>
+            <span class="kanban-coluna-contagem">${orcs.length}</span>
+          </div>
+          <div class="kanban-coluna-corpo">
+            ${orcs.map((o) => this._kanbanCardHtml(o)).join("")}
+            ${orcs.length === 0 ? '<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:14px 0;">Arraste or\xE7amentos aqui</div>' : ""}
+          </div>
+        </div>
+      `;
+      }).join("");
+      return `<div class="kanban-board">${colunas}</div>`;
+    }
+    _kanbanCardHtml(o) {
+      const dims = [o.largura, o.altura, o.profundidade].filter(Boolean).join("\xD7");
+      const outrosStatus = ORC_STATUS.filter((s) => s.status !== (o.status || "rascunho"));
+      const convertido = o.convertidoEm ? `<span class="orc-convertido" title="Convertido em venda em ${formatarData(o.convertidoEm)}">\u2713 Vendido</span>` : "";
+      const statusRotulos = { rascunho: "Rascunho", enviado: "Enviado", aprovado: "Aprovado", recusado: "Recusado" };
+      return `
+      <div class="kanban-card" draggable="true" data-id="${o.id}" data-status="${o.status || "rascunho"}">
+        <div class="kanban-card-corpo">
+          ${o.numero ? `<div class="orc-kb-numero"><span>${o.numero}</span>${convertido}</div>` : ""}
+          <div class="kanban-card-nome"><strong>${o.nome || "Or\xE7amento sem nome"}</strong></div>
+          <div class="kanban-card-desc">${o.clienteNome || "Cliente avulso"}${o.tecnica ? " \xB7 " + capitalizarTexto(o.tecnica) : ""}</div>
+          <div class="kanban-card-meta">
+            <span style="font-weight:700;">${this.fmt(o.preco, o.moeda || this.moeda)}</span>
+            ${dims ? `<span class="orc-kb-dims">${dims}cm</span>` : ""}
+          </div>
+        </div>
+        <div class="kanban-card-acoes">
+          <button class="btn-miniatura btn-orc-carregar" data-id="${o.id}" title="Carregar na calculadora" aria-label="Carregar na calculadora">\u270E</button>
+          <button class="btn-miniatura btn-orc-pdf" data-id="${o.id}" title="Exportar proposta PDF" aria-label="Exportar proposta PDF">\u{1F4C4}</button>
+          <button class="btn-miniatura btn-orc-encomenda" data-id="${o.id}" title="Criar encomenda" aria-label="Criar encomenda">\u{1F4E6}</button>
+          ${o.status === "aprovado" && !o.convertidoEm ? `<button class="btn-miniatura btn-orc-venda" data-id="${o.id}" title="Aprovar e registrar venda" aria-label="Registrar venda">\u{1F4B0}</button>` : ""}
+          <button class="kanban-mobile-menu-btn" data-id="${o.id}" title="Mover etapa / excluir" aria-label="Mais a\xE7\xF5es"><i class="fas fa-ellipsis-v"></i></button>
+          <div class="kanban-mobile-dropdown" data-id="${o.id}">
+            ${outrosStatus.map((s) => `<button class="kanban-mover-btn" data-id="${o.id}" data-status="${s.status}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.cor};margin-right:6px;"></span>${s.rotulo}</button>`).join("")}
+            <button class="kanban-mover-btn btn-orc-excluir" data-id="${o.id}" style="color:#dc2626;">\u2715 Excluir</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    renderOrcamentosLista(lista) {
+      const statusRotulos = { rascunho: "Rascunho", enviado: "Enviado", aprovado: "Aprovado", recusado: "Recusado" };
+      return `
+      <div class="orcamentos-lista">
+        ${lista.map((o) => {
+        const dims = [o.largura, o.altura, o.profundidade].filter(Boolean).join("\xD7");
+        return `
+          <div class="orcamento-item" data-id="${o.id}">
+            <div class="orc-ident">
+              <div class="orc-nome">${o.nome || "Or\xE7amento sem nome"} <span class="orc-status st-${o.status || "rascunho"}">${statusRotulos[o.status] || "Rascunho"}</span>${o.convertidoEm ? ' <span class="orc-convertido">\u2713 Vendido</span>' : ""}</div>
+              <div class="orc-meta">${o.numero ? o.numero + " \xB7 " : ""}${o.clienteNome || "Cliente avulso"}${o.tecnica ? " \xB7 " + capitalizarTexto(o.tecnica) : ""}${dims ? " \xB7 " + dims + "cm" : ""} \xB7 ${formatarData(o.data || o.criadoEm)}${o.validadeData ? " \xB7 v\xE1lido at\xE9 " + formatarData(o.validadeData) : ""}</div>
+            </div>
+            <div class="orc-preco">${this.fmt(o.preco, o.moeda || this.moeda)}</div>
+            <div class="orc-acoes">
+              <select class="orc-status-select" data-acao="status" aria-label="Alterar status do or\xE7amento">
+                ${Object.keys(statusRotulos).map((s) => `<option value="${s}" ${(o.status || "rascunho") === s ? "selected" : ""}>${statusRotulos[s]}</option>`).join("")}
+              </select>
+              <button class="btn-miniatura btn-orc-carregar" data-id="${o.id}" title="Carregar na calculadora" aria-label="Carregar na calculadora">\u270E Carregar</button>
+              <button class="btn-miniatura btn-orc-pdf" data-id="${o.id}" title="Exportar proposta PDF" aria-label="Exportar proposta PDF">\u{1F4C4}</button>
+              <button class="btn-miniatura btn-orc-encomenda" data-id="${o.id}" title="Criar encomenda" aria-label="Criar encomenda">\u{1F4E6}</button>
+              ${o.status === "aprovado" && !o.convertidoEm ? `<button class="btn-miniatura btn-orc-venda" data-id="${o.id}" title="Aprovar e registrar venda" aria-label="Registrar venda">\u{1F4B0} Venda</button>` : ""}
+              <button class="btn-miniatura btn-orc-excluir" data-id="${o.id}" style="color:#dc2626;" title="Excluir or\xE7amento" aria-label="Excluir or\xE7amento">\u2715</button>
+            </div>
+          </div>`;
+      }).join("")}
+      </div>
+    `;
+    }
     // --- Cálculo ---
-    calcularPreco(c) {
+    calcularBreakdown(c) {
       const materiais = Number(c.materiais) || 0;
       const horas = Number(c.horas) || 0;
       const valorHora = Number(c.valorHora) || 60;
       const complexidade = Math.max(1, Math.min(5, Number(c.complexidade) || 3));
-      const mult = this.config.multiplicadorExperiencia || 1.5;
+      const mult = Number(c.multiplicador) || this.config.multiplicadorExperiencia || 1.5;
       const fator = this.fatoresComplexidade[complexidade] || 1;
-      const base = materiais + horas * valorHora;
-      const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
-      const bonusArea = area > 0 ? 1 + area / 1e4 : 1;
-      return Math.round(base * mult * fator * bonusArea);
+      const maoObra = horas * valorHora;
+      const custoTotal = materiais + maoObra;
+      const largura = Number(c.largura) || 0;
+      const altura = Number(c.altura) || 0;
+      const profundidade = Number(c.profundidade) || 0;
+      const area = largura * altura;
+      const bonus = area > 0 ? 1 + area / 1e4 : 1;
+      const precoBruto = custoTotal * mult * fator * bonus;
+      const arred = Number(c.arredondamento) || 0;
+      const preco = arred > 0 ? Math.max(arred, Math.round(precoBruto / arred) * arred) : Math.round(precoBruto);
+      const lucro = preco - custoTotal;
+      const margem = preco > 0 ? lucro / preco * 100 : 0;
+      const markup = custoTotal > 0 ? preco / custoTotal : 0;
+      return { materiais, horas, valorHora, maoObra, custoTotal, fator, mult, bonus, arred, precoBruto, preco, lucro, margem, markup, largura, altura, profundidade, area };
+    }
+    calcularPreco(c) {
+      return this.calcularBreakdown(c).preco;
     }
     detalharCalculo(preco) {
+      const b = this.calcularBreakdown(this.calc);
+      const formula = `${this.fmt(b.materiais)} + (${b.horas}h \xD7 ${this.fmt(b.valorHora)}) = ${this.fmt(b.custoTotal)}`;
+      return `${formula} \xD7 ${b.mult} \xD7 ${b.fator}${b.bonus !== 1 ? ` \xD7 ${b.bonus.toFixed(2)} (\xE1rea)` : ""} = ${this.fmt(preco)}`;
+    }
+    renderBreakdown(b) {
+      const margemClasse = b.margem >= 50 ? "bd-ok" : b.margem >= 25 ? "bd-medio" : "bd-baixo";
+      return `
+      <div class="bd-item"><span class="bd-label">Custo materiais</span><span class="bd-valor">${this.fmt(b.materiais)}</span></div>
+      <div class="bd-item"><span class="bd-label">M\xE3o de obra (${b.horas}h \xD7 ${this.fmt(b.valorHora)})</span><span class="bd-valor">${this.fmt(b.maoObra)}</span></div>
+      <div class="bd-item bd-total"><span class="bd-label">Custo total</span><span class="bd-valor">${this.fmt(b.custoTotal)}</span></div>
+      <div class="bd-item"><span class="bd-label">Multiplicador</span><span class="bd-valor">\xD7 ${b.mult}</span></div>
+      <div class="bd-item"><span class="bd-label">Complexidade</span><span class="bd-valor">\xD7 ${b.fator}</span></div>
+      ${b.bonus !== 1 ? `<div class="bd-item"><span class="bd-label">B\xF4nus \xE1rea (${(b.area / 1e4).toFixed(2)} m\xB2)</span><span class="bd-valor">\xD7 ${b.bonus.toFixed(2)}</span></div>` : ""}
+      <div class="bd-item"><span class="bd-label">Lucro estimado</span><span class="bd-valor">${this.fmt(b.lucro)}</span></div>
+      <div class="bd-item"><span class="bd-label">Markup</span><span class="bd-valor">${b.markup.toFixed(2)}\xD7</span></div>
+      <div class="bd-item"><span class="bd-label">Margem</span><span class="bd-valor ${margemClasse}">${b.margem.toFixed(1)}%</span></div>
+    `;
+    }
+    renderRegraAuto() {
       const c = this.calc;
-      const m = Number(c.materiais) || 0;
-      const h = Number(c.horas) || 0;
-      const vh = Number(c.valorHora) || 60;
-      const mult = this.config.multiplicadorExperiencia || 1.5;
-      const fator = this.fatoresComplexidade[Math.max(1, Math.min(5, Number(c.complexidade) || 3))];
-      const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
-      const bonus = area > 0 ? 1 + area / 1e4 : 1;
-      return `${this.fmt(m)} + (${h}h \xD7 ${this.fmt(vh)}) \xD7 ${mult} \xD7 ${fator}${bonus !== 1 ? ` \xD7 ${bonus.toFixed(2)} (\xE1rea)` : ""} = ${this.fmt(preco)}`;
+      const largura = Number(c.largura) || 0;
+      const altura = Number(c.altura) || 0;
+      const area = largura * altura;
+      if (!area) return "";
+      const regra = this.regras.find((r) => {
+        if (r.tecnica && c.tecnica && r.tecnica !== c.tecnica) return false;
+        if (largura && (largura < r.larguraMin || largura > r.larguraMax)) return false;
+        if (altura && (altura < r.alturaMin || altura > r.alturaMax)) return false;
+        return true;
+      });
+      if (!regra) return "";
+      const precoRegra = Math.round((regra.precoBase || 0) * regra.multiplicador * this.fatoresComplexidade[regra.complexidade || 3] * (1 + area / 1e4));
+      const sugerido = this.calcularPreco(this.calc);
+      return `
+      <div class="regra-auto">
+        <span class="ra-icone">\u26A1</span>
+        <div class="ra-texto">
+          <strong>Regra autom\xE1tica aplic\xE1vel: ${regra.nome}</strong>
+          <span class="texto-ajuda">Pre\xE7o pela regra: ${this.fmt(precoRegra)}${sugerido > 0 ? ` \xB7 Sugerido: ${this.fmt(sugerido)}` : ""}</span>
+        </div>
+      </div>
+    `;
     }
     renderFaixaComparativa(obras) {
       const c = this.calc;
@@ -14708,17 +14969,52 @@ Aprecie a exposi\xE7\xE3o!`;
           }
         });
       }
-      ["calcMateriais", "calcHoras", "calcValorHora", "calcLargura", "calcAltura"].forEach((id) => {
+      const bindNum = (id, campo) => {
         const el = document.getElementById(id);
         if (!el) return;
         const handler = () => {
-          this.calc[id.replace("calc", "").toLowerCase()] = Number(el.value) || 0;
-          if (id === "calcValorHora") this.salvarConfig({ valorHora: Number(el.value) || 60 });
+          this.calc[campo] = Number(el.value) || 0;
+          if (campo === "valorHora") this.salvarConfig({ valorHora: Number(el.value) || 60 });
           this.atualizarResultado();
         };
         el.addEventListener("input", handler);
         this._bindCache[id] = { el, handler, type: "input" };
-      });
+      };
+      bindNum("calcMateriais", "materiais");
+      bindNum("calcHoras", "horas");
+      bindNum("calcValorHora", "valorHora");
+      bindNum("calcLargura", "largura");
+      bindNum("calcAltura", "altura");
+      bindNum("calcProfundidade", "profundidade");
+      bindNum("calcMultiplicador", "multiplicador");
+      const bindTexto = (id, campo) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const handler = () => {
+          this.calc[campo] = el.value;
+          this.atualizarResultado();
+        };
+        el.addEventListener("input", handler);
+        this._bindCache[id] = { el, handler, type: "input" };
+      };
+      bindTexto("calcNome", "nome");
+      const bindSelect = (id, campo) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const handler = () => {
+          this.calc[campo] = el.value;
+          if (campo === "arredondamento") {
+            this.calc.arredondamento = Number(el.value) || 0;
+            this.salvarConfig({ arredondamento: this.calc.arredondamento });
+          }
+          this.atualizarResultado();
+        };
+        el.addEventListener("change", handler);
+        this._bindCache[id] = { el, handler, type: "change" };
+      };
+      bindSelect("calcCliente", "clienteId");
+      bindSelect("calcTecnica", "tecnica");
+      bindSelect("calcArredondamento", "arredondamento");
       const estrelasContainer = document.getElementById("estrelasInput");
       if (estrelasContainer) {
         const handler = (e) => {
@@ -14731,32 +15027,117 @@ Aprecie a exposi\xE7\xE3o!`;
         estrelasContainer.addEventListener("click", handler);
         this._bindCache["estrelasInput"] = { el: estrelasContainer, handler, type: "click" };
       }
-      const selObra = document.getElementById("selObraCalc");
-      if (selObra) {
-        const handler = () => {
-          const obra = obraStore().porId(selObra.value);
-          if (obra) {
-            document.getElementById("calcMateriais").value = obra.custoMateriais || 0;
-            document.getElementById("calcHoras").value = obra.horasTrabalho || 0;
-            if (obra.dimensoes) {
-              document.getElementById("calcLargura").value = obra.dimensoes.largura || 0;
-              document.getElementById("calcAltura").value = obra.dimensoes.altura || 0;
+      document.getElementById("btnSalvarOrcamento")?.addEventListener("click", () => this.salvarOrcamento());
+      document.getElementById("btnCopiarPreco")?.addEventListener("click", () => this.copiarPreco());
+      document.getElementById("btnPropostaPDF")?.addEventListener("click", () => this.exportarPropostaPDF(null));
+      document.getElementById("btnCriarEncomenda")?.addEventListener("click", () => this.criarEncomenda(null));
+      const selTemplate = document.getElementById("selTemplateProposta");
+      if (selTemplate) {
+        const handler = () => this.salvarConfig({ templateProposta: selTemplate.value });
+        selTemplate.addEventListener("change", handler);
+        this._bindCache["selTemplateProposta"] = { el: selTemplate, handler, type: "change" };
+      }
+      document.getElementById("btnKanbanOrc")?.addEventListener("click", () => {
+        localStorage.setItem("atelier-crm-view-mode-orcamentos", "kanban");
+        this.rerenderizar();
+      });
+      document.getElementById("btnListaOrc")?.addEventListener("click", () => {
+        localStorage.setItem("atelier-crm-view-mode-orcamentos", "lista");
+        this.rerenderizar();
+      });
+      const orcamentosContainer = document.getElementById("orcamentosContainer");
+      if (orcamentosContainer) {
+        const clickHandler = (e) => {
+          if (!e.target.closest(".kanban-mobile-menu-btn")) {
+            orcamentosContainer.querySelectorAll(".kanban-mobile-dropdown.visivel").forEach((d) => d.classList.remove("visivel"));
+          }
+          const idEl = e.target.closest("[data-id]");
+          const id = idEl ? idEl.dataset.id : null;
+          if (e.target.closest(".btn-orc-carregar")) {
+            if (id) this.carregarOrcamento(id);
+            return;
+          }
+          if (e.target.closest(".btn-orc-pdf")) {
+            if (id) this.exportarPropostaPDF(id);
+            return;
+          }
+          if (e.target.closest(".btn-orc-encomenda")) {
+            if (id) this.criarEncomenda(id);
+            return;
+          }
+          if (e.target.closest(".btn-orc-venda")) {
+            if (id) this.registrarVenda(id);
+            return;
+          }
+          if (e.target.closest(".btn-orc-excluir")) {
+            if (id) this.excluirOrcamento(id);
+            return;
+          }
+          if (e.target.closest(".kanban-mobile-menu-btn")) {
+            const card = e.target.closest(".kanban-card");
+            if (card) {
+              const dd = card.querySelector(".kanban-mobile-dropdown");
+              if (dd) dd.classList.toggle("visivel");
             }
-            this.calc.materiais = Number(obra.custoMateriais) || 0;
-            this.calc.horas = Number(obra.horasTrabalho) || 0;
-            this.calc.largura = obra.dimensoes && obra.dimensoes.largura || 0;
-            this.calc.altura = obra.dimensoes && obra.dimensoes.altura || 0;
-            this.calc.obraId = obra.id;
-            this.atualizarResultado();
-          } else {
-            this.calc.obraId = "";
-            this.atualizarResultado();
+            return;
+          }
+          if (e.target.closest(".kanban-mover-btn")) {
+            const btn = e.target.closest(".kanban-mover-btn");
+            if (btn.dataset.status && id) this._moverOrcamentoParaStatus(id, btn.dataset.status);
+            return;
           }
         };
-        selObra.addEventListener("change", handler);
-        this._bindCache["selObraCalc"] = { el: selObra, handler, type: "change" };
+        const changeHandler = (e) => {
+          const sel = e.target.closest(".orc-status-select");
+          if (!sel) return;
+          const id = sel.closest(".orcamento-item")?.dataset.id;
+          if (!id) return;
+          this.definirStatusOrcamento(id, sel.value);
+        };
+        orcamentosContainer.addEventListener("click", clickHandler);
+        orcamentosContainer.addEventListener("change", changeHandler);
+        this._bindCache["orcamentosContainer"] = { el: orcamentosContainer, handler: clickHandler, type: "click" };
+        this._bindCache["orcamentosContainerChange"] = { el: orcamentosContainer, handler: changeHandler, type: "change" };
+        const board = orcamentosContainer.querySelector(".kanban-board");
+        if (board) {
+          const onDragStart = (e) => {
+            const card = e.target.closest(".kanban-card");
+            if (!card) return;
+            card.classList.add("arrastando");
+            e.dataTransfer.setData("text/plain", card.dataset.id);
+          };
+          const onDragEnd = (e) => {
+            const card = e.target.closest(".kanban-card");
+            if (card) card.classList.remove("arrastando");
+          };
+          const onDragOver = (e) => {
+            e.preventDefault();
+            const col = e.target.closest(".kanban-coluna");
+            if (col) col.classList.add("kanban-coluna--drag-over");
+          };
+          const onDragLeave = (e) => {
+            const col = e.target.closest(".kanban-coluna");
+            if (col) col.classList.remove("kanban-coluna--drag-over");
+          };
+          const onDrop = (e) => {
+            e.preventDefault();
+            const col = e.target.closest(".kanban-coluna");
+            if (!col) return;
+            col.classList.remove("kanban-coluna--drag-over");
+            const id = e.dataTransfer.getData("text/plain");
+            if (id) this._moverOrcamentoParaStatus(id, col.dataset.status);
+          };
+          const bindDrag = (tipo, handler) => {
+            board.addEventListener(tipo, handler);
+            this._bindCache["kb" + tipo] = { el: board, handler, type: tipo };
+          };
+          bindDrag("dragstart", onDragStart);
+          bindDrag("dragend", onDragEnd);
+          bindDrag("dragover", onDragOver);
+          bindDrag("dragleave", onDragLeave);
+          bindDrag("drop", onDrop);
+        }
       }
-      document.getElementById("btnSalvarPrecoCalc")?.addEventListener("click", () => this.salvarPrecoNaObra());
       document.getElementById("selHistoricoObra")?.addEventListener("change", () => this.rerenderizar());
       document.getElementById("selProjecaoObra")?.addEventListener("change", () => this.rerenderizar());
       document.getElementById("btnSalvarMetaMensal")?.addEventListener("click", () => {
@@ -14772,6 +15153,7 @@ Aprecie a exposi\xE7\xE3o!`;
         this.rerenderizar();
       });
       document.getElementById("btnExportarRelatorio")?.addEventListener("click", () => this.exportarRelatorioPDF());
+      this.atualizarResultado();
     }
     atualizarResultado() {
       const preco = this.calcularPreco(this.calc);
@@ -14779,8 +15161,12 @@ Aprecie a exposi\xE7\xE3o!`;
       const elDetalhe = document.getElementById("detalheCalculo");
       const elFaixa = document.getElementById("faixaComparativa");
       const elConversoes = document.getElementById("conversoesMultiMoeda");
+      const elBreakdown = document.getElementById("breakdownGrid");
+      const elRegra = document.getElementById("regraAuto");
       if (elValor) elValor.textContent = this.fmt(preco);
       if (elDetalhe) elDetalhe.textContent = this.detalharCalculo(preco);
+      if (elBreakdown) elBreakdown.innerHTML = this.renderBreakdown(this.calcularBreakdown(this.calc));
+      if (elRegra) elRegra.innerHTML = this.renderRegraAuto();
       if (elConversoes) {
         const moedas = ["USD", "EUR", "GBP"];
         elConversoes.innerHTML = moedas.filter((m) => m !== this.moeda).map(
@@ -14792,31 +15178,556 @@ Aprecie a exposi\xE7\xE3o!`;
         elFaixa.innerHTML = this.renderFaixaComparativa(obras);
       }
     }
-    salvarPrecoNaObra() {
-      const obraId = this.calc.obraId || document.getElementById("selObraCalc")?.value;
-      if (!obraId) {
-        mostrarToast("Selecione uma obra primeiro.", "aviso");
+    // --- Ações do orçamento ---
+    _dadosOrcamentoAtual() {
+      const cliente = this.calc.clienteId ? clienteStore().items.find((c) => c.id === this.calc.clienteId) : null;
+      return {
+        id: "orc_" + Date.now(),
+        nome: this.calc.nome?.trim() || "Or\xE7amento sem nome",
+        clienteId: this.calc.clienteId || "",
+        clienteNome: cliente ? cliente.nome : "",
+        clienteEmail: cliente ? cliente.email : "",
+        clienteTelefone: cliente ? cliente.telefone : "",
+        tecnica: this.calc.tecnica || "",
+        materiais: Number(this.calc.materiais) || 0,
+        horas: Number(this.calc.horas) || 0,
+        valorHora: Number(this.calc.valorHora) || 60,
+        largura: Number(this.calc.largura) || 0,
+        altura: Number(this.calc.altura) || 0,
+        profundidade: Number(this.calc.profundidade) || 0,
+        complexidade: Number(this.calc.complexidade) || 3,
+        multiplicador: Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5,
+        arredondamento: Number(this.calc.arredondamento) || 0,
+        preco: this.calcularPreco(this.calc),
+        moeda: this.moeda,
+        numero: "",
+        validade: 30,
+        validadeData: "",
+        status: "rascunho",
+        data: (/* @__PURE__ */ new Date()).toISOString(),
+        criadoEm: (/* @__PURE__ */ new Date()).toISOString()
+      };
+    }
+    _gerarNumeroProposta() {
+      const cfg = this.cfgRoot;
+      const ano = (/* @__PURE__ */ new Date()).getFullYear();
+      if (!cfg.contadorPropostas || typeof cfg.contadorPropostas !== "object") cfg.contadorPropostas = {};
+      cfg.contadorPropostas[ano] = (Number(cfg.contadorPropostas[ano]) || 0) + 1;
+      configStore().salvar();
+      return `PRO-${ano}-${String(cfg.contadorPropostas[ano]).padStart(4, "0")}`;
+    }
+    _persistirOrcamento(orc) {
+      if (!orc.numero) {
+        orc.numero = this._gerarNumeroProposta();
+        const vd = new Date(Date.now() + 30 * 864e5);
+        orc.validadeData = vd.toISOString().slice(0, 10);
+      }
+      this._garantirAceiteToken(orc);
+      const lista = this.cfgRoot.precificadorOrcamentos || [];
+      const idx = lista.findIndex((o) => o.id === orc.id);
+      if (idx >= 0) lista[idx] = orc;
+      else lista.unshift(orc);
+      this.cfgRoot.precificadorOrcamentos = lista;
+      configStore().salvar();
+      return orc;
+    }
+    _garantirAceiteToken(orc) {
+      if (orc.aceiteToken) return orc.aceiteToken;
+      orc.aceiteToken = "aceite_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      configStore().salvar();
+      return orc.aceiteToken;
+    }
+    salvarOrcamento() {
+      if (this.calcularPreco(this.calc) <= 0) {
+        mostrarToast("Preencha pelo menos materiais, horas ou dimens\xF5es.", "aviso");
         return;
       }
-      const precoSugerido = this.calcularPreco(this.calc);
-      const obra = obraStore().porId(obraId);
-      if (!obra) {
-        mostrarToast("Obra n\xE3o encontrada.", "aviso");
-        return;
-      }
-      const hist = obra.historicoPrecos || [];
-      if (obra.preco && Number(obra.preco) > 0) {
-        hist.push({ preco: Number(obra.preco), data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), motivo: "Reajuste via Precificador" });
-      }
-      hist.push({ preco: precoSugerido, data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), motivo: "Pre\xE7o sugerido pelo Precificador" });
-      obraStore().atualizar(obraId, {
-        preco: precoSugerido,
-        custoMateriais: Number(this.calc.materiais) || 0,
-        horasTrabalho: Number(this.calc.horas) || 0,
-        historicoPrecos: hist
-      });
-      mostrarToast(`Pre\xE7o ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ""}"!`, "sucesso");
+      const orc = this._persistirOrcamento(this._dadosOrcamentoAtual());
+      mostrarToast(`Or\xE7amento salvo: ${this.fmt(orc.preco)}!`, "sucesso");
+      activityLogger.registrar("criacao", "Or\xE7amento criado", orc.nome, "criacao");
       this.rerenderizar();
+    }
+    copiarPreco() {
+      const preco = this.calcularPreco(this.calc);
+      if (preco <= 0) {
+        mostrarToast("Calcule um pre\xE7o primeiro.", "aviso");
+        return;
+      }
+      const texto = this.calc.nome ? `${this.calc.nome}: ` : "";
+      navigator.clipboard.writeText(`${texto}${this.fmt(preco)}`).then(
+        () => mostrarToast(`Pre\xE7o ${this.fmt(preco)} copiado!`, "sucesso")
+      ).catch(() => mostrarToast("Erro ao copiar.", "erro"));
+    }
+    carregarOrcamento(id) {
+      const orc = this.orcamentos.find((o) => o.id === id);
+      if (!orc) {
+        mostrarToast("Or\xE7amento n\xE3o encontrado.", "aviso");
+        return;
+      }
+      this.calc = {
+        nome: orc.nome || "",
+        clienteId: orc.clienteId || "",
+        tecnica: orc.tecnica || "",
+        materiais: orc.materiais || 0,
+        horas: orc.horas || 0,
+        valorHora: orc.valorHora || this.config.valorHora || 60,
+        largura: orc.largura || 0,
+        altura: orc.altura || 0,
+        profundidade: orc.profundidade || 0,
+        complexidade: orc.complexidade || 3,
+        multiplicador: orc.multiplicador || this.config.multiplicadorExperiencia || 1.5,
+        arredondamento: orc.arredondamento || 0
+      };
+      mostrarToast("Or\xE7amento carregado na calculadora.", "info");
+      this.rerenderizar();
+      const container = document.getElementById("precificadorContainer");
+      if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    definirStatusOrcamento(id, status) {
+      const lista = this.cfgRoot.precificadorOrcamentos || [];
+      const orc = lista.find((o) => o.id === id);
+      if (!orc) return;
+      orc.status = status;
+      this.cfgRoot.precificadorOrcamentos = lista;
+      configStore().salvar();
+      const statusRotulos = { rascunho: "Rascunho", enviado: "Enviado", aprovado: "Aprovado", recusado: "Recusado" };
+      const item = document.querySelector(`.orcamento-item[data-id="${id}"]`);
+      if (item) {
+        const badge = item.querySelector(".orc-status");
+        if (badge) {
+          badge.textContent = statusRotulos[status] || status;
+          badge.className = "orc-status st-" + (status || "rascunho");
+        }
+      } else {
+        this.rerenderizar();
+      }
+      mostrarToast(`Or\xE7amento marcado como "${statusRotulos[status] || status}".`, "sucesso");
+    }
+    _moverOrcamentoParaStatus(id, novoStatus) {
+      const lista = this.cfgRoot.precificadorOrcamentos || [];
+      const orc = lista.find((o) => o.id === id);
+      if (!orc || (orc.status || "rascunho") === novoStatus) return;
+      orc.status = novoStatus;
+      this.cfgRoot.precificadorOrcamentos = lista;
+      configStore().salvar();
+      const rotulo = ORC_STATUS.find((s) => s.status === novoStatus)?.rotulo || novoStatus;
+      mostrarToast(`Or\xE7amento movido para "${rotulo}".`, "sucesso");
+      this.rerenderizar();
+    }
+    async registrarVenda(orcId) {
+      const orc = this.orcamentos.find((o) => o.id === orcId);
+      if (!orc) {
+        mostrarToast("Or\xE7amento n\xE3o encontrado.", "aviso");
+        return;
+      }
+      if ((orc.status || "rascunho") !== "aprovado") {
+        mostrarToast("Aprove o or\xE7amento antes de registrar a venda.", "aviso");
+        return;
+      }
+      if (orc.convertidoEm) {
+        mostrarToast("Este or\xE7amento j\xE1 foi convertido em venda.", "aviso");
+        return;
+      }
+      const ok = await confirmarAcao(`Registrar a venda de "${orc.nome}" por ${this.fmt(orc.preco, orc.moeda)}?`, { textoConfirmar: "Registrar Venda", titulo: "Converter em Venda" });
+      if (!ok) return;
+      const dados = {
+        obraId: "",
+        obraTitulo: orc.nome || "Obra sem t\xEDtulo",
+        clienteId: orc.clienteId || "",
+        clienteNome: orc.clienteNome || "Cliente avulso",
+        precoFinal: orc.preco || 0,
+        valorTotal: orc.preco || 0,
+        data: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+        dataVenda: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+        formaPagamento: "a combinar",
+        status: "aprovada",
+        orcamentoId: orc.id,
+        numeroProposta: orc.numero || ""
+      };
+      const venda = this.dataStore.adicionar("vendas", dados);
+      if (orc.clienteId) {
+        const cliente = clienteStore().items.find((c) => c.id === orc.clienteId);
+        if (cliente) clienteStore().atualizar(orc.clienteId, { aquisicoes: (Number(cliente.aquisicoes) || 0) + 1 });
+      }
+      orc.convertidoEm = (/* @__PURE__ */ new Date()).toISOString();
+      orc.vendaId = venda ? venda.id : "";
+      this.cfgRoot.precificadorOrcamentos = this.orcamentos;
+      configStore().salvar();
+      mostrarToast(`Venda registrada: ${this.fmt(orc.preco, orc.moeda)}!`, "sucesso");
+      activityLogger.registrar("venda", "Venda registrada a partir do or\xE7amento", orc.nome, "venda");
+      if (this.router && typeof this.router.navegar === "function") {
+        setTimeout(() => this.router.navegar("vendas"), 400);
+      }
+    }
+    async excluirOrcamento(id) {
+      const ok = await confirmarAcao("Excluir este or\xE7amento?", { textoConfirmar: "Excluir", perigoso: true });
+      if (!ok) return;
+      this.cfgRoot.precificadorOrcamentos = (this.cfgRoot.precificadorOrcamentos || []).filter((o) => o.id !== id);
+      configStore().salvar();
+      mostrarToast("Or\xE7amento exclu\xEDdo.", "sucesso");
+      this.rerenderizar();
+    }
+    criarEncomenda(orcId) {
+      let orc = orcId ? this.orcamentos.find((o) => o.id === orcId) : null;
+      if (!orc) {
+        if (this.calcularPreco(this.calc) <= 0) {
+          mostrarToast("Calcule um pre\xE7o primeiro.", "aviso");
+          return;
+        }
+        orc = this._dadosOrcamentoAtual();
+      }
+      const descricao = orc.nome + (orc.tecnica ? ` \u2014 ${orc.tecnica}` : "") + (orc.largura ? ` \u2014 ${[orc.largura, orc.altura, orc.profundidade].filter(Boolean).join("\xD7")}cm` : "");
+      const dados = {
+        clienteNome: orc.clienteNome || "Cliente avulso",
+        clienteEmail: orc.clienteEmail || "",
+        clienteTelefone: orc.clienteTelefone || "",
+        descricao,
+        prazo: "",
+        status: "recebido",
+        valor: orc.preco || 0,
+        atualizacoes: [{ data: (/* @__PURE__ */ new Date()).toISOString(), status: "recebido", mensagem: `Encomenda criada a partir do or\xE7amento "${orc.nome}".` }],
+        imagens: []
+      };
+      this.dataStore.adicionar("encomendas", dados);
+      mostrarToast(`Encomenda criada (${this.fmt(orc.preco, orc.moeda)})!`, "sucesso");
+      activityLogger.registrar("criacao", "Encomenda criada do or\xE7amento", orc.nome, "criacao");
+      if (this.router && typeof this.router.navegar === "function") {
+        setTimeout(() => this.router.navegar("encomendas"), 400);
+      }
+    }
+    exportarPropostaPDF(orcId) {
+      if (typeof window.jspdf === "undefined" && typeof jspdf === "undefined") {
+        mostrarToast("jsPDF n\xE3o carregado. Tente novamente.", "erro");
+        return;
+      }
+      let orc = orcId ? this.orcamentos.find((o) => o.id === orcId) : null;
+      if (!orc) {
+        if (this.calcularPreco(this.calc) <= 0) {
+          mostrarToast("Calcule um pre\xE7o primeiro.", "aviso");
+          return;
+        }
+        orc = this._persistirOrcamento(this._dadosOrcamentoAtual());
+        mostrarToast("Or\xE7amento salvo automaticamente para gerar o QR de aceite.", "info");
+        this.rerenderizar();
+      }
+      const template = this.config.templateProposta || "classico";
+      mostrarLoading("Gerando proposta PDF...");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const d = this._prepararProposta(orc);
+      const qr = this._gerarQRProposta(orc);
+      if (template === "moderno") this._propostaModerno(doc, d, qr);
+      else if (template === "minimalista") this._propostaMinimalista(doc, d, qr);
+      else this._propostaClassico(doc, d, qr);
+      doc.save(`proposta-${(orc.nome || "obra").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "obra"}.pdf`);
+      esconderLoading();
+      mostrarToast("Proposta PDF exportada!", "sucesso");
+    }
+    _prepararProposta(orc) {
+      const artista = configStore().artista?.nome || "Artista";
+      const contato = configStore().artista?.email ? ` | ${configStore().artista.email}` : "";
+      const dims = [orc.largura, orc.altura, orc.profundidade].filter(Boolean).join(" \xD7 ");
+      return {
+        orc,
+        artista,
+        contato,
+        numero: orc.numero || String(orc.id || "").replace("orc_", ""),
+        data: (/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR"),
+        nome: orc.nome || "Obra sem t\xEDtulo",
+        tecnica: orc.tecnica ? capitalizarTexto(orc.tecnica) : "",
+        dims,
+        complexidade: orc.complexidade ? "\u2605".repeat(Math.max(1, Math.min(5, Number(orc.complexidade) || 1))) : "",
+        cliente: orc.clienteNome || "Cliente avulso",
+        clienteEmail: orc.clienteEmail || "",
+        materiais: orc.materiais || 0,
+        horas: orc.horas || 0,
+        valorHora: orc.valorHora || 60,
+        maoObra: (orc.horas || 0) * (orc.valorHora || 60),
+        custoTotal: (orc.materiais || 0) + (orc.horas || 0) * (orc.valorHora || 60),
+        multiplicador: orc.multiplicador || 1.5,
+        preco: orc.preco || 0,
+        moeda: orc.moeda || this.moeda,
+        validadeData: orc.validadeData ? formatarData(orc.validadeData) : ""
+      };
+    }
+    _gerarQRProposta(orc) {
+      const token = orc.aceiteToken || this._garantirAceiteToken(orc);
+      let base = "";
+      try {
+        if (window.location.origin && window.location.origin !== "null" && !window.location.origin.startsWith("file")) {
+          base = window.location.origin + window.location.pathname;
+        }
+      } catch {
+      }
+      return gerarQRCodeDataUrl(base + "#portal?token=" + token);
+    }
+    // --- Templates de proposta PDF ---
+    _propostaClassico(doc, d, qr) {
+      const margem = 22, larg = 166;
+      doc.setFont("times", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(40);
+      doc.text("PROPOSTA DE OBRA", margem, 24);
+      doc.setFont("times", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(90);
+      doc.text(`${d.artista}${d.contato}`, margem, 31);
+      doc.setTextColor(140);
+      doc.setDrawColor(120);
+      doc.setLineWidth(0.4);
+      doc.line(margem, 35, margem + larg, 35);
+      doc.setLineWidth(0.15);
+      doc.line(margem, 36.2, margem + larg, 36.2);
+      doc.setFont("times", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text(`Proposta N\xBA ${d.numero}`, margem + larg, 44, { align: "right" });
+      doc.text(`Emiss\xE3o: ${d.data}`, margem + larg, 48, { align: "right" });
+      let y = 58;
+      const secao = (titulo) => {
+        doc.setFont("times", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(60);
+        doc.text(titulo.toUpperCase(), margem, y);
+        y += 5.5;
+      };
+      const linha = (label, valor) => {
+        doc.setFont("times", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(40);
+        doc.text(label, margem, y);
+        doc.setFont("times", "italic");
+        doc.setTextColor(80);
+        if (valor) doc.text(String(valor), margem + 50, y);
+        y += 6;
+      };
+      secao("Obra");
+      linha("T\xEDtulo:", d.nome);
+      const detalhes = [d.tecnica, d.dims ? d.dims + " cm" : "", d.complexidade].filter(Boolean).join("   \xB7   ");
+      if (detalhes) linha("Detalhes:", detalhes);
+      linha("Cliente:", d.cliente + (d.clienteEmail ? " \u2014 " + d.clienteEmail : ""));
+      y += 3;
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.15);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      secao("Composi\xE7\xE3o do valor");
+      linha("Materiais:", this.fmt(d.materiais, d.moeda));
+      linha("M\xE3o de obra:", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)} = ${this.fmt(d.maoObra, d.moeda)}`);
+      linha("Custo total:", this.fmt(d.custoTotal, d.moeda));
+      linha("Multiplicador:", `\xD7 ${d.multiplicador}`);
+      y += 3;
+      doc.setDrawColor(180);
+      doc.line(margem, y, margem + larg, y);
+      y += 10;
+      doc.setFont("times", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(30);
+      doc.text(`Valor da proposta: ${this.fmt(d.preco, d.moeda)}`, margem, y);
+      y += 8;
+      doc.setFont("times", "italic");
+      doc.setFontSize(9.5);
+      doc.setTextColor(90);
+      doc.text(`Validade da proposta: 30 dias${d.validadeData ? " (at\xE9 " + d.validadeData + ")" : ""}.`, margem, y);
+      y += 5;
+      doc.text("Aceite por meio do QR code abaixo ou assinatura manual.", margem, y);
+      y += 4;
+      if (qr) {
+        doc.addImage(qr, "PNG", margem + larg - 42, y, 42, 42);
+        doc.setDrawColor(140);
+        doc.setLineWidth(0.2);
+        doc.rect(margem + larg - 44, y - 2, 46, 46);
+        doc.setFont("times", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(110);
+        doc.text("Escaneie para aceitar a proposta digitalmente.", margem, y + 48);
+      }
+      const sigY = 262;
+      doc.setDrawColor(150);
+      doc.setLineWidth(0.2);
+      doc.line(margem, sigY, margem + 70, sigY);
+      doc.line(margem + larg - 70, sigY, margem + larg, sigY);
+      doc.setFont("times", "italic");
+      doc.setFontSize(9);
+      doc.setTextColor(110);
+      doc.text("Cliente", margem, sigY + 5);
+      doc.text("Artista", margem + larg - 70, sigY + 5);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`${d.artista} \xB7 ${d.data}`, margem + larg - 70, sigY + 10, { align: "right" });
+    }
+    _propostaModerno(doc, d, qr) {
+      const accent = [146, 100, 45];
+      const dk = [60, 45, 30];
+      const margem = 20, larg = 170;
+      doc.setFillColor(accent[0], accent[1], accent[2]);
+      doc.rect(0, 0, 210, 7, "F");
+      doc.setTextColor(255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("PROPOSTA DE OBRA", margem, 5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`${d.numero} \xB7 ${d.data}`, 210 - margem, 5, { align: "right" });
+      let y = 26;
+      doc.setTextColor(dk[0], dk[1], dk[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text(d.nome, margem, y);
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(120);
+      const det = [d.tecnica, d.dims ? d.dims + " cm" : "", d.complexidade].filter(Boolean).join("  \xB7  ");
+      if (det) {
+        doc.text(det, margem, y);
+        y += 6;
+      }
+      doc.text(`Cliente: ${d.cliente}${d.clienteEmail ? " \xB7 " + d.clienteEmail : ""}`, margem, y);
+      y += 6;
+      doc.text(`${d.artista}${d.contato}`, margem, y);
+      y += 8;
+      doc.setDrawColor(accent[0], accent[1], accent[2]);
+      doc.setLineWidth(0.5);
+      doc.line(margem, y, margem + larg, y);
+      y += 9;
+      const secao = (titulo) => {
+        doc.setFillColor(accent[0], accent[1], accent[2]);
+        doc.roundedRect(margem, y - 4, 6, 6, 1, 1, "F");
+        doc.setTextColor(dk[0], dk[1], dk[2]);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(titulo.toUpperCase(), margem + 10, y);
+        y += 7;
+      };
+      const item = (label, valor) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(95);
+        doc.text(label, margem + 10, y);
+        doc.setTextColor(dk[0], dk[1], dk[2]);
+        doc.text(String(valor), margem + 90, y);
+        y += 6;
+      };
+      secao("Composi\xE7\xE3o do valor");
+      item("Materiais", this.fmt(d.materiais, d.moeda));
+      item("M\xE3o de obra", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)}`);
+      item("Custo total", this.fmt(d.custoTotal, d.moeda));
+      item("Multiplicador", `\xD7 ${d.multiplicador}`);
+      y += 3;
+      doc.setDrawColor(215);
+      doc.setLineWidth(0.2);
+      doc.line(margem, y, margem + larg, y);
+      y += 9;
+      doc.setFillColor(250, 243, 233);
+      doc.setDrawColor(accent[0], accent[1], accent[2]);
+      doc.setLineWidth(0.6);
+      doc.roundedRect(margem, y - 6, larg, 20, 2, 2, "FD");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text("VALOR DA PROPOSTA", margem + 8, y);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(accent[0], accent[1], accent[2]);
+      doc.text(this.fmt(d.preco, d.moeda), margem + 8, y + 7);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text(`Validade: 30 dias${d.validadeData ? " (at\xE9 " + d.validadeData + ")" : ""}`, margem + larg - 8, y + 7, { align: "right" });
+      y += 27;
+      if (qr) {
+        doc.addImage(qr, "PNG", margem, y, 38, 38);
+        doc.setDrawColor(215);
+        doc.setLineWidth(0.3);
+        doc.rect(margem, y, 38, 38);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(120);
+        doc.text("Aceite digital", margem + 45, y + 6);
+        doc.setFontSize(8);
+        doc.text("Escaneie o QR code para aprovar", margem + 45, y + 11);
+        doc.text("esta proposta automaticamente.", margem + 45, y + 15);
+        doc.setFontSize(9);
+        doc.setTextColor(130);
+        doc.text("Ou assine:", margem + 45, y + 24);
+        doc.setDrawColor(150);
+        doc.line(margem + 45, y + 27, margem + larg, y + 27);
+        doc.setFontSize(8);
+        doc.text("Cliente", margem + 45, y + 31);
+      }
+    }
+    _propostaMinimalista(doc, d, qr) {
+      const margem = 30, larg = 150;
+      let y = 30;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.text(d.numero, margem, y);
+      doc.text(d.data, margem + larg, y, { align: "right" });
+      y += 7;
+      doc.setTextColor(20);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(24);
+      doc.text(d.nome, margem, y);
+      y += 9;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(130);
+      const det = [d.tecnica, d.dims ? d.dims + " cm" : "", d.complexidade].filter(Boolean).join("   \xB7   ");
+      if (det) {
+        doc.text(det, margem, y);
+        y += 6;
+      }
+      doc.text(`Cliente: ${d.cliente}${d.clienteEmail ? " \xB7 " + d.clienteEmail : ""}`, margem, y);
+      y += 6;
+      doc.text(d.artista + (d.contato ? d.contato.replace(" | ", " \xB7 ") : ""), margem, y);
+      y += 14;
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.line(margem, y, margem + larg, y);
+      y += 13;
+      const item = (label, valor) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text(label.toUpperCase(), margem, y);
+        doc.setTextColor(60);
+        doc.text(String(valor), margem + larg, y, { align: "right" });
+        y += 6.5;
+      };
+      item("Materiais", this.fmt(d.materiais, d.moeda));
+      item("M\xE3o de obra", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)}`);
+      item("Custo total", this.fmt(d.custoTotal, d.moeda));
+      item("Multiplicador", `\xD7 ${d.multiplicador}`);
+      y += 8;
+      doc.setDrawColor(220);
+      doc.line(margem, y, margem + larg, y);
+      y += 15;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(30);
+      doc.setTextColor(20);
+      doc.text(this.fmt(d.preco, d.moeda), margem, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(140);
+      doc.text(`Validade: 30 dias${d.validadeData ? " (at\xE9 " + d.validadeData + ")" : ""}`, margem, y);
+      y += 18;
+      if (qr) {
+        doc.addImage(qr, "PNG", margem, y, 34, 34);
+        doc.setDrawColor(220);
+        doc.setLineWidth(0.2);
+        doc.line(margem + 40, y + 4, margem + larg, y + 4);
+        doc.setFontSize(8);
+        doc.setTextColor(140);
+        doc.text("Cliente", margem + 40, y + 9);
+        doc.line(margem + 40, y + 20, margem + larg, y + 20);
+        doc.setTextColor(160);
+        doc.text("Artista", margem + 40, y + 25);
+        doc.setTextColor(140);
+        doc.text("Escaneie o QR para aprovar digitalmente.", margem, y + 40);
+      }
     }
     // --- Regras ---
     adicionarRegra() {
@@ -15032,6 +15943,32 @@ Aprecie a exposi\xE7\xE3o!`;
       if (precos.length > 0) {
         doc.text(`Menor pre\xE7o: ${this.fmt(Math.min(...precos))} | Maior pre\xE7o: ${this.fmt(Math.max(...precos))}`, margem, y);
         y += 5;
+      }
+      const orcs = this.orcamentos;
+      if (orcs.length > 0) {
+        if (y > 240) {
+          doc.addPage();
+          y = 20;
+        }
+        y += 6;
+        doc.setDrawColor(200);
+        doc.line(margem, y, margem + larg, y);
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("Or\xE7amentos Salvos", margem, y);
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const statusRotulos = { rascunho: "Rascunho", enviado: "Enviado", aprovado: "Aprovado", recusado: "Recusado" };
+        orcs.slice(0, 25).forEach((o) => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.text(`${o.nome || "Sem nome"} \u2014 ${statusRotulos[o.status] || o.status} \u2014 ${this.fmt(o.preco, o.moeda || this.moeda)} \u2014 ${o.clienteNome || "Cliente avulso"}`, margem, y);
+          y += 5;
+        });
       }
       doc.save("relatorio-precificacao.pdf");
       esconderLoading();
@@ -17218,6 +18155,9 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         </div>
       `;
       }
+      if (this.token.startsWith("aceite_")) {
+        return this.renderAceiteOrcamento();
+      }
       const portal = this.dataStore.listar("portais").find((p) => p.token === this.token && p.ativo);
       if (!portal) {
         return `
@@ -17271,6 +18211,50 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       } catch {
         return "";
       }
+    }
+    renderAceiteOrcamento() {
+      const orcs = configStore().precificadorOrcamentos || [];
+      const orc = orcs.find((o) => o.aceiteToken === this.token);
+      const artista = configStore().artista?.nome || "Artista";
+      if (!orc) {
+        return `
+        <div class="portal-wrapper">
+          <div class="portal-card portal-erro">
+            <div class="portal-icone"><i class="fas fa-lock"></i></div>
+            <h2>Proposta n\xE3o encontrada</h2>
+            <p>N\xE3o encontramos esta proposta. O link pode estar incorreto ou a proposta foi exclu\xEDda.</p>
+          </div>
+        </div>
+      `;
+      }
+      const aceita = orc.status === "aprovado" && orc.aceiteData;
+      if (!aceita) {
+        orc.status = "aprovado";
+        orc.aceiteData = (/* @__PURE__ */ new Date()).toISOString();
+        configStore().salvar();
+        activityLogger.registrar("criacao", "Or\xE7amento aprovado via QR de aceite", orc.nome, "criacao");
+      }
+      const moeda = orc.moeda || "BRL";
+      const valor = (Number(orc.preco) || 0).toLocaleString("pt-BR", { style: "currency", currency: moeda });
+      const dims = [orc.largura, orc.altura, orc.profundidade].filter(Boolean).join("\xD7");
+      return `
+      <div class="portal-wrapper">
+        <div class="portal-card portal-aceite">
+          <div class="portal-icone portal-aceite-icone"><i class="fas fa-check-circle"></i></div>
+          <h2>${aceita ? "Proposta j\xE1 aceita" : "Proposta aceita!"}</h2>
+          <p class="portal-aceite-sub">${aceita ? `Esta proposta j\xE1 foi aprovada anteriormente em ${formatarData(orc.aceiteData)}.` : "Seu aceite foi registrado com sucesso. O artista foi notificado."}</p>
+          <div class="portal-aceite-detalhes">
+            <div class="portal-aceite-linha"><span>Proposta</span><strong>${sanitizarHTML(orc.nome || "Obra sem t\xEDtulo")}</strong></div>
+            ${orc.numero ? `<div class="portal-aceite-linha"><span>N\xFAmero</span><strong>${orc.numero}</strong></div>` : ""}
+            ${dims ? `<div class="portal-aceite-linha"><span>Dimens\xF5es</span><strong>${dims} cm</strong></div>` : ""}
+            ${orc.tecnica ? `<div class="portal-aceite-linha"><span>T\xE9cnica</span><strong>${capitalizarTexto(orc.tecnica)}</strong></div>` : ""}
+            <div class="portal-aceite-linha"><span>Valor</span><strong>${valor}</strong></div>
+            ${orc.validadeData ? `<div class="portal-aceite-linha"><span>Validade</span><strong>${formatarData(orc.validadeData)}</strong></div>` : ""}
+          </div>
+          <p class="portal-footer-peq">via ${sanitizarHTML(artista)} \xB7 Atelier CRM</p>
+        </div>
+      </div>
+    `;
     }
     renderEncomendaCard(enc) {
       const statusMap = {
@@ -20414,8 +21398,9 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       pin: "",
       autoLock: false,
       tourCompleted: false,
-      precificador: { valorHora: 60, multiplicadorExperiencia: 1.5, metaMensal: 1e4, metaAnual: 12e4, metaInicio: "" },
+      precificador: { valorHora: 60, multiplicadorExperiencia: 1.5, arredondamento: 0, metaMensal: 1e4, metaAnual: 12e4, metaInicio: "" },
       precificadorRegras: [],
+      precificadorOrcamentos: [],
       moedaPadrao: "BRL",
       taxasCambio: { USD: 5, EUR: 5.5, GBP: 6.3 },
       contadorRecibos: {},

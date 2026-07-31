@@ -2080,6 +2080,51 @@
   /* Seletor de obra na calculadora */
   .sel-obra-calc { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--bg); color: var(--text); width: 100%; }
 
+  /* Calculadora de orçamento */
+  .precificador .calc-dims { display: flex; gap: 6px; align-items: center; }
+  .precificador .calc-dims input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--bg); color: var(--text); min-width: 0; }
+  .precificador .calc-dims span { color: var(--text-muted); font-size: 0.8rem; }
+  .precificador .calc-dims input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+
+  .breakdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 12px; }
+  .bd-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .bd-item .bd-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .bd-item .bd-valor { font-size: 0.95rem; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bd-item.bd-total { border-color: var(--accent); background: rgba(37,99,235,0.06); }
+  .bd-item .bd-valor.bd-ok { color: #16a34a; }
+  .bd-item .bd-valor.bd-medio { color: #b45309; }
+  .bd-item .bd-valor.bd-baixo { color: #dc2626; }
+
+  .regra-auto { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; }
+  .regra-auto .ra-icone { font-size: 1.2rem; }
+  .regra-auto .ra-texto { display: flex; flex-direction: column; font-size: 0.85rem; color: #92400e; }
+
+  .orcamento-acoes { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .orcamento-acoes button { flex: 1; min-width: 120px; }
+
+  .orcamentos-lista { display: flex; flex-direction: column; gap: 8px; }
+  .orcamento-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+  .orcamento-item:hover { border-color: var(--accent); }
+  .orc-ident { flex: 1; min-width: 0; }
+  .orc-nome { font-size: 0.9rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .orc-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+  .orc-preco { font-size: 1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .orc-acoes { display: flex; align-items: center; gap: 6px; }
+  .orc-status-select { padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; background: var(--card); color: var(--text); }
+  .orc-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 500; text-transform: capitalize; }
+  .orc-status.st-rascunho { background: #e2e8f0; color: #475569; }
+  .orc-status.st-enviado { background: #dbeafe; color: #1e40af; }
+  .orc-status.st-aprovado { background: #d1fae5; color: #065f46; }
+  .orc-status.st-recusado { background: #fee2e2; color: #991b1b; }
+  .orc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .orc-toolbar h3 { margin: 0; }
+  .orc-kb-numero { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--text-muted); font-weight: 600; }
+  .orc-kb-dims { font-size: 0.68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .orc-convertido { font-size: 0.62rem; font-weight: 700; background: #16a34a; color: #fff; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+  .btn-orc-venda { background: #16a34a; color: #fff !important; }
+  .btn-orc-venda:hover { background: #15803d; }
+  .kanban-card .btn-miniatura { padding: 2px 6px; font-size: 0.72rem; }
+
   /* Toolbar do Precificador */
   .precificador-toolbar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
   .precificador-toolbar .moeda-selector { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); }
@@ -2154,6 +2199,14 @@
   .portal-erro .portal-icone { font-size: 3rem; margin-bottom: 12px; }
   .portal-erro h2 { color: var(--text); margin: 0 0 8px; }
   .portal-erro p { color: var(--text-muted); font-size: 0.9rem; }
+  .portal-aceite { text-align: center; max-width: 480px; margin: 0 auto; }
+  .portal-aceite .portal-icone { font-size: 3.2rem; margin-bottom: 10px; }
+  .portal-aceite-icone { color: #16a34a; }
+  .portal-aceite-sub { color: var(--text-muted); font-size: 0.9rem; margin: 8px 0 0; }
+  .portal-aceite-detalhes { margin: 20px 0 8px; text-align: left; border-top: 1px solid var(--border); }
+  .portal-aceite-linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .portal-aceite-linha span { color: var(--text-muted); }
+  .portal-aceite-linha strong { color: var(--text); font-variant-numeric: tabular-nums; }
   .portal-encomendas-lista { display: flex; flex-direction: column; gap: 16px; }
   .portal-vazio { text-align: center; padding: 40px; color: var(--text-muted); background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
   .portal-encomenda-card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
@@ -2195,6 +2248,9 @@
     .precificador .calc-grid { grid-template-columns: 1fr; }
     .metas-grid { grid-template-columns: 1fr; }
     .analise-grid { grid-template-columns: 1fr 1fr; }
+    .orcamento-item { flex-direction: column; align-items: flex-start; }
+    .orc-acoes { width: 100%; flex-wrap: wrap; }
+    .orc-acoes .btn-miniatura { padding: 6px 10px; }
   }
   @media (max-width: 480px) {
     .analise-grid { grid-template-columns: 1fr; }

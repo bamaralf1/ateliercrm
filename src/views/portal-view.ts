@@ -20,6 +20,10 @@ export class PortalView extends BaseView {
       `;
     }
 
+    if (this.token.startsWith('aceite_')) {
+      return this.renderAceiteOrcamento();
+    }
+
     const portal = this.dataStore.listar('portais').find(p => p.token === this.token && p.ativo);
     if (!portal) {
       return `
@@ -80,6 +84,54 @@ export class PortalView extends BaseView {
       const params = new URLSearchParams(hash.replace('#portal?', ''));
       return params.get('token') || '';
     } catch { return ''; }
+  }
+
+  renderAceiteOrcamento() {
+    const orcs = configStore().precificadorOrcamentos || [];
+    const orc = orcs.find(o => o.aceiteToken === this.token);
+    const artista = configStore().artista?.nome || 'Artista';
+    if (!orc) {
+      return `
+        <div class="portal-wrapper">
+          <div class="portal-card portal-erro">
+            <div class="portal-icone"><i class="fas fa-lock"></i></div>
+            <h2>Proposta não encontrada</h2>
+            <p>Não encontramos esta proposta. O link pode estar incorreto ou a proposta foi excluída.</p>
+          </div>
+        </div>
+      `;
+    }
+    const aceita = orc.status === 'aprovado' && orc.aceiteData;
+    if (!aceita) {
+      orc.status = 'aprovado';
+      orc.aceiteData = new Date().toISOString();
+      configStore().salvar();
+      activityLogger.registrar('criacao', 'Orçamento aprovado via QR de aceite', orc.nome, 'criacao');
+    }
+    const moeda = orc.moeda || 'BRL';
+    const valor = (Number(orc.preco) || 0).toLocaleString('pt-BR', { style: 'currency', currency: moeda });
+    const dims = [orc.largura, orc.altura, orc.profundidade].filter(Boolean).join('×');
+
+    return `
+      <div class="portal-wrapper">
+        <div class="portal-card portal-aceite">
+          <div class="portal-icone portal-aceite-icone"><i class="fas fa-check-circle"></i></div>
+          <h2>${aceita ? 'Proposta já aceita' : 'Proposta aceita!'}</h2>
+          <p class="portal-aceite-sub">${aceita
+            ? `Esta proposta já foi aprovada anteriormente em ${formatarData(orc.aceiteData)}.`
+            : 'Seu aceite foi registrado com sucesso. O artista foi notificado.'}</p>
+          <div class="portal-aceite-detalhes">
+            <div class="portal-aceite-linha"><span>Proposta</span><strong>${sanitizarHTML(orc.nome || 'Obra sem título')}</strong></div>
+            ${orc.numero ? `<div class="portal-aceite-linha"><span>Número</span><strong>${orc.numero}</strong></div>` : ''}
+            ${dims ? `<div class="portal-aceite-linha"><span>Dimensões</span><strong>${dims} cm</strong></div>` : ''}
+            ${orc.tecnica ? `<div class="portal-aceite-linha"><span>Técnica</span><strong>${capitalizarTexto(orc.tecnica)}</strong></div>` : ''}
+            <div class="portal-aceite-linha"><span>Valor</span><strong>${valor}</strong></div>
+            ${orc.validadeData ? `<div class="portal-aceite-linha"><span>Validade</span><strong>${formatarData(orc.validadeData)}</strong></div>` : ''}
+          </div>
+          <p class="portal-footer-peq">via ${sanitizarHTML(artista)} · Atelier CRM</p>
+        </div>
+      </div>
+    `;
   }
 
   renderEncomendaCard(enc) {
