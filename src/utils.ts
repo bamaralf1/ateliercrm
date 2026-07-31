@@ -53,6 +53,7 @@ export function abrirModal(htmlConteudo) {
   const h3 = caixa.querySelector('h3');
   if (h3 && !h3.id) h3.id = 'modalTitulo_' + Date.now();
   if (h3) caixa.setAttribute('aria-labelledby', h3.id);
+  document.body.style.overflow = 'hidden';
 }
 
 export function fecharModal() {
@@ -60,6 +61,7 @@ export function fecharModal() {
   const caixa = document.getElementById('modalCaixa');
   overlay.classList.remove('aberto');
   caixa.removeAttribute('aria-labelledby');
+  document.body.style.overflow = '';
   setTimeout(() => {
     if (!overlay.classList.contains('aberto')) {
       caixa.innerHTML = '';
@@ -347,6 +349,49 @@ export function debounce(fn, delayMs = 250) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), delayMs);
   };
+}
+
+// Contador animado para KPIs (respects prefers-reduced-motion)
+export function animarContador(el, valorFinal, formatar) {
+  if (!el) return;
+  const preferReduzido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const alvo = Number(valorFinal);
+  if (preferReduzido || isNaN(alvo)) {
+    el.textContent = formatar ? formatar(alvo) : String(valorFinal);
+    return;
+  }
+  const duracao = 800;
+  const inicio = performance.now();
+  const passo = (agora) => {
+    const t = Math.min((agora - inicio) / duracao, 1);
+    const easing = 1 - Math.pow(1 - t, 3);
+    const atual = alvo * easing;
+    el.textContent = formatar ? formatar(atual) : Math.round(atual).toLocaleString('pt-BR');
+    if (t < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+}
+
+// Configuração premium global do Chart.js (tooltip, grids, font)
+export function inicializarChartDefaults() {
+  const Chart = (typeof window !== 'undefined' ? window.Chart : null);
+  if (!Chart) return;
+  const fontPrincipal = getComputedStyle(document.documentElement).getPropertyValue('--font-principal').trim() || "'Inter', sans-serif";
+  Chart.defaults.font.family = fontPrincipal;
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = 'rgba(120,120,140,0.8)';
+  Chart.defaults.borderColor = 'rgba(128,128,128,0.1)';
+  Chart.defaults.animation.duration = 700;
+  Chart.defaults.animation.easing = 'easeOutQuart';
+  Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(17,17,27,0.92)';
+  Chart.defaults.plugins.tooltip.padding = 12;
+  Chart.defaults.plugins.tooltip.cornerRadius = 10;
+  Chart.defaults.plugins.tooltip.titleFont = { family: fontPrincipal, size: 12, weight: '600' };
+  Chart.defaults.plugins.tooltip.bodyFont = { family: fontPrincipal, size: 12 };
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+  Chart.defaults.plugins.tooltip.usePointStyle = true;
+  Chart.defaults.scales.linear.grid = { drawBorder: false };
+  Chart.defaults.scales.category.grid = { drawBorder: false };
 }
 
 

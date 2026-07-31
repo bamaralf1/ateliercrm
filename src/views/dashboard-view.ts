@@ -69,8 +69,8 @@ export class DashboardView extends BaseView {
     const kpis = [
       { rotulo: 'Total de Obras', valor: obras.length, tendencia: crescimentoMensal, icone: '<i class="fas fa-images"></i>', cor: '#2563eb', sparkline: this.gerarSparkline(obras, 'criacao'), variacao: obras.length > 0 ? variacaoObras : null },
       { rotulo: 'Obras Vendidas', valor: vendidas.length, sub: `${obras.length > 0 ? ((vendidas.length / obras.length) * 100).toFixed(1) : 0}% do total`, icone: '<i class="fas fa-check"></i>', cor: '#16a34a', sparkline: '' },
-      { rotulo: 'Valor do Acervo', valor: formatarMoeda(valorAcervo), sub: `Ticket médio: ${formatarMoeda(ticketMedio)}`, icone: '<i class="fas fa-dollar-sign"></i>', cor: '#d97706', sparkline: '' },
-      { rotulo: 'Total Vendido', valor: formatarMoeda(valorVendido), sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + ' este mês' : vendas.length + ' venda(s)'}`, icone: '<i class="fas fa-chart-bar"></i>', cor: '#7c3aed', sparkline: this.gerarSparkline(vendas, 'receita'), variacao: variacaoReceita },
+      { rotulo: 'Valor do Acervo', valor: formatarMoeda(valorAcervo), valorNum: valorAcervo, sub: `Ticket médio: ${formatarMoeda(ticketMedio)}`, icone: '<i class="fas fa-dollar-sign"></i>', cor: '#d97706', sparkline: '' },
+      { rotulo: 'Total Vendido', valor: formatarMoeda(valorVendido), valorNum: valorVendido, sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + ' este mês' : vendas.length + ' venda(s)'}`, icone: '<i class="fas fa-chart-bar"></i>', cor: '#7c3aed', sparkline: this.gerarSparkline(vendas, 'receita'), variacao: variacaoReceita },
       { rotulo: 'Clientes', valor: clientes.length, sub: `${this.contarClientesAtivos(clientes)} ativos`, icone: '👥', cor: '#0891b2', sparkline: '' },
       { rotulo: 'Favoritas', valor: obrasFavoritas, sub: '<i class="fas fa-star"></i> obras marcadas', icone: '<i class="fas fa-star"></i>', cor: '#dc2626', sparkline: '' }
     ];
@@ -97,7 +97,7 @@ export class DashboardView extends BaseView {
             <div class="kpi-icone">${k.icone}</div>
             <div class="kpi-conteudo">
               <div class="kpi-rotulo">${k.rotulo}</div>
-              <div class="kpi-valor">${k.valor}</div>
+              <div class="kpi-valor" data-contador="${k.valorNum ?? (typeof k.valor === 'number' ? k.valor : '')}" data-contador-tipo="${typeof k.valor === 'number' ? 'num' : (k.valorNum != null ? 'moeda' : '')}">${k.valor}</div>
               ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
               ${k.variacao !== null && k.variacao !== undefined ? `<div class="kpi-variacao ${k.variacao >= 0 ? 'positiva' : 'negativa'}">${k.variacao >= 0 ? '↑' : '↓'} ${Math.abs(k.variacao).toFixed(1)}% vs mês anterior</div>` : ''}
             </div>
@@ -490,6 +490,14 @@ export class DashboardView extends BaseView {
 
     this.initDragDrop();
     this.initConfigModal();
+    // Contadores animados dos KPIs
+    container.querySelectorAll('.kpi-valor[data-contador]').forEach((el) => {
+      const alvo = Number(el.dataset.contador);
+      const ehMoeda = el.dataset.contadorTipo === 'moeda';
+      if (!isNaN(alvo)) {
+        animarContador(el, alvo, ehMoeda ? (v) => formatarMoeda(v) : undefined);
+      }
+    });
     if (typeof Chart === 'undefined') {
       document.querySelectorAll('[id^="chart"]').forEach(el => {
         if (el.tagName === 'CANVAS') {
@@ -511,6 +519,8 @@ export class DashboardView extends BaseView {
       });
       return;
     }
+
+    inicializarChartDefaults();
 
     Object.values(this.charts).forEach(c => { try { c.destroy(); } catch (e) { console.warn(e) } });
     this.charts = {};

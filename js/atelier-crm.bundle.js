@@ -8202,12 +8202,14 @@ Only state can be modified.`);
     const h3 = caixa.querySelector("h3");
     if (h3 && !h3.id) h3.id = "modalTitulo_" + Date.now();
     if (h3) caixa.setAttribute("aria-labelledby", h3.id);
+    document.body.style.overflow = "hidden";
   }
   function fecharModal() {
     const overlay = document.getElementById("modalOverlay");
     const caixa = document.getElementById("modalCaixa");
     overlay.classList.remove("aberto");
     caixa.removeAttribute("aria-labelledby");
+    document.body.style.overflow = "";
     setTimeout(() => {
       if (!overlay.classList.contains("aberto")) {
         caixa.innerHTML = "";
@@ -8478,6 +8480,45 @@ Only state can be modified.`);
       clearTimeout(timer);
       timer = setTimeout(() => fn.apply(this, args), delayMs);
     };
+  }
+  function animarContador(el, valorFinal, formatar) {
+    if (!el) return;
+    const preferReduzido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const alvo = Number(valorFinal);
+    if (preferReduzido || isNaN(alvo)) {
+      el.textContent = formatar ? formatar(alvo) : String(valorFinal);
+      return;
+    }
+    const duracao = 800;
+    const inicio = performance.now();
+    const passo = (agora) => {
+      const t = Math.min((agora - inicio) / duracao, 1);
+      const easing = 1 - Math.pow(1 - t, 3);
+      const atual = alvo * easing;
+      el.textContent = formatar ? formatar(atual) : Math.round(atual).toLocaleString("pt-BR");
+      if (t < 1) requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  }
+  function inicializarChartDefaults() {
+    const Chart2 = typeof window !== "undefined" ? window.Chart : null;
+    if (!Chart2) return;
+    const fontPrincipal = getComputedStyle(document.documentElement).getPropertyValue("--font-principal").trim() || "'Inter', sans-serif";
+    Chart2.defaults.font.family = fontPrincipal;
+    Chart2.defaults.font.size = 11;
+    Chart2.defaults.color = "rgba(120,120,140,0.8)";
+    Chart2.defaults.borderColor = "rgba(128,128,128,0.1)";
+    Chart2.defaults.animation.duration = 700;
+    Chart2.defaults.animation.easing = "easeOutQuart";
+    Chart2.defaults.plugins.tooltip.backgroundColor = "rgba(17,17,27,0.92)";
+    Chart2.defaults.plugins.tooltip.padding = 12;
+    Chart2.defaults.plugins.tooltip.cornerRadius = 10;
+    Chart2.defaults.plugins.tooltip.titleFont = { family: fontPrincipal, size: 12, weight: "600" };
+    Chart2.defaults.plugins.tooltip.bodyFont = { family: fontPrincipal, size: 12 };
+    Chart2.defaults.plugins.tooltip.boxPadding = 4;
+    Chart2.defaults.plugins.tooltip.usePointStyle = true;
+    Chart2.defaults.scales.linear.grid = { drawBorder: false };
+    Chart2.defaults.scales.category.grid = { drawBorder: false };
   }
   var ICONES = {
     dashboard: '<i class="fas fa-chart-bar"></i>',
@@ -9387,8 +9428,8 @@ Only state can be modified.`);
       const kpis = [
         { rotulo: "Total de Obras", valor: obras.length, tendencia: crescimentoMensal, icone: '<i class="fas fa-images"></i>', cor: "#2563eb", sparkline: this.gerarSparkline(obras, "criacao"), variacao: obras.length > 0 ? variacaoObras : null },
         { rotulo: "Obras Vendidas", valor: vendidas.length, sub: `${obras.length > 0 ? (vendidas.length / obras.length * 100).toFixed(1) : 0}% do total`, icone: '<i class="fas fa-check"></i>', cor: "#16a34a", sparkline: "" },
-        { rotulo: "Valor do Acervo", valor: formatarMoeda(valorAcervo), sub: `Ticket m\xE9dio: ${formatarMoeda(ticketMedio)}`, icone: '<i class="fas fa-dollar-sign"></i>', cor: "#d97706", sparkline: "" },
-        { rotulo: "Total Vendido", valor: formatarMoeda(valorVendido), sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + " este m\xEAs" : vendas.length + " venda(s)"}`, icone: '<i class="fas fa-chart-bar"></i>', cor: "#7c3aed", sparkline: this.gerarSparkline(vendas, "receita"), variacao: variacaoReceita },
+        { rotulo: "Valor do Acervo", valor: formatarMoeda(valorAcervo), valorNum: valorAcervo, sub: `Ticket m\xE9dio: ${formatarMoeda(ticketMedio)}`, icone: '<i class="fas fa-dollar-sign"></i>', cor: "#d97706", sparkline: "" },
+        { rotulo: "Total Vendido", valor: formatarMoeda(valorVendido), valorNum: valorVendido, sub: `${receitaMes > 0 ? formatarMoeda(receitaMes) + " este m\xEAs" : vendas.length + " venda(s)"}`, icone: '<i class="fas fa-chart-bar"></i>', cor: "#7c3aed", sparkline: this.gerarSparkline(vendas, "receita"), variacao: variacaoReceita },
         { rotulo: "Clientes", valor: clientes.length, sub: `${this.contarClientesAtivos(clientes)} ativos`, icone: "\u{1F465}", cor: "#0891b2", sparkline: "" },
         { rotulo: "Favoritas", valor: obrasFavoritas, sub: '<i class="fas fa-star"></i> obras marcadas', icone: '<i class="fas fa-star"></i>', cor: "#dc2626", sparkline: "" }
       ];
@@ -9413,7 +9454,7 @@ Only state can be modified.`);
             <div class="kpi-icone">${k.icone}</div>
             <div class="kpi-conteudo">
               <div class="kpi-rotulo">${k.rotulo}</div>
-              <div class="kpi-valor">${k.valor}</div>
+              <div class="kpi-valor" data-contador="${k.valorNum ?? (typeof k.valor === "number" ? k.valor : "")}" data-contador-tipo="${typeof k.valor === "number" ? "num" : k.valorNum != null ? "moeda" : ""}">${k.valor}</div>
               ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ""}
               ${k.variacao !== null && k.variacao !== void 0 ? `<div class="kpi-variacao ${k.variacao >= 0 ? "positiva" : "negativa"}">${k.variacao >= 0 ? "\u2191" : "\u2193"} ${Math.abs(k.variacao).toFixed(1)}% vs m\xEAs anterior</div>` : ""}
             </div>
@@ -9799,6 +9840,13 @@ Only state can be modified.`);
       });
       this.initDragDrop();
       this.initConfigModal();
+      container.querySelectorAll(".kpi-valor[data-contador]").forEach((el) => {
+        const alvo = Number(el.dataset.contador);
+        const ehMoeda = el.dataset.contadorTipo === "moeda";
+        if (!isNaN(alvo)) {
+          animarContador(el, alvo, ehMoeda ? (v) => formatarMoeda(v) : void 0);
+        }
+      });
       if (typeof Chart === "undefined") {
         document.querySelectorAll('[id^="chart"]').forEach((el) => {
           if (el.tagName === "CANVAS") {
@@ -9820,6 +9868,7 @@ Only state can be modified.`);
         });
         return;
       }
+      inicializarChartDefaults();
       Object.values(this.charts).forEach((c) => {
         try {
           c.destroy();
@@ -21359,6 +21408,14 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     dataStore.exportarBackup();
     mostrarToast("Backup exportado com sucesso!", "sucesso");
   });
+  document.addEventListener("submit", (e) => {
+    const alvo = e.target;
+    const btn = alvo && alvo.querySelector && alvo.querySelector('button[type="submit"]');
+    if (btn && btn.tagName === "BUTTON") {
+      btn.classList.add("btn-carregando");
+      setTimeout(() => btn.classList.remove("btn-carregando"), 600);
+    }
+  }, true);
   document.getElementById("modalOverlay").addEventListener("click", (e) => {
     if (e.target.id === "modalOverlay") fecharModal();
   });
@@ -21369,6 +21426,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     const toast = document.getElementById("toast");
     const msgEl = document.getElementById("toastMsg");
     const iconEl = toast?.querySelector("i");
+    const progresso = document.getElementById("toastProgress");
     if (!toast || !msgEl) return;
     const icones = { sucesso: "fa-check-circle", erro: "fa-times-circle", aviso: "fa-exclamation-triangle", info: "fa-info-circle" };
     const temIconeProprio = /<i\s|[\u{1F000}-\u{1FFFF}]/u.test(mensagem);
@@ -21378,6 +21436,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     msgEl.textContent = mensagem;
     toast.className = "toast" + (tipo && icones[tipo] ? " " + tipo : "");
     toast.classList.add("mostrar");
+    if (progresso) {
+      progresso.style.animation = "none";
+      void progresso.offsetWidth;
+      progresso.style.animation = "";
+    }
     clearTimeout(window._toastTimeout);
     window._toastTimeout = setTimeout(() => {
       toast.classList.add("saindo");
@@ -21396,6 +21459,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     });
   }
   themeEngine.inicializar();
+  inicializarChartDefaults();
   router.inicializar();
   setTimeout(() => iniciarMonitorInatividade(), 500);
   setTimeout(() => cloudSync.iniciarAutoBackup(), 2e3);

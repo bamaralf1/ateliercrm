@@ -766,6 +766,16 @@ document.getElementById('btnBackup').addEventListener('click', () => {
   mostrarToast('Backup exportado com sucesso!', 'sucesso');
 });
 
+// Spinner premium no botão de submit enquanto salva
+document.addEventListener('submit', (e) => {
+  const alvo = e.target;
+  const btn = alvo && alvo.querySelector && alvo.querySelector('button[type="submit"]');
+  if (btn && btn.tagName === 'BUTTON') {
+    btn.classList.add('btn-carregando');
+    setTimeout(() => btn.classList.remove('btn-carregando'), 600);
+  }
+}, true);
+
 document.getElementById('modalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'modalOverlay') fecharModal();
 });
@@ -777,6 +787,7 @@ window.mostrarToast = function(mensagem, tipo = 'info') {
   const toast = document.getElementById('toast');
   const msgEl = document.getElementById('toastMsg');
   const iconEl = toast?.querySelector('i');
+  const progresso = document.getElementById('toastProgress');
   if (!toast || !msgEl) return;
   const icones = { sucesso: 'fa-check-circle', erro: 'fa-times-circle', aviso: 'fa-exclamation-triangle', info: 'fa-info-circle' };
   const temIconeProprio = /<i\s|[\u{1F000}-\u{1FFFF}]/u.test(mensagem);
@@ -784,6 +795,12 @@ window.mostrarToast = function(mensagem, tipo = 'info') {
   msgEl.textContent = mensagem;
   toast.className = 'toast' + (tipo && icones[tipo] ? ' ' + tipo : '');
   toast.classList.add('mostrar');
+  // Reinicia a barra de progresso
+  if (progresso) {
+    progresso.style.animation = 'none';
+    void progresso.offsetWidth;
+    progresso.style.animation = '';
+  }
   clearTimeout(window._toastTimeout);
   window._toastTimeout = setTimeout(() => {
     toast.classList.add('saindo');
@@ -803,6 +820,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').ca
 
 // Init
 themeEngine.inicializar();
+inicializarChartDefaults();
 router.inicializar();
 setTimeout(() => iniciarMonitorInatividade(), 500);
 setTimeout(() => cloudSync.iniciarAutoBackup(), 2000);
