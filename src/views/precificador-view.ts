@@ -216,7 +216,76 @@ export class PrecificadorView extends BaseView {
             <button id="btnListaOrc" class="${this.modoOrcamentos === 'lista' ? 'ativo' : ''}" aria-label="Visualizar como lista"><i class="fas fa-list"></i> Lista</button>
           </div>
         </div>
+        ${lista.length > 0 ? this.renderPipelineCard() : ''}
         ${corpo}
+      </div>
+    `;
+  }
+
+  _calcularPipeline() {
+    const orcs = this.orcamentos;
+    if (orcs.length === 0) return null;
+    const enviados = orcs.filter(o => {
+      const st = o.status || 'rascunho';
+      return ['enviado', 'aprovado', 'recusado'].includes(st) || o.aceiteData || o.convertidoEm || o.aprovadoEm || o.enviadoEm;
+    });
+    const aprovados = orcs.filter(o => {
+      const st = o.status || 'rascunho';
+      return st === 'aprovado' || o.aceiteData || o.convertidoEm || o.aprovadoEm;
+    });
+    const convertidos = aprovados.filter(o => o.convertidoEm || o.vendaId);
+    const emAberto = aprovados.filter(o => !o.convertidoEm && !o.vendaId);
+    const taxaConversao = enviados.length > 0 ? (aprovados.length / enviados.length) * 100 : 0;
+    let tempoTotal = 0, tempoCount = 0;
+    aprovados.forEach(o => {
+      const tEnv = this._tsData(o.enviadoEm || o.data || o.criadoEm);
+      const tAprov = this._tsData(o.aceiteData || o.aprovadoEm || o.convertidoEm);
+      if (tEnv === null || tAprov === null || tAprov < tEnv) return;
+      tempoTotal += (tAprov - tEnv) / 86400000;
+      tempoCount++;
+    });
+    const receitaPotencial = emAberto.reduce((s, o) => s + (Number(o.preco) || 0), 0);
+    return {
+      total: orcs.length,
+      enviados: enviados.length,
+      aprovados: aprovados.length,
+      convertidos: convertidos.length,
+      emAberto: emAberto.length,
+      taxaConversao,
+      tempoMedio: tempoCount > 0 ? tempoTotal / tempoCount : null,
+      receitaPotencial
+    };
+  }
+
+  _tsData(v) {
+    if (!v) return null;
+    const s = String(v);
+    const t = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T12:00:00') : new Date(s);
+    const ts = t.getTime();
+    return Number.isFinite(ts) ? ts : null;
+  }
+
+  renderPipelineCard() {
+    const p = this._calcularPipeline();
+    if (!p) return '';
+    const tempo = p.tempoMedio !== null ? `${p.tempoMedio.toFixed(1)} dia${p.tempoMedio === 1 ? '' : 's'}` : '—';
+    return `
+      <div class="pipeline-grid">
+        <div class="pipeline-card pc-conversao">
+          <div class="pc-valor">${p.taxaConversao.toFixed(0)}%</div>
+          <div class="pc-rotulo">Taxa de conversão <span class="pc-sub-inline">enviados → aprovados</span></div>
+          <div class="pc-sub">${p.aprovados} de ${p.enviados} aprovados</div>
+        </div>
+        <div class="pipeline-card pc-tempo">
+          <div class="pc-valor">${tempo}</div>
+          <div class="pc-rotulo">Tempo médio até aprovação</div>
+          <div class="pc-sub">${p.convertidos} já convertido${p.convertidos === 1 ? '' : 's'} em venda</div>
+        </div>
+        <div class="pipeline-card pc-receita">
+          <div class="pc-valor">${this.fmt(p.receitaPotencial)}</div>
+          <div class="pc-rotulo">Receita potencial em aberto</div>
+          <div class="pc-sub">${p.emAberto} aprovado${p.emAberto === 1 ? '' : 's'} não convertido${p.emAberto === 1 ? '' : 's'}</div>
+        </div>
       </div>
     `;
   }
@@ -1515,6 +1584,7 @@ export class PrecificadorView extends BaseView {
     const orc = lista.find(o => o.id === id);
     if (!orc) return;
     orc.status = status;
+    this._registrarTimestampStatus(orc, status);
     this.cfgRoot.precificadorOrcamentos = lista;
     configStore().salvar();
     const statusRotulos = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', recusado: 'Recusado' };
@@ -1536,11 +1606,19 @@ export class PrecificadorView extends BaseView {
     const orc = lista.find(o => o.id === id);
     if (!orc || (orc.status || 'rascunho') === novoStatus) return;
     orc.status = novoStatus;
+    this._registrarTimestampStatus(orc, novoStatus);
     this.cfgRoot.precificadorOrcamentos = lista;
     configStore().salvar();
     const rotulo = ORC_STATUS.find(s => s.status === novoStatus)?.rotulo || novoStatus;
     mostrarToast(`Orçamento movido para "${rotulo}".`, 'sucesso');
     this.rerenderizar();
+  }
+
+  _registrarTimestampStatus(orc, status) {
+    const agora = new Date().toISOString();
+    if (status === 'enviado' && !orc.enviadoEm) orc.enviadoEm = agora;
+    if (status === 'aprovado' && !orc.aprovadoEm) orc.aprovadoEm = agora;
+    if (status === 'recusado' && !orc.recusadoEm) orc.recusadoEm = agora;
   }
 
   async registrarVenda(orcId) {
@@ -2203,6 +2281,25 @@ export class PrecificadorView extends BaseView {
     doc.text(`Valor total do portfólio: ${this.fmt(total)}`, margem, y); y += 5;
     if (precos.length > 0) {
       doc.text(`Menor preço: ${this.fmt(Math.min(...precos))} | Maior preço: ${this.fmt(Math.max(...precos))}`, margem, y); y += 5;
+    }
+
+    const pipeline = this._calcularPipeline();
+    if (pipeline) {
+      if (y > 240) { doc.addPage(); y = 20; }
+      y += 6;
+      doc.setDrawColor(200);
+      doc.line(margem, y, margem + larg, y);
+      y += 8;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('Pipeline de Orçamentos', margem, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Taxa de conversão (enviados → aprovados): ${pipeline.taxaConversao.toFixed(1)}% (${pipeline.aprovados} de ${pipeline.enviados})`, margem, y); y += 5;
+      doc.text(`Tempo médio até aprovação: ${pipeline.tempoMedio !== null ? pipeline.tempoMedio.toFixed(1) + ' dias' : '—'}`, margem, y); y += 5;
+      doc.text(`Receita potencial em aberto: ${this.fmt(pipeline.receitaPotencial)} (${pipeline.emAberto} aprovado${pipeline.emAberto === 1 ? '' : 's'} não convertido${pipeline.emAberto === 1 ? '' : 's'})`, margem, y); y += 5;
+      doc.text(`Aprovados convertidos em venda: ${pipeline.convertidos} de ${pipeline.aprovados}`, margem, y); y += 5;
     }
 
     const orcs = this.orcamentos;

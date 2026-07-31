@@ -2042,6 +2042,18 @@
   .tc-input { width: 90px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; }
   .bd-item.bd-comissao .bd-label, .bd-item.bd-galeria .bd-label { color: var(--text-muted); }
   .bd-item.bd-galeria .bd-valor { color: var(--accent); font-weight: 600; }
+  .pipeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+  .pipeline-card { text-align: center; padding: 12px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+  .pipeline-card .pc-valor { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+  .pipeline-card .pc-rotulo { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+  .pipeline-card .pc-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+  .pipeline-card .pc-sub-inline { display: block; }
+  .pipeline-card.pc-conversao { border-color: #93c5fd; background: linear-gradient(135deg, #eff6ff, transparent); }
+  .pipeline-card.pc-conversao .pc-valor { color: #1d4ed8; }
+  .pipeline-card.pc-tempo { border-color: #34d399; background: linear-gradient(135deg, #ecfdf5, transparent); }
+  .pipeline-card.pc-tempo .pc-valor { color: #047857; }
+  .pipeline-card.pc-receita { border-color: #fbbf24; background: linear-gradient(135deg, #fffbeb, transparent); }
+  .pipeline-card.pc-receita .pc-valor { color: #b45309; }
 
   /* Complexidade estrelas */
   .estrelas-input { display: flex; gap: 4px; }
@@ -2284,6 +2296,7 @@
     .orc-acoes .btn-miniatura { padding: 6px 10px; }
     .sugestao-niveis { grid-template-columns: 1fr; }
     .negoc-grid { grid-template-columns: 1fr; }
+    .pipeline-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 480px) {
     .analise-grid { grid-template-columns: 1fr; }
