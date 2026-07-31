@@ -41,6 +41,15 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - PDF exporta com break-even embutido
 - CSS: `.conversoes-multi`, `.be-tabela`, `.ml-precisao-grid`, `.projecao-grid`, `.regras-lista`, `.regra-form`, `.taxas-form`
 
+### Orçamentos premium P0 (precificador-view.ts, portal-view.ts, vendas-view.ts) — commit `da2e560`
+- **Calculadora de orçamento** (sem obra de referência): `this.calc = { nome, clienteId, tecnica, materiais, horas, valorHora, largura/altura/profundidade, complexidade, multiplicador, arredondamento }`; breakdown com `bd-ok/bd-medio/bd-baixo`, regra automática, faixa comparativa, conversões multi-moeda.
+- **Numeração sequencial**: `_gerarNumeroProposta()` → `PRO-${ano}-${4 dígitos}` via `config.contadorPropostas` (por ano); exibido no card/list a e na proposta PDF; validade 30 dias (`orc.validadeData`).
+- **Kanban de orçamentos** por status (Rascunho/Enviado/Aprovado/Recusado) com DnD (`_moverOrcamentoParaStatus`), toggle Kanban/Lista (`localStorage['atelier-crm-view-mode-orcamentos']`), dropdown móvel por card, cores `.orc-status.st-*`.
+- **Conversão aprovado → Venda**: botão `btn-orc-venda` (💰) só em status `aprovado` e sem `convertidoEm`; `registrarVenda()` cria venda via `dataStore.adicionar('vendas', { obraId:'', obraTitulo, clienteId, clienteNome, precoFinal, dataVenda, formaPagamento:'a combinar', status:'aprovada', orcamentoId, numeroProposta })`, incrementa `aquisicoes` do cliente, marca `orc.convertidoEm`/`vendaId` e navega para Vendas. Vendas de orçamento caem na tabela de Vendas com fallback `v.obraTitulo`/`v.clienteNome` (sem obra).
+- **Proposta PDF premium**: 3 templates (`_propostaClassico` times serifado / `_propostaModerno` banda+bloco de valor / `_propostaMinimalista` hairline) selecionáveis por `precificador.templateProposta` (select `selTemplateProposta`). Exportar proposta sem orçamento salvo **auto-salva** o orçamento (gera número + token).
+- **QR de aceite**: `_garantirAceiteToken(orc)` cria `aceite_xxx` persistido; `_gerarQRProposta` usa `gerarQRCodeDataUrl(base + '#portal?token=' + token)`; cliente escaneia → `PortalView.renderAceiteOrcamento()` reconhece token `aceite_*`, marca `status:'aprovado'` + `aceiteData` (idempotente: re-scan mostra "Proposta já aceita"). CSS `.portal-aceite*`.
+- Helpers: `_persistirOrcamento(orc)` (numero+validade+token+upsert), `_prepararProposta`, `_propostaClassico/Moderno/Minimalista`, `definirStatusOrcamento` (lista in-place / kanban rerender).
+
 ### Portal do Cliente (portal-view.ts, encomendas-view.ts)
 - `PortalCliente` com token único por encomenda
 - `portal-view.ts`: valida token do hash `#portal?token=xxx`, timeline visual, cards com badges
