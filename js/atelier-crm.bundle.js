@@ -14045,7 +14045,8 @@ Aprecie a exposi\xE7\xE3o!`;
         profundidade: 0,
         complexidade: 3,
         multiplicador: 1.5,
-        arredondamento: 0
+        arredondamento: 0,
+        comissaoGaleria: 0
       };
       this.fatoresComplexidade = [0, 0.7, 0.85, 1, 1.2, 1.5];
       this.modoOrcamentos = localStorage.getItem("atelier-crm-view-mode-orcamentos") || "kanban";
@@ -14099,6 +14100,7 @@ Aprecie a exposi\xE7\xE3o!`;
       this.calc.valorHora = Number(this.calc.valorHora) || this.config.valorHora || 60;
       this.calc.multiplicador = Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5;
       this.calc.arredondamento = Number(this.calc.arredondamento) || this.config.arredondamento || 0;
+      this.calc.comissaoGaleria = Number(this.calc.comissaoGaleria) || 0;
       const opcoesClientes = clientes.map(
         (c) => `<option value="${c.id}" ${this.calc.clienteId === c.id ? "selected" : ""}>${c.nome}${c.email ? " \u2014 " + c.email : ""}</option>`
       ).join("");
@@ -14119,6 +14121,7 @@ Aprecie a exposi\xE7\xE3o!`;
             <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de c\xE2mbio" aria-label="Editar taxas de c\xE2mbio">\u{1F4B1}</button>
           </div>
           <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precifica\xE7\xE3o</button>
+          <button class="btn-secundario" id="btnAbrirTecnicas"><i class="fas fa-swatchbook"></i> Custos por T\xE9cnica</button>
           <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relat\xF3rio PDF</button>
         </div>
 
@@ -14172,6 +14175,10 @@ Aprecie a exposi\xE7\xE3o!`;
               <input type="number" id="calcMultiplicador" aria-label="Multiplicador" value="${this.calc.multiplicador}" min="1" step="0.1">
             </div>
             <div class="campo-calc">
+              <label>\u{1F3DB}\uFE0F Comiss\xE3o de galeria (%)</label>
+              <input type="number" id="calcComissao" aria-label="Comiss\xE3o de galeria" value="${this.calc.comissaoGaleria}" min="0" max="90" step="1" title="Percentual repassado \xE0 galeria. Mostra pre\xE7o ateli\xEA vs. pre\xE7o galeria.">
+            </div>
+            <div class="campo-calc">
               <label>\u{1F522} Arredondamento</label>
               <select id="calcArredondamento" aria-label="Arredondamento">
                 <option value="0" ${this.calc.arredondamento === 0 ? "selected" : ""}>Sem arredondamento</option>
@@ -14192,7 +14199,8 @@ Aprecie a exposi\xE7\xE3o!`;
 
           <div class="breakdown-grid" id="breakdownGrid">${this.renderBreakdown(this.calcularBreakdown(this.calc))}</div>
           <div id="regraAuto">${this.renderRegraAuto()}</div>
-          <div id="faixaComparativa">${this.renderFaixaComparativa(obras)}</div>
+          <div id="sugestaoInteligente">${this.renderSugestaoInteligente()}</div>
+          <div id="faixaNegociacao">${this.renderFaixaNegociacao()}</div>
 
           <div class="orcamento-acoes">
             <select id="selTemplateProposta" class="orc-status-select" aria-label="Template da proposta PDF" title="Template da proposta PDF">
@@ -14226,6 +14234,7 @@ Aprecie a exposi\xE7\xE3o!`;
 
       ${this.renderModalRegras()}
       ${this.renderModalTaxas()}
+      ${this.renderModalTecnicas()}
     `;
     }
     // --- Orçamentos Salvos ---
@@ -14342,7 +14351,9 @@ Aprecie a exposi\xE7\xE3o!`;
       const lucro = preco - custoTotal;
       const margem = preco > 0 ? lucro / preco * 100 : 0;
       const markup = custoTotal > 0 ? preco / custoTotal : 0;
-      return { materiais, horas, valorHora, maoObra, custoTotal, fator, mult, bonus, arred, precoBruto, preco, lucro, margem, markup, largura, altura, profundidade, area };
+      const comissaoPct = Math.max(0, Math.min(90, Number(c.comissaoGaleria) || 0));
+      const precoGaleria = comissaoPct >= 100 ? preco : preco / (1 - comissaoPct / 100);
+      return { materiais, horas, valorHora, maoObra, custoTotal, fator, mult, bonus, arred, precoBruto, preco, lucro, margem, markup, largura, altura, profundidade, area, comissaoPct, precoGaleria };
     }
     calcularPreco(c) {
       return this.calcularBreakdown(c).preco;
@@ -14364,6 +14375,9 @@ Aprecie a exposi\xE7\xE3o!`;
       <div class="bd-item"><span class="bd-label">Lucro estimado</span><span class="bd-valor">${this.fmt(b.lucro)}</span></div>
       <div class="bd-item"><span class="bd-label">Markup</span><span class="bd-valor">${b.markup.toFixed(2)}\xD7</span></div>
       <div class="bd-item"><span class="bd-label">Margem</span><span class="bd-valor ${margemClasse}">${b.margem.toFixed(1)}%</span></div>
+      <div class="bd-item bd-comissao"><span class="bd-label">Comiss\xE3o de galeria</span><span class="bd-valor">${b.comissaoPct}%</span></div>
+      <div class="bd-item bd-total"><span class="bd-label">Pre\xE7o ateli\xEA (seu)</span><span class="bd-valor">${this.fmt(b.preco)}</span></div>
+      ${b.comissaoPct > 0 ? `<div class="bd-item bd-galeria"><span class="bd-label">Pre\xE7o galeria (p/ repassar ${b.comissaoPct}%)</span><span class="bd-valor">${this.fmt(b.precoGaleria)}</span></div>` : ""}
     `;
     }
     renderRegraAuto() {
@@ -14391,27 +14405,104 @@ Aprecie a exposi\xE7\xE3o!`;
       </div>
     `;
     }
-    renderFaixaComparativa(obras) {
+    renderSugestaoInteligente() {
       const c = this.calc;
       const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
-      if (!area || obras.length < 2) return "";
-      const similares = obras.filter((o) => {
+      if (!area) return "";
+      const obras = (obraStore().items || []).filter((o) => Number(o.preco) > 0);
+      if (obras.length === 0) return "";
+      let similares = obras.filter((o) => {
         const dim = o.dimensoes;
         if (!dim || !dim.largura || !dim.altura) return false;
         const oArea = dim.largura * dim.altura;
-        return oArea > area * 0.5 && oArea < area * 1.5 && o.preco > 0;
+        return oArea > area * 0.5 && oArea < area * 1.5 && (!c.tecnica || !o.tecnica || o.tecnica === c.tecnica);
       });
-      if (similares.length < 2) return "";
+      if (similares.length < 2 && c.tecnica) {
+        similares = obras.filter((o) => o.tecnica === c.tecnica);
+      }
+      if (similares.length < 2) {
+        return `
+        <div class="sugestao-card sugestao-fraca">
+          <div class="sugestao-header">
+            <span class="sugestao-titulo">\u{1F916} Sugest\xE3o Inteligente</span>
+            <span class="sugestao-confianca">Confian\xE7a <strong>baixa</strong></span>
+          </div>
+          <div class="sugestao-veredicto sv-baixo">Dados insuficientes: cadastre mais obras${c.tecnica ? ` de ${c.tecnica}` : ""} no cat\xE1logo para comparar seu pre\xE7o com o mercado.</div>
+        </div>
+      `;
+      }
       const precos = similares.map((o) => Number(o.preco)).sort((a, b) => a - b);
       const min = precos[0], max = precos[precos.length - 1];
-      const media = Math.round(precos.reduce((s, v) => s + v, 0) / precos.length);
+      const media = precos.reduce((s, v) => s + v, 0) / precos.length;
+      const sugerido = this.calcularPreco(this.calc);
+      if (sugerido <= 0) return "";
+      const pct = media > 0 ? (sugerido - media) / media * 100 : 0;
+      const dispersao = media > 0 ? (max - min) / media : 1;
+      let confianca = Math.round(Math.max(10, Math.min(98, 100 - Math.abs(pct) * 1.5 - dispersao * 40 - Math.max(0, 5 - similares.length) * 7)));
+      let classe = "sv-ok", seta = "\u2713", recomendacao, dirTexto;
+      if (Math.abs(pct) < 8) {
+        classe = "sv-ok";
+        recomendacao = `Alinhado ao mercado da ${c.tecnica ? `t\xE9cnica ${c.tecnica}` : "sua \xE1rea"}. Pre\xE7o competitivo \u2014 pode negociar com seguran\xE7a na faixa abaixo.`;
+      } else if (pct > 0) {
+        classe = "sv-alto";
+        seta = "\u2191";
+        recomendacao = `Seu pre\xE7o est\xE1 ${Math.abs(pct).toFixed(0)}% acima da m\xE9dia do mercado${c.tecnica ? ` da ${c.tecnica}` : ""} (${this.fmt(Math.round(media))}). Justifique com curadoria, hist\xF3rico ou s\xE9rie exclusiva \u2014 ou considere ajustar.`;
+      } else {
+        classe = "sv-baixo";
+        seta = "\u2193";
+        recomendacao = `Seu pre\xE7o est\xE1 ${Math.abs(pct).toFixed(0)}% abaixo da m\xE9dia do mercado${c.tecnica ? ` da ${c.tecnica}` : ""} (${this.fmt(Math.round(media))}). H\xE1 espa\xE7o para valorizar sua obra.`;
+      }
+      dirTexto = pct >= 0 ? "acima" : "abaixo";
       return `
-      <div class="faixa-comparativo">
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(min)}</div><div class="faixa-rotulo">Menor similar</div></div>
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(media)}</div><div class="faixa-rotulo">M\xE9dia similares</div></div>
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(max)}</div><div class="faixa-rotulo">Maior similar</div></div>
+      <div class="sugestao-card">
+        <div class="sugestao-header">
+          <span class="sugestao-titulo">\u{1F916} Sugest\xE3o Inteligente</span>
+          <span class="sugestao-confianca">Confian\xE7a <strong>${confianca}%</strong></span>
+        </div>
+        <div class="confianca-bar"><div class="confianca-fill" style="width:${confianca}%"></div></div>
+        <div class="sugestao-veredicto ${classe}">
+          <span class="sv-icone">${seta}</span>
+          <span>${recomendacao}</span>
+        </div>
+        <div class="sugestao-niveis">
+          <div class="sn-item"><div class="sn-valor">${this.fmt(sugerido)}</div><div class="sn-rotulo">Sugerido (seu)</div></div>
+          <div class="sn-item"><div class="sn-valor">${this.fmt(Math.round(media))}</div><div class="sn-rotulo">M\xE9dia do mercado</div></div>
+          <div class="sn-item"><div class="sn-valor">${this.fmt(min)} \u2013 ${this.fmt(max)}</div><div class="sn-rotulo">Faixa observada (${similares.length} obras)</div></div>
+        </div>
+        <div class="sugestao-pct">Diferen\xE7a: <strong>${Math.abs(pct).toFixed(0)}% ${dirTexto}</strong> do mercado${c.tecnica ? ` da ${c.tecnica}` : ""}.</div>
       </div>
     `;
+    }
+    renderFaixaNegociacao() {
+      const preco = this.calcularPreco(this.calc);
+      if (preco <= 0) return "";
+      const cfg = this.config;
+      const pctMin = this._nf(cfg.negociacaoMin, -10);
+      const pctMeta = this._nf(cfg.negociacaoMeta, 0);
+      const pctIdeal = this._nf(cfg.negociacaoIdeal, 15);
+      const min = Math.round(preco * (1 + pctMin / 100));
+      const meta = Math.round(preco * (1 + pctMeta / 100));
+      const ideal = Math.round(preco * (1 + pctIdeal / 100));
+      return `
+      <div class="negoc-wrapper">
+        <div class="negoc-titulo">\u2696\uFE0F Faixa de Negocia\xE7\xE3o</div>
+        <div class="negoc-grid">
+          <div class="negoc-card negoc-min"><div class="negoc-rotulo">M\xEDnimo aceit\xE1vel</div><div class="negoc-valor">${this.fmt(min)}</div><div class="negoc-pct">${pctMin >= 0 ? "+" : ""}${pctMin}% do ateli\xEA</div></div>
+          <div class="negoc-card negoc-meta"><div class="negoc-rotulo">Meta</div><div class="negoc-valor">${this.fmt(meta)}</div><div class="negoc-pct">${pctMeta >= 0 ? "+" : ""}${pctMeta}% do ateli\xEA</div></div>
+          <div class="negoc-card negoc-ideal"><div class="negoc-rotulo">Ideal</div><div class="negoc-valor">${this.fmt(ideal)}</div><div class="negoc-pct">+${pctIdeal}% do ateli\xEA</div></div>
+        </div>
+        <div class="negoc-config">
+          <label>M\xEDn. %<input type="number" id="negocMinInput" value="${pctMin}" step="1" aria-label="Percentual m\xEDnimo"></label>
+          <label>Meta %<input type="number" id="negocMetaInput" value="${pctMeta}" step="1" aria-label="Percentual meta"></label>
+          <label>Ideal %<input type="number" id="negocIdealInput" value="${pctIdeal}" step="1" aria-label="Percentual ideal"></label>
+          <button class="btn-secundario" id="btnSalvarNegociacao">Salvar faixa</button>
+        </div>
+      </div>
+    `;
+    }
+    _nf(valor, padrao) {
+      const v = Number(valor);
+      return Number.isFinite(v) ? v : padrao;
     }
     // --- Break-Even ---
     renderBreakEven(obras) {
@@ -14675,6 +14766,36 @@ Aprecie a exposi\xE7\xE3o!`;
           <div class="modal-acoes">
             <button class="btn-secundario" id="btnFecharTaxas">Fechar</button>
             <button class="btn-primario" id="btnSalvarTaxas">Salvar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+    renderModalTecnicas() {
+      const tcs = this.cfgRoot.tecnicasCusto || {};
+      const tecnicas = ["\xF3leo", "acr\xEDlica", "aquarela", "guache", "t\xEAmpera", "desenho", "gravura", "escultura", "cer\xE2mica", "t\xEAxtil", "outra"];
+      return `
+      <div class="widget-config-overlay" id="tecnicasOverlay" style="display:none">
+        <div class="widget-config-modal" style="max-width:560px;">
+          <h3><i class="fas fa-swatchbook"></i> Custos por T\xE9cnica</h3>
+          <p class="texto-ajuda">Valor/hora e multiplicador padr\xE3o s\xE3o auto-selecionados ao escolher a t\xE9cnica na calculadora. Deixe vazio para usar o padr\xE3o geral.</p>
+          <div class="be-tabela-wrapper" style="max-height:50vh;overflow-y:auto;">
+            <table class="be-tabela">
+              <thead><tr><th>T\xE9cnica</th><th>Valor/hora</th><th>Multiplicador</th></tr></thead>
+              <tbody>
+                ${tecnicas.map((t) => `
+                  <tr>
+                    <td>${capitalizarTexto(t)}</td>
+                    <td><input type="number" id="tcHora_${t}" value="${tcs[t] && Number.isFinite(Number(tcs[t].valorHora)) ? tcs[t].valorHora : ""}" class="tc-input" step="1" min="0" aria-label="Valor hora ${t}"></td>
+                    <td><input type="number" id="tcMult_${t}" value="${tcs[t] && Number.isFinite(Number(tcs[t].multiplicador)) ? tcs[t].multiplicador : ""}" class="tc-input" step="0.1" min="0" aria-label="Multiplicador ${t}"></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-acoes" style="margin-top:12px;">
+            <button class="btn-secundario" id="btnFecharTecnicas">Fechar</button>
+            <button class="btn-primario" id="btnSalvarTecnicas">Salvar</button>
           </div>
         </div>
       </div>
@@ -14946,6 +15067,46 @@ Aprecie a exposi\xE7\xE3o!`;
         mostrarToast("Taxas de c\xE2mbio salvas!", "sucesso");
         this.rerenderizar();
       });
+      document.getElementById("btnAbrirTecnicas")?.addEventListener("click", () => {
+        document.getElementById("tecnicasOverlay").style.display = "flex";
+      });
+      document.getElementById("btnFecharTecnicas")?.addEventListener("click", () => {
+        document.getElementById("tecnicasOverlay").style.display = "none";
+      });
+      document.getElementById("btnSalvarTecnicas")?.addEventListener("click", () => {
+        const tcs = this.cfgRoot.tecnicasCusto || {};
+        const tecnicas = ["\xF3leo", "acr\xEDlica", "aquarela", "guache", "t\xEAmpera", "desenho", "gravura", "escultura", "cer\xE2mica", "t\xEAxtil", "outra"];
+        tecnicas.forEach((t) => {
+          if (!tcs[t]) tcs[t] = {};
+          const vh = Number(document.getElementById("tcHora_" + t)?.value);
+          const ml = Number(document.getElementById("tcMult_" + t)?.value);
+          if (Number.isFinite(vh) && vh >= 0 && vh > 0) tcs[t].valorHora = vh;
+          else delete tcs[t].valorHora;
+          if (Number.isFinite(ml) && ml >= 0 && ml > 0) tcs[t].multiplicador = ml;
+          else delete tcs[t].multiplicador;
+        });
+        this.cfgRoot.tecnicasCusto = tcs;
+        configStore().salvar();
+        document.getElementById("tecnicasOverlay").style.display = "none";
+        mostrarToast("Custos por t\xE9cnica salvos!", "sucesso");
+        this.aplicarCustosTecnica();
+        this.rerenderizar();
+      });
+      const precContainer = document.getElementById("precificadorContainer");
+      if (precContainer) {
+        const handler = (e) => {
+          if (!e.target.closest("#btnSalvarNegociacao")) return;
+          this.salvarConfig({
+            negociacaoMin: Number(document.getElementById("negocMinInput")?.value) || 0,
+            negociacaoMeta: Number(document.getElementById("negocMetaInput")?.value) || 0,
+            negociacaoIdeal: Number(document.getElementById("negocIdealInput")?.value) || 0
+          });
+          mostrarToast("Faixa de negocia\xE7\xE3o salva!", "sucesso");
+          this.rerenderizar();
+        };
+        precContainer.addEventListener("click", handler);
+        this._bindCache["negociacaoSave"] = { el: precContainer, handler, type: "click" };
+      }
       document.getElementById("btnAbrirRegras")?.addEventListener("click", () => {
         document.getElementById("regrasOverlay").style.display = "flex";
       });
@@ -14987,6 +15148,7 @@ Aprecie a exposi\xE7\xE3o!`;
       bindNum("calcAltura", "altura");
       bindNum("calcProfundidade", "profundidade");
       bindNum("calcMultiplicador", "multiplicador");
+      bindNum("calcComissao", "comissaoGaleria");
       const bindTexto = (id, campo) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -15013,8 +15175,17 @@ Aprecie a exposi\xE7\xE3o!`;
         this._bindCache[id] = { el, handler, type: "change" };
       };
       bindSelect("calcCliente", "clienteId");
-      bindSelect("calcTecnica", "tecnica");
       bindSelect("calcArredondamento", "arredondamento");
+      const elTecnica = document.getElementById("calcTecnica");
+      if (elTecnica) {
+        const handler = () => {
+          this.calc.tecnica = elTecnica.value;
+          this.aplicarCustosTecnica();
+          this.atualizarResultado();
+        };
+        elTecnica.addEventListener("change", handler);
+        this._bindCache["calcTecnica"] = { el: elTecnica, handler, type: "change" };
+      }
       const estrelasContainer = document.getElementById("estrelasInput");
       if (estrelasContainer) {
         const handler = (e) => {
@@ -15155,11 +15326,27 @@ Aprecie a exposi\xE7\xE3o!`;
       document.getElementById("btnExportarRelatorio")?.addEventListener("click", () => this.exportarRelatorioPDF());
       this.atualizarResultado();
     }
+    aplicarCustosTecnica() {
+      const tcs = this.cfgRoot.tecnicasCusto || {};
+      const cfg = tcs[this.calc.tecnica];
+      if (this.calc.tecnica && cfg) {
+        if (Number.isFinite(Number(cfg.valorHora)) && Number(cfg.valorHora) > 0) this.calc.valorHora = Number(cfg.valorHora);
+        if (Number.isFinite(Number(cfg.multiplicador)) && Number(cfg.multiplicador) > 0) this.calc.multiplicador = Number(cfg.multiplicador);
+      } else {
+        this.calc.valorHora = this.config.valorHora || 60;
+        this.calc.multiplicador = this.config.multiplicadorExperiencia || 1.5;
+      }
+      const elVh = document.getElementById("calcValorHora");
+      if (elVh) elVh.value = this.calc.valorHora;
+      const elMult = document.getElementById("calcMultiplicador");
+      if (elMult) elMult.value = this.calc.multiplicador;
+    }
     atualizarResultado() {
       const preco = this.calcularPreco(this.calc);
       const elValor = document.getElementById("valorSugerido");
       const elDetalhe = document.getElementById("detalheCalculo");
-      const elFaixa = document.getElementById("faixaComparativa");
+      const elSugestao = document.getElementById("sugestaoInteligente");
+      const elNegoc = document.getElementById("faixaNegociacao");
       const elConversoes = document.getElementById("conversoesMultiMoeda");
       const elBreakdown = document.getElementById("breakdownGrid");
       const elRegra = document.getElementById("regraAuto");
@@ -15167,15 +15354,13 @@ Aprecie a exposi\xE7\xE3o!`;
       if (elDetalhe) elDetalhe.textContent = this.detalharCalculo(preco);
       if (elBreakdown) elBreakdown.innerHTML = this.renderBreakdown(this.calcularBreakdown(this.calc));
       if (elRegra) elRegra.innerHTML = this.renderRegraAuto();
+      if (elSugestao) elSugestao.innerHTML = this.renderSugestaoInteligente();
+      if (elNegoc) elNegoc.innerHTML = this.renderFaixaNegociacao();
       if (elConversoes) {
         const moedas = ["USD", "EUR", "GBP"];
         elConversoes.innerHTML = moedas.filter((m) => m !== this.moeda).map(
           (m) => `<span class="conv-moeda">${m}: ${this.fmt(this.converter(preco, this.moeda, m), m)}</span>`
         ).join("");
-      }
-      if (elFaixa) {
-        const obras = obraStore().items || [];
-        elFaixa.innerHTML = this.renderFaixaComparativa(obras);
       }
     }
     // --- Ações do orçamento ---
@@ -15198,6 +15383,7 @@ Aprecie a exposi\xE7\xE3o!`;
         complexidade: Number(this.calc.complexidade) || 3,
         multiplicador: Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5,
         arredondamento: Number(this.calc.arredondamento) || 0,
+        comissaoGaleria: Number(this.calc.comissaoGaleria) || 0,
         preco: this.calcularPreco(this.calc),
         moeda: this.moeda,
         numero: "",
@@ -15276,7 +15462,8 @@ Aprecie a exposi\xE7\xE3o!`;
         profundidade: orc.profundidade || 0,
         complexidade: orc.complexidade || 3,
         multiplicador: orc.multiplicador || this.config.multiplicadorExperiencia || 1.5,
-        arredondamento: orc.arredondamento || 0
+        arredondamento: orc.arredondamento || 0,
+        comissaoGaleria: Number(orc.comissaoGaleria) || 0
       };
       mostrarToast("Or\xE7amento carregado na calculadora.", "info");
       this.rerenderizar();
@@ -15446,6 +15633,8 @@ Aprecie a exposi\xE7\xE3o!`;
         custoTotal: (orc.materiais || 0) + (orc.horas || 0) * (orc.valorHora || 60),
         multiplicador: orc.multiplicador || 1.5,
         preco: orc.preco || 0,
+        comissaoPct: Math.max(0, Math.min(90, Number(orc.comissaoGaleria) || 0)),
+        precoGaleria: (orc.preco || 0) / (1 - Math.max(0, Math.min(90, Number(orc.comissaoGaleria) || 0)) / 100),
         moeda: orc.moeda || this.moeda,
         validadeData: orc.validadeData ? formatarData(orc.validadeData) : ""
       };
@@ -15516,6 +15705,7 @@ Aprecie a exposi\xE7\xE3o!`;
       linha("M\xE3o de obra:", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)} = ${this.fmt(d.maoObra, d.moeda)}`);
       linha("Custo total:", this.fmt(d.custoTotal, d.moeda));
       linha("Multiplicador:", `\xD7 ${d.multiplicador}`);
+      if (d.comissaoPct > 0) linha("Comiss\xE3o de galeria:", `${d.comissaoPct}%`);
       y += 3;
       doc.setDrawColor(180);
       doc.line(margem, y, margem + larg, y);
@@ -15524,7 +15714,14 @@ Aprecie a exposi\xE7\xE3o!`;
       doc.setFontSize(18);
       doc.setTextColor(30);
       doc.text(`Valor da proposta: ${this.fmt(d.preco, d.moeda)}`, margem, y);
-      y += 8;
+      y += 7;
+      if (d.comissaoPct > 0) {
+        doc.setFont("times", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(90);
+        doc.text(`Pre\xE7o via galeria (com ${d.comissaoPct}% de comiss\xE3o): ${this.fmt(d.precoGaleria, d.moeda)}`, margem, y);
+        y += 7;
+      }
       doc.setFont("times", "italic");
       doc.setFontSize(9.5);
       doc.setTextColor(90);
@@ -15614,6 +15811,7 @@ Aprecie a exposi\xE7\xE3o!`;
       item("M\xE3o de obra", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)}`);
       item("Custo total", this.fmt(d.custoTotal, d.moeda));
       item("Multiplicador", `\xD7 ${d.multiplicador}`);
+      if (d.comissaoPct > 0) item("Comiss\xE3o de galeria", `${d.comissaoPct}%`);
       y += 3;
       doc.setDrawColor(215);
       doc.setLineWidth(0.2);
@@ -15631,6 +15829,12 @@ Aprecie a exposi\xE7\xE3o!`;
       doc.setFontSize(16);
       doc.setTextColor(accent[0], accent[1], accent[2]);
       doc.text(this.fmt(d.preco, d.moeda), margem + 8, y + 7);
+      if (d.comissaoPct > 0) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text(`via galeria (+${d.comissaoPct}%): ${this.fmt(d.precoGaleria, d.moeda)}`, margem + 8, y + 13);
+      }
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(120);
@@ -15700,6 +15904,7 @@ Aprecie a exposi\xE7\xE3o!`;
       item("M\xE3o de obra", `${d.horas}h \xD7 ${this.fmt(d.valorHora, d.moeda)}`);
       item("Custo total", this.fmt(d.custoTotal, d.moeda));
       item("Multiplicador", `\xD7 ${d.multiplicador}`);
+      if (d.comissaoPct > 0) item("Comiss\xE3o de galeria", `${d.comissaoPct}%`);
       y += 8;
       doc.setDrawColor(220);
       doc.line(margem, y, margem + larg, y);
@@ -15712,6 +15917,10 @@ Aprecie a exposi\xE7\xE3o!`;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(140);
+      if (d.comissaoPct > 0) {
+        doc.text(`via galeria (+${d.comissaoPct}%): ${this.fmt(d.precoGaleria, d.moeda)}`, margem, y);
+        y += 5;
+      }
       doc.text(`Validade: 30 dias${d.validadeData ? " (at\xE9 " + d.validadeData + ")" : ""}`, margem, y);
       y += 18;
       if (qr) {
@@ -21398,7 +21607,20 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       pin: "",
       autoLock: false,
       tourCompleted: false,
-      precificador: { valorHora: 60, multiplicadorExperiencia: 1.5, arredondamento: 0, metaMensal: 1e4, metaAnual: 12e4, metaInicio: "" },
+      precificador: { valorHora: 60, multiplicadorExperiencia: 1.5, arredondamento: 0, metaMensal: 1e4, metaAnual: 12e4, metaInicio: "", comissaoGaleria: 0, negociacaoMin: -10, negociacaoMeta: 0, negociacaoIdeal: 15 },
+      tecnicasCusto: {
+        "\xF3leo": { valorHora: 80, multiplicador: 2 },
+        "acr\xEDlica": { valorHora: 70, multiplicador: 1.8 },
+        "aquarela": { valorHora: 65, multiplicador: 1.6 },
+        "guache": { valorHora: 60, multiplicador: 1.5 },
+        "t\xEAmpera": { valorHora: 65, multiplicador: 1.6 },
+        "desenho": { valorHora: 45, multiplicador: 1.3 },
+        "gravura": { valorHora: 70, multiplicador: 1.8 },
+        "escultura": { valorHora: 90, multiplicador: 2.2 },
+        "cer\xE2mica": { valorHora: 75, multiplicador: 1.9 },
+        "t\xEAxtil": { valorHora: 55, multiplicador: 1.5 },
+        "outra": { valorHora: 60, multiplicador: 1.5 }
+      },
       precificadorRegras: [],
       precificadorOrcamentos: [],
       moedaPadrao: "BRL",

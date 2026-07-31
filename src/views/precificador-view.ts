@@ -13,7 +13,7 @@ export class PrecificadorView extends BaseView {
       materiais: 0, horas: 0, valorHora: 60,
       largura: 0, altura: 0, profundidade: 0,
       complexidade: 3,
-      multiplicador: 1.5, arredondamento: 0
+      multiplicador: 1.5, arredondamento: 0, comissaoGaleria: 0
     };
     this.fatoresComplexidade = [0, 0.7, 0.85, 1.0, 1.2, 1.5];
     this.modoOrcamentos = localStorage.getItem('atelier-crm-view-mode-orcamentos') || 'kanban';
@@ -60,6 +60,7 @@ export class PrecificadorView extends BaseView {
     this.calc.valorHora = Number(this.calc.valorHora) || this.config.valorHora || 60;
     this.calc.multiplicador = Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5;
     this.calc.arredondamento = Number(this.calc.arredondamento) || this.config.arredondamento || 0;
+    this.calc.comissaoGaleria = Number(this.calc.comissaoGaleria) || 0;
 
     const opcoesClientes = clientes.map(c =>
       `<option value="${c.id}" ${this.calc.clienteId === c.id ? 'selected' : ''}>${c.nome}${c.email ? ' — ' + c.email : ''}</option>`
@@ -83,6 +84,7 @@ export class PrecificadorView extends BaseView {
             <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de câmbio" aria-label="Editar taxas de câmbio">💱</button>
           </div>
           <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precificação</button>
+          <button class="btn-secundario" id="btnAbrirTecnicas"><i class="fas fa-swatchbook"></i> Custos por Técnica</button>
           <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relatório PDF</button>
         </div>
 
@@ -136,6 +138,10 @@ export class PrecificadorView extends BaseView {
               <input type="number" id="calcMultiplicador" aria-label="Multiplicador" value="${this.calc.multiplicador}" min="1" step="0.1">
             </div>
             <div class="campo-calc">
+              <label>🏛️ Comissão de galeria (%)</label>
+              <input type="number" id="calcComissao" aria-label="Comissão de galeria" value="${this.calc.comissaoGaleria}" min="0" max="90" step="1" title="Percentual repassado à galeria. Mostra preço ateliê vs. preço galeria.">
+            </div>
+            <div class="campo-calc">
               <label>🔢 Arredondamento</label>
               <select id="calcArredondamento" aria-label="Arredondamento">
                 <option value="0" ${this.calc.arredondamento === 0 ? 'selected' : ''}>Sem arredondamento</option>
@@ -156,7 +162,8 @@ export class PrecificadorView extends BaseView {
 
           <div class="breakdown-grid" id="breakdownGrid">${this.renderBreakdown(this.calcularBreakdown(this.calc))}</div>
           <div id="regraAuto">${this.renderRegraAuto()}</div>
-          <div id="faixaComparativa">${this.renderFaixaComparativa(obras)}</div>
+          <div id="sugestaoInteligente">${this.renderSugestaoInteligente()}</div>
+          <div id="faixaNegociacao">${this.renderFaixaNegociacao()}</div>
 
           <div class="orcamento-acoes">
             <select id="selTemplateProposta" class="orc-status-select" aria-label="Template da proposta PDF" title="Template da proposta PDF">
@@ -190,6 +197,7 @@ export class PrecificadorView extends BaseView {
 
       ${this.renderModalRegras()}
       ${this.renderModalTaxas()}
+      ${this.renderModalTecnicas()}
     `;
   }
 
@@ -313,7 +321,9 @@ export class PrecificadorView extends BaseView {
     const lucro = preco - custoTotal;
     const margem = preco > 0 ? (lucro / preco) * 100 : 0;
     const markup = custoTotal > 0 ? preco / custoTotal : 0;
-    return { materiais, horas, valorHora, maoObra, custoTotal, fator, mult, bonus, arred, precoBruto, preco, lucro, margem, markup, largura, altura, profundidade, area };
+    const comissaoPct = Math.max(0, Math.min(90, Number(c.comissaoGaleria) || 0));
+    const precoGaleria = comissaoPct >= 100 ? preco : preco / (1 - comissaoPct / 100);
+    return { materiais, horas, valorHora, maoObra, custoTotal, fator, mult, bonus, arred, precoBruto, preco, lucro, margem, markup, largura, altura, profundidade, area, comissaoPct, precoGaleria };
   }
 
   calcularPreco(c) {
@@ -338,6 +348,9 @@ export class PrecificadorView extends BaseView {
       <div class="bd-item"><span class="bd-label">Lucro estimado</span><span class="bd-valor">${this.fmt(b.lucro)}</span></div>
       <div class="bd-item"><span class="bd-label">Markup</span><span class="bd-valor">${b.markup.toFixed(2)}×</span></div>
       <div class="bd-item"><span class="bd-label">Margem</span><span class="bd-valor ${margemClasse}">${b.margem.toFixed(1)}%</span></div>
+      <div class="bd-item bd-comissao"><span class="bd-label">Comissão de galeria</span><span class="bd-valor">${b.comissaoPct}%</span></div>
+      <div class="bd-item bd-total"><span class="bd-label">Preço ateliê (seu)</span><span class="bd-valor">${this.fmt(b.preco)}</span></div>
+      ${b.comissaoPct > 0 ? `<div class="bd-item bd-galeria"><span class="bd-label">Preço galeria (p/ repassar ${b.comissaoPct}%)</span><span class="bd-valor">${this.fmt(b.precoGaleria)}</span></div>` : ''}
     `;
   }
 
@@ -367,27 +380,104 @@ export class PrecificadorView extends BaseView {
     `;
   }
 
-  renderFaixaComparativa(obras) {
+  renderSugestaoInteligente() {
     const c = this.calc;
     const area = (Number(c.largura) || 0) * (Number(c.altura) || 0);
-    if (!area || obras.length < 2) return '';
-    const similares = obras.filter(o => {
+    if (!area) return '';
+    const obras = (obraStore().items || []).filter(o => Number(o.preco) > 0);
+    if (obras.length === 0) return '';
+    let similares = obras.filter(o => {
       const dim = o.dimensoes;
       if (!dim || !dim.largura || !dim.altura) return false;
       const oArea = dim.largura * dim.altura;
-      return oArea > area * 0.5 && oArea < area * 1.5 && o.preco > 0;
+      return oArea > area * 0.5 && oArea < area * 1.5 && (!c.tecnica || !o.tecnica || o.tecnica === c.tecnica);
     });
-    if (similares.length < 2) return '';
+    if (similares.length < 2 && c.tecnica) {
+      similares = obras.filter(o => o.tecnica === c.tecnica);
+    }
+    if (similares.length < 2) {
+      return `
+        <div class="sugestao-card sugestao-fraca">
+          <div class="sugestao-header">
+            <span class="sugestao-titulo">🤖 Sugestão Inteligente</span>
+            <span class="sugestao-confianca">Confiança <strong>baixa</strong></span>
+          </div>
+          <div class="sugestao-veredicto sv-baixo">Dados insuficientes: cadastre mais obras${c.tecnica ? ` de ${c.tecnica}` : ''} no catálogo para comparar seu preço com o mercado.</div>
+        </div>
+      `;
+    }
     const precos = similares.map(o => Number(o.preco)).sort((a, b) => a - b);
     const min = precos[0], max = precos[precos.length - 1];
-    const media = Math.round(precos.reduce((s, v) => s + v, 0) / precos.length);
+    const media = precos.reduce((s, v) => s + v, 0) / precos.length;
+    const sugerido = this.calcularPreco(this.calc);
+    if (sugerido <= 0) return '';
+    const pct = media > 0 ? ((sugerido - media) / media) * 100 : 0;
+    const dispersao = media > 0 ? (max - min) / media : 1;
+    let confianca = Math.round(Math.max(10, Math.min(98, 100 - Math.abs(pct) * 1.5 - dispersao * 40 - Math.max(0, 5 - similares.length) * 7)));
+    let classe = 'sv-ok', seta = '✓', recomendacao, dirTexto;
+    if (Math.abs(pct) < 8) {
+      classe = 'sv-ok';
+      recomendacao = `Alinhado ao mercado da ${c.tecnica ? `técnica ${c.tecnica}` : 'sua área'}. Preço competitivo — pode negociar com segurança na faixa abaixo.`;
+    } else if (pct > 0) {
+      classe = 'sv-alto'; seta = '↑';
+      recomendacao = `Seu preço está ${Math.abs(pct).toFixed(0)}% acima da média do mercado${c.tecnica ? ` da ${c.tecnica}` : ''} (${this.fmt(Math.round(media))}). Justifique com curadoria, histórico ou série exclusiva — ou considere ajustar.`;
+    } else {
+      classe = 'sv-baixo'; seta = '↓';
+      recomendacao = `Seu preço está ${Math.abs(pct).toFixed(0)}% abaixo da média do mercado${c.tecnica ? ` da ${c.tecnica}` : ''} (${this.fmt(Math.round(media))}). Há espaço para valorizar sua obra.`;
+    }
+    dirTexto = pct >= 0 ? 'acima' : 'abaixo';
     return `
-      <div class="faixa-comparativo">
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(min)}</div><div class="faixa-rotulo">Menor similar</div></div>
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(media)}</div><div class="faixa-rotulo">Média similares</div></div>
-        <div class="faixa-item"><div class="faixa-valor">${this.fmt(max)}</div><div class="faixa-rotulo">Maior similar</div></div>
+      <div class="sugestao-card">
+        <div class="sugestao-header">
+          <span class="sugestao-titulo">🤖 Sugestão Inteligente</span>
+          <span class="sugestao-confianca">Confiança <strong>${confianca}%</strong></span>
+        </div>
+        <div class="confianca-bar"><div class="confianca-fill" style="width:${confianca}%"></div></div>
+        <div class="sugestao-veredicto ${classe}">
+          <span class="sv-icone">${seta}</span>
+          <span>${recomendacao}</span>
+        </div>
+        <div class="sugestao-niveis">
+          <div class="sn-item"><div class="sn-valor">${this.fmt(sugerido)}</div><div class="sn-rotulo">Sugerido (seu)</div></div>
+          <div class="sn-item"><div class="sn-valor">${this.fmt(Math.round(media))}</div><div class="sn-rotulo">Média do mercado</div></div>
+          <div class="sn-item"><div class="sn-valor">${this.fmt(min)} – ${this.fmt(max)}</div><div class="sn-rotulo">Faixa observada (${similares.length} obras)</div></div>
+        </div>
+        <div class="sugestao-pct">Diferença: <strong>${Math.abs(pct).toFixed(0)}% ${dirTexto}</strong> do mercado${c.tecnica ? ` da ${c.tecnica}` : ''}.</div>
       </div>
     `;
+  }
+
+  renderFaixaNegociacao() {
+    const preco = this.calcularPreco(this.calc);
+    if (preco <= 0) return '';
+    const cfg = this.config;
+    const pctMin = this._nf(cfg.negociacaoMin, -10);
+    const pctMeta = this._nf(cfg.negociacaoMeta, 0);
+    const pctIdeal = this._nf(cfg.negociacaoIdeal, 15);
+    const min = Math.round(preco * (1 + pctMin / 100));
+    const meta = Math.round(preco * (1 + pctMeta / 100));
+    const ideal = Math.round(preco * (1 + pctIdeal / 100));
+    return `
+      <div class="negoc-wrapper">
+        <div class="negoc-titulo">⚖️ Faixa de Negociação</div>
+        <div class="negoc-grid">
+          <div class="negoc-card negoc-min"><div class="negoc-rotulo">Mínimo aceitável</div><div class="negoc-valor">${this.fmt(min)}</div><div class="negoc-pct">${pctMin >= 0 ? '+' : ''}${pctMin}% do ateliê</div></div>
+          <div class="negoc-card negoc-meta"><div class="negoc-rotulo">Meta</div><div class="negoc-valor">${this.fmt(meta)}</div><div class="negoc-pct">${pctMeta >= 0 ? '+' : ''}${pctMeta}% do ateliê</div></div>
+          <div class="negoc-card negoc-ideal"><div class="negoc-rotulo">Ideal</div><div class="negoc-valor">${this.fmt(ideal)}</div><div class="negoc-pct">+${pctIdeal}% do ateliê</div></div>
+        </div>
+        <div class="negoc-config">
+          <label>Mín. %<input type="number" id="negocMinInput" value="${pctMin}" step="1" aria-label="Percentual mínimo"></label>
+          <label>Meta %<input type="number" id="negocMetaInput" value="${pctMeta}" step="1" aria-label="Percentual meta"></label>
+          <label>Ideal %<input type="number" id="negocIdealInput" value="${pctIdeal}" step="1" aria-label="Percentual ideal"></label>
+          <button class="btn-secundario" id="btnSalvarNegociacao">Salvar faixa</button>
+        </div>
+      </div>
+    `;
+  }
+
+  _nf(valor, padrao) {
+    const v = Number(valor);
+    return Number.isFinite(v) ? v : padrao;
   }
 
   // --- Break-Even ---
@@ -672,6 +762,37 @@ export class PrecificadorView extends BaseView {
           <div class="modal-acoes">
             <button class="btn-secundario" id="btnFecharTaxas">Fechar</button>
             <button class="btn-primario" id="btnSalvarTaxas">Salvar</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderModalTecnicas() {
+    const tcs = this.cfgRoot.tecnicasCusto || {};
+    const tecnicas = ['óleo', 'acrílica', 'aquarela', 'guache', 'têmpera', 'desenho', 'gravura', 'escultura', 'cerâmica', 'têxtil', 'outra'];
+    return `
+      <div class="widget-config-overlay" id="tecnicasOverlay" style="display:none">
+        <div class="widget-config-modal" style="max-width:560px;">
+          <h3><i class="fas fa-swatchbook"></i> Custos por Técnica</h3>
+          <p class="texto-ajuda">Valor/hora e multiplicador padrão são auto-selecionados ao escolher a técnica na calculadora. Deixe vazio para usar o padrão geral.</p>
+          <div class="be-tabela-wrapper" style="max-height:50vh;overflow-y:auto;">
+            <table class="be-tabela">
+              <thead><tr><th>Técnica</th><th>Valor/hora</th><th>Multiplicador</th></tr></thead>
+              <tbody>
+                ${tecnicas.map(t => `
+                  <tr>
+                    <td>${capitalizarTexto(t)}</td>
+                    <td><input type="number" id="tcHora_${t}" value="${tcs[t] && Number.isFinite(Number(tcs[t].valorHora)) ? tcs[t].valorHora : ''}" class="tc-input" step="1" min="0" aria-label="Valor hora ${t}"></td>
+                    <td><input type="number" id="tcMult_${t}" value="${tcs[t] && Number.isFinite(Number(tcs[t].multiplicador)) ? tcs[t].multiplicador : ''}" class="tc-input" step="0.1" min="0" aria-label="Multiplicador ${t}"></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-acoes" style="margin-top:12px;">
+            <button class="btn-secundario" id="btnFecharTecnicas">Fechar</button>
+            <button class="btn-primario" id="btnSalvarTecnicas">Salvar</button>
           </div>
         </div>
       </div>
@@ -975,6 +1096,48 @@ export class PrecificadorView extends BaseView {
       this.rerenderizar();
     });
 
+    // Custos por técnica
+    document.getElementById('btnAbrirTecnicas')?.addEventListener('click', () => {
+      document.getElementById('tecnicasOverlay').style.display = 'flex';
+    });
+    document.getElementById('btnFecharTecnicas')?.addEventListener('click', () => {
+      document.getElementById('tecnicasOverlay').style.display = 'none';
+    });
+    document.getElementById('btnSalvarTecnicas')?.addEventListener('click', () => {
+      const tcs = this.cfgRoot.tecnicasCusto || {};
+      const tecnicas = ['óleo', 'acrílica', 'aquarela', 'guache', 'têmpera', 'desenho', 'gravura', 'escultura', 'cerâmica', 'têxtil', 'outra'];
+      tecnicas.forEach(t => {
+        if (!tcs[t]) tcs[t] = {};
+        const vh = Number(document.getElementById('tcHora_' + t)?.value);
+        const ml = Number(document.getElementById('tcMult_' + t)?.value);
+        if (Number.isFinite(vh) && vh >= 0 && vh > 0) tcs[t].valorHora = vh; else delete tcs[t].valorHora;
+        if (Number.isFinite(ml) && ml >= 0 && ml > 0) tcs[t].multiplicador = ml; else delete tcs[t].multiplicador;
+      });
+      this.cfgRoot.tecnicasCusto = tcs;
+      configStore().salvar();
+      document.getElementById('tecnicasOverlay').style.display = 'none';
+      mostrarToast('Custos por técnica salvos!', 'sucesso');
+      this.aplicarCustosTecnica();
+      this.rerenderizar();
+    });
+
+    // Faixa de negociação (delegação: renderizada dinamicamente por atualizarResultado)
+    const precContainer = document.getElementById('precificadorContainer');
+    if (precContainer) {
+      const handler = (e) => {
+        if (!e.target.closest('#btnSalvarNegociacao')) return;
+        this.salvarConfig({
+          negociacaoMin: Number(document.getElementById('negocMinInput')?.value) || 0,
+          negociacaoMeta: Number(document.getElementById('negocMetaInput')?.value) || 0,
+          negociacaoIdeal: Number(document.getElementById('negocIdealInput')?.value) || 0
+        });
+        mostrarToast('Faixa de negociação salva!', 'sucesso');
+        this.rerenderizar();
+      };
+      precContainer.addEventListener('click', handler);
+      this._bindCache['negociacaoSave'] = { el: precContainer, handler, type: 'click' };
+    }
+
     // Regras
     document.getElementById('btnAbrirRegras')?.addEventListener('click', () => {
       document.getElementById('regrasOverlay').style.display = 'flex';
@@ -1020,6 +1183,7 @@ export class PrecificadorView extends BaseView {
     bindNum('calcAltura', 'altura');
     bindNum('calcProfundidade', 'profundidade');
     bindNum('calcMultiplicador', 'multiplicador');
+    bindNum('calcComissao', 'comissaoGaleria');
 
     const bindTexto = (id, campo) => {
       const el = document.getElementById(id);
@@ -1048,8 +1212,18 @@ export class PrecificadorView extends BaseView {
       this._bindCache[id] = { el, handler, type: 'change' };
     };
     bindSelect('calcCliente', 'clienteId');
-    bindSelect('calcTecnica', 'tecnica');
     bindSelect('calcArredondamento', 'arredondamento');
+
+    const elTecnica = document.getElementById('calcTecnica');
+    if (elTecnica) {
+      const handler = () => {
+        this.calc.tecnica = elTecnica.value;
+        this.aplicarCustosTecnica();
+        this.atualizarResultado();
+      };
+      elTecnica.addEventListener('change', handler);
+      this._bindCache['calcTecnica'] = { el: elTecnica, handler, type: 'change' };
+    }
 
     const estrelasContainer = document.getElementById('estrelasInput');
     if (estrelasContainer) {
@@ -1194,11 +1368,28 @@ export class PrecificadorView extends BaseView {
     this.atualizarResultado();
   }
 
+  aplicarCustosTecnica() {
+    const tcs = this.cfgRoot.tecnicasCusto || {};
+    const cfg = tcs[this.calc.tecnica];
+    if (this.calc.tecnica && cfg) {
+      if (Number.isFinite(Number(cfg.valorHora)) && Number(cfg.valorHora) > 0) this.calc.valorHora = Number(cfg.valorHora);
+      if (Number.isFinite(Number(cfg.multiplicador)) && Number(cfg.multiplicador) > 0) this.calc.multiplicador = Number(cfg.multiplicador);
+    } else {
+      this.calc.valorHora = this.config.valorHora || 60;
+      this.calc.multiplicador = this.config.multiplicadorExperiencia || 1.5;
+    }
+    const elVh = document.getElementById('calcValorHora');
+    if (elVh) elVh.value = this.calc.valorHora;
+    const elMult = document.getElementById('calcMultiplicador');
+    if (elMult) elMult.value = this.calc.multiplicador;
+  }
+
   atualizarResultado() {
     const preco = this.calcularPreco(this.calc);
     const elValor = document.getElementById('valorSugerido');
     const elDetalhe = document.getElementById('detalheCalculo');
-    const elFaixa = document.getElementById('faixaComparativa');
+    const elSugestao = document.getElementById('sugestaoInteligente');
+    const elNegoc = document.getElementById('faixaNegociacao');
     const elConversoes = document.getElementById('conversoesMultiMoeda');
     const elBreakdown = document.getElementById('breakdownGrid');
     const elRegra = document.getElementById('regraAuto');
@@ -1206,6 +1397,8 @@ export class PrecificadorView extends BaseView {
     if (elDetalhe) elDetalhe.textContent = this.detalharCalculo(preco);
     if (elBreakdown) elBreakdown.innerHTML = this.renderBreakdown(this.calcularBreakdown(this.calc));
     if (elRegra) elRegra.innerHTML = this.renderRegraAuto();
+    if (elSugestao) elSugestao.innerHTML = this.renderSugestaoInteligente();
+    if (elNegoc) elNegoc.innerHTML = this.renderFaixaNegociacao();
 
     // Conversões multi-moeda
     if (elConversoes) {
@@ -1213,11 +1406,6 @@ export class PrecificadorView extends BaseView {
       elConversoes.innerHTML = moedas.filter(m => m !== this.moeda).map(m =>
         `<span class="conv-moeda">${m}: ${this.fmt(this.converter(preco, this.moeda, m), m)}</span>`
       ).join('');
-    }
-
-    if (elFaixa) {
-      const obras = obraStore().items || [];
-      elFaixa.innerHTML = this.renderFaixaComparativa(obras);
     }
   }
 
@@ -1241,6 +1429,7 @@ export class PrecificadorView extends BaseView {
       complexidade: Number(this.calc.complexidade) || 3,
       multiplicador: Number(this.calc.multiplicador) || this.config.multiplicadorExperiencia || 1.5,
       arredondamento: Number(this.calc.arredondamento) || 0,
+      comissaoGaleria: Number(this.calc.comissaoGaleria) || 0,
       preco: this.calcularPreco(this.calc),
       moeda: this.moeda,
       numero: '',
@@ -1312,7 +1501,8 @@ export class PrecificadorView extends BaseView {
       largura: orc.largura || 0, altura: orc.altura || 0, profundidade: orc.profundidade || 0,
       complexidade: orc.complexidade || 3,
       multiplicador: orc.multiplicador || this.config.multiplicadorExperiencia || 1.5,
-      arredondamento: orc.arredondamento || 0
+      arredondamento: orc.arredondamento || 0,
+      comissaoGaleria: Number(orc.comissaoGaleria) || 0
     };
     mostrarToast('Orçamento carregado na calculadora.', 'info');
     this.rerenderizar();
@@ -1473,6 +1663,8 @@ export class PrecificadorView extends BaseView {
       custoTotal: (orc.materiais || 0) + (orc.horas || 0) * (orc.valorHora || 60),
       multiplicador: orc.multiplicador || 1.5,
       preco: orc.preco || 0,
+      comissaoPct: Math.max(0, Math.min(90, Number(orc.comissaoGaleria) || 0)),
+      precoGaleria: (orc.preco || 0) / (1 - (Math.max(0, Math.min(90, Number(orc.comissaoGaleria) || 0))) / 100),
       moeda: orc.moeda || this.moeda,
       validadeData: orc.validadeData ? formatarData(orc.validadeData) : ''
     };
@@ -1547,6 +1739,7 @@ export class PrecificadorView extends BaseView {
     linha('Mão de obra:', `${d.horas}h × ${this.fmt(d.valorHora, d.moeda)} = ${this.fmt(d.maoObra, d.moeda)}`);
     linha('Custo total:', this.fmt(d.custoTotal, d.moeda));
     linha('Multiplicador:', `× ${d.multiplicador}`);
+    if (d.comissaoPct > 0) linha('Comissão de galeria:', `${d.comissaoPct}%`);
     y += 3;
     doc.setDrawColor(180);
     doc.line(margem, y, margem + larg, y);
@@ -1556,7 +1749,14 @@ export class PrecificadorView extends BaseView {
     doc.setFontSize(18);
     doc.setTextColor(30);
     doc.text(`Valor da proposta: ${this.fmt(d.preco, d.moeda)}`, margem, y);
-    y += 8;
+    y += 7;
+    if (d.comissaoPct > 0) {
+      doc.setFont('times', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(90);
+      doc.text(`Preço via galeria (com ${d.comissaoPct}% de comissão): ${this.fmt(d.precoGaleria, d.moeda)}`, margem, y);
+      y += 7;
+    }
     doc.setFont('times', 'italic');
     doc.setFontSize(9.5);
     doc.setTextColor(90);
@@ -1651,6 +1851,7 @@ export class PrecificadorView extends BaseView {
     item('Mão de obra', `${d.horas}h × ${this.fmt(d.valorHora, d.moeda)}`);
     item('Custo total', this.fmt(d.custoTotal, d.moeda));
     item('Multiplicador', `× ${d.multiplicador}`);
+    if (d.comissaoPct > 0) item('Comissão de galeria', `${d.comissaoPct}%`);
     y += 3;
     doc.setDrawColor(215);
     doc.setLineWidth(0.2);
@@ -1669,6 +1870,12 @@ export class PrecificadorView extends BaseView {
     doc.setFontSize(16);
     doc.setTextColor(accent[0], accent[1], accent[2]);
     doc.text(this.fmt(d.preco, d.moeda), margem + 8, y + 7);
+    if (d.comissaoPct > 0) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(`via galeria (+${d.comissaoPct}%): ${this.fmt(d.precoGaleria, d.moeda)}`, margem + 8, y + 13);
+    }
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(120);
@@ -1738,6 +1945,7 @@ export class PrecificadorView extends BaseView {
     item('Mão de obra', `${d.horas}h × ${this.fmt(d.valorHora, d.moeda)}`);
     item('Custo total', this.fmt(d.custoTotal, d.moeda));
     item('Multiplicador', `× ${d.multiplicador}`);
+    if (d.comissaoPct > 0) item('Comissão de galeria', `${d.comissaoPct}%`);
     y += 8;
     doc.setDrawColor(220);
     doc.line(margem, y, margem + larg, y);
@@ -1751,6 +1959,10 @@ export class PrecificadorView extends BaseView {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(140);
+    if (d.comissaoPct > 0) {
+      doc.text(`via galeria (+${d.comissaoPct}%): ${this.fmt(d.precoGaleria, d.moeda)}`, margem, y);
+      y += 5;
+    }
     doc.text(`Validade: 30 dias${d.validadeData ? ' (até ' + d.validadeData + ')' : ''}`, margem, y);
     y += 18;
 
