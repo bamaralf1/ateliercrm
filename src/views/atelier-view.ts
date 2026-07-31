@@ -15,7 +15,7 @@
   // --- RENDER ---
   render() {
     const tabs = ['estoque', 'consumo', 'compras', 'fornecedores', 'custo'];
-    const tabLabels = { estoque: 'ðŸ“¦ Estoque', consumo: 'ðŸ“‹ Consumo', compras: 'ðŸ›’ Compras', fornecedores: 'ðŸª Fornecedores', custo: 'ðŸ’° Custo p/ Obra' };
+    const tabLabels = { estoque: '📦 Estoque', consumo: '📋 Consumo', compras: '🛒 Compras', fornecedores: '🏪 Fornecedores', custo: '💰 Custo p/ Obra' };
     const tabContent = {
       estoque: () => this.renderEstoque(),
       consumo: () => this.renderConsumo(),
@@ -84,11 +84,11 @@
           ${m.dataAquisicao ? `<span>📅 ${m.dataAquisicao}</span>` : ''}
           ${m.validade ? `<span>⏳ Val: ${m.validade}</span>` : ''}
         </div>
-        ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">ðŸ“ ${m.notas}</div>` : ''}
+        ${m.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${m.notas}</div>` : ''}
         <div class="mat-acoes">
-          <button data-acao="editarMaterial" data-id="${m.id}">âœï¸ Editar</button>
-          <button data-acao="consumirMaterial" data-id="${m.id}">ðŸ“‰ Consumir</button>
-           <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;" aria-label="Excluir material">ðŸ—‘ï¸</button>
+          <button data-acao="editarMaterial" data-id="${m.id}">✏️ Editar</button>
+          <button data-acao="consumirMaterial" data-id="${m.id}">📉 Consumir</button>
+           <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;" aria-label="Excluir material">🗑️</button>
         </div>
       </div>
     `;
@@ -109,7 +109,7 @@
 
     return `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <button class="btn-primario" id="btnNovoConsumo" style="font-size:0.8rem;padding:6px 14px;">âž• Registrar Consumo</button>
+        <button class="btn-primario" id="btnNovoConsumo" style="font-size:0.8rem;padding:6px 14px;">➕ Registrar Consumo</button>
         <span style="font-size:0.8rem;color:var(--text-muted);">${consumos.length} registro(s)</span>
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum consumo registrado.</p>' : `
@@ -121,10 +121,10 @@
             <td class="cons-obra">${r.matNome}</td>
             <td>${r.obraTitulo}</td>
             <td>${r.quantidade}</td>
-            <td>${r.custo !== null ? formatarMoeda(r.custo) : 'â€”'}</td>
-            <td>${r.data || 'â€”'}</td>
+            <td>${r.custo !== null ? formatarMoeda(r.custo) : '—'}</td>
+            <td>${r.data || '—'}</td>
             <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${r.notas || ''}</td>
-            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;" aria-label="Excluir consumo">ðŸ—‘ï¸</button></td>
+            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;" aria-label="Excluir consumo">🗑️</button></td>
           </tr>
         `).join('')}
       </table>`}
@@ -149,7 +149,7 @@
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <button class="btn-primario" id="btnGerarLista" style="font-size:0.8rem;padding:6px 14px;">⚡ Gerar lista automática</button>
         <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">➕ Adicionar item manual</button>
-        <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">ðŸ“ž Exportar TXT</button>
+        <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">📞 Exportar TXT</button>
       </div>
       ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista automática".</p>' : ''}
       <ul class="lista-compras">
@@ -164,14 +164,14 @@
     return `
       <li class="${comprado ? 'comprado' : ''}">
         <div class="lc-info">
-          <div class="lc-nome">${this.catIcones[m.categoria] || 'ðŸ“¦'} ${m.nome}</div>
+          <div class="lc-nome">${this.catIcones[m.categoria] || '📦'} ${m.nome}</div>
           <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? '· '+m.marca : ''}</div>
         </div>
-        <div class="lc-qtd">${comprado ? 'âœ”ï¸' : `Qtd: ${qtdSugerida} ${m.unidade || 'un'}`}</div>
+        <div class="lc-qtd">${comprado ? '✔️' : `Qtd: ${qtdSugerida} ${m.unidade || 'un'}`}</div>
         ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ''}
         <div class="lc-acoes">
-          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">â†©ï¸</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado">âœ”</button>`}
-          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;" aria-label="Remover da lista">ðŸ—‘ï¸</button>
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">↩️</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado">✔</button>`}
+          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;" aria-label="Remover da lista">🗑️</button>
         </div>
       </li>
     `;
@@ -182,7 +182,7 @@
     const fornecedores = this.fornecedores;
     return `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <button class="btn-primario" id="btnNovoFornecedor" style="font-size:0.8rem;padding:6px 14px;">âž• Novo Fornecedor</button>
+        <button class="btn-primario" id="btnNovoFornecedor" style="font-size:0.8rem;padding:6px 14px;">➕ Novo Fornecedor</button>
         <span style="font-size:0.8rem;color:var(--text-muted);">${fornecedores.length} fornecedor(es)</span>
       </div>
       <div class="forn-grid">
@@ -192,20 +192,20 @@
           const totalGasto = hist.reduce((s, h) => s + Number(h.valor || 0), 0);
           return `
             <div class="forn-card">
-              <div class="forn-nome">ðŸª ${f.nome}</div>
+              <div class="forn-nome">🏪 ${f.nome}</div>
               <div class="forn-contato">${f.contato || ''}${f.email ? ' · '+f.email : ''}</div>
-              <div class="forn-esp">ðŸ“’ ${f.especialidade || 'Sem especialidade'}</div>
-              ${f.avaliacao ? `<div class="forn-estrelas">${'â˜…'.repeat(Math.min(5, Number(f.avaliacao)))}${'â˜†'.repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ''}
-              ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">ðŸ“ ${f.notas}</div>` : ''}
+              <div class="forn-esp">📒 ${f.especialidade || 'Sem especialidade'}</div>
+              ${f.avaliacao ? `<div class="forn-estrelas">${'★'.repeat(Math.min(5, Number(f.avaliacao)))}${'☆'.repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ''}
+              ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${f.notas}</div>` : ''}
               ${hist.length > 0 ? `
                 <div class="forn-hist">
                   <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Histórico (Total: ${formatarMoeda(totalGasto)})</div>
-                  ${hist.map(h => `<div class="hist-item"><span>${h.data || ''} â€” ${h.itens || ''}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join('')}
+                  ${hist.map(h => `<div class="hist-item"><span>${h.data || ''} — ${h.itens || ''}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join('')}
                 </div>
               ` : ''}
               <div class="forn-acoes">
-                <button data-acao="editarFornecedor" data-id="${f.id}">âœï¸ Editar</button>
-                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;" aria-label="Excluir fornecedor">ðŸ—‘ï¸</button>
+                <button data-acao="editarFornecedor" data-id="${f.id}">✏️ Editar</button>
+                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;" aria-label="Excluir fornecedor">🗑️</button>
               </div>
             </div>
           `;
@@ -223,8 +223,8 @@
     return `
       <div style="margin-bottom:12px;">
         <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
-          <option value="">â€” Selecione uma obra â€”</option>
-          ${obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'} ${o.preco ? 'â€” '+formatarMoeda(o.preco) : ''}</option>`).join('')}
+          <option value="">— Selecione uma obra —</option>
+          ${obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'} ${o.preco ? '— '+formatarMoeda(o.preco) : ''}</option>`).join('')}
         </select>
       </div>
       <div id="custoObraDetalhe">
@@ -255,26 +255,26 @@
       <div class="custo-obra-header">
         <div class="custo-obra-card">
           <div class="co-valor">${formatarMoeda(Math.round(custoTotal))}</div>
-          <div class="co-label">ðŸ’° Custo de produção</div>
+          <div class="co-label">💰 Custo de produção</div>
         </div>
         <div class="custo-obra-card">
-          <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : 'â€”'}</div>
-          <div class="co-label">ðŸ·ï¸ Preço de venda</div>
+          <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : '—'}</div>
+          <div class="co-label">🏷️ Preço de venda</div>
         </div>
         <div class="custo-obra-card">
-          <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + '%' : 'â€”'}</div>
-          ${margem > 0 ? `<div class="co-label">ðŸ“Š Margem de lucro ${margem >= 60 ? 'âœ”' : (margem >= 30 ? 'âš ï¸' : 'ðŸ”½')}</div>` : '<div class="co-label">Sem venda definida</div>'}
+          <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + '%' : '—'}</div>
+          ${margem > 0 ? `<div class="co-label">📊 Margem de lucro ${margem >= 60 ? '✔' : (margem >= 30 ? '⚠️' : '🔽')}</div>` : '<div class="co-label">Sem venda definida</div>'}
         </div>
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `
       <table class="cons-table">
         <caption class="sr-only">Detalhamento de custos</caption>
         <tr><th>Material</th><th>Qtd</th><th>Valor unit.</th><th>Custo</th><th>Data</th><th>Notas</th></tr>
-        ${rows.map(r => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find(m => m.id === r.materialId)?.precoUnitario ? 'R$ '+Number(materiais.find(m => m.id === r.materialId).precoUnitario).toFixed(2) : 'â€”'}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || 'â€”'}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ''}</td></tr>`).join('')}
+        ${rows.map(r => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find(m => m.id === r.materialId)?.precoUnitario ? 'R$ '+Number(materiais.find(m => m.id === r.materialId).precoUnitario).toFixed(2) : '—'}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || '—'}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ''}</td></tr>`).join('')}
         <tr style="font-weight:600;"><td>TOTAL</td><td></td><td></td><td>${formatarMoeda(Math.round(custoTotal))}</td><td></td><td></td></tr>
       </table>`}
       <div style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);">
-        ðŸ’¡ Dica: Registre materiais usados na aba <strong>Consumo</strong> para ver o custo real de cada obra.
+        💡 Dica: Registre materiais usados na aba <strong>Consumo</strong> para ver o custo real de cada obra.
       </div>
     `;
   }
@@ -354,7 +354,7 @@
     const catOpts = cats.map(c => `<option value="${c}" ${mat && mat.categoria === c ? 'selected' : ''}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join('');
 
     abrirModal(`
-      <h3>${mat ? 'âœï¸ Editar' : isLista ? 'âž• Adicionar à Lista' : 'âž• Novo Material'}</h3>
+      <h3>${mat ? '✏️ Editar' : isLista ? '➕ Adicionar à Lista' : '➕ Novo Material'}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || '' : ''}" required aria-label="Nome" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
@@ -422,10 +422,10 @@
     const opcoes = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
 
     abrirModal(`
-      <h3>ðŸ“‰ Consumir: ${mat.nome}</h3>
+      <h3>📉 Consumir: ${mat.nome}</h3>
       <form id="formModal">
         <div class="campo-form"><label>Obra</label><select id="fConsObra" aria-label="Obra">${opcoes}</select></div>
-        <div class="campo-form"><label>Quantidade (${mat.unidade || 'un'} â€” atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
+        <div class="campo-form"><label>Quantidade (${mat.unidade || 'un'} — atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
         <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${new Date().toISOString().slice(0, 10)}" aria-label="Data"></div>
         <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" aria-label="Notas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
@@ -459,11 +459,11 @@
   abrirFormConsumo() {
     const materiais = this.materiais;
     const obras = this.obras;
-    const matOpts = materiais.map(m => `<option value="${m.id}">${this.catIcones[m.categoria] || 'ðŸ“¦'} ${m.nome} (${m.quantidade} ${m.unidade || 'un'})</option>`).join('');
+    const matOpts = materiais.map(m => `<option value="${m.id}">${this.catIcones[m.categoria] || '📦'} ${m.nome} (${m.quantidade} ${m.unidade || 'un'})</option>`).join('');
     const obrOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
 
     abrirModal(`
-      <h3>ðŸ“‹ Registrar Consumo</h3>
+      <h3>📋 Registrar Consumo</h3>
       <form id="formModal">
         <div class="campo-form"><label>Material</label><select id="fConsMat" aria-label="Material">${matOpts}</select></div>
         <div class="campo-form"><label>Obra</label><select id="fConsObraFull" aria-label="Obra">${obrOpts}</select></div>
@@ -515,7 +515,7 @@
     const f = id ? this.dataStore.buscarPorId('fornecedores', id) : null;
 
     abrirModal(`
-      <h3>${f ? 'âœï¸ Editar Fornecedor' : 'âž• Novo Fornecedor'}</h3>
+      <h3>${f ? '✏️ Editar Fornecedor' : '➕ Novo Fornecedor'}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
           <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || '' : ''}" required aria-label="Nome do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
@@ -594,14 +594,14 @@
     const materiais = this.materiais.filter(m => m.comprado === false);
     if (materiais.length === 0) { mostrarToast('Lista vazia.', 'aviso'); return; }
 
-    let txt = '=== LISTA DE COMPRAS â€” ATELIER ===\n';
+    let txt = '=== LISTA DE COMPRAS — ATELIER ===\n';
     txt += `Gerada em: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
     let total = 0;
     materiais.forEach(m => {
       const qtd = Math.max(1, Math.ceil(((Number(m.quantidadeMinima) || 0) * 2 - (Number(m.quantidade) || 0))));
       const preco = (Number(m.precoUnitario) || 0) * qtd;
       total += preco;
-      txt += `â–¡ ${m.nome}\n`;
+      txt += `□ ${m.nome}\n`;
       txt += `   Qtd: ${qtd} ${m.unidade || 'un'} | Cat: ${this.catLabels[m.categoria] || m.categoria}${m.marca ? ' | Marca: '+m.marca : ''}\n`;
       txt += `   Est.: ${formatarMoeda(Math.round(preco))}\n\n`;
     });
