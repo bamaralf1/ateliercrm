@@ -1,4 +1,4 @@
-const CACHE = 'atelier-crm-v3';
+const CACHE = 'atelier-crm-v4';
 const ASSETS = ['/', '/index.html', '/js/atelier-crm.bundle.js', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -17,13 +17,39 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  const serveFromNetwork = () =>
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok) {
+          const c = res.clone();
+          caches.open(CACHE).then((ca) => ca.put(e.request, c));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(e.request).then((r) => r || caches.match('/index.html'))
+      );
+
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request).then((res) => {
-      const c = res.clone();
-      if (res.ok && res.url.startsWith(self.location.origin)) {
-        caches.open(CACHE).then((ca) => ca.put(e.request, c));
+    caches.match(e.request).then((r) => {
+      if (r && e.request.mode === 'navigate') {
+        return fetch(e.request).then((fresh) => {
+          const c = fresh.clone();
+          caches.open(CACHE).then((ca) => ca.put(e.request, c));
+          return fresh;
+        }).catch(() => r);
       }
-      return res;
-    }).catch(() => caches.match('/index.html')))
+      if (r && url.pathname === '/js/atelier-crm.bundle.js') {
+        return fetch(e.request).then((fresh) => {
+          const c = fresh.clone();
+          caches.open(CACHE).then((ca) => ca.put(e.request, c));
+          return fresh;
+        }).catch(() => r);
+      }
+      return r || serveFromNetwork();
+    })
   );
 });
