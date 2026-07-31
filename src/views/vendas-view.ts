@@ -32,7 +32,7 @@ export class VendasView extends BaseView {
       return `
         <tr class="${this.selecionados.has(v.id) ? 'linha-selecionada' : ''}">
           <td onclick="event.stopPropagation()">
-            <input type="checkbox" class="checkbox-item-vend" data-id="${v.id}" ${this.selecionados.has(v.id) ? 'checked' : ''}>
+            <input type="checkbox" class="checkbox-item-vend" aria-label="Selecionar venda" data-id="${v.id}" ${this.selecionados.has(v.id) ? 'checked' : ''}>
           </td>
           <td>${obra ? obra.titulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
           <td>${cliente ? cliente.nome : '-'}</td>
@@ -47,7 +47,7 @@ export class VendasView extends BaseView {
           <td class="acoes-linha-tabela">
             <button class="btn-icone-tabela" data-gerar-recibo="${v.id}"><i class="fas fa-file"></i> Recibo</button>
             <button class="btn-icone-tabela" data-gerar-proposta="${v.id}"><i class="fas fa-pencil-alt"></i> Proposta</button>
-            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">✕</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda" aria-label="Cancelar venda">✕</button>
           </td>
         </tr>
       `;
@@ -56,6 +56,7 @@ export class VendasView extends BaseView {
     const tabela = vendas.length ? `
       <div class="tabela-wrapper">
         <table>
+          <caption class="sr-only">Lista de vendas</caption>
           <thead><tr><th style="width:36px;"></th><th>Obra</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -79,7 +80,7 @@ export class VendasView extends BaseView {
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAllVend" ${this.selecionados.size === vendas.length && vendas.length > 0 ? 'checked' : ''}>
+            <input type="checkbox" id="selectAllVend" aria-label="Selecionar todos" ${this.selecionados.size === vendas.length && vendas.length > 0 ? 'checked' : ''}>
             <label for="selectAllVend">Todos</label>
           </div>
           <button class="btn-gradient" id="btnNovaVenda">✚ Nova Venda</button>
@@ -97,20 +98,20 @@ export class VendasView extends BaseView {
       <div class="catalogo-filtros">
         <div class="campo-filtro">
           <label>Cliente</label>
-          <select id="filtroVendaCliente">
+          <select id="filtroVendaCliente" aria-label="Cliente">
             <option value="">Todos</option>
             ${clientes.map(c => `<option value="${c.id}" ${this.filtros.cliente === c.id ? 'selected' : ''}>${c.nome}</option>`).join('')}
           </select>
         </div>
         <div class="campo-filtro">
           <label>Status</label>
-          <select id="filtroVendaStatus">
+          <select id="filtroVendaStatus" aria-label="Status">
             <option value="">Todos</option>
             ${statusPossiveis.map(s => `<option value="${s}" ${this.filtros.status === s ? 'selected' : ''}>${rotuloStatusVenda(s)}</option>`).join('')}
           </select>
         </div>
-        <div class="campo-filtro"><label>De</label><input type="date" id="filtroVendaDataInicio" value="${this.filtros.dataInicio}"></div>
-        <div class="campo-filtro"><label>Até</label><input type="date" id="filtroVendaDataFim" value="${this.filtros.dataFim}"></div>
+        <div class="campo-filtro"><label>De</label><input type="date" id="filtroVendaDataInicio" aria-label="De" value="${this.filtros.dataInicio}"></div>
+        <div class="campo-filtro"><label>Até</label><input type="date" id="filtroVendaDataFim" aria-label="Até" value="${this.filtros.dataFim}"></div>
         <button class="btn-secundario" id="btnLimparFiltrosVenda">Limpar filtros</button>
       </div>
 
@@ -179,7 +180,7 @@ export class VendasView extends BaseView {
 
   atualizarStatus(id, novoStatus) {
     vendaStore().atualizar(id, { status: novoStatus });
-    mostrarToast('Status da venda atualizado.');
+    mostrarToast('Status da venda atualizado.', 'sucesso');
   }
 
   bulkAcao(acao) {
@@ -202,7 +203,7 @@ export class VendasView extends BaseView {
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = `vendas-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click(); URL.revokeObjectURL(a.href);
-        mostrarToast(`${vendas.length} venda(s) exportada(s)`);
+        mostrarToast(`${vendas.length} venda(s) exportada(s)`, 'sucesso');
         break;
       }
     }
@@ -217,7 +218,7 @@ export class VendasView extends BaseView {
     const clientes = clienteStore().items;
 
     if (!obrasDisponiveis.length) {
-      mostrarToast('Não há obras disponíveis para venda no momento.');
+      mostrarToast('Não há obras disponíveis para venda no momento.', 'aviso');
       return;
     }
 
@@ -226,14 +227,14 @@ export class VendasView extends BaseView {
       <form id="formVenda">
         <div class="campo-form">
           <label>Obra *</label>
-          <select id="campoObraVenda" required>
+          <select id="campoObraVenda" required aria-label="Obra">
             <option value="">Selecione a obra...</option>
             ${obrasDisponiveis.map(o => `<option value="${o.id}" data-preco="${o.preco}">${o.titulo} (${formatarMoeda(o.preco)})</option>`).join('')}
           </select>
         </div>
         <div class="campo-form">
           <label>Cliente *</label>
-          <select id="campoClienteVenda" required>
+          <select id="campoClienteVenda" required aria-label="Cliente">
             <option value="">Selecione...</option>
             ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
             <option value="__novo__">+ Cadastrar novo cliente</option>
@@ -241,24 +242,24 @@ export class VendasView extends BaseView {
         </div>
         <div id="blocoNovoClienteVenda" style="display:none;">
           <div class="form-linha">
-            <div class="campo-form"><label>Nome do novo cliente *</label><input type="text" id="campoNovoClienteNome"></div>
-            <div class="campo-form"><label>Telefone</label><input type="text" id="campoNovoClienteTelefone"></div>
+            <div class="campo-form"><label>Nome do novo cliente *</label><input type="text" id="campoNovoClienteNome" aria-label="Nome do novo cliente"></div>
+            <div class="campo-form"><label>Telefone</label><input type="text" id="campoNovoClienteTelefone" aria-label="Telefone"></div>
           </div>
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Preço final (R$) *</label>
-            <input type="number" id="campoPrecoVenda" required>
+            <input type="number" id="campoPrecoVenda" required aria-label="Preço final">
           </div>
           <div class="campo-form">
             <label>Data</label>
-            <input type="date" id="campoDataVenda" value="${new Date().toISOString().slice(0, 10)}">
+            <input type="date" id="campoDataVenda" aria-label="Data" value="${new Date().toISOString().slice(0, 10)}">
           </div>
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Forma de pagamento</label>
-            <select id="campoFormaPagamento">
+            <select id="campoFormaPagamento" aria-label="Forma de pagamento">
               <option value="à vista">à vista</option>
               <option value="parcelado">Parcelado</option>
               <option value="transferência">Transferência</option>
@@ -267,7 +268,7 @@ export class VendasView extends BaseView {
           </div>
           <div class="campo-form">
             <label>Status</label>
-            <select id="campoStatusVenda">
+            <select id="campoStatusVenda" aria-label="Status">
               <option value="negociação">Negociação</option>
               <option value="aprovada">Aprovada</option>
               <option value="paga">Paga</option>
@@ -302,14 +303,14 @@ export class VendasView extends BaseView {
       const preco = document.getElementById('campoPrecoVenda').value;
 
       if (!obraId || !clienteId || preco === '') {
-        mostrarToast('Selecione a obra, o cliente e informe o preço final.');
+        mostrarToast('Selecione a obra, o cliente e informe o preço final.', 'aviso');
         return;
       }
 
       // Cadastro rápido de cliente (integração com o módulo Clientes)
       if (clienteId === '__novo__') {
         const nomeNovo = document.getElementById('campoNovoClienteNome').value.trim();
-        if (!nomeNovo) { mostrarToast('Informe o nome do novo cliente.'); return; }
+        if (!nomeNovo) { mostrarToast('Informe o nome do novo cliente.', 'aviso'); return; }
         const novoCliente = clienteStore().adicionar({
           nome: nomeNovo,
           telefone: document.getElementById('campoNovoClienteTelefone').value.trim(),
@@ -336,30 +337,35 @@ export class VendasView extends BaseView {
       if (cliente) clienteStore().atualizar(clienteId, { aquisicoes: (cliente.aquisicoes || 0) + 1 });
 
       fecharModal();
-      mostrarToast('Venda registrada com sucesso!');
+      mostrarToast('Venda registrada com sucesso!', 'sucesso');
       this.router.navegar('vendas');
     });
   }
 
   // Cancela uma venda: reverte a obra para "disponível" e desfaz a aquisição do cliente
-  cancelarVenda(id) {
+  async cancelarVenda(id) {
     const venda = vendaStore().porId(id);
     if (!venda) return;
-    if (!confirm('Cancelar esta venda? A obra voltará a ficar disponível no catálogo.')) return;
+    if (!await confirmarAcao('Cancelar esta venda? A obra voltará a ficar disponível no catálogo.', { textoConfirmar: 'Cancelar Venda', perigoso: true })) return;
 
+    const statusAnterior = obraStore().porId(venda.obraId)?.status;
     obraStore().atualizar(venda.obraId, { status: 'disponível' });
     const cliente = clienteStore().porId(venda.clienteId);
     if (cliente) clienteStore().atualizar(venda.clienteId, { aquisicoes: Math.max(0, (cliente.aquisicoes || 0) - 1) });
 
     vendaStore().remover(id);
-    mostrarToast('Venda cancelada.');
+    mostrarToastComDesfazer('Venda cancelada.', () => {
+      vendaStore().items.unshift(venda); vendaStore()._persistir();
+      if (statusAnterior) obraStore().atualizar(venda.obraId, { status: statusAnterior });
+      if (cliente) clienteStore().atualizar(venda.clienteId, { aquisicoes: Math.max(0, (cliente.aquisicoes || 0) + 1) });
+    });
     this.rerenderizar();
   }
 
   // Modal de escolha rápida de venda, usado pelo atalho "Gerar Recibo" do Dashboard
   abrirEscolhaRapida() {
     const vendas = vendaStore().items;
-    if (!vendas.length) { mostrarToast('Nenhuma venda registrada ainda. Registre uma venda primeiro.'); return; }
+    if (!vendas.length) { mostrarToast('Nenhuma venda registrada ainda. Registre uma venda primeiro.', 'aviso'); return; }
 
     const obras = obraStore().items;
     const clientes = clienteStore().items;

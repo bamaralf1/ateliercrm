@@ -33,10 +33,10 @@ export class PDFGenerator {
 
   // Abre o modal com o resumo do documento e a área de assinatura (canvas touch/mouse)
   abrirModalAssinatura(venda, tipo) {
-    if (!venda) { mostrarToast('Venda não encontrada.'); return; }
+    if (!venda) { mostrarToast('Venda não encontrada.', 'aviso'); return; }
     const obra = this.dataStore.buscarPorId('obras', venda.obraId);
     const cliente = this.dataStore.buscarPorId('clientes', venda.clienteId);
-    if (!obra || !cliente) { mostrarToast('Não foi possível localizar a obra ou o cliente desta venda.'); return; }
+    if (!obra || !cliente) { mostrarToast('Não foi possível localizar a obra ou o cliente desta venda.', 'aviso'); return; }
 
     // Numeração estável: gera uma única vez por documento e reaproveita em novas exportações
     const chaveNumero = tipo === 'proposta' ? 'numeroProposta' : 'numeroRecibo';
@@ -104,10 +104,10 @@ export class PDFGenerator {
   // html2canvas e embute a imagem resultante em um PDF (via jsPDF)
   async gerarPdf(venda, obra, cliente, tipo, assinaturaDataUrl) {
     if (!window.jspdf || !window.html2canvas) {
-      mostrarToast('Bibliotecas de PDF indisponíveis (verifique sua conexão com a internet).');
+      mostrarToast('Bibliotecas de PDF indisponíveis (verifique sua conexão com a internet).', 'erro');
       return;
     }
-    mostrarToast('Gerando PDF, aguarde...');
+    mostrarToast('Gerando PDF, aguarde...', 'info');
 
     const cores = this.obterCoresTema();
     const artista = this.dataStore.dados.config.artista || {};
@@ -182,11 +182,11 @@ export class PDFGenerator {
       const doc = new jsPDF({ unit: 'px', format: [canvasCapturado.width, canvasCapturado.height] });
       doc.addImage(imgData, 'PNG', 0, 0, canvasCapturado.width, canvasCapturado.height);
       doc.save(`${tipo === 'proposta' ? 'proposta' : 'recibo'}-${numero.toLowerCase()}.pdf`);
-      mostrarToast('PDF gerado com sucesso!');
+      mostrarToast('PDF gerado com sucesso!', 'sucesso');
       fecharModal();
     } catch (erro) {
       console.error('Erro ao gerar PDF:', erro);
-      mostrarToast('Não foi possível gerar o PDF. Tente novamente.');
+      mostrarToast('Não foi possível gerar o PDF. Tente novamente.', 'erro');
     } finally {
       document.body.removeChild(container);
     }

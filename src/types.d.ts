@@ -134,6 +134,7 @@ interface Encomenda {
 interface PortalCliente {
   id: string;
   clienteId: string;
+  encomendaId?: string;
   clienteNome: string;
   token: string;
   ativo: boolean;

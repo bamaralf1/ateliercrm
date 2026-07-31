@@ -58,7 +58,7 @@ export class RedeView extends BaseView {
         ${c.estagio ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${this.estagios[c.estagio] || c.estagio}</div>` : ''}
         ${alerta ? `<div class="cont-alerta ${alerta}">${alertaMsg}</div>` : ''}
         ${c.proximoPasso ? `<div class="cont-passos">🎯 ${c.proximoPasso}</div>` : ''}
-        <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">✏️ Editar</button><button data-acao="interagirContato" data-id="${c.id}">💬 Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;">🗑️</button></div>
+        <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">✏️ Editar</button><button data-acao="interagirContato" data-id="${c.id}">💬 Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;" aria-label="Excluir contato">🗑️</button></div>
       </div>`;
   }
 
@@ -80,8 +80,8 @@ export class RedeView extends BaseView {
               <div class="pipe-cat">${this.catLabels[c.categoria] || c.categoria}</div>
               ${dias !== null ? `<div class="pipe-dias">${dias > 30 ? '⚠️ '+dias+' dias' : '✅ '+dias+' dias'}</div>` : ''}
               <div style="display:flex;gap:4px;margin-top:6px;">
-                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">◀</button>
-                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">▶</button>
+                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para esquerda">◀</button>
+                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para direita">▶</button>
               </div>
             </div>`;
           }).join('')}
@@ -155,7 +155,7 @@ export class RedeView extends BaseView {
           ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🖼️ Obras: ${obras.join(', ')}</div>` : ''}
           ${e.documentacao && e.documentacao.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📞 Docs: ${e.documentacao.join(', ')}</div>` : ''}
           ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">🏆 ${e.resultado}</div>` : ''}
-          <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">✏️ Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;">🗑️</button></div>
+          <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">✏️ Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;" aria-label="Excluir evento">🗑️</button></div>
         </div>`;
       }).join('')}</div>`;
   }
@@ -398,34 +398,34 @@ export class RedeView extends BaseView {
 
     abrirModal(`<h3>${c ? '✏️ Editar' : '✨ Novo'} Contato Profissional</h3>
       <form id="formModal" style="display:grid;gap:10px;"><div class="modal-form-grid">
-        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fContNome" value="${c ? c.nome||'' : ''}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fContCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${catOpts}</select></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Estagio</label><select id="fContEstagio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${estOpts}</select></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Instituicao</label><input type="text" id="fContInst" value="${c ? c.instituicao||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Cargo</label><input type="text" id="fContCargo" value="${c ? c.cargo||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fContTel" value="${c ? c.contato||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fContEmail" value="${c ? c.email||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Redes sociais</label><input type="text" id="fContRedes" value="${c ? c.redes||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Relacionamento (1-5)</label><input type="number" id="fContNivel" value="${c ? c.nivelRelacionamento||0 : 0}" min="1" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Como conheceu</label><input type="text" id="fContConheceu" value="${c ? c.comoConheceu||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Ultimo contato</label><input type="date" id="fContUltimo" value="${c ? c.ultimoContato||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Proximo passo</label><input type="text" id="fContPasso" value="${c ? c.proximoPasso||'' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div class="campo-full"><label><input type="checkbox" id="fContVip" ${c && c.vip ? 'checked' : ''}> 👑 Contato VIP (colecionador)</label></div>
-        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fContNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${c ? c.notas||'' : ''}</textarea></div>
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fContNome" value="${c ? c.nome||'' : ''}" required aria-label="Nome" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fContCat" aria-label="Categoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${catOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Estagio</label><select id="fContEstagio" aria-label="Estágio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${estOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Instituicao</label><input type="text" id="fContInst" value="${c ? c.instituicao||'' : ''}" aria-label="Instituição" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Cargo</label><input type="text" id="fContCargo" value="${c ? c.cargo||'' : ''}" aria-label="Cargo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fContTel" value="${c ? c.contato||'' : ''}" aria-label="Contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fContEmail" value="${c ? c.email||'' : ''}" aria-label="E-mail" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Redes sociais</label><input type="text" id="fContRedes" value="${c ? c.redes||'' : ''}" aria-label="Redes sociais" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Relacionamento (1-5)</label><input type="number" id="fContNivel" value="${c ? c.nivelRelacionamento||0 : 0}" min="1" max="5" aria-label="Relacionamento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Como conheceu</label><input type="text" id="fContConheceu" value="${c ? c.comoConheceu||'' : ''}" aria-label="Como conheceu" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Ultimo contato</label><input type="date" id="fContUltimo" value="${c ? c.ultimoContato||'' : ''}" aria-label="Último contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Proximo passo</label><input type="text" id="fContPasso" value="${c ? c.proximoPasso||'' : ''}" aria-label="Próximo passo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-full"><label><input type="checkbox" id="fContVip" ${c && c.vip ? 'checked' : ''} aria-label="Contato VIP"> 👑 Contato VIP (colecionador)</label></div>
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fContNotas" aria-label="Notas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${c ? c.notas||'' : ''}</textarea></div>
       </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
 
     document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
     document.getElementById('formModal').addEventListener('submit', (e) => {
       e.preventDefault();
-      const nome = document.getElementById('fContNome').value.trim(); if (!nome) { mostrarToast('Nome obrigatorio.'); return; }
+      const nome = document.getElementById('fContNome').value.trim(); if (!nome) { mostrarToast('Nome obrigatorio.', 'aviso'); return; }
       const dados = { nome, categoria: document.getElementById('fContCat').value, estagio: document.getElementById('fContEstagio').value, instituicao: document.getElementById('fContInst').value.trim(), cargo: document.getElementById('fContCargo').value.trim(), contato: document.getElementById('fContTel').value.trim(), email: document.getElementById('fContEmail').value.trim(), redes: document.getElementById('fContRedes').value.trim(), nivelRelacionamento: Number(document.getElementById('fContNivel').value) || 0, comoConheceu: document.getElementById('fContConheceu').value.trim(), ultimoContato: document.getElementById('fContUltimo').value, proximoPasso: document.getElementById('fContPasso').value.trim(), vip: document.getElementById('fContVip').checked, notas: document.getElementById('fContNotas').value.trim() };
-      if (c) { this.dataStore.atualizar('contatosProfissionais', id, dados); mostrarToast('Contato atualizado!'); }
-      else { this.dataStore.adicionar('contatosProfissionais', dados); mostrarToast('Contato adicionado!'); }
+      if (c) { this.dataStore.atualizar('contatosProfissionais', id, dados); mostrarToast('Contato atualizado!', 'sucesso'); }
+      else { this.dataStore.adicionar('contatosProfissionais', dados); mostrarToast('Contato adicionado!', 'sucesso'); }
       fecharModal(); this.rerenderizar();
     });
   }
 
-  excluirContato(id) { if (!confirm('Excluir este contato?')) return; this.dataStore.remover('contatosProfissionais', id); mostrarToast('Contato excluido.'); this.rerenderizar(); }
+  async excluirContato(id) { if (!await confirmarAcao('Excluir este contato?')) return; const item = this.dataStore.buscarPorId('contatosProfissionais', id); this.dataStore.remover('contatosProfissionais', id); const ds = this.dataStore; mostrarToastComDesfazer('Contato excluido.', () => { ds.dados.contatosProfissionais.push(item); ds.salvar(); }); this.rerenderizar(); }
 
   // --- CRUD Interacao ---
   abrirFormInteracao(contatoId = null) {
@@ -434,13 +434,13 @@ export class RedeView extends BaseView {
     const tipoOpts = Object.entries(this.tiposInteracao).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
 
     abrirModal(`<h3>✨ Nova Interacao</h3>
-      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato">${contatos.map(c => `<option value="${c.id}" ${c.id === selId ? 'selected' : ''}>${this.catIcones[c.categoria]||'📋'} ${c.nome}</option>`).join('')}</select></div>
-      <div class="campo-form"><label>Tipo</label><select id="fIntTipo">${tipoOpts}</select></div>
-      <div class="campo-form"><label>Data</label><input type="date" id="fIntData" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" placeholder="Descreva a interacao..."></textarea></div>
-      <div class="campo-form"><label>Sentimento</label><select id="fIntSentimento"><option value="positivo">😊 Positivo</option><option value="neutro">😐 Neutro</option><option value="negativo">😟 Negativo</option></select></div>
-      <div class="campo-form"><label><input type="checkbox" id="fIntFollowUp"> 🔝 Necessita follow-up</label></div>
-      <div class="campo-form" id="divFollowUpNotas" style="display:none;"><label>Notas do follow-up</label><textarea id="fIntFollowNotas" placeholder="O que fazer?"></textarea></div>
+      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato" aria-label="Contato">${contatos.map(c => `<option value="${c.id}" ${c.id === selId ? 'selected' : ''}>${this.catIcones[c.categoria]||'📋'} ${c.nome}</option>`).join('')}</select></div>
+      <div class="campo-form"><label>Tipo</label><select id="fIntTipo" aria-label="Tipo">${tipoOpts}</select></div>
+      <div class="campo-form"><label>Data</label><input type="date" id="fIntData" aria-label="Data" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" aria-label="Resumo" placeholder="Descreva a interacao..."></textarea></div>
+      <div class="campo-form"><label>Sentimento</label><select id="fIntSentimento" aria-label="Sentimento"><option value="positivo">😊 Positivo</option><option value="neutro">😐 Neutro</option><option value="negativo">😟 Negativo</option></select></div>
+      <div class="campo-form"><label><input type="checkbox" id="fIntFollowUp" aria-label="Necessita follow-up"> 🔝 Necessita follow-up</label></div>
+      <div class="campo-form" id="divFollowUpNotas" style="display:none;"><label>Notas do follow-up</label><textarea id="fIntFollowNotas" aria-label="Notas do follow-up" placeholder="O que fazer?"></textarea></div>
       <div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
 
     document.getElementById('fIntFollowUp')?.addEventListener('change', () => { document.getElementById('divFollowUpNotas').style.display = document.getElementById('fIntFollowUp').checked ? 'block' : 'none'; });
@@ -449,7 +449,7 @@ export class RedeView extends BaseView {
       e.preventDefault();
       this.dataStore.adicionar('interacoes', { contatoId: document.getElementById('fIntContato').value, tipo: document.getElementById('fIntTipo').value, data: document.getElementById('fIntData').value, resumo: document.getElementById('fIntResumo').value.trim(), sentimento: document.getElementById('fIntSentimento').value, followUp: document.getElementById('fIntFollowUp').checked, followUpNotas: document.getElementById('fIntFollowNotas').value.trim(), anexos: [] });
       this.dataStore.atualizar('contatosProfissionais', document.getElementById('fIntContato').value, { ultimoContato: document.getElementById('fIntData').value });
-      fecharModal(); mostrarToast('Interacao registrada!'); this.rerenderizar();
+      fecharModal(); mostrarToast('Interacao registrada!', 'sucesso'); this.rerenderizar();
       this.solicitarNotificacao('Interacao registrada', 'Nao se esqueca do follow-up!');
     });
   }
@@ -464,17 +464,17 @@ export class RedeView extends BaseView {
 
     abrirModal(`<h3>${e ? '✏️ Editar' : '✨ Novo'} Evento</h3>
       <form id="formModal"><div class="modal-form-grid">
-        <div class="campo-full"><input type="text" id="fEvtNome" value="${e ? e.nome||'' : ''}" required placeholder="Nome do evento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><select id="fEvtTipo">${tipoOpts}</select></div>
-        <div><select id="fEvtStatus">${statusOpts}</select></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Inscricao</label><input type="date" id="fEvtDataIns" value="${e ? e.dataInscricao||'' : ''}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Evento</label><input type="date" id="fEvtDataEvt" value="${e ? e.dataEvento||'' : ''}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Investimento (R$)</label><input type="number" id="fEvtInvest" value="${e ? e.investimento||0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Retorno (R$)</label><input type="number" id="fEvtRetorno" value="${e ? e.retorno||0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Resultado</label><input type="text" id="fEvtResultado" value="${e ? e.resultado||'' : ''}" placeholder="Ex.: Premiado, selecionado..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Documentacao</label><input type="text" id="fEvtDocs" value="${e && e.documentacao ? e.documentacao.join(', ') : ''}" placeholder="docs separados por virgula" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Obras enviadas</label><select multiple id="fEvtObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;">${obraOpts}</select></div>
-        <div class="campo-full"><textarea id="fEvtNotas" placeholder="Notas..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${e ? e.notas||'' : ''}</textarea></div>
+        <div class="campo-full"><input type="text" id="fEvtNome" value="${e ? e.nome||'' : ''}" required aria-label="Nome do evento" placeholder="Nome do evento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><select id="fEvtTipo" aria-label="Tipo do evento">${tipoOpts}</select></div>
+        <div><select id="fEvtStatus" aria-label="Status do evento">${statusOpts}</select></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Inscricao</label><input type="date" id="fEvtDataIns" value="${e ? e.dataInscricao||'' : ''}" aria-label="Data de inscrição" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Evento</label><input type="date" id="fEvtDataEvt" value="${e ? e.dataEvento||'' : ''}" aria-label="Data do evento" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Investimento (R$)</label><input type="number" id="fEvtInvest" value="${e ? e.investimento||0 : 0}" aria-label="Investimento" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Retorno (R$)</label><input type="number" id="fEvtRetorno" value="${e ? e.retorno||0 : 0}" aria-label="Retorno" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Resultado</label><input type="text" id="fEvtResultado" value="${e ? e.resultado||'' : ''}" aria-label="Resultado" placeholder="Ex.: Premiado, selecionado..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Documentacao</label><input type="text" id="fEvtDocs" value="${e && e.documentacao ? e.documentacao.join(', ') : ''}" aria-label="Documentação" placeholder="docs separados por virgula" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Obras enviadas</label><select multiple id="fEvtObras" aria-label="Obras enviadas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;">${obraOpts}</select></div>
+        <div class="campo-full"><textarea id="fEvtNotas" aria-label="Notas" placeholder="Notas..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${e ? e.notas||'' : ''}</textarea></div>
       </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
 
     document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
@@ -484,14 +484,14 @@ export class RedeView extends BaseView {
       const obrasSel = sel ? Array.from(sel.selectedOptions).map(o => o.value) : [];
       const docs = document.getElementById('fEvtDocs').value.split(',').map(s => s.trim()).filter(Boolean);
       const dados = { nome: document.getElementById('fEvtNome').value.trim(), tipo: document.getElementById('fEvtTipo').value, status: document.getElementById('fEvtStatus').value, dataInscricao: document.getElementById('fEvtDataIns').value, dataEvento: document.getElementById('fEvtDataEvt').value, investimento: Number(document.getElementById('fEvtInvest').value) || 0, retorno: Number(document.getElementById('fEvtRetorno').value) || 0, resultado: document.getElementById('fEvtResultado').value.trim(), documentacao: docs, obrasEnviadas: obrasSel, notas: document.getElementById('fEvtNotas').value.trim() };
-      if (!dados.nome) { mostrarToast('Nome obrigatorio.'); return; }
-      if (e) { this.dataStore.atualizar('eventos', id, dados); mostrarToast('Evento atualizado!'); }
-      else { this.dataStore.adicionar('eventos', dados); mostrarToast('Evento adicionado!'); }
+      if (!dados.nome) { mostrarToast('Nome obrigatorio.', 'aviso'); return; }
+      if (e) { this.dataStore.atualizar('eventos', id, dados); mostrarToast('Evento atualizado!', 'sucesso'); }
+      else { this.dataStore.adicionar('eventos', dados); mostrarToast('Evento adicionado!', 'sucesso'); }
       fecharModal(); this.rerenderizar();
     });
   }
 
-  excluirEvento(id) { if (!confirm('Excluir este evento?')) return; this.dataStore.remover('eventos', id); mostrarToast('Evento excluido.'); this.rerenderizar(); }
+  async excluirEvento(id) { if (!await confirmarAcao('Excluir este evento?')) return; const item = this.dataStore.buscarPorId('eventos', id); this.dataStore.remover('eventos', id); const ds = this.dataStore; mostrarToastComDesfazer('Evento excluido.', () => { ds.dados.eventos.push(item); ds.salvar(); }); this.rerenderizar(); }
 
   // --- LEMBRETES ---
   verificarLembretes() {
@@ -518,7 +518,7 @@ export class RedeView extends BaseView {
 
   // --- PDF ---
   exportarRelatorioPDF() {
-    if ((typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') || !window.jspdf?.jsPDF) { mostrarToast('jsPDF nao carregado.'); return; }
+    if ((typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') || !window.jspdf?.jsPDF) { mostrarToast('jsPDF nao carregado.', 'erro'); return; }
     mostrarLoading('Gerando relatorio de networking...');
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -546,7 +546,7 @@ export class RedeView extends BaseView {
 
     doc.save('relatorio-networking.pdf');
     esconderLoading();
-    mostrarToast('Relatorio exportado em PDF!');
+    mostrarToast('Relatorio exportado em PDF!', 'sucesso');
   }
 
 }

@@ -8195,15 +8195,22 @@ Only state can be modified.`);
     document.getElementById("loadingOverlay").classList.remove("ativo");
   }
   function abrirModal(htmlConteudo) {
-    document.getElementById("modalCaixa").innerHTML = htmlConteudo;
-    document.getElementById("modalOverlay").classList.add("aberto");
+    const caixa = document.getElementById("modalCaixa");
+    const overlay = document.getElementById("modalOverlay");
+    caixa.innerHTML = htmlConteudo;
+    overlay.classList.add("aberto");
+    const h3 = caixa.querySelector("h3");
+    if (h3 && !h3.id) h3.id = "modalTitulo_" + Date.now();
+    if (h3) caixa.setAttribute("aria-labelledby", h3.id);
   }
   function fecharModal() {
     const overlay = document.getElementById("modalOverlay");
+    const caixa = document.getElementById("modalCaixa");
     overlay.classList.remove("aberto");
+    caixa.removeAttribute("aria-labelledby");
     setTimeout(() => {
       if (!overlay.classList.contains("aberto")) {
-        document.getElementById("modalCaixa").innerHTML = "";
+        caixa.innerHTML = "";
       }
     }, 300);
   }
@@ -8309,6 +8316,7 @@ Only state can be modified.`);
     const tabelaHtml = itens.length ? `
     <div class="tabela-wrapper">
       <table>
+        <caption class="sr-only">${titulo}</caption>
         <thead>
           <tr>${colunas.map((c) => `<th>${c}</th>`).join("")}</tr>
         </thead>
@@ -8415,22 +8423,22 @@ Only state can be modified.`);
         const r = typeof o === "object" ? o.rotulo : o;
         return `<option value="${v}">${r}</option>`;
       }).join("");
-      return `<div class="campo-form"><label>${campo.rotulo}</label><select id="campo_${campo.nome}"${req}>${opcoesHtml}</select></div>`;
+      return `<div class="campo-form"><label>${campo.rotulo}</label><select id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}>${opcoesHtml}</select></div>`;
     }
     if (campo.tipo === "textarea") {
-      return `<div class="campo-form"><label>${campo.rotulo}</label><textarea id="campo_${campo.nome}"${req}></textarea></div>`;
+      return `<div class="campo-form"><label>${campo.rotulo}</label><textarea id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}></textarea></div>`;
     }
     if (campo.tipo === "dimensoes") {
       return `<div class="campo-form"><label>${campo.rotulo}</label><div class="form-linha">
-      <input type="number" id="campoAltura" placeholder="Altura">
-      <input type="number" id="campoLargura" placeholder="Largura">
-      <input type="number" id="campoProfundidade" placeholder="Profundidade">
+      <input type="number" id="campoAltura" placeholder="Altura" aria-label="Altura">
+      <input type="number" id="campoLargura" placeholder="Largura" aria-label="Largura">
+      <input type="number" id="campoProfundidade" placeholder="Profundidade" aria-label="Profundidade">
     </div></div>`;
     }
     if (campo.tipo === "file") {
-      return `<div class="campo-form"><label>${campo.rotulo}</label><input type="file" id="campo_${campo.nome}" accept="image/*"${req}></div>`;
+      return `<div class="campo-form"><label>${campo.rotulo}</label><input type="file" id="campo_${campo.nome}" accept="image/*" aria-label="${campo.rotulo}"${req}></div>`;
     }
-    return `<div class="campo-form"><label>${campo.rotulo}</label><input type="${campo.tipo}" id="campo_${campo.nome}"${req}></div>`;
+    return `<div class="campo-form"><label>${campo.rotulo}</label><input type="${campo.tipo}" id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}></div>`;
   }
   function abrirModalNovoItem(colecao, dataStore2, router2) {
     const campos = definicaoFormulario(colecao, dataStore2);
@@ -8459,10 +8467,17 @@ Only state can be modified.`);
         }
       });
       dataStore2.adicionar(colecao, dados);
-      mostrarToast(`${colecao.charAt(0).toUpperCase() + colecao.slice(1)} cadastrado com sucesso!`);
+      mostrarToast(`${colecao.charAt(0).toUpperCase() + colecao.slice(1)} cadastrado com sucesso!`, "sucesso");
       fecharModal();
       router2.navegar(colecao);
     });
+  }
+  function debounce2(fn, delayMs = 250) {
+    let timer;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delayMs);
+    };
   }
   var ICONES = {
     dashboard: '<i class="fas fa-chart-bar"></i>',
@@ -8758,6 +8773,12 @@ Only state can be modified.`);
       }
       if (!this.dados.portais) {
         this.dados.portais = [];
+        migrou = true;
+      }
+      if (this.dados.portais && this.dados.portais.length > 0 && !this.dados.portais[0].encomendaId) {
+        this.dados.portais.forEach((p) => {
+          p.encomendaId = "";
+        });
         migrou = true;
       }
       if (this.dados.encomendas && this.dados.encomendas.length > 0 && !this.dados.encomendas[0].atualizacoes) {
@@ -9129,6 +9150,12 @@ Only state can be modified.`);
       return icones[tipo] || '<i class="fas fa-thumbtack"></i>';
     }
   };
+  function atualizarThemeColor() {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    const cor = getComputedStyle(document.body).getPropertyValue("--sidebar-bg").trim();
+    if (cor) meta.setAttribute("content", cor);
+  }
   var ThemeEngine = class {
     constructor(dataStore2) {
       this.dataStore = dataStore2;
@@ -9149,12 +9176,14 @@ Only state can be modified.`);
       if (window.AtelierCRMTranslations) {
         window.AtelierCRMTranslations.locale = idioma;
       }
+      atualizarThemeColor();
     }
     aplicarTema(nomeTema) {
       document.body.setAttribute("data-tema", nomeTema);
       this.temaAtual = nomeTema;
       this.dataStore.dados.config.tema = nomeTema;
       this.dataStore.salvar();
+      atualizarThemeColor();
     }
   };
   var Router = class {
@@ -9201,10 +9230,18 @@ Only state can be modified.`);
       document.querySelectorAll(".nav-item").forEach((item) => {
         item.classList.toggle("ativo", item.dataset.rota === chave);
       });
-      this.container.innerHTML = this.rotas[chave].render();
-      if (typeof this.rotas[chave].aposRender === "function") {
-        this.rotas[chave].aposRender();
-      }
+      this.container.style.opacity = "0";
+      this.container.style.transform = "translateY(4px)";
+      requestAnimationFrame(() => {
+        this.container.innerHTML = this.rotas[chave].render();
+        if (typeof this.rotas[chave].aposRender === "function") {
+          this.rotas[chave].aposRender();
+        }
+        requestAnimationFrame(() => {
+          this.container.style.opacity = "1";
+          this.container.style.transform = "translateY(0)";
+        });
+      });
       const bc = document.getElementById("breadcrumbAtual");
       if (bc) bc.textContent = this.rotas[chave].rotulo;
       if (window.innerWidth <= 860) {
@@ -9247,12 +9284,21 @@ Only state can be modified.`);
       });
       this._eventoCleanups = [];
     }
-    rerenderizar() {
+    rerenderizar(manterFoco = false) {
       const c = document.getElementById("viewPrincipal");
-      if (c) {
-        this.removerListeners();
-        c.innerHTML = this.render();
-        this.aposRenderizar();
+      if (!c) return;
+      const idFoco = manterFoco ? document.activeElement.id : null;
+      this.removerListeners();
+      c.innerHTML = this.render();
+      this.aposRenderizar();
+      if (idFoco) {
+        const el = document.getElementById(idFoco);
+        if (el) {
+          el.focus();
+          const v = el.value;
+          el.value = "";
+          el.value = v;
+        }
       }
     }
     destruir() {
@@ -9356,8 +9402,8 @@ Only state can be modified.`);
         </div>
         <div class="dashboard-acoes">
           <button class="btn-gradient" id="btnDownloadDashboard" title="Baixar dashboard como imagem"><i class="fas fa-camera"></i> Exportar</button>
-          <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets">\u2699\uFE0F</button>
-          <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados"><i class="fas fa-sync"></i></button>
+           <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets" aria-label="Configurar widgets">\u2699\uFE0F</button>
+           <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados" aria-label="Atualizar dados"><i class="fas fa-sync"></i></button>
         </div>
       </div>
 
@@ -9721,18 +9767,18 @@ Only state can be modified.`);
       document.getElementById("btnAtualizarDashboard")?.addEventListener("click", () => this.rerenderizar());
       document.getElementById("btnDownloadDashboard")?.addEventListener("click", () => {
         if (typeof html2canvas === "undefined") {
-          mostrarToast("Biblioteca de captura indispon\xEDvel.");
+          mostrarToast("Biblioteca de captura indispon\xEDvel.", "erro");
           return;
         }
-        mostrarToast("Gerando imagem do dashboard...");
+        mostrarToast("Gerando imagem do dashboard...", "info");
         const el = document.getElementById("viewPrincipal").querySelector(".kpi-grid")?.parentElement || document.getElementById("viewPrincipal");
         html2canvas(el, { backgroundColor: getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#ffffff", scale: 2, useCORS: true, logging: false }).then((canvas) => {
           const link = document.createElement("a");
           link.download = `dashboard-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.png`;
           link.href = canvas.toDataURL("image/png");
           link.click();
-          mostrarToast("Dashboard exportado!");
-        }).catch(() => mostrarToast("Erro ao gerar imagem."));
+          mostrarToast("Dashboard exportado!", "sucesso");
+        }).catch(() => mostrarToast("Erro ao gerar imagem.", "erro"));
       });
       document.getElementById("btnAtalhoNovaObra")?.addEventListener("click", () => {
         this.router.navegar("catalogo");
@@ -9965,6 +10011,7 @@ Only state can be modified.`);
       this.imagemDestacadaRef = "";
       this.modoComparacao = false;
       this.idsComparacao = [];
+      this._skeletonAtivo = false;
       this._escutarEvento("abrir-nova-obra", () => this.abrirFormulario());
     }
     obrasFiltradas() {
@@ -9991,7 +10038,7 @@ Only state can be modified.`);
     render() {
       const obras = this.obrasFiltradas();
       const anos = this.anosDisponiveis();
-      const conteudoLista = obras.length ? this.modo === "grid" ? this.renderGrid(obras) : this.renderLista(obras) : this.renderEstadoVazio();
+      const conteudoLista = this._skeletonAtivo && this.modo === "grid" ? this.renderSkeletonGrid() : obras.length ? this.modo === "grid" ? this.renderGrid(obras) : this.renderLista(obras) : this.renderEstadoVazio();
       const filtrosAtivos = Object.entries(this.filtros).filter(([k, v]) => v !== "" && k !== "ordenar").length + (this.filtroRapido ? 1 : 0);
       return `
       <div class="view-cabecalho">
@@ -10001,7 +10048,7 @@ Only state can be modified.`);
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAll" ${this.selecionados.size === obras.length && obras.length > 0 ? "checked" : ""}>
+            <input type="checkbox" id="selectAll" aria-label="Selecionar todas as obras" ${this.selecionados.size === obras.length && obras.length > 0 ? "checked" : ""}>
             <label for="selectAll">Selecionar todos</label>
           </div>
           <button class="btn-secundario" id="btnComparar" title="Comparar obras selecionadas" ${this.selecionados.size < 2 ? "disabled" : ""}><i class="fas fa-chart-bar"></i> Comparar</button>
@@ -10025,7 +10072,7 @@ Only state can be modified.`);
 
       ${conteudoLista}
 
-      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra"><i class="fas fa-plus"></i></button>
+      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra" aria-label="Nova Obra"><i class="fas fa-plus"></i></button>
     `;
     }
     renderEstadoVazio() {
@@ -10092,9 +10139,9 @@ Only state can be modified.`);
         <div class="campo-filtro">
           <label>Faixa de pre\xE7o (R$)</label>
           <div class="faixa-preco">
-            <input type="number" id="filtroPrecoMin" placeholder="M\xEDn." value="${this.filtros.precoMin}">
+            <input type="number" id="filtroPrecoMin" placeholder="M\xEDn." aria-label="Pre\xE7o m\xEDnimo" value="${this.filtros.precoMin}">
             <span>\u2014</span>
-            <input type="number" id="filtroPrecoMax" placeholder="M\xE1x." value="${this.filtros.precoMax}">
+            <input type="number" id="filtroPrecoMax" placeholder="M\xE1x." aria-label="Pre\xE7o m\xE1ximo" value="${this.filtros.precoMax}">
           </div>
         </div>
         <div class="campo-filtro">
@@ -10130,19 +10177,41 @@ Only state can be modified.`);
       ` : ""}
     `;
     }
+    renderSkeletonGrid() {
+      const cards = Array.from({ length: 8 }, (_, i) => `
+      <div class="sk-card-obra">
+        <div class="sk-shimmer sk-imagem" style="animation-delay:${i * 0.05}s"></div>
+        <div class="sk-shimmer sk-linha" style="width:70%;animation-delay:${i * 0.05}s"></div>
+        <div class="sk-shimmer sk-linha" style="width:50%;animation-delay:${i * 0.05}s"></div>
+      </div>
+    `).join("");
+      return `<div class="sk-grid">${cards}</div>`;
+    }
+    _rerenderizarComSkeleton() {
+      if (this.modo !== "grid") {
+        this.rerenderizar(true);
+        return;
+      }
+      this._skeletonAtivo = true;
+      this.rerenderizar(true);
+      setTimeout(() => {
+        this._skeletonAtivo = false;
+        this.rerenderizar(true);
+      }, 150);
+    }
     renderGrid(obras) {
       return `
       <div class="grid-obras stagger-in">
         ${obras.map((o) => `
           <div class="card-obra ${o.favorita ? "favorita" : ""} ${this.selecionados.has(o.id) ? "selecionada" : ""}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? "checked" : ""}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || "obra"}" ${this.selecionados.has(o.id) ? "checked" : ""}>
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i class="fas fa-star"></i></div>' : ""}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
               <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
               ${o.imagens && o.imagens.length > 1 ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ""}
-              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria">\u25B6</button>
+              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${o.titulo}">\u25B6</button>
             </div>
             <div class="corpo-card-obra" data-abrir-ficha="${o.id}">
               <div class="titulo-obra">${o.titulo}</div>
@@ -10153,8 +10222,8 @@ Only state can be modified.`);
               </div>
             </div>
             <div class="acoes-card-obra">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}">${o.favorita ? "\u2605" : "\u2606"}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o"><i class="fas fa-chart-bar"></i></button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}" aria-label="${o.favorita ? "Remover favorita" : "Marcar favorita"} ${o.titulo}">${o.favorita ? "\u2605" : "\u2606"}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o" aria-label="Adicionar ${o.titulo} \xE0 compara\xE7\xE3o"><i class="fas fa-chart-bar"></i></button>
               <button data-editar-obra="${o.id}">\u270E Editar</button>
               <button class="btn-excluir-obra" data-excluir-obra="${o.id}">\u{1F5D1} Excluir</button>
             </div>
@@ -10169,7 +10238,7 @@ Only state can be modified.`);
         ${obras.map((o) => `
           <div class="linha-obra-lista ${o.favorita ? "favorita" : ""} ${this.selecionados.has(o.id) ? "selecionada" : ""}">
             <div class="checkbox-bulk-lista">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? "checked" : ""}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || "obra"}" ${this.selecionados.has(o.id) ? "checked" : ""}>
             </div>
             ${o.favorita ? '<span class="icone-favorita-lista"><i class="fas fa-star"></i></span>' : ""}
             <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
@@ -10180,10 +10249,10 @@ Only state can be modified.`);
             <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
             <span class="preco-lista">${formatarMoeda(o.preco)}</span>
             <div class="acoes-lista">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}">${o.favorita ? "\u2605" : "\u2606"}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o"><i class="fas fa-chart-bar"></i></button>
-              <button data-editar-obra="${o.id}">\u270E</button>
-              <button data-excluir-obra="${o.id}">\u{1F5D1}</button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? "Remover favorita" : "Marcar favorita"}" aria-label="${o.favorita ? "Remover favorita" : "Marcar favorita"} ${o.titulo}">${o.favorita ? "\u2605" : "\u2606"}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar \xE0 compara\xE7\xE3o" aria-label="Adicionar ${o.titulo} \xE0 compara\xE7\xE3o"><i class="fas fa-chart-bar"></i></button>
+              <button data-editar-obra="${o.id}" aria-label="Editar obra">\u270E</button>
+              <button data-excluir-obra="${o.id}" aria-label="Excluir ${o.titulo}">\u{1F5D1}</button>
             </div>
           </div>
         `).join("")}
@@ -10212,36 +10281,36 @@ Only state can be modified.`);
       const btnLista = document.getElementById("btnModoLista");
       if (btnGrid) btnGrid.addEventListener("click", () => {
         this.modo = "grid";
-        this.rerenderizar();
+        this._rerenderizarComSkeleton();
       });
       if (btnLista) btnLista.addEventListener("click", () => {
         this.modo = "lista";
         this.rerenderizar();
       });
       const campoBusca = document.getElementById("filtroBusca");
-      if (campoBusca) campoBusca.addEventListener("input", (e) => {
+      if (campoBusca) campoBusca.addEventListener("input", debounce2((e) => {
         this.filtros.busca = e.target.value;
-        this.rerenderizar(true);
-      });
+        this._rerenderizarComSkeleton();
+      }, 250));
       ["filtroTecnica", "filtroStatus", "filtroAno", "filtroPrecoMin", "filtroPrecoMax"].forEach((idCampo) => {
         const el = document.getElementById(idCampo);
         if (!el) return;
         const chave = { filtroTecnica: "tecnica", filtroStatus: "status", filtroAno: "ano", filtroPrecoMin: "precoMin", filtroPrecoMax: "precoMax" }[idCampo];
         el.addEventListener("change", (e) => {
           this.filtros[chave] = e.target.value;
-          this.rerenderizar();
+          this._rerenderizarComSkeleton();
         });
       });
       const ordenarEl = document.getElementById("filtroOrdenar");
       if (ordenarEl) ordenarEl.addEventListener("change", (e) => {
         this.filtros.ordenar = e.target.value;
-        this.rerenderizar();
+        this._rerenderizarComSkeleton();
       });
       const btnLimpar = document.getElementById("btnLimparFiltros");
       if (btnLimpar) btnLimpar.addEventListener("click", () => {
         this.filtros = { busca: "", tecnica: "", status: "", ano: "", precoMin: "", precoMax: "", ordenar: "recentes" };
         this.filtroRapido = "";
-        this.rerenderizar();
+        this._rerenderizarComSkeleton();
       });
       container.addEventListener("keydown", (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "a") {
@@ -10315,7 +10384,7 @@ Only state can be modified.`);
       document.getElementById("btnSlideshowTodas")?.addEventListener("click", () => {
         const obras = this.obrasFiltradas();
         if (obras.length === 0) {
-          mostrarToast("Nenhuma obra para exibir.");
+          mostrarToast("Nenhuma obra para exibir.", "aviso");
           return;
         }
         const imagens = obras.map((o) => ({ src: this.obterImagem(o), legenda: `${o.titulo} \xB7 ${formatarMoeda(o.preco)}` }));
@@ -10324,7 +10393,7 @@ Only state can be modified.`);
       document.getElementById("btnExportarTodas")?.addEventListener("click", () => {
         const ids = this.obrasFiltradas().map((o) => o.id);
         if (ids.length === 0) {
-          mostrarToast("Nenhuma obra para exportar.");
+          mostrarToast("Nenhuma obra para exportar.", "aviso");
           return;
         }
         this.exportarObrasJSON(ids);
@@ -10367,7 +10436,7 @@ Only state can be modified.`);
           const f = alvoChipRapido.dataset.filtro;
           this.filtroRapido = this.filtroRapido === f ? "" : f;
           this.aplicarFiltroRapido();
-          this.rerenderizar();
+          this._rerenderizarComSkeleton();
           return;
         }
         if (alvoChipSalvo) {
@@ -10433,7 +10502,7 @@ Only state can be modified.`);
         }
       }
     }
-    bulkAcao(acao) {
+    async bulkAcao(acao) {
       const ids = Array.from(this.selecionados);
       if (ids.length === 0) return;
       switch (acao) {
@@ -10445,7 +10514,7 @@ Only state can be modified.`);
               obraStore().atualizar(id, obra);
             }
           });
-          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} favoritada${ids.length === 1 ? "" : "s"}`);
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} favoritada${ids.length === 1 ? "" : "s"}`, "sucesso");
           break;
         case "desfavoritar":
           ids.forEach((id) => {
@@ -10455,7 +10524,7 @@ Only state can be modified.`);
               obraStore().atualizar(id, obra);
             }
           });
-          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} desfavoritada${ids.length === 1 ? "" : "s"}`);
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} desfavoritada${ids.length === 1 ? "" : "s"}`, "sucesso");
           break;
         case "mudarStatus":
           abrirModal(`
@@ -10483,7 +10552,7 @@ Only state can be modified.`);
                 obraStore().atualizar(id, obra);
               }
             });
-            mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} atualizada${ids.length === 1 ? "" : "s"}`);
+            mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} atualizada${ids.length === 1 ? "" : "s"}`, "sucesso");
             this.selecionados.clear();
             fecharModal();
             this.rerenderizar();
@@ -10497,9 +10566,19 @@ Only state can be modified.`);
           this.exportarCatalogoPDF(ids);
           break;
         case "excluir":
-          if (!confirm(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? "" : "s"}? Esta a\xE7\xE3o n\xE3o pode ser desfeita.`)) return;
-          ids.forEach((id) => obraStore().remover(id));
-          mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} exclu\xEDda${ids.length === 1 ? "" : "s"}`);
+          if (!await confirmarAcao(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? "" : "s"}? Esta a\xE7\xE3o n\xE3o pode ser desfeita.`)) return;
+          const excluidas = [];
+          ids.forEach((id) => {
+            const o = obraStore().porId(id);
+            if (o) excluidas.push(o);
+            obraStore().remover(id);
+          });
+          mostrarToastComDesfazer(`${ids.length} obra${ids.length === 1 ? "" : "s"} exclu\xEDda${ids.length === 1 ? "" : "s"}`, () => {
+            excluidas.forEach((o) => {
+              obraStore().items.unshift(o);
+            });
+            obraStore()._persistir();
+          });
           break;
       }
       this.selecionados.clear();
@@ -10518,11 +10597,11 @@ Only state can be modified.`);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} exportada${ids.length === 1 ? "" : "s"}`);
+      mostrarToast(`${ids.length} obra${ids.length === 1 ? "" : "s"} exportada${ids.length === 1 ? "" : "s"}`, "sucesso");
     }
     exportarCatalogoPDF(ids) {
       if (!window.jspdf) {
-        mostrarToast("Biblioteca de PDF indispon\xEDvel.");
+        mostrarToast("Biblioteca de PDF indispon\xEDvel.", "erro");
         return;
       }
       const obras = ids.map((id) => obraStore().porId(id)).filter(Boolean);
@@ -10600,7 +10679,7 @@ Only state can be modified.`);
       const nomeArquivo = `catalogo-${obras.length}-obras-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.pdf`;
       doc.save(nomeArquivo);
       esconderLoading();
-      mostrarToast(`Cat\xE1logo PDF exportado com ${obras.length} obra${obras.length === 1 ? "" : "s"}!`);
+      mostrarToast(`Cat\xE1logo PDF exportado com ${obras.length} obra${obras.length === 1 ? "" : "s"}!`, "sucesso");
     }
     /* ------------------------------------------------------------------------
        CADASTRO / EDIÇÃO DE OBRA (com múltiplas imagens, drag & drop, editor)
@@ -10668,9 +10747,9 @@ Only state can be modified.`);
         <div class="campo-form">
           <label>Dimens\xF5es (cm)</label>
           <div class="form-linha">
-            <input type="number" id="campoAltura" placeholder="Altura" value="${dim.altura || ""}">
-            <input type="number" id="campoLargura" placeholder="Largura" value="${dim.largura || ""}">
-            <input type="number" id="campoProfundidade" placeholder="Profundidade" value="${dim.profundidade || ""}">
+            <input type="number" id="campoAltura" placeholder="Altura" aria-label="Altura em cm" value="${dim.altura || ""}">
+            <input type="number" id="campoLargura" placeholder="Largura" aria-label="Largura em cm" value="${dim.largura || ""}">
+            <input type="number" id="campoProfundidade" placeholder="Profundidade" aria-label="Profundidade em cm" value="${dim.profundidade || ""}">
           </div>
         </div>
         <div class="campo-form">
@@ -10705,7 +10784,7 @@ Only state can be modified.`);
               <p>Arraste imagens para c\xE1 ou clique para selecionar</p>
               <p class="texto-ajuda">JPG, PNG \xB7 M\xFAltiplos arquivos \xB7 M\xE1x 5 imagens</p>
             </div>
-            <input type="file" id="campoImagens" accept="image/*" multiple style="display:none">
+            <input type="file" id="campoImagens" accept="image/*" multiple style="display:none" aria-label="Selecionar imagens da obra">
           </div>
           <div class="preview-galeria" id="previewGaleria">
             ${this.imagensFormAtual.length === 0 ? '<p class="texto-ajuda">Nenhuma imagem selecionada ainda.</p>' : ""}
@@ -10727,7 +10806,7 @@ Only state can be modified.`);
         const tecnica = document.getElementById("campoTecnica").value;
         const preco = document.getElementById("campoPreco").value;
         if (!titulo || !tecnica || preco === "") {
-          mostrarToast("Preencha os campos obrigat\xF3rios: t\xEDtulo, t\xE9cnica e pre\xE7o.");
+          mostrarToast("Preencha os campos obrigat\xF3rios: t\xEDtulo, t\xE9cnica e pre\xE7o.", "aviso");
           return;
         }
         const imagensRef = [...this.imagensRefAtual];
@@ -10762,11 +10841,11 @@ Only state can be modified.`);
         };
         if (obraExistente) {
           obraStore().atualizar(obraExistente.id, dadosObra);
-          mostrarToast("Obra atualizada com sucesso!");
+          mostrarToast("Obra atualizada com sucesso!", "sucesso");
         } else {
           dadosObra.dataCadastro = (/* @__PURE__ */ new Date()).toISOString();
           obraStore().adicionar(dadosObra);
-          mostrarToast("Obra cadastrada com sucesso!");
+          mostrarToast("Obra cadastrada com sucesso!", "sucesso");
         }
         fecharModal();
         this.router.navegar("catalogo");
@@ -10796,7 +10875,7 @@ Only state can be modified.`);
     }
     processarArquivos(files) {
       if (this.imagensFormAtual.length + files.length > 5) {
-        mostrarToast("M\xE1ximo de 5 imagens por obra.");
+        mostrarToast("M\xE1ximo de 5 imagens por obra.", "aviso");
         return;
       }
       Array.from(files).forEach((arquivo) => {
@@ -10861,9 +10940,9 @@ Only state can be modified.`);
           <div class="miniatura-imagem ${img === this.imagemDestacadaAtual ? "destacada" : ""}" draggable="true" data-idx="${i}">
             <img src="${img}" alt="Imagem ${i + 1}">
             <div class="miniaturas-acoes">
-              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? "ativo" : ""}" data-destacar="${i}" title="Marcar como destacada"><i class="fas fa-star"></i></button>
-              <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem">\u270E</button>
-              <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem">\u2715</button>
+              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? "ativo" : ""}" data-destacar="${i}" title="Marcar como destacada" aria-label="Marcar imagem ${i + 1} como destacada"><i class="fas fa-star"></i></button>
+              <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem" aria-label="Editar imagem">\u270E</button>
+              <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem" aria-label="Remover imagem">\u2715</button>
             </div>
             <span class="mi-ordem">${i + 1}</span>
           </div>
@@ -10943,7 +11022,7 @@ Only state can be modified.`);
           <p>Arraste imagens para c\xE1</p>
           <p class="texto-ajuda">JPG, PNG \xB7 M\xFAltiplos arquivos \xB7 Sem limite</p>
         </div>
-        <input type="file" id="batchFileInput" accept="image/*" multiple style="display:none">
+        <input type="file" id="batchFileInput" accept="image/*" multiple style="display:none" aria-label="Selecionar arquivos de imagem para importa\xE7\xE3o em lote">
       </div>
       <div id="batchPreviewContainer"></div>
       <div class="batch-campos-comuns" id="batchCamposComuns" style="display:none;">
@@ -10984,7 +11063,7 @@ Only state can be modified.`);
       const processarLote = (files) => {
         const imgFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
         if (imgFiles.length === 0) {
-          mostrarToast("Nenhuma imagem encontrada.");
+          mostrarToast("Nenhuma imagem encontrada.", "aviso");
           return;
         }
         let concluidas = 0;
@@ -11032,7 +11111,7 @@ Only state can be modified.`);
             ${imagens.map((img, i) => `
               <div class="batch-item" data-idx="${i}">
                 <img src="${img}" alt="Obra ${i + 1}">
-                <button class="batch-remover" data-idx="${i}" title="Remover">\u2715</button>
+                <button class="batch-remover" data-idx="${i}" title="Remover" aria-label="Remover obra ${i + 1}">\u2715</button>
                 <span class="batch-label">Obra ${i + 1}</span>
               </div>
             `).join("")}
@@ -11068,7 +11147,7 @@ Only state can be modified.`);
           }));
           obras.forEach((o) => obraStore().adicionar(o));
           fecharModal();
-          mostrarToast(`${obras.length} obra(s) importada(s) com sucesso!`);
+          mostrarToast(`${obras.length} obra(s) importada(s) com sucesso!`, "sucesso");
           this.router.navegar("catalogo");
         });
       };
@@ -11111,7 +11190,7 @@ Only state can be modified.`);
             </div>
             <div class="editor-controle-grupo">
               <label>Brilho: ${brilho > 0 ? "+" : ""}${brilho}</label>
-              <input type="range" id="sliderBrilho" min="-100" max="100" value="${brilho}" style="width:100%">
+              <input type="range" id="sliderBrilho" min="-100" max="100" value="${brilho}" style="width:100%" aria-label="Ajustar brilho">
             </div>
             <div class="editor-controle-grupo">
               <label>Cortar</label>
@@ -11146,7 +11225,7 @@ Only state can be modified.`);
           this.imagensFormAtual[idx] = aplicarTransformacoes();
           this.renderizarPreviewGaleria();
           fecharModal();
-          mostrarToast("Imagem editada com sucesso!");
+          mostrarToast("Imagem editada com sucesso!", "sucesso");
         });
       };
       const aplicarTransformacoes = () => {
@@ -11200,8 +11279,8 @@ Only state can be modified.`);
           <div class="ficha-imagem-principal">
             <img id="fichaImgPrincipal" class="idb-placeholder" src="${imgPrinc}" alt="${o.titulo}"${imgPrincIdb}>
             ${temMultiplas ? `
-            <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev">\u25C0</button>
-            <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext">\u25B6</button>
+            <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev" aria-label="Imagem anterior">\u25C0</button>
+            <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext" aria-label="Pr\xF3xima imagem">\u25B6</button>
             <button class="ficha-slideshow-btn" id="fichaSlideshow">\u25B6 Iniciar Slideshow</button>
             ` : ""}
           </div>
@@ -11217,6 +11296,7 @@ Only state can be modified.`);
           <div class="titulo-ficha">${o.titulo}</div>
           <div class="serie-ficha">${o.serie ? "S\xE9rie: " + o.serie : "&nbsp;"}</div>
           <table class="tabela-ficha">
+            <caption class="sr-only">Ficha t\xE9cnica da obra</caption>
             <tr><td>T\xE9cnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
             <tr><td>Dimens\xF5es</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
             <tr><td>Ano</td><td>${o.ano || "-"}</td></tr>
@@ -11278,7 +11358,7 @@ Only state can be modified.`);
         navigator.share({ title: obra.titulo, text: texto }).catch(() => {
         });
       } else {
-        navigator.clipboard.writeText(texto).then(() => mostrarToast("Informa\xE7\xE3o copiadas para a \xE1rea de transfer\xEAncia!")).catch(() => {
+        navigator.clipboard.writeText(texto).then(() => mostrarToast("Informa\xE7\xE3o copiadas para a \xE1rea de transfer\xEAncia!", "info")).catch(() => {
         });
       }
     }
@@ -11337,7 +11417,7 @@ Only state can be modified.`);
        ------------------------------------------------------------------------ */
     abrirComparacao(ids) {
       if (ids.length < 2) {
-        mostrarToast("Selecione pelo menos 2 obras para comparar.");
+        mostrarToast("Selecione pelo menos 2 obras para comparar.", "aviso");
         return;
       }
       const obras = ids.map((id) => obraStore().porId(id)).filter(Boolean);
@@ -11353,6 +11433,7 @@ Only state can be modified.`);
         <h3 class="comparacao-titulo">${o.titulo}</h3>
         ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ""}
         <table class="comparacao-tabela">
+          <caption class="sr-only">Informa\xE7\xF5es da obra</caption>
           <tr><td>T\xE9cnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
           <tr><td>Dimens\xF5es</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
           <tr><td>Ano</td><td>${o.ano || "-"}</td></tr>
@@ -11397,7 +11478,7 @@ Only state can be modified.`);
     }
     exportarComparacaoPDF(obras) {
       if (!window.jspdf) {
-        mostrarToast("Biblioteca de PDF indispon\xEDvel.");
+        mostrarToast("Biblioteca de PDF indispon\xEDvel.", "erro");
         return;
       }
       mostrarLoading("Gerando compara\xE7\xE3o em PDF...");
@@ -11447,23 +11528,25 @@ Only state can be modified.`);
       });
       doc.save(`comparacao-obras-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.pdf`);
       esconderLoading();
-      mostrarToast("Compara\xE7\xE3o exportada em PDF!");
+      mostrarToast("Compara\xE7\xE3o exportada em PDF!", "sucesso");
     }
     /* ------------------------------------------------------------------------
        EXCLUSÃO E EXPORTAÇÃO INDIVIDUAL
        ------------------------------------------------------------------------ */
-    excluirObra(id) {
+    async excluirObra(id) {
       const obra = obraStore().porId(id);
       if (!obra) return;
-      const confirmado = confirm(`Excluir a obra "${obra.titulo}"? Essa a\xE7\xE3o n\xE3o pode ser desfeita.`);
-      if (!confirmado) return;
+      if (!await confirmarAcao(`Excluir a obra "${obra.titulo}"? Essa a\xE7\xE3o n\xE3o pode ser desfeita.`)) return;
       obraStore().remover(id);
-      mostrarToast("Obra exclu\xEDda.");
+      mostrarToastComDesfazer("Obra exclu\xEDda.", () => {
+        obraStore().items.unshift(obra);
+        obraStore()._persistir();
+      });
       this.rerenderizar();
     }
     exportarPDF(obra) {
       if (!window.jspdf) {
-        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).");
+        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).", "erro");
         return;
       }
       mostrarLoading("Gerando ficha t\xE9cnica em PDF...");
@@ -11544,7 +11627,7 @@ Only state can be modified.`);
       const nomeArquivo = `ficha-${(obra.titulo || "obra").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.pdf`;
       doc.save(nomeArquivo);
       esconderLoading();
-      mostrarToast("PDF exportado com sucesso!");
+      mostrarToast("PDF exportado com sucesso!", "sucesso");
     }
   };
   var ClientesView = class extends BaseView {
@@ -11580,7 +11663,7 @@ Only state can be modified.`);
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAllCli" ${this.selecionados.size === clientes.length && clientes.length > 0 ? "checked" : ""}>
+            <input type="checkbox" id="selectAllCli" aria-label="Selecionar todos os clientes" ${this.selecionados.size === clientes.length && clientes.length > 0 ? "checked" : ""}>
             <label for="selectAllCli">Todos</label>
           </div>
           <div class="toggle-visualizacao">
@@ -11616,7 +11699,7 @@ Only state can be modified.`);
       const linhas = clientes.map((c) => `
       <tr class="${this.selecionados.has(c.id) ? "linha-selecionada" : ""}">
         <td onclick="event.stopPropagation()">
-          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? "checked" : ""}>
+          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? "checked" : ""}>
         </td>
         <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong></td>
         <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${c.email || "-"}</td>
@@ -11624,14 +11707,15 @@ Only state can be modified.`);
         <td>${c.aquisicoes || 0}</td>
         <td>${(c.tags || []).map((t) => `<span class="badge-tag">${t}</span>`).join("") || "-"}</td>
         <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
-          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
-          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i class="fas fa-pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join("");
       return `
       <div class="tabela-wrapper">
         <table>
+          <caption class="sr-only">Lista de clientes</caption>
           <thead><tr><th style="width:36px;"></th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Aquisi\xE7\xF5es</th><th>Tags</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -11644,7 +11728,7 @@ Only state can be modified.`);
         ${clientes.map((c) => `
           <div class="card-cliente ${this.selecionados.has(c.id) ? "selecionada" : ""}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? "checked" : ""}>
+              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? "checked" : ""}>
             </div>
             <div class="cc-avatar">${(c.nome || "?").charAt(0).toUpperCase()}</div>
             <div class="cc-info" data-abrir-ficha-cliente="${c.id}">
@@ -11656,8 +11740,8 @@ Only state can be modified.`);
               <div class="cc-tags">${(c.tags || []).slice(0, 2).map((t) => `<span class="badge-tag">${t}</span>`).join("")}</div>
             </div>
             <div class="cc-acoes">
-              <button data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
-              <button data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+              <button data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i class="fas fa-pen"></i></button>
+              <button data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         `).join("")}
@@ -11677,10 +11761,10 @@ Only state can be modified.`);
       });
       document.getElementById("btnNovoCliente")?.addEventListener("click", () => this.abrirFormulario());
       const campoBusca = document.getElementById("buscaClientes");
-      if (campoBusca) campoBusca.addEventListener("input", (e) => {
+      if (campoBusca) campoBusca.addEventListener("input", debounce2((e) => {
         this.busca = e.target.value;
         this.rerenderizar(true);
-      });
+      }, 250));
       const selectAll = document.getElementById("selectAllCli");
       if (selectAll) {
         selectAll.addEventListener("change", (e) => {
@@ -11762,7 +11846,7 @@ Only state can be modified.`);
           a.download = `clientes-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
           a.click();
           URL.revokeObjectURL(a.href);
-          mostrarToast(`${clientes.length} cliente(s) exportado(s)`);
+          mostrarToast(`${clientes.length} cliente(s) exportado(s)`, "sucesso");
           break;
         }
         case "excluir": {
@@ -11772,7 +11856,7 @@ Only state can be modified.`);
               clienteStore().remover(id);
             }
           });
-          mostrarToast(`${ids.length} cliente(s) exclu\xEDdo(s) (com vendas preservados)`);
+          mostrarToast(`${ids.length} cliente(s) exclu\xEDdo(s) (com vendas preservados)`, "sucesso");
           break;
         }
       }
@@ -11821,7 +11905,7 @@ Only state can be modified.`);
         e.preventDefault();
         const nome = document.getElementById("campoNomeCliente").value.trim();
         if (!nome) {
-          mostrarToast("O nome do cliente \xE9 obrigat\xF3rio.");
+          mostrarToast("O nome do cliente \xE9 obrigat\xF3rio.", "aviso");
           return;
         }
         const tags = document.getElementById("campoTagsCliente").value.split(",").map((t) => t.trim()).filter(Boolean);
@@ -11835,26 +11919,30 @@ Only state can be modified.`);
         };
         if (existente) {
           clienteStore().atualizar(existente.id, dados);
-          mostrarToast("Cliente atualizado com sucesso!");
+          mostrarToast("Cliente atualizado com sucesso!", "sucesso");
         } else {
           dados.aquisicoes = 0;
           clienteStore().adicionar(dados);
-          mostrarToast("Cliente cadastrado com sucesso!");
+          mostrarToast("Cliente cadastrado com sucesso!", "sucesso");
         }
         fecharModal();
         this.router.navegar("clientes");
       });
     }
-    excluirCliente(id) {
+    async excluirCliente(id) {
       const cliente = clienteStore().porId(id);
       if (!cliente) return;
       const temVendas = vendaStore().items.some((v) => v.clienteId === id);
       if (temVendas) {
-        mostrarToast("Este cliente possui vendas registradas e n\xE3o pode ser exclu\xEDdo.");
+        mostrarToast("Este cliente possui vendas registradas e n\xE3o pode ser exclu\xEDdo.", "aviso");
         return;
       }
-      if (!confirm(`Excluir o cliente "${cliente.nome}"?`)) return;
+      if (!await confirmarAcao(`Excluir o cliente "${cliente.nome}"?`)) return;
       clienteStore().remover(id);
+      mostrarToastComDesfazer("Cliente exclu\xEDdo.", () => {
+        clienteStore().items.unshift(cliente);
+        clienteStore()._persistir();
+      });
       this.rerenderizar();
     }
     abrirFicha(id) {
@@ -11924,7 +12012,7 @@ Only state can be modified.`);
         return `
         <tr class="${this.selecionados.has(v.id) ? "linha-selecionada" : ""}">
           <td onclick="event.stopPropagation()">
-            <input type="checkbox" class="checkbox-item-vend" data-id="${v.id}" ${this.selecionados.has(v.id) ? "checked" : ""}>
+            <input type="checkbox" class="checkbox-item-vend" aria-label="Selecionar venda" data-id="${v.id}" ${this.selecionados.has(v.id) ? "checked" : ""}>
           </td>
           <td>${obra ? obra.titulo : '<span style="color:var(--text-muted)">Obra removida</span>'}</td>
           <td>${cliente ? cliente.nome : "-"}</td>
@@ -11939,7 +12027,7 @@ Only state can be modified.`);
           <td class="acoes-linha-tabela">
             <button class="btn-icone-tabela" data-gerar-recibo="${v.id}"><i class="fas fa-file"></i> Recibo</button>
             <button class="btn-icone-tabela" data-gerar-proposta="${v.id}"><i class="fas fa-pencil-alt"></i> Proposta</button>
-            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda">\u2715</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda" aria-label="Cancelar venda">\u2715</button>
           </td>
         </tr>
       `;
@@ -11947,6 +12035,7 @@ Only state can be modified.`);
       const tabela = vendas.length ? `
       <div class="tabela-wrapper">
         <table>
+          <caption class="sr-only">Lista de vendas</caption>
           <thead><tr><th style="width:36px;"></th><th>Obra</th><th>Cliente</th><th>Valor</th><th>Data</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -11971,7 +12060,7 @@ Only state can be modified.`);
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAllVend" ${this.selecionados.size === vendas.length && vendas.length > 0 ? "checked" : ""}>
+            <input type="checkbox" id="selectAllVend" aria-label="Selecionar todos" ${this.selecionados.size === vendas.length && vendas.length > 0 ? "checked" : ""}>
             <label for="selectAllVend">Todos</label>
           </div>
           <button class="btn-gradient" id="btnNovaVenda">\u271A Nova Venda</button>
@@ -11989,20 +12078,20 @@ Only state can be modified.`);
       <div class="catalogo-filtros">
         <div class="campo-filtro">
           <label>Cliente</label>
-          <select id="filtroVendaCliente">
+          <select id="filtroVendaCliente" aria-label="Cliente">
             <option value="">Todos</option>
             ${clientes.map((c) => `<option value="${c.id}" ${this.filtros.cliente === c.id ? "selected" : ""}>${c.nome}</option>`).join("")}
           </select>
         </div>
         <div class="campo-filtro">
           <label>Status</label>
-          <select id="filtroVendaStatus">
+          <select id="filtroVendaStatus" aria-label="Status">
             <option value="">Todos</option>
             ${statusPossiveis.map((s) => `<option value="${s}" ${this.filtros.status === s ? "selected" : ""}>${rotuloStatusVenda(s)}</option>`).join("")}
           </select>
         </div>
-        <div class="campo-filtro"><label>De</label><input type="date" id="filtroVendaDataInicio" value="${this.filtros.dataInicio}"></div>
-        <div class="campo-filtro"><label>At\xE9</label><input type="date" id="filtroVendaDataFim" value="${this.filtros.dataFim}"></div>
+        <div class="campo-filtro"><label>De</label><input type="date" id="filtroVendaDataInicio" aria-label="De" value="${this.filtros.dataInicio}"></div>
+        <div class="campo-filtro"><label>At\xE9</label><input type="date" id="filtroVendaDataFim" aria-label="At\xE9" value="${this.filtros.dataFim}"></div>
         <button class="btn-secundario" id="btnLimparFiltrosVenda">Limpar filtros</button>
       </div>
 
@@ -12084,7 +12173,7 @@ Only state can be modified.`);
     }
     atualizarStatus(id, novoStatus) {
       vendaStore().atualizar(id, { status: novoStatus });
-      mostrarToast("Status da venda atualizado.");
+      mostrarToast("Status da venda atualizado.", "sucesso");
     }
     bulkAcao(acao) {
       const ids = Array.from(this.selecionados);
@@ -12108,7 +12197,7 @@ Only state can be modified.`);
           a.download = `vendas-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
           a.click();
           URL.revokeObjectURL(a.href);
-          mostrarToast(`${vendas.length} venda(s) exportada(s)`);
+          mostrarToast(`${vendas.length} venda(s) exportada(s)`, "sucesso");
           break;
         }
       }
@@ -12120,7 +12209,7 @@ Only state can be modified.`);
       const obrasDisponiveis = obraStore().items.filter((o) => classeStatus(o.status) !== "vendida");
       const clientes = clienteStore().items;
       if (!obrasDisponiveis.length) {
-        mostrarToast("N\xE3o h\xE1 obras dispon\xEDveis para venda no momento.");
+        mostrarToast("N\xE3o h\xE1 obras dispon\xEDveis para venda no momento.", "aviso");
         return;
       }
       abrirModal(`
@@ -12128,14 +12217,14 @@ Only state can be modified.`);
       <form id="formVenda">
         <div class="campo-form">
           <label>Obra *</label>
-          <select id="campoObraVenda" required>
+          <select id="campoObraVenda" required aria-label="Obra">
             <option value="">Selecione a obra...</option>
             ${obrasDisponiveis.map((o) => `<option value="${o.id}" data-preco="${o.preco}">${o.titulo} (${formatarMoeda(o.preco)})</option>`).join("")}
           </select>
         </div>
         <div class="campo-form">
           <label>Cliente *</label>
-          <select id="campoClienteVenda" required>
+          <select id="campoClienteVenda" required aria-label="Cliente">
             <option value="">Selecione...</option>
             ${clientes.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("")}
             <option value="__novo__">+ Cadastrar novo cliente</option>
@@ -12143,24 +12232,24 @@ Only state can be modified.`);
         </div>
         <div id="blocoNovoClienteVenda" style="display:none;">
           <div class="form-linha">
-            <div class="campo-form"><label>Nome do novo cliente *</label><input type="text" id="campoNovoClienteNome"></div>
-            <div class="campo-form"><label>Telefone</label><input type="text" id="campoNovoClienteTelefone"></div>
+            <div class="campo-form"><label>Nome do novo cliente *</label><input type="text" id="campoNovoClienteNome" aria-label="Nome do novo cliente"></div>
+            <div class="campo-form"><label>Telefone</label><input type="text" id="campoNovoClienteTelefone" aria-label="Telefone"></div>
           </div>
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Pre\xE7o final (R$) *</label>
-            <input type="number" id="campoPrecoVenda" required>
+            <input type="number" id="campoPrecoVenda" required aria-label="Pre\xE7o final">
           </div>
           <div class="campo-form">
             <label>Data</label>
-            <input type="date" id="campoDataVenda" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}">
+            <input type="date" id="campoDataVenda" aria-label="Data" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}">
           </div>
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Forma de pagamento</label>
-            <select id="campoFormaPagamento">
+            <select id="campoFormaPagamento" aria-label="Forma de pagamento">
               <option value="\xE0 vista">\xE0 vista</option>
               <option value="parcelado">Parcelado</option>
               <option value="transfer\xEAncia">Transfer\xEAncia</option>
@@ -12169,7 +12258,7 @@ Only state can be modified.`);
           </div>
           <div class="campo-form">
             <label>Status</label>
-            <select id="campoStatusVenda">
+            <select id="campoStatusVenda" aria-label="Status">
               <option value="negocia\xE7\xE3o">Negocia\xE7\xE3o</option>
               <option value="aprovada">Aprovada</option>
               <option value="paga">Paga</option>
@@ -12197,13 +12286,13 @@ Only state can be modified.`);
         let clienteId = document.getElementById("campoClienteVenda").value;
         const preco = document.getElementById("campoPrecoVenda").value;
         if (!obraId || !clienteId || preco === "") {
-          mostrarToast("Selecione a obra, o cliente e informe o pre\xE7o final.");
+          mostrarToast("Selecione a obra, o cliente e informe o pre\xE7o final.", "aviso");
           return;
         }
         if (clienteId === "__novo__") {
           const nomeNovo = document.getElementById("campoNovoClienteNome").value.trim();
           if (!nomeNovo) {
-            mostrarToast("Informe o nome do novo cliente.");
+            mostrarToast("Informe o nome do novo cliente.", "aviso");
             return;
           }
           const novoCliente = clienteStore().adicionar({
@@ -12230,27 +12319,33 @@ Only state can be modified.`);
         const cliente = clienteStore().porId(clienteId);
         if (cliente) clienteStore().atualizar(clienteId, { aquisicoes: (cliente.aquisicoes || 0) + 1 });
         fecharModal();
-        mostrarToast("Venda registrada com sucesso!");
+        mostrarToast("Venda registrada com sucesso!", "sucesso");
         this.router.navegar("vendas");
       });
     }
     // Cancela uma venda: reverte a obra para "disponível" e desfaz a aquisição do cliente
-    cancelarVenda(id) {
+    async cancelarVenda(id) {
       const venda = vendaStore().porId(id);
       if (!venda) return;
-      if (!confirm("Cancelar esta venda? A obra voltar\xE1 a ficar dispon\xEDvel no cat\xE1logo.")) return;
+      if (!await confirmarAcao("Cancelar esta venda? A obra voltar\xE1 a ficar dispon\xEDvel no cat\xE1logo.", { textoConfirmar: "Cancelar Venda", perigoso: true })) return;
+      const statusAnterior = obraStore().porId(venda.obraId)?.status;
       obraStore().atualizar(venda.obraId, { status: "dispon\xEDvel" });
       const cliente = clienteStore().porId(venda.clienteId);
       if (cliente) clienteStore().atualizar(venda.clienteId, { aquisicoes: Math.max(0, (cliente.aquisicoes || 0) - 1) });
       vendaStore().remover(id);
-      mostrarToast("Venda cancelada.");
+      mostrarToastComDesfazer("Venda cancelada.", () => {
+        vendaStore().items.unshift(venda);
+        vendaStore()._persistir();
+        if (statusAnterior) obraStore().atualizar(venda.obraId, { status: statusAnterior });
+        if (cliente) clienteStore().atualizar(venda.clienteId, { aquisicoes: Math.max(0, (cliente.aquisicoes || 0) + 1) });
+      });
       this.rerenderizar();
     }
     // Modal de escolha rápida de venda, usado pelo atalho "Gerar Recibo" do Dashboard
     abrirEscolhaRapida() {
       const vendas = vendaStore().items;
       if (!vendas.length) {
-        mostrarToast("Nenhuma venda registrada ainda. Registre uma venda primeiro.");
+        mostrarToast("Nenhuma venda registrada ainda. Registre uma venda primeiro.", "aviso");
         return;
       }
       const obras = obraStore().items;
@@ -12313,13 +12408,13 @@ Only state can be modified.`);
     // Abre o modal com o resumo do documento e a área de assinatura (canvas touch/mouse)
     abrirModalAssinatura(venda, tipo) {
       if (!venda) {
-        mostrarToast("Venda n\xE3o encontrada.");
+        mostrarToast("Venda n\xE3o encontrada.", "aviso");
         return;
       }
       const obra = this.dataStore.buscarPorId("obras", venda.obraId);
       const cliente = this.dataStore.buscarPorId("clientes", venda.clienteId);
       if (!obra || !cliente) {
-        mostrarToast("N\xE3o foi poss\xEDvel localizar a obra ou o cliente desta venda.");
+        mostrarToast("N\xE3o foi poss\xEDvel localizar a obra ou o cliente desta venda.", "aviso");
         return;
       }
       const chaveNumero = tipo === "proposta" ? "numeroProposta" : "numeroRecibo";
@@ -12393,10 +12488,10 @@ Only state can be modified.`);
     // html2canvas e embute a imagem resultante em um PDF (via jsPDF)
     async gerarPdf(venda, obra, cliente, tipo, assinaturaDataUrl) {
       if (!window.jspdf || !window.html2canvas) {
-        mostrarToast("Bibliotecas de PDF indispon\xEDveis (verifique sua conex\xE3o com a internet).");
+        mostrarToast("Bibliotecas de PDF indispon\xEDveis (verifique sua conex\xE3o com a internet).", "erro");
         return;
       }
-      mostrarToast("Gerando PDF, aguarde...");
+      mostrarToast("Gerando PDF, aguarde...", "info");
       const cores = this.obterCoresTema();
       const artista = this.dataStore.dados.config.artista || {};
       const nomeArtista = artista.nome || "Ateli\xEA do Artista";
@@ -12461,11 +12556,11 @@ Only state can be modified.`);
         const doc = new jsPDF({ unit: "px", format: [canvasCapturado.width, canvasCapturado.height] });
         doc.addImage(imgData, "PNG", 0, 0, canvasCapturado.width, canvasCapturado.height);
         doc.save(`${tipo === "proposta" ? "proposta" : "recibo"}-${numero.toLowerCase()}.pdf`);
-        mostrarToast("PDF gerado com sucesso!");
+        mostrarToast("PDF gerado com sucesso!", "sucesso");
         fecharModal();
       } catch (erro) {
         console.error("Erro ao gerar PDF:", erro);
-        mostrarToast("N\xE3o foi poss\xEDvel gerar o PDF. Tente novamente.");
+        mostrarToast("N\xE3o foi poss\xEDvel gerar o PDF. Tente novamente.", "erro");
       } finally {
         document.body.removeChild(container);
       }
@@ -12488,13 +12583,13 @@ Only state can be modified.`);
         <td>${formatarData(c.dataEmissao || c.criadoEm)}</td>
         <td class="acoes-linha-tabela">
           <button class="btn-icone-tabela" data-baixar-certificado="${c.id}"><i class="fas fa-file"></i> PDF</button>
-          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}" aria-label="Excluir certificado"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join("");
       const tabela = certificados.length ? `
       <div class="tabela-wrapper">
-        <table>
+        <table><caption class="sr-only">Lista de certificados</caption>
           <thead><tr><th>Obra</th><th>N\xBA de S\xE9rie</th><th>Edi\xE7\xE3o</th><th>Emitido em</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -12535,10 +12630,15 @@ Only state can be modified.`);
       container.addEventListener("click", delegHandler);
       this._bindCache["delegCertificados"] = { el: container, handler: delegHandler, type: "click" };
     }
-    excluirCertificado(id) {
-      if (!confirm("Excluir este certificado do hist\xF3rico? O PDF j\xE1 baixado n\xE3o ser\xE1 afetado.")) return;
+    async excluirCertificado(id) {
+      if (!await confirmarAcao("Excluir este certificado do hist\xF3rico? O PDF j\xE1 baixado n\xE3o ser\xE1 afetado.")) return;
+      const item = this.dataStore.buscarPorId("certificados", id);
       this.dataStore.remover("certificados", id);
-      mostrarToast("Certificado exclu\xEDdo do hist\xF3rico.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Certificado exclu\xEDdo do hist\xF3rico.", () => {
+        dataStore2.dados.certificados.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     // Numeração sequencial por ano: ART-2026-001, ART-2026-002...
@@ -12559,19 +12659,19 @@ Only state can be modified.`);
       <form id="formCertificado">
         <div class="campo-form">
           <label>Origem dos dados</label>
-          <select id="campoOrigemCertificado">
+          <select id="campoOrigemCertificado" aria-label="Origem dos dados">
             <option value="">\u2014 Preencher manualmente \u2014</option>
             ${obras.map((o) => `<option value="${o.id}">${o.titulo}</option>`).join("")}
           </select>
         </div>
         <div class="campo-form">
           <label>T\xEDtulo da obra *</label>
-          <input type="text" id="campoTituloCert" required>
+          <input type="text" id="campoTituloCert" required aria-label="T\xEDtulo da obra">
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>T\xE9cnica *</label>
-            <select id="campoTecnicaCert" required>
+            <select id="campoTecnicaCert" required aria-label="T\xE9cnica">
               <option value="">Selecione...</option>
               <option value="\xF3leo">\xD3leo</option>
               <option value="aquarela">Aquarela</option>
@@ -12579,13 +12679,13 @@ Only state can be modified.`);
               <option value="outra">Outra</option>
             </select>
           </div>
-          <div class="campo-form"><label>Ano</label><input type="number" id="campoAnoCert" value="${(/* @__PURE__ */ new Date()).getFullYear()}"></div>
+          <div class="campo-form"><label>Ano</label><input type="number" id="campoAnoCert" aria-label="Ano" value="${(/* @__PURE__ */ new Date()).getFullYear()}"></div>
         </div>
-        <div class="campo-form"><label>Dimens\xF5es (ex: 60 x 80 cm)</label><input type="text" id="campoDimensoesCert"></div>
+        <div class="campo-form"><label>Dimens\xF5es (ex: 60 x 80 cm)</label><input type="text" id="campoDimensoesCert" aria-label="Dimens\xF5es"></div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Edi\xE7\xE3o</label>
-            <select id="campoEdicaoTipo">
+            <select id="campoEdicaoTipo" aria-label="Edi\xE7\xE3o">
               <option value="unica">\xDAnica</option>
               <option value="limitada">Limitada</option>
             </select>
@@ -12593,18 +12693,18 @@ Only state can be modified.`);
           <div class="campo-form" id="blocoEdicaoLimitada" style="display:none;">
             <label>N\xBA / Total</label>
             <div class="form-linha">
-              <input type="number" id="campoEdicaoAtual" placeholder="Ex: 2" min="1">
-              <input type="number" id="campoEdicaoTotal" placeholder="Ex: 10" min="1">
+              <input type="number" id="campoEdicaoAtual" aria-label="N\xFAmero da edi\xE7\xE3o atual" placeholder="Ex: 2" min="1">
+              <input type="number" id="campoEdicaoTotal" aria-label="Total de edi\xE7\xF5es" placeholder="Ex: 10" min="1">
             </div>
           </div>
         </div>
         <div class="form-linha">
-          <div class="campo-form"><label>Local</label><input type="text" id="campoLocalCert" placeholder="Ex: Rio Bonito/RJ"></div>
-          <div class="campo-form"><label>Data</label><input type="date" id="campoDataCert" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+          <div class="campo-form"><label>Local</label><input type="text" id="campoLocalCert" aria-label="Local" placeholder="Ex: Rio Bonito/RJ"></div>
+          <div class="campo-form"><label>Data</label><input type="date" id="campoDataCert" aria-label="Data" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
         </div>
         <div class="campo-form">
           <label>Assinatura do artista</label>
-          <canvas id="canvasAssinaturaCert" class="area-assinatura" width="500" height="150"></canvas>
+          <canvas id="canvasAssinaturaCert" class="area-assinatura" width="500" height="150" aria-label="Assinatura do artista"></canvas>
           <div class="legenda-assinatura">
             <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
               <input type="checkbox" id="campoSalvarAssinatura" ${assinaturaSalva ? "checked" : ""}> Usar/salvar como assinatura padr\xE3o
@@ -12682,7 +12782,7 @@ Only state can be modified.`);
         const tituloObra = document.getElementById("campoTituloCert").value.trim();
         const tecnica = document.getElementById("campoTecnicaCert").value;
         if (!tituloObra || !tecnica) {
-          mostrarToast("Preencha ao menos o t\xEDtulo e a t\xE9cnica da obra.");
+          mostrarToast("Preencha ao menos o t\xEDtulo e a t\xE9cnica da obra.", "aviso");
           return;
         }
         const edicaoTipo = document.getElementById("campoEdicaoTipo").value;
@@ -12708,7 +12808,7 @@ Only state can be modified.`);
         }
         const registrado = this.dataStore.adicionar("certificados", cert);
         fecharModal();
-        mostrarToast("Gerando certificado em PDF...");
+        mostrarToast("Gerando certificado em PDF...", "info");
         await this.gerarPdfCertificado(registrado, assinaturaDataUrl);
         this.router.navegar("certificados");
       });
@@ -12718,14 +12818,14 @@ Only state can be modified.`);
       const cert = this.dataStore.buscarPorId("certificados", id);
       if (!cert) return;
       const assinaturaSalva = configStore().artista?.assinatura || "";
-      mostrarToast("Gerando PDF...");
+      mostrarToast("Gerando PDF...", "info");
       await this.gerarPdfCertificado(cert, assinaturaSalva);
     }
     // Monta o PDF do certificado com jsPDF puro: borda decorativa, foto, texto
     // padrão de autenticidade, edição, assinatura e QR Code de validação
     async gerarPdfCertificado(cert, assinaturaDataUrl) {
       if (!window.jspdf) {
-        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).");
+        mostrarToast("Biblioteca de PDF indispon\xEDvel (verifique sua conex\xE3o com a internet).", "erro");
         return;
       }
       const { jsPDF } = window.jspdf;
@@ -12826,7 +12926,7 @@ Only state can be modified.`);
       doc.setTextColor(150);
       doc.text(`Emitido em ${(/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR")} \xB7 Atelier CRM`, w / 2, h - 14, { align: "center" });
       doc.save(`certificado-${cert.numeroSerie.toLowerCase()}.pdf`);
-      mostrarToast("Certificado gerado com sucesso!");
+      mostrarToast("Certificado gerado com sucesso!", "sucesso");
     }
   };
   var ReferenciasView = class extends BaseView {
@@ -13032,42 +13132,42 @@ Only state can be modified.`);
         <button type="button" data-tipo-ref="nota"><i class="fas fa-pencil-alt"></i> Nota</button>
       </div>
       <form id="formReferencia">
-        <div class="campo-form"><label>T\xEDtulo (opcional)</label><input type="text" id="campoTituloRef"></div>
+        <div class="campo-form"><label>T\xEDtulo (opcional)</label><input type="text" id="campoTituloRef" aria-label="T\xEDtulo"></div>
 
         <div class="campo-form" data-bloco-tipo="imagem">
           <label>Imagem</label>
-          <input type="file" id="campoArquivoRef" accept="image/*">
+          <input type="file" id="campoArquivoRef" accept="image/*" aria-label="Imagem">
           <img id="previewImagemRef" class="preview-imagem-form" style="display:none;">
         </div>
 
         <div class="campo-form" data-bloco-tipo="link" style="display:none;">
           <label>URL da imagem/p\xE1gina</label>
-          <input type="url" id="campoUrlRef" placeholder="https://...">
+          <input type="url" id="campoUrlRef" aria-label="URL da imagem" placeholder="https://...">
           <p class="texto-ajuda">Se a URL apontar para uma imagem, o preview aparecer\xE1 automaticamente no board.</p>
         </div>
 
         <div class="campo-form" data-bloco-tipo="nota" style="display:none;">
           <label>Nota</label>
-          <textarea id="campoNotaRef" placeholder="Escreva sua ideia, inspira\xE7\xE3o ou observa\xE7\xE3o..."></textarea>
+          <textarea id="campoNotaRef" aria-label="Nota" placeholder="Escreva sua ideia, inspira\xE7\xE3o ou observa\xE7\xE3o..."></textarea>
         </div>
 
         <div class="form-linha">
           <div class="campo-form">
             <label>Categoria</label>
-            <input type="text" id="campoCategoriaRef" list="listaCategoriasRef" placeholder="cor, \xE9poca, artista, emo\xE7\xE3o...">
+            <input type="text" id="campoCategoriaRef" aria-label="Categoria" list="listaCategoriasRef" placeholder="cor, \xE9poca, artista, emo\xE7\xE3o...">
             <datalist id="listaCategoriasRef">
               <option value="cor"><option value="\xE9poca"><option value="artista"><option value="emo\xE7\xE3o"><option value="composi\xE7\xE3o">
             </datalist>
           </div>
           <div class="campo-form">
             <label>Obra vinculada</label>
-            <select id="campoObraVinculadaRef">
+            <select id="campoObraVinculadaRef" aria-label="Obra vinculada">
               <option value="">Nenhuma</option>
               ${obras.map((o) => `<option value="${o.id}">${o.titulo}</option>`).join("")}
             </select>
           </div>
         </div>
-        <div class="campo-form"><label>Tags (separadas por v\xEDrgula)</label><input type="text" id="campoTagsRef" placeholder="Ex: quente, retrato, luz suave"></div>
+        <div class="campo-form"><label>Tags (separadas por v\xEDrgula)</label><input type="text" id="campoTagsRef" aria-label="Tags" placeholder="Ex: quente, retrato, luz suave"></div>
 
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarReferencia">Cancelar</button>
@@ -13102,17 +13202,17 @@ Only state can be modified.`);
       document.getElementById("formReferencia").addEventListener("submit", (e) => {
         e.preventDefault();
         if (tipoAtual === "imagem" && !imagemBase64) {
-          mostrarToast("Selecione uma imagem para continuar.");
+          mostrarToast("Selecione uma imagem para continuar.", "aviso");
           return;
         }
         const url = document.getElementById("campoUrlRef").value.trim();
         if (tipoAtual === "link" && !url) {
-          mostrarToast("Informe a URL do link de refer\xEAncia.");
+          mostrarToast("Informe a URL do link de refer\xEAncia.", "aviso");
           return;
         }
         const nota = document.getElementById("campoNotaRef").value.trim();
         if (tipoAtual === "nota" && !nota) {
-          mostrarToast("Escreva o conte\xFAdo da nota.");
+          mostrarToast("Escreva o conte\xFAdo da nota.", "aviso");
           return;
         }
         const tags = document.getElementById("campoTagsRef").value.split(",").map((t) => t.trim()).filter(Boolean);
@@ -13128,21 +13228,26 @@ Only state can be modified.`);
         };
         this.dataStore.adicionar("referencias", referencia);
         fecharModal();
-        mostrarToast("Refer\xEAncia adicionada ao board!");
+        mostrarToast("Refer\xEAncia adicionada ao board!", "sucesso");
         this.rerenderizar();
       });
     }
-    excluirReferencia(id) {
-      if (!confirm("Remover este item do board de refer\xEAncias?")) return;
+    async excluirReferencia(id) {
+      if (!await confirmarAcao("Remover este item do board de refer\xEAncias?")) return;
+      const item = this.dataStore.buscarPorId("referencias", id);
       this.dataStore.remover("referencias", id);
-      mostrarToast("Refer\xEAncia removida.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Refer\xEAncia removida.", () => {
+        dataStore2.dados.referencias.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     // Modo apresentação em tela cheia: navega pelos itens filtrados atualmente exibidos
     abrirApresentacao(indiceInicial) {
       this.itensApresentacao = this.referenciasFiltradas();
       if (!this.itensApresentacao.length) {
-        mostrarToast("N\xE3o h\xE1 itens para apresentar.");
+        mostrarToast("N\xE3o h\xE1 itens para apresentar.", "aviso");
         return;
       }
       this.indiceApresentacao = indiceInicial || 0;
@@ -13153,6 +13258,7 @@ Only state can be modified.`);
       const botaoFechar = document.createElement("button");
       botaoFechar.className = "btn-fechar-apresentacao";
       botaoFechar.textContent = "\u2715";
+      botaoFechar.setAttribute("aria-label", "Fechar apresenta\xE7\xE3o");
       botaoFechar.addEventListener("click", () => this.fecharApresentacao());
       document.body.appendChild(botaoFechar);
       overlay.dataset.temBotaoFechar = "true";
@@ -13295,9 +13401,9 @@ Only state can be modified.`);
           <span class="hint-controle">Arraste para girar \xB7 Scroll para zoom</span>
         </div>
         <div class="hud-tour ${this.tourAtivo ? "visivel" : ""}" id="hudTour">
-          <button class="tour-btn" id="tourPrev">\u25C0</button>
-          <button class="tour-btn ${this.tourAtivo ? "ativo" : ""}" id="tourPlayPause">${this.tourAtivo ? "\u23F8" : "\u25B6"}</button>
-          <button class="tour-btn" id="tourNext">\u25B6</button>
+           <button class="tour-btn" id="tourPrev" aria-label="Obra anterior">\u25C0</button>
+          <button class="tour-btn ${this.tourAtivo ? "ativo" : ""}" id="tourPlayPause" aria-label="Reproduzir ou pausar tour">${this.tourAtivo ? "\u23F8" : "\u25B6"}</button>
+          <button class="tour-btn" id="tourNext" aria-label="Pr\xF3xima obra">\u25B6</button>
           <span class="tour-progresso" id="tourProgresso">1 / ${this.obrasVisiveis.length}</span>
         </div>
       </div>`;
@@ -13878,7 +13984,7 @@ Aprecie a exposi\xE7\xE3o!`;
         (m) => `<option value="${m}" ${this.moeda === m ? "selected" : ""}>${m}</option>`
       ).join("")}
             </select>
-            <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de c\xE2mbio">\u{1F4B1}</button>
+            <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de c\xE2mbio" aria-label="Editar taxas de c\xE2mbio">\u{1F4B1}</button>
           </div>
           <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precifica\xE7\xE3o</button>
           <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relat\xF3rio PDF</button>
@@ -13889,26 +13995,26 @@ Aprecie a exposi\xE7\xE3o!`;
           <div class="calc-grid">
             <div class="campo-calc" style="grid-column:1/-1">
               <label>Obra de refer\xEAncia</label>
-              <select class="sel-obra-calc" id="selObraCalc"><option value="">\u2014 Selecionar obra \u2014</option>${opcoesObra}</select>
+               <select class="sel-obra-calc" id="selObraCalc" aria-label="Obra de refer\xEAncia"><option value="">\u2014 Selecionar obra \u2014</option>${opcoesObra}</select>
             </div>
             <div class="campo-calc">
               <label><i class="fas fa-dollar-sign"></i> Custo materiais (${this.moeda})</label>
-              <input type="number" id="calcMateriais" value="${this.calc.materiais}" min="0" step="0.1">
+               <input type="number" id="calcMateriais" aria-label="Custo materiais" value="${this.calc.materiais}" min="0" step="0.1">
             </div>
             <div class="campo-calc">
               <label>\u23F1 Horas trabalhadas</label>
-              <input type="number" id="calcHoras" value="${this.calc.horas}" min="0" step="0.5">
+               <input type="number" id="calcHoras" aria-label="Horas trabalhadas" value="${this.calc.horas}" min="0" step="0.5">
             </div>
             <div class="campo-calc">
               <label>\u{1F675} Valor hora (${this.moeda})</label>
-              <input type="number" id="calcValorHora" value="${this.calc.valorHora}" min="0" step="1">
+               <input type="number" id="calcValorHora" aria-label="Valor hora" value="${this.calc.valorHora}" min="0" step="1">
             </div>
             <div class="campo-calc">
               <label>\u{1F4D0} Dimens\xF5es (cm)</label>
               <div style="display:flex;gap:6px;">
-                <input type="number" id="calcLargura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
+                 <input type="number" id="calcLargura" aria-label="Largura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
                 <span style="align-self:center;color:var(--text-muted);font-size:0.8rem;">\xD7</span>
-                <input type="number" id="calcAltura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
+                <input type="number" id="calcAltura" aria-label="Altura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
               </div>
             </div>
             <div class="campo-calc">
@@ -14024,6 +14130,7 @@ Aprecie a exposi\xE7\xE3o!`;
         <h3><i class="fas fa-chart-bar"></i> An\xE1lise de Break-Even</h3>
         <div class="be-tabela-wrapper">
           <table class="be-tabela">
+            <caption class="sr-only">An\xE1lise de Break-Even</caption>
             <thead><tr>
               <th>Obra</th><th>Custo Total</th><th>Pre\xE7o</th><th>Margem</th><th>Markup</th><th>Lucro</th>
             </tr></thead>
@@ -14090,6 +14197,7 @@ Aprecie a exposi\xE7\xE3o!`;
         ${ultimas.length > 0 ? `
         <h4 style="margin:12px 0 6px;font-size:0.8rem;color:var(--text-muted);">Maiores discrep\xE2ncias</h4>
         <table class="be-tabela">
+          <caption class="sr-only">Maiores discrep\xE2ncias entre pre\xE7o sugerido e real</caption>
           <thead><tr><th>Obra</th><th>Sugerido</th><th>Real</th><th>Erro</th></tr></thead>
           <tbody>${ultimas.map((u) => `<tr class="${u.pctErro > 20 ? "be-baixa" : "be-alta"}">
             <td>${u.titulo || "\u2014"}</td>
@@ -14201,7 +14309,7 @@ Aprecie a exposi\xE7\xE3o!`;
                 </div>
                 <div class="regra-acoes">
                   <button class="btn-miniatura btn-aplicar-regra" data-idx="${i}">\u25B6 Aplicar</button>
-                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;">\u2715</button>
+                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;" aria-label="Remover regra">\u2715</button>
                 </div>
               </div>
             `).join("")}
@@ -14209,8 +14317,8 @@ Aprecie a exposi\xE7\xE3o!`;
           <hr style="margin:12px 0;border-color:var(--border);">
           <h4 style="margin:0 0 8px;font-size:0.85rem;">Nova Regra</h4>
           <div class="regra-form">
-            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input">
-            <select id="regraTecnica" class="regra-input">
+            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input" aria-label="Nome da regra">
+            <select id="regraTecnica" class="regra-input" aria-label="T\xE9cnica">
               <option value="">Qualquer t\xE9cnica</option>
               <option value="\xF3leo">\xD3leo</option>
               <option value="aquarela">Aquarela</option>
@@ -14219,15 +14327,15 @@ Aprecie a exposi\xE7\xE3o!`;
               <option value="outra">Outra</option>
             </select>
             <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1">
+              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1" aria-label="Largura m\xEDnima">
+              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1" aria-label="Largura m\xE1xima">
+              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1" aria-label="Altura m\xEDnima">
+              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1" aria-label="Altura m\xE1xima">
             </div>
             <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1">
-              <input type="number" id="regraBase" placeholder="Pre\xE7o base" class="regra-input" value="0" style="flex:1">
-              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1">
+              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1" aria-label="Multiplicador">
+              <input type="number" id="regraBase" placeholder="Pre\xE7o base" class="regra-input" value="0" style="flex:1" aria-label="Pre\xE7o base">
+              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1" aria-label="Complexidade">
             </div>
             <button class="btn-primario" id="btnAdicionarRegra" style="grid-column:1/-1;">+ Adicionar Regra</button>
           </div>
@@ -14250,7 +14358,7 @@ Aprecie a exposi\xE7\xE3o!`;
             ${["USD", "EUR", "GBP"].map((m) => `
               <div class="taxa-item">
                 <label>${m}</label>
-                <input type="number" id="taxa${m}" value="${tx[m] || 1}" step="0.01" min="0.01">
+                <input type="number" id="taxa${m}" value="${tx[m] || 1}" step="0.01" min="0.01" aria-label="Taxa de c\xE2mbio ${m}">
               </div>
             `).join("")}
           </div>
@@ -14389,6 +14497,7 @@ Aprecie a exposi\xE7\xE3o!`;
         <div>
           <h4 style="margin:0 0 8px;font-size:0.85rem;color:var(--text-muted);">M\xE9dia de Pre\xE7o por T\xE9cnica</h4>
           <table class="tabela-media">
+            <caption class="sr-only">M\xE9dia de pre\xE7o por t\xE9cnica</caption>
             <tr><th>T\xE9cnica</th><th>M\xE9dia</th><th>Obras</th></tr>
             ${tecRows.map((r) => `<tr><td>${r.tec}</td><td>${this.fmt(r.media)}</td><td>${r.count}</td></tr>`).join("")}
           </table>
@@ -14458,7 +14567,7 @@ Aprecie a exposi\xE7\xE3o!`;
           </div>
           ${circM}
           <div class="meta-edit">
-            <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100">
+            <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100" aria-label="Meta mensal">
             <button class="btn-secundario" id="btnSalvarMetaMensal">Salvar</button>
           </div>
           ${projecao ? `<div class="meta-projecao"><i class="fas fa-chart-line"></i> ${projecao}</div>` : ""}
@@ -14472,7 +14581,7 @@ Aprecie a exposi\xE7\xE3o!`;
           </div>
           ${circA}
           <div class="meta-edit">
-            <input type="number" id="metaAnualInput" value="${metaAnual}" min="0" step="1000">
+            <input type="number" id="metaAnualInput" value="${metaAnual}" min="0" step="1000" aria-label="Meta anual">
             <button class="btn-secundario" id="btnSalvarMetaAnual">Salvar</button>
           </div>
           <div class="meta-projecao">\u{1F4C6} ${diasRestantes} dias restantes no m\xEAs</div>
@@ -14524,7 +14633,7 @@ Aprecie a exposi\xE7\xE3o!`;
         this.cfgRoot.taxasCambio = tx;
         configStore().salvar();
         document.getElementById("taxasOverlay").style.display = "none";
-        mostrarToast("Taxas de c\xE2mbio salvas!");
+        mostrarToast("Taxas de c\xE2mbio salvas!", "sucesso");
         this.rerenderizar();
       });
       document.getElementById("btnAbrirRegras")?.addEventListener("click", () => {
@@ -14604,13 +14713,13 @@ Aprecie a exposi\xE7\xE3o!`;
       document.getElementById("btnSalvarMetaMensal")?.addEventListener("click", () => {
         const v = Number(document.getElementById("metaMensalInput")?.value) || 0;
         this.salvarConfig({ metaMensal: v });
-        mostrarToast("Meta mensal salva!");
+        mostrarToast("Meta mensal salva!", "sucesso");
         this.rerenderizar();
       });
       document.getElementById("btnSalvarMetaAnual")?.addEventListener("click", () => {
         const v = Number(document.getElementById("metaAnualInput")?.value) || 0;
         this.salvarConfig({ metaAnual: v });
-        mostrarToast("Meta anual salva!");
+        mostrarToast("Meta anual salva!", "sucesso");
         this.rerenderizar();
       });
       document.getElementById("btnExportarRelatorio")?.addEventListener("click", () => this.exportarRelatorioPDF());
@@ -14637,13 +14746,13 @@ Aprecie a exposi\xE7\xE3o!`;
     salvarPrecoNaObra() {
       const obraId = this.calc.obraId || document.getElementById("selObraCalc")?.value;
       if (!obraId) {
-        mostrarToast("Selecione uma obra primeiro.");
+        mostrarToast("Selecione uma obra primeiro.", "aviso");
         return;
       }
       const precoSugerido = this.calcularPreco(this.calc);
       const obra = obraStore().porId(obraId);
       if (!obra) {
-        mostrarToast("Obra n\xE3o encontrada.");
+        mostrarToast("Obra n\xE3o encontrada.", "aviso");
         return;
       }
       const hist = obra.historicoPrecos || [];
@@ -14657,14 +14766,14 @@ Aprecie a exposi\xE7\xE3o!`;
         horasTrabalho: Number(this.calc.horas) || 0,
         historicoPrecos: hist
       });
-      mostrarToast(`Pre\xE7o ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ""}"!`);
+      mostrarToast(`Pre\xE7o ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ""}"!`, "sucesso");
       this.rerenderizar();
     }
     // --- Regras ---
     adicionarRegra() {
       const nome = document.getElementById("regraNome")?.value?.trim();
       if (!nome) {
-        mostrarToast("Informe um nome para a regra.");
+        mostrarToast("Informe um nome para a regra.", "aviso");
         return;
       }
       const regras = this.cfgRoot.precificadorRegras || [];
@@ -14682,7 +14791,7 @@ Aprecie a exposi\xE7\xE3o!`;
       });
       this.cfgRoot.precificadorRegras = regras;
       configStore().salvar();
-      mostrarToast("Regra adicionada!");
+      mostrarToast("Regra adicionada!", "sucesso");
       this.rerenderizar();
     }
     removerRegra(idx) {
@@ -14716,13 +14825,13 @@ Aprecie a exposi\xE7\xE3o!`;
           count++;
         }
       });
-      mostrarToast(`Regra "${regra.nome}" aplicada em ${count} obra${count > 1 ? "s" : ""}.`);
+      mostrarToast(`Regra "${regra.nome}" aplicada em ${count} obra${count > 1 ? "s" : ""}.`, "sucesso");
       this.rerenderizar();
     }
     aplicarRegrasEmTodas() {
       const regras = this.cfgRoot.precificadorRegras || [];
       if (regras.length === 0) {
-        mostrarToast("Nenhuma regra cadastrada.");
+        mostrarToast("Nenhuma regra cadastrada.", "aviso");
         return;
       }
       const obras = obraStore().items || [];
@@ -14746,13 +14855,13 @@ Aprecie a exposi\xE7\xE3o!`;
           count++;
         }
       });
-      mostrarToast(`Regras aplicadas em ${count} obra${count > 1 ? "s" : ""} sem pre\xE7o.`);
+      mostrarToast(`Regras aplicadas em ${count} obra${count > 1 ? "s" : ""} sem pre\xE7o.`, "sucesso");
       this.rerenderizar();
     }
     // --- PDF Export ---
     exportarRelatorioPDF() {
       if (typeof window.jspdf === "undefined" && typeof jspdf === "undefined") {
-        mostrarToast("jsPDF n\xE3o carregado. Tente novamente.");
+        mostrarToast("jsPDF n\xE3o carregado. Tente novamente.", "erro");
         return;
       }
       mostrarLoading("Gerando relat\xF3rio de precifica\xE7\xE3o...");
@@ -14877,7 +14986,7 @@ Aprecie a exposi\xE7\xE3o!`;
       }
       doc.save("relatorio-precificacao.pdf");
       esconderLoading();
-      mostrarToast("Relat\xF3rio PDF exportado com sucesso!");
+      mostrarToast("Relat\xF3rio PDF exportado com sucesso!", "sucesso");
     }
   };
   var AtelierView = class extends BaseView {
@@ -14971,7 +15080,7 @@ Aprecie a exposi\xE7\xE3o!`;
         <div class="mat-acoes">
           <button data-acao="editarMaterial" data-id="${m.id}">\xE2\u0153\x8F\xEF\xB8\x8F Editar</button>
           <button data-acao="consumirMaterial" data-id="${m.id}">\xF0\u0178\u201C\u2030 Consumir</button>
-          <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
+           <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;" aria-label="Excluir material">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
         </div>
       </div>
     `;
@@ -14994,6 +15103,7 @@ Aprecie a exposi\xE7\xE3o!`;
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum consumo registrado.</p>' : `
       <table class="cons-table">
+        <caption class="sr-only">Lista de consumos</caption>
         <tr><th>Material</th><th>Obra</th><th>Qtd</th><th>Custo</th><th>Data</th><th>Notas</th><th></th></tr>
         ${rows.map((r) => `
           <tr>
@@ -15003,7 +15113,7 @@ Aprecie a exposi\xE7\xE3o!`;
             <td>${r.custo !== null ? formatarMoeda(r.custo) : "\xE2\u20AC\u201D"}</td>
             <td>${r.data || "\xE2\u20AC\u201D"}</td>
             <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${r.notas || ""}</td>
-            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button></td>
+            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;" aria-label="Excluir consumo">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button></td>
           </tr>
         `).join("")}
       </table>`}
@@ -15032,7 +15142,7 @@ Aprecie a exposi\xE7\xE3o!`;
         <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">\u2795 Adicionar item manual</button>
         <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">\xF0\u0178\u201C\u017E Exportar TXT</button>
       </div>
-      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista autom\xC3\xA1tica".</p>' : ""}
+      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista autom\xE1tica".</p>' : ""}
       <ul class="lista-compras">
         ${paraComprar.map((m) => this.renderItemCompra(m, false)).join("")}
         ${comprados.map((m) => this.renderItemCompra(m, true)).join("")}
@@ -15045,13 +15155,13 @@ Aprecie a exposi\xE7\xE3o!`;
       <li class="${comprado ? "comprado" : ""}">
         <div class="lc-info">
           <div class="lc-nome">${this.catIcones[m.categoria] || "\xF0\u0178\u201C\xA6"} ${m.nome}</div>
-          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? "\xC2\xB7 " + m.marca : ""}</div>
+          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? "\xB7 " + m.marca : ""}</div>
         </div>
         <div class="lc-qtd">${comprado ? "\xE2\u0153\u201D\xEF\xB8\x8F" : `Qtd: ${qtdSugerida} ${m.unidade || "un"}`}</div>
         ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ""}
         <div class="lc-acoes">
-          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}">\xE2\u2020\xA9\xEF\xB8\x8F</button>` : `<button data-acao="marcarComprado" data-id="${m.id}">\xE2\u0153\u201D</button>`}
-          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">\xE2\u2020\xA9\xEF\xB8\x8F</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado">\xE2\u0153\u201D</button>`}
+          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;" aria-label="Remover da lista">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
         </div>
       </li>
     `;
@@ -15072,19 +15182,19 @@ Aprecie a exposi\xE7\xE3o!`;
         return `
             <div class="forn-card">
               <div class="forn-nome">\xF0\u0178\x8F\xAA ${f.nome}</div>
-              <div class="forn-contato">${f.contato || ""}${f.email ? " \xC2\xB7 " + f.email : ""}</div>
+              <div class="forn-contato">${f.contato || ""}${f.email ? " \xB7 " + f.email : ""}</div>
               <div class="forn-esp">\xF0\u0178\u201C\u2019 ${f.especialidade || "Sem especialidade"}</div>
               ${f.avaliacao ? `<div class="forn-estrelas">${"\xE2\u02DC\u2026".repeat(Math.min(5, Number(f.avaliacao)))}${"\xE2\u02DC\u2020".repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ""}
               ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\xF0\u0178\u201C\x9D ${f.notas}</div>` : ""}
               ${hist.length > 0 ? `
                 <div class="forn-hist">
-                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Hist\xC3\xB3rico (Total: ${formatarMoeda(totalGasto)})</div>
+                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Hist\xF3rico (Total: ${formatarMoeda(totalGasto)})</div>
                   ${hist.map((h) => `<div class="hist-item"><span>${h.data || ""} \xE2\u20AC\u201D ${h.itens || ""}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join("")}
                 </div>
               ` : ""}
               <div class="forn-acoes">
                 <button data-acao="editarFornecedor" data-id="${f.id}">\xE2\u0153\x8F\xEF\xB8\x8F Editar</button>
-                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
+                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;" aria-label="Excluir fornecedor">\xF0\u0178\u2014\u2018\xEF\xB8\x8F</button>
               </div>
             </div>
           `;
@@ -15101,7 +15211,7 @@ Aprecie a exposi\xE7\xE3o!`;
       <div style="margin-bottom:12px;">
         <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
           <option value="">\xE2\u20AC\u201D Selecione uma obra \xE2\u20AC\u201D</option>
-          ${obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"} ${o.preco ? "\xE2\u20AC\u201D " + formatarMoeda(o.preco) : ""}</option>`).join("")}
+          ${obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"} ${o.preco ? "\xE2\u20AC\u201D " + formatarMoeda(o.preco) : ""}</option>`).join("")}
         </select>
       </div>
       <div id="custoObraDetalhe">
@@ -15111,7 +15221,7 @@ Aprecie a exposi\xE7\xE3o!`;
     }
     renderCustoDetalhe(obraId) {
       const obra = obraStore().items.find((o) => o.id === obraId);
-      if (!obra) return '<p style="color:var(--text-muted);">Obra n\xC3\xA3o encontrada.</p>';
+      if (!obra) return '<p style="color:var(--text-muted);">Obra n\xE3o encontrada.</p>';
       const consumosObra = this.consumos.filter((c) => c.obraId === obraId);
       const materiais = this.materiais;
       let custoTotal = 0;
@@ -15128,11 +15238,11 @@ Aprecie a exposi\xE7\xE3o!`;
       <div class="custo-obra-header">
         <div class="custo-obra-card">
           <div class="co-valor">${formatarMoeda(Math.round(custoTotal))}</div>
-          <div class="co-label">\xF0\u0178\u2019\xB0 Custo de produ\xC3\xA7\xC3\xA3o</div>
+          <div class="co-label">\xF0\u0178\u2019\xB0 Custo de produ\xE7\xE3o</div>
         </div>
         <div class="custo-obra-card">
           <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : "\xE2\u20AC\u201D"}</div>
-          <div class="co-label">\xF0\u0178\x8F\xB7\xEF\xB8\x8F Pre\xC3\xA7o de venda</div>
+          <div class="co-label">\xF0\u0178\x8F\xB7\xEF\xB8\x8F Pre\xE7o de venda</div>
         </div>
         <div class="custo-obra-card">
           <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + "%" : "\xE2\u20AC\u201D"}</div>
@@ -15141,6 +15251,7 @@ Aprecie a exposi\xE7\xE3o!`;
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `
       <table class="cons-table">
+        <caption class="sr-only">Detalhamento de custos</caption>
         <tr><th>Material</th><th>Qtd</th><th>Valor unit.</th><th>Custo</th><th>Data</th><th>Notas</th></tr>
         ${rows.map((r) => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find((m) => m.id === r.materialId)?.precoUnitario ? "R$ " + Number(materiais.find((m) => m.id === r.materialId).precoUnitario).toFixed(2) : "\xE2\u20AC\u201D"}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || "\xE2\u20AC\u201D"}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ""}</td></tr>`).join("")}
         <tr style="font-weight:600;"><td>TOTAL</td><td></td><td></td><td>${formatarMoeda(Math.round(custoTotal))}</td><td></td><td></td></tr>
@@ -15213,20 +15324,20 @@ Aprecie a exposi\xE7\xE3o!`;
       const cats = Object.keys(this.catLabels);
       const catOpts = cats.map((c) => `<option value="${c}" ${mat && mat.categoria === c ? "selected" : ""}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join("");
       abrirModal(`
-      <h3>${mat ? "\xE2\u0153\x8F\xEF\xB8\x8F Editar" : isLista ? "\xE2\u017E\u2022 Adicionar \xC3\xA0 Lista" : "\xE2\u017E\u2022 Novo Material"}</h3>
+      <h3>${mat ? "\xE2\u0153\x8F\xEF\xB8\x8F Editar" : isLista ? "\xE2\u017E\u2022 Adicionar \xE0 Lista" : "\xE2\u017E\u2022 Novo Material"}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fMatCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${catOpts}</select></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Subcategoria</label><input type="text" id="fMatSub" value="${mat ? mat.subcategoria || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || "un" : "un"}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. m\xC3\xADnima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Pre\xC3\xA7o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisi\xC3\xA7\xC3\xA3o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || "" : ""}</textarea></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || "" : ""}" required aria-label="Nome" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fMatCat" aria-label="Categoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${catOpts}</select></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Subcategoria</label><input type="text" id="fMatSub" value="${mat ? mat.subcategoria || "" : ""}" aria-label="Subcategoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || "" : ""}" aria-label="Marca" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" aria-label="Quantidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || "un" : "un"}" aria-label="Unidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. m\xEDnima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" aria-label="Quantidade m\xEDnima" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Pre\xE7o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" aria-label="Pre\xE7o unit\xE1rio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || "" : ""}" aria-label="Local" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisi\xE7\xE3o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || "" : ""}" aria-label="Data de aquisi\xE7\xE3o" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" aria-label="Notas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || "" : ""}</textarea></div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -15251,39 +15362,44 @@ Aprecie a exposi\xE7\xE3o!`;
           notas: document.getElementById("fMatNotas").value.trim()
         };
         if (!dados.nome) {
-          mostrarToast("O nome \xC3\xA9 obrigat\xC3\xB3rio.");
+          mostrarToast("O nome \xE9 obrigat\xF3rio.", "aviso");
           return;
         }
         if (isLista) dados.comprado = false;
         if (mat) {
           this.dataStore.atualizar("materiais", id, dados);
-          mostrarToast("Material atualizado!");
+          mostrarToast("Material atualizado!", "sucesso");
         } else {
           this.dataStore.adicionar("materiais", dados);
-          mostrarToast("Material adicionado!");
+          mostrarToast("Material adicionado!", "sucesso");
         }
         fecharModal();
         this.rerenderizar();
       });
     }
-    excluirMaterial(id) {
-      if (!confirm("Excluir este material?")) return;
+    async excluirMaterial(id) {
+      if (!await confirmarAcao("Excluir este material?")) return;
+      const item = this.dataStore.buscarPorId("materiais", id);
       this.dataStore.remover("materiais", id);
-      mostrarToast("Material exclu\xC3\xADdo.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Material exclu\xEDdo.", () => {
+        dataStore2.dados.materiais.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     consumirRapido(id) {
       const mat = this.dataStore.buscarPorId("materiais", id);
       if (!mat) return;
       const obras = this.obras;
-      const opcoes = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"}</option>`).join("");
+      const opcoes = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
       abrirModal(`
       <h3>\xF0\u0178\u201C\u2030 Consumir: ${mat.nome}</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Obra</label><select id="fConsObra">${opcoes}</select></div>
-        <div class="campo-form"><label>Quantidade (${mat.unidade || "un"} \xE2\u20AC\u201D atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1"></div>
-        <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
-        <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="campo-form"><label>Obra</label><select id="fConsObra" aria-label="Obra">${opcoes}</select></div>
+        <div class="campo-form"><label>Quantidade (${mat.unidade || "un"} \xE2\u20AC\u201D atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" aria-label="Data"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" aria-label="Notas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">Consumir</button>
@@ -15295,7 +15411,7 @@ Aprecie a exposi\xE7\xE3o!`;
         e.preventDefault();
         const qtd = Number(document.getElementById("fConsQtd").value) || 0;
         if (qtd <= 0) {
-          mostrarToast("Quantidade inv\xC3\xA1lida.");
+          mostrarToast("Quantidade inv\xE1lida.", "aviso");
           return;
         }
         const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
@@ -15308,7 +15424,7 @@ Aprecie a exposi\xE7\xE3o!`;
           notas: document.getElementById("fConsNotas").value.trim()
         });
         fecharModal();
-        mostrarToast(`${qtd} ${mat.unidade || "un"} consumido(s) de "${mat.nome}". Novo estoque: ${novaQtd}.`);
+        mostrarToast(`${qtd} ${mat.unidade || "un"} consumido(s) de "${mat.nome}". Novo estoque: ${novaQtd}.`, "info");
         this.rerenderizar();
       });
     }
@@ -15317,15 +15433,15 @@ Aprecie a exposi\xE7\xE3o!`;
       const materiais = this.materiais;
       const obras = this.obras;
       const matOpts = materiais.map((m) => `<option value="${m.id}">${this.catIcones[m.categoria] || "\xF0\u0178\u201C\xA6"} ${m.nome} (${m.quantidade} ${m.unidade || "un"})</option>`).join("");
-      const obrOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xC3\xADtulo"}</option>`).join("");
+      const obrOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem t\xEDtulo"}</option>`).join("");
       abrirModal(`
       <h3>\xF0\u0178\u201C\u2039 Registrar Consumo</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Material</label><select id="fConsMat">${matOpts}</select></div>
-        <div class="campo-form"><label>Obra</label><select id="fConsObraFull">${obrOpts}</select></div>
-        <div class="campo-form"><label>Quantidade</label><input type="number" id="fConsQtdFull" value="1" min="0.1" step="0.1"></div>
-        <div class="campo-form"><label>Data</label><input type="date" id="fConsDataFull" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
-        <div class="campo-form"><label>Notas</label><textarea id="fConsNotasFull" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="campo-form"><label>Material</label><select id="fConsMat" aria-label="Material">${matOpts}</select></div>
+        <div class="campo-form"><label>Obra</label><select id="fConsObraFull" aria-label="Obra">${obrOpts}</select></div>
+        <div class="campo-form"><label>Quantidade</label><input type="number" id="fConsQtdFull" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsDataFull" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" aria-label="Data"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotasFull" aria-label="Notas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">Registrar</button>
@@ -15338,7 +15454,7 @@ Aprecie a exposi\xE7\xE3o!`;
         const matId = document.getElementById("fConsMat").value;
         const qtd = Number(document.getElementById("fConsQtdFull").value) || 0;
         if (qtd <= 0) {
-          mostrarToast("Quantidade inv\xC3\xA1lida.");
+          mostrarToast("Quantidade inv\xE1lida.", "aviso");
           return;
         }
         const mat = this.dataStore.buscarPorId("materiais", matId);
@@ -15354,14 +15470,19 @@ Aprecie a exposi\xE7\xE3o!`;
           notas: document.getElementById("fConsNotasFull").value.trim()
         });
         fecharModal();
-        mostrarToast("Consumo registrado e estoque atualizado!");
+        mostrarToast("Consumo registrado e estoque atualizado!", "sucesso");
         this.rerenderizar();
       });
     }
-    excluirConsumo(id) {
-      if (!confirm("Excluir este registro de consumo?")) return;
+    async excluirConsumo(id) {
+      if (!await confirmarAcao("Excluir este registro de consumo?")) return;
+      const item = this.dataStore.buscarPorId("consumos", id);
       this.dataStore.remover("consumos", id);
-      mostrarToast("Registro exclu\xC3\xADdo.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Registro exclu\xEDdo.", () => {
+        dataStore2.dados.consumos.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     // --- Fornecedores ---
@@ -15371,12 +15492,12 @@ Aprecie a exposi\xE7\xE3o!`;
       <h3>${f ? "\xE2\u0153\x8F\xEF\xB8\x8F Editar Fornecedor" : "\xE2\u017E\u2022 Novo Fornecedor"}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avalia\xC3\xA7\xC3\xA3o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || "" : ""}</textarea></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || "" : ""}" required aria-label="Nome do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || "" : ""}" aria-label="Contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || "" : ""}" aria-label="E-mail do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || "" : ""}" aria-label="Especialidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avalia\xE7\xE3o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" aria-label="Avalia\xE7\xE3o" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" aria-label="Notas do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || "" : ""}</textarea></div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -15389,7 +15510,7 @@ Aprecie a exposi\xE7\xE3o!`;
         e.preventDefault();
         const nome = document.getElementById("fFornNome").value.trim();
         if (!nome) {
-          mostrarToast("O nome \xC3\xA9 obrigat\xC3\xB3rio.");
+          mostrarToast("O nome \xE9 obrigat\xF3rio.", "aviso");
           return;
         }
         const dados = {
@@ -15403,19 +15524,24 @@ Aprecie a exposi\xE7\xE3o!`;
         };
         if (f) {
           this.dataStore.atualizar("fornecedores", id, dados);
-          mostrarToast("Fornecedor atualizado!");
+          mostrarToast("Fornecedor atualizado!", "sucesso");
         } else {
           this.dataStore.adicionar("fornecedores", dados);
-          mostrarToast("Fornecedor adicionado!");
+          mostrarToast("Fornecedor adicionado!", "sucesso");
         }
         fecharModal();
         this.rerenderizar();
       });
     }
-    excluirFornecedor(id) {
-      if (!confirm("Excluir este fornecedor?")) return;
+    async excluirFornecedor(id) {
+      if (!await confirmarAcao("Excluir este fornecedor?")) return;
+      const item = this.dataStore.buscarPorId("fornecedores", id);
       this.dataStore.remover("fornecedores", id);
-      mostrarToast("Fornecedor exclu\xC3\xADdo.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Fornecedor exclu\xEDdo.", () => {
+        dataStore2.dados.fornecedores.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     // --- Lista de Compras ---
@@ -15430,23 +15556,23 @@ Aprecie a exposi\xE7\xE3o!`;
           count++;
         }
       });
-      mostrarToast(`${count} item(ns) adicionado(s) \xE0 lista de compras!`);
+      mostrarToast(`${count} item(ns) adicionado(s) \xE0 lista de compras!`, "sucesso");
       this.rerenderizar();
     }
     marcarComprado(id, comprado) {
       this.dataStore.atualizar("materiais", id, { comprado });
-      mostrarToast(comprado ? "Marcado como comprado!" : "Reaberto na lista.");
+      mostrarToast(comprado ? "Marcado como comprado!" : "Reaberto na lista.", "info");
       this.rerenderizar();
     }
     removerDaLista(id) {
       this.dataStore.atualizar("materiais", id, { comprado: void 0 });
-      mostrarToast("Item removido da lista.");
+      mostrarToast("Item removido da lista.", "info");
       this.rerenderizar();
     }
     exportarListaTXT() {
       const materiais = this.materiais.filter((m) => m.comprado === false);
       if (materiais.length === 0) {
-        mostrarToast("Lista vazia.");
+        mostrarToast("Lista vazia.", "aviso");
         return;
       }
       let txt = "=== LISTA DE COMPRAS \xE2\u20AC\u201D ATELIER ===\n";
@@ -15477,7 +15603,7 @@ Aprecie a exposi\xE7\xE3o!`;
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      mostrarToast("Lista exportada em TXT!");
+      mostrarToast("Lista exportada em TXT!", "sucesso");
     }
   };
   var RedeView = class extends BaseView {
@@ -15545,7 +15671,7 @@ Aprecie a exposi\xE7\xE3o!`;
         ${c.estagio ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${this.estagios[c.estagio] || c.estagio}</div>` : ""}
         ${alerta ? `<div class="cont-alerta ${alerta}">${alertaMsg}</div>` : ""}
         ${c.proximoPasso ? `<div class="cont-passos">\u{1F3AF} ${c.proximoPasso}</div>` : ""}
-        <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">\u270F\uFE0F Editar</button><button data-acao="interagirContato" data-id="${c.id}">\u{1F4AC} Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button></div>
+        <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">\u270F\uFE0F Editar</button><button data-acao="interagirContato" data-id="${c.id}">\u{1F4AC} Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;" aria-label="Excluir contato">\u{1F5D1}\uFE0F</button></div>
       </div>`;
     }
     // --- PIPELINE ---
@@ -15567,8 +15693,8 @@ Aprecie a exposi\xE7\xE3o!`;
               <div class="pipe-cat">${this.catLabels[c.categoria] || c.categoria}</div>
               ${dias !== null ? `<div class="pipe-dias">${dias > 30 ? "\u26A0\uFE0F " + dias + " dias" : "\u2705 " + dias + " dias"}</div>` : ""}
               <div style="display:flex;gap:4px;margin-top:6px;">
-                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">\u25C0</button>
-                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;">\u25B6</button>
+                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para esquerda">\u25C0</button>
+                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para direita">\u25B6</button>
               </div>
             </div>`;
       }).join("")}
@@ -15639,7 +15765,7 @@ Aprecie a exposi\xE7\xE3o!`;
           ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F5BC}\uFE0F Obras: ${obras.join(", ")}</div>` : ""}
           ${e.documentacao && e.documentacao.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">\u{1F4DE} Docs: ${e.documentacao.join(", ")}</div>` : ""}
           ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">\u{1F3C6} ${e.resultado}</div>` : ""}
-          <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">\u270F\uFE0F Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;">\u{1F5D1}\uFE0F</button></div>
+          <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">\u270F\uFE0F Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;" aria-label="Excluir evento">\u{1F5D1}\uFE0F</button></div>
         </div>`;
       }).join("")}</div>`;
     }
@@ -15821,45 +15947,50 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const estOpts = this.estagiosOrdem.map((e) => `<option value="${e}" ${c && c.estagio === e ? "selected" : ""}>${this.estagios[e]}</option>`).join("");
       abrirModal(`<h3>${c ? "\u270F\uFE0F Editar" : "\u2728 Novo"} Contato Profissional</h3>
       <form id="formModal" style="display:grid;gap:10px;"><div class="modal-form-grid">
-        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fContNome" value="${c ? c.nome || "" : ""}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fContCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${catOpts}</select></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Estagio</label><select id="fContEstagio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${estOpts}</select></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Instituicao</label><input type="text" id="fContInst" value="${c ? c.instituicao || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Cargo</label><input type="text" id="fContCargo" value="${c ? c.cargo || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fContTel" value="${c ? c.contato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fContEmail" value="${c ? c.email || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Redes sociais</label><input type="text" id="fContRedes" value="${c ? c.redes || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Relacionamento (1-5)</label><input type="number" id="fContNivel" value="${c ? c.nivelRelacionamento || 0 : 0}" min="1" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Como conheceu</label><input type="text" id="fContConheceu" value="${c ? c.comoConheceu || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Ultimo contato</label><input type="date" id="fContUltimo" value="${c ? c.ultimoContato || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.8rem;color:var(--text-muted);">Proximo passo</label><input type="text" id="fContPasso" value="${c ? c.proximoPasso || "" : ""}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div class="campo-full"><label><input type="checkbox" id="fContVip" ${c && c.vip ? "checked" : ""}> \u{1F451} Contato VIP (colecionador)</label></div>
-        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fContNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${c ? c.notas || "" : ""}</textarea></div>
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fContNome" value="${c ? c.nome || "" : ""}" required aria-label="Nome" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fContCat" aria-label="Categoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${catOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Estagio</label><select id="fContEstagio" aria-label="Est\xE1gio" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;">${estOpts}</select></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Instituicao</label><input type="text" id="fContInst" value="${c ? c.instituicao || "" : ""}" aria-label="Institui\xE7\xE3o" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Cargo</label><input type="text" id="fContCargo" value="${c ? c.cargo || "" : ""}" aria-label="Cargo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fContTel" value="${c ? c.contato || "" : ""}" aria-label="Contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fContEmail" value="${c ? c.email || "" : ""}" aria-label="E-mail" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Redes sociais</label><input type="text" id="fContRedes" value="${c ? c.redes || "" : ""}" aria-label="Redes sociais" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Relacionamento (1-5)</label><input type="number" id="fContNivel" value="${c ? c.nivelRelacionamento || 0 : 0}" min="1" max="5" aria-label="Relacionamento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Como conheceu</label><input type="text" id="fContConheceu" value="${c ? c.comoConheceu || "" : ""}" aria-label="Como conheceu" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Ultimo contato</label><input type="date" id="fContUltimo" value="${c ? c.ultimoContato || "" : ""}" aria-label="\xDAltimo contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.8rem;color:var(--text-muted);">Proximo passo</label><input type="text" id="fContPasso" value="${c ? c.proximoPasso || "" : ""}" aria-label="Pr\xF3ximo passo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-full"><label><input type="checkbox" id="fContVip" ${c && c.vip ? "checked" : ""} aria-label="Contato VIP"> \u{1F451} Contato VIP (colecionador)</label></div>
+        <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fContNotas" aria-label="Notas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${c ? c.notas || "" : ""}</textarea></div>
       </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
       document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
       document.getElementById("formModal").addEventListener("submit", (e) => {
         e.preventDefault();
         const nome = document.getElementById("fContNome").value.trim();
         if (!nome) {
-          mostrarToast("Nome obrigatorio.");
+          mostrarToast("Nome obrigatorio.", "aviso");
           return;
         }
         const dados = { nome, categoria: document.getElementById("fContCat").value, estagio: document.getElementById("fContEstagio").value, instituicao: document.getElementById("fContInst").value.trim(), cargo: document.getElementById("fContCargo").value.trim(), contato: document.getElementById("fContTel").value.trim(), email: document.getElementById("fContEmail").value.trim(), redes: document.getElementById("fContRedes").value.trim(), nivelRelacionamento: Number(document.getElementById("fContNivel").value) || 0, comoConheceu: document.getElementById("fContConheceu").value.trim(), ultimoContato: document.getElementById("fContUltimo").value, proximoPasso: document.getElementById("fContPasso").value.trim(), vip: document.getElementById("fContVip").checked, notas: document.getElementById("fContNotas").value.trim() };
         if (c) {
           this.dataStore.atualizar("contatosProfissionais", id, dados);
-          mostrarToast("Contato atualizado!");
+          mostrarToast("Contato atualizado!", "sucesso");
         } else {
           this.dataStore.adicionar("contatosProfissionais", dados);
-          mostrarToast("Contato adicionado!");
+          mostrarToast("Contato adicionado!", "sucesso");
         }
         fecharModal();
         this.rerenderizar();
       });
     }
-    excluirContato(id) {
-      if (!confirm("Excluir este contato?")) return;
+    async excluirContato(id) {
+      if (!await confirmarAcao("Excluir este contato?")) return;
+      const item = this.dataStore.buscarPorId("contatosProfissionais", id);
       this.dataStore.remover("contatosProfissionais", id);
-      mostrarToast("Contato excluido.");
+      const ds = this.dataStore;
+      mostrarToastComDesfazer("Contato excluido.", () => {
+        ds.dados.contatosProfissionais.push(item);
+        ds.salvar();
+      });
       this.rerenderizar();
     }
     // --- CRUD Interacao ---
@@ -15868,13 +15999,13 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const selId = contatoId || this._selContatoInteracao || "";
       const tipoOpts = Object.entries(this.tiposInteracao).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
       abrirModal(`<h3>\u2728 Nova Interacao</h3>
-      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato">${contatos.map((c) => `<option value="${c.id}" ${c.id === selId ? "selected" : ""}>${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome}</option>`).join("")}</select></div>
-      <div class="campo-form"><label>Tipo</label><select id="fIntTipo">${tipoOpts}</select></div>
-      <div class="campo-form"><label>Data</label><input type="date" id="fIntData" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
-      <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" placeholder="Descreva a interacao..."></textarea></div>
-      <div class="campo-form"><label>Sentimento</label><select id="fIntSentimento"><option value="positivo">\u{1F60A} Positivo</option><option value="neutro">\u{1F610} Neutro</option><option value="negativo">\u{1F61F} Negativo</option></select></div>
-      <div class="campo-form"><label><input type="checkbox" id="fIntFollowUp"> \u{1F51D} Necessita follow-up</label></div>
-      <div class="campo-form" id="divFollowUpNotas" style="display:none;"><label>Notas do follow-up</label><textarea id="fIntFollowNotas" placeholder="O que fazer?"></textarea></div>
+      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato" aria-label="Contato">${contatos.map((c) => `<option value="${c.id}" ${c.id === selId ? "selected" : ""}>${this.catIcones[c.categoria] || "\u{1F4CB}"} ${c.nome}</option>`).join("")}</select></div>
+      <div class="campo-form"><label>Tipo</label><select id="fIntTipo" aria-label="Tipo">${tipoOpts}</select></div>
+      <div class="campo-form"><label>Data</label><input type="date" id="fIntData" aria-label="Data" value="${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}"></div>
+      <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" aria-label="Resumo" placeholder="Descreva a interacao..."></textarea></div>
+      <div class="campo-form"><label>Sentimento</label><select id="fIntSentimento" aria-label="Sentimento"><option value="positivo">\u{1F60A} Positivo</option><option value="neutro">\u{1F610} Neutro</option><option value="negativo">\u{1F61F} Negativo</option></select></div>
+      <div class="campo-form"><label><input type="checkbox" id="fIntFollowUp" aria-label="Necessita follow-up"> \u{1F51D} Necessita follow-up</label></div>
+      <div class="campo-form" id="divFollowUpNotas" style="display:none;"><label>Notas do follow-up</label><textarea id="fIntFollowNotas" aria-label="Notas do follow-up" placeholder="O que fazer?"></textarea></div>
       <div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
       document.getElementById("fIntFollowUp")?.addEventListener("change", () => {
         document.getElementById("divFollowUpNotas").style.display = document.getElementById("fIntFollowUp").checked ? "block" : "none";
@@ -15885,7 +16016,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         this.dataStore.adicionar("interacoes", { contatoId: document.getElementById("fIntContato").value, tipo: document.getElementById("fIntTipo").value, data: document.getElementById("fIntData").value, resumo: document.getElementById("fIntResumo").value.trim(), sentimento: document.getElementById("fIntSentimento").value, followUp: document.getElementById("fIntFollowUp").checked, followUpNotas: document.getElementById("fIntFollowNotas").value.trim(), anexos: [] });
         this.dataStore.atualizar("contatosProfissionais", document.getElementById("fIntContato").value, { ultimoContato: document.getElementById("fIntData").value });
         fecharModal();
-        mostrarToast("Interacao registrada!");
+        mostrarToast("Interacao registrada!", "sucesso");
         this.rerenderizar();
         this.solicitarNotificacao("Interacao registrada", "Nao se esqueca do follow-up!");
       });
@@ -15899,17 +16030,17 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const obraOpts = obras.map((o) => `<option value="${o.id}">${o.titulo || "Sem titulo"}</option>`).join("");
       abrirModal(`<h3>${e ? "\u270F\uFE0F Editar" : "\u2728 Novo"} Evento</h3>
       <form id="formModal"><div class="modal-form-grid">
-        <div class="campo-full"><input type="text" id="fEvtNome" value="${e ? e.nome || "" : ""}" required placeholder="Nome do evento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><select id="fEvtTipo">${tipoOpts}</select></div>
-        <div><select id="fEvtStatus">${statusOpts}</select></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Inscricao</label><input type="date" id="fEvtDataIns" value="${e ? e.dataInscricao || "" : ""}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Evento</label><input type="date" id="fEvtDataEvt" value="${e ? e.dataEvento || "" : ""}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Investimento (R$)</label><input type="number" id="fEvtInvest" value="${e ? e.investimento || 0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Retorno (R$)</label><input type="number" id="fEvtRetorno" value="${e ? e.retorno || 0 : 0}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Resultado</label><input type="text" id="fEvtResultado" value="${e ? e.resultado || "" : ""}" placeholder="Ex.: Premiado, selecionado..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Documentacao</label><input type="text" id="fEvtDocs" value="${e && e.documentacao ? e.documentacao.join(", ") : ""}" placeholder="docs separados por virgula" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div><label style="font-size:0.75rem;color:var(--text-muted);">Obras enviadas</label><select multiple id="fEvtObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;">${obraOpts}</select></div>
-        <div class="campo-full"><textarea id="fEvtNotas" placeholder="Notas..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${e ? e.notas || "" : ""}</textarea></div>
+        <div class="campo-full"><input type="text" id="fEvtNome" value="${e ? e.nome || "" : ""}" required aria-label="Nome do evento" placeholder="Nome do evento" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><select id="fEvtTipo" aria-label="Tipo do evento">${tipoOpts}</select></div>
+        <div><select id="fEvtStatus" aria-label="Status do evento">${statusOpts}</select></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Inscricao</label><input type="date" id="fEvtDataIns" value="${e ? e.dataInscricao || "" : ""}" aria-label="Data de inscri\xE7\xE3o" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Evento</label><input type="date" id="fEvtDataEvt" value="${e ? e.dataEvento || "" : ""}" aria-label="Data do evento" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Investimento (R$)</label><input type="number" id="fEvtInvest" value="${e ? e.investimento || 0 : 0}" aria-label="Investimento" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Retorno (R$)</label><input type="number" id="fEvtRetorno" value="${e ? e.retorno || 0 : 0}" aria-label="Retorno" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Resultado</label><input type="text" id="fEvtResultado" value="${e ? e.resultado || "" : ""}" aria-label="Resultado" placeholder="Ex.: Premiado, selecionado..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Documentacao</label><input type="text" id="fEvtDocs" value="${e && e.documentacao ? e.documentacao.join(", ") : ""}" aria-label="Documenta\xE7\xE3o" placeholder="docs separados por virgula" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div><label style="font-size:0.75rem;color:var(--text-muted);">Obras enviadas</label><select multiple id="fEvtObras" aria-label="Obras enviadas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;">${obraOpts}</select></div>
+        <div class="campo-full"><textarea id="fEvtNotas" aria-label="Notas" placeholder="Notas..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${e ? e.notas || "" : ""}</textarea></div>
       </div><div class="modal-acoes"><button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button><button type="submit" class="btn-primario">Salvar</button></div></form>`);
       document.getElementById("btnCancelarModal").addEventListener("click", fecharModal);
       document.getElementById("formModal").addEventListener("submit", (e2) => {
@@ -15919,24 +16050,29 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         const docs = document.getElementById("fEvtDocs").value.split(",").map((s) => s.trim()).filter(Boolean);
         const dados = { nome: document.getElementById("fEvtNome").value.trim(), tipo: document.getElementById("fEvtTipo").value, status: document.getElementById("fEvtStatus").value, dataInscricao: document.getElementById("fEvtDataIns").value, dataEvento: document.getElementById("fEvtDataEvt").value, investimento: Number(document.getElementById("fEvtInvest").value) || 0, retorno: Number(document.getElementById("fEvtRetorno").value) || 0, resultado: document.getElementById("fEvtResultado").value.trim(), documentacao: docs, obrasEnviadas: obrasSel, notas: document.getElementById("fEvtNotas").value.trim() };
         if (!dados.nome) {
-          mostrarToast("Nome obrigatorio.");
+          mostrarToast("Nome obrigatorio.", "aviso");
           return;
         }
         if (e) {
           this.dataStore.atualizar("eventos", id, dados);
-          mostrarToast("Evento atualizado!");
+          mostrarToast("Evento atualizado!", "sucesso");
         } else {
           this.dataStore.adicionar("eventos", dados);
-          mostrarToast("Evento adicionado!");
+          mostrarToast("Evento adicionado!", "sucesso");
         }
         fecharModal();
         this.rerenderizar();
       });
     }
-    excluirEvento(id) {
-      if (!confirm("Excluir este evento?")) return;
+    async excluirEvento(id) {
+      if (!await confirmarAcao("Excluir este evento?")) return;
+      const item = this.dataStore.buscarPorId("eventos", id);
       this.dataStore.remover("eventos", id);
-      mostrarToast("Evento excluido.");
+      const ds = this.dataStore;
+      mostrarToastComDesfazer("Evento excluido.", () => {
+        ds.dados.eventos.push(item);
+        ds.salvar();
+      });
       this.rerenderizar();
     }
     // --- LEMBRETES ---
@@ -15974,7 +16110,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
     // --- PDF ---
     exportarRelatorioPDF() {
       if (typeof window.jspdf === "undefined" && typeof jspdf === "undefined" || !window.jspdf?.jsPDF) {
-        mostrarToast("jsPDF nao carregado.");
+        mostrarToast("jsPDF nao carregado.", "erro");
         return;
       }
       mostrarLoading("Gerando relatorio de networking...");
@@ -16034,7 +16170,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       });
       doc.save("relatorio-networking.pdf");
       esconderLoading();
-      mostrarToast("Relatorio exportado em PDF!");
+      mostrarToast("Relatorio exportado em PDF!", "sucesso");
     }
   };
   var DiarioView = class extends BaseView {
@@ -16234,7 +16370,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         ${fotos.length > 0 ? `<div class="dc-fotos">${fotos.map((f) => `<img src="${f}" onclick="window.open('${f}')">`).join("")}</div>` : ""}
         <div class="diario-acoes">
           <button data-acao="editarEntrada" data-id="${e.id}"><i class="fas fa-pen"></i> Editar</button>
-          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;" aria-label="Excluir entrada"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     `;
@@ -16292,9 +16428,9 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       return `
       <div class="cal-toolbar">
         <div class="cal-nav">
-          <button id="calMesAnt">\u25C0</button>
+          <button id="calMesAnt" aria-label="M\xEAs anterior">\u25C0</button>
           <span>${nomeMes}</span>
-          <button id="calMesProx">\u25B6</button>
+          <button id="calMesProx" aria-label="Pr\xF3ximo m\xEAs">\u25B6</button>
           <button id="calHoje" style="margin-left:4px;font-size:0.75rem;padding:4px 10px;">Hoje</button>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
@@ -16343,9 +16479,44 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         <button class="btn-primario" id="btnNovaEtapa" style="font-size:0.75rem;padding:5px 12px;margin-left:8px;" ${!obraId ? "disabled" : ""}><i class="fas fa-plus"></i> Nova Etapa</button>
         ${obraId ? `<button class="btn-secundario" id="btnExportarProcessoPDF" style="font-size:0.75rem;padding:5px 12px;margin-left:4px;">\u{1F4E4} Exportar Making Of PDF</button>` : ""}
       </div>
-      ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : etapas.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;">\u{1F4C9}</p><p>Nenhuma etapa documentada para esta obra ainda.<br>Clique em "Nova Etapa" para iniciar a linha do tempo do processo criativo.</p></div>` : ""}
-      ${etapas.length > 0 ? `
-        <div style="margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">${etapas.length} etapa(s)  \xB7  ${obras.find((o) => o.id === obraId)?.titulo || ""}</div>
+      ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : ""}
+      ${obraId ? (() => {
+        const docsCount = this.etapasPadrao.filter((p) => etapas.some((e) => e.titulo === p)).length;
+        const totalPadrao = this.etapasPadrao.length;
+        const pct = totalPadrao > 0 ? Math.round(docsCount / totalPadrao * 100) : 0;
+        const dotsHtml = this.etapasPadrao.map((padrao, i) => {
+          const etapaDoc = etapas.find((e) => e.titulo === padrao);
+          const documentada = !!etapaDoc;
+          const dataStr = etapaDoc && etapaDoc.data ? new Date(etapaDoc.data).toLocaleDateString("pt-BR") : "";
+          return `
+            <div class="proc-dot-wrapper" style="left:${totalPadrao > 1 ? i / (totalPadrao - 1) * 100 : 50}%">
+              <div class="proc-dot ${documentada ? "proc-dot--preenchido" : "proc-dot--vazio"} ${!documentada ? "proc-dot--clicavel" : ""}" data-titulo="${sanitizarHTML(padrao)}" tabindex="0" role="button" aria-label="${documentada ? padrao + " \u2014 " + dataStr : "Adicionar " + padrao}">
+                ${documentada ? '<i class="fas fa-check" style="font-size:0.55rem;color:#fff;"></i>' : ""}
+                <span class="proc-tooltip">${sanitizarHTML(padrao)}${dataStr ? '<br><span style="font-size:0.65rem;opacity:0.8;">' + dataStr + "</span>" : '<br><span style="font-size:0.65rem;opacity:0.8;">Clique para adicionar</span>'}</span>
+              </div>
+            </div>`;
+        }).join("");
+        return `
+        <div class="proc-progresso">
+          <div class="proc-progresso-header">
+            <span><i class="fas fa-chart-line"></i> Progresso do processo criativo</span>
+            <span class="proc-progresso-pct">${docsCount} de ${totalPadrao} etapas \u2014 ${pct}%</span>
+          </div>
+          <div class="proc-barra">
+            <div class="proc-barra-trilha">
+              <div class="proc-barra-preenchimento" style="width:${pct}%"></div>
+            </div>
+            <div class="proc-dots-container">${dotsHtml}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-muted);margin-top:18px;padding:0 2px;">
+            <span>${this.etapasPadrao[0] || ""}</span>
+            <span>${this.etapasPadrao[this.etapasPadrao.length - 1] || ""}</span>
+          </div>
+          <div style="margin-top:6px;font-size:0.78rem;color:var(--text-muted);">${etapas.length} etapa(s) documentada(s) \xB7 ${etapas.filter((e) => !this.etapasPadrao.includes(e.titulo)).length} personalizada(s)</div>
+        </div>`;
+      })() : ""}
+      ${obraId && etapas.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;">\u{1F4C9}</p><p>Nenhuma etapa documentada para esta obra ainda.<br>Clique em "Nova Etapa" para iniciar a linha do tempo do processo criativo.</p></div>` : ""}
+      ${obraId && etapas.length > 0 ? `
         <div class="proc-timeline">
           ${etapas.sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)).map((et, i) => `
             <div class="proc-step">
@@ -16357,7 +16528,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
               ${et.videoLink ? `<div class="ps-video">\u{1F4C9} <a href="${et.videoLink}" target="_blank">Ver v\xEDdeo time-lapse</a></div>` : ""}
               <div class="diario-acoes">
                 <button data-acao="editarEtapa" data-id="${et.id}"><i class="fas fa-pen"></i> Editar</button>
-                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;" aria-label="Excluir etapa"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           `).join("")}
@@ -16572,6 +16743,16 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       document.getElementById("btnExportarProcessoPDF")?.addEventListener("click", () => this.exportarProcessoPDF());
       document.getElementById("btnNovaCitacao")?.addEventListener("click", () => this.rerenderizar());
       document.getElementById("btnNovoPrompt")?.addEventListener("click", () => this.rerenderizar());
+      const procProgresso = document.querySelector(".proc-progresso");
+      if (procProgresso) {
+        procProgresso.addEventListener("click", (e) => {
+          const dot = e.target.closest(".proc-dot--clicavel");
+          if (dot) {
+            const titulo = dot.dataset.titulo;
+            if (titulo) this.abrirFormEtapa(null, titulo);
+          }
+        });
+      }
       const container = document.getElementById("diarioContent") || document.getElementById("viewPrincipal");
       if (container) {
         const h = (e) => {
@@ -16604,14 +16785,14 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       this._fotosTemporarias = [...fotos];
       this._selHumor = humorVal;
       const humorBtns = [1, 2, 3, 4, 5].map(
-        (n) => `<button type="button" class="humor-btn ${n === this._selHumor ? "selecionado" : ""}" data-humor="${n}">${this.humorEmojis[n]}</button>`
+        (n) => `<button type="button" class="humor-btn ${n === this._selHumor ? "selecionado" : ""}" data-humor="${n}" aria-label="Humor ${this.humorLabels[n]}">${this.humorEmojis[n]}</button>`
       ).join("");
       abrirModal(`
       <h3>${entrada ? '<i class="fas fa-pen"></i> Editar Entrada' : '<i class="fas fa-plus"></i> Nova Entrada do Di\xE1rio'}</h3>
       <form id="formModal" class="diario-form-grid">
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-calendar-alt"></i> Data</label>
-          <input type="date" id="fEntData" value="${dataVal}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          <input type="date" id="fEntData" value="${dataVal}" required aria-label="Data" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F600} Humor criativo</label>
@@ -16624,33 +16805,33 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
             <button type="button" class="btn-toolbar" data-insere="<strong></strong>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><strong>Negrito</strong></button>
             <button type="button" class="btn-toolbar" data-insere="<em></em>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><em>It\xE1lico</em></button>
           </div>
-          <textarea id="fEntTexto" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
+          <textarea id="fEntTexto" aria-label="O que trabalhou hoje" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-images"></i> Obras trabalhadas (segure Ctrl para m\xFAltiplas)</label>
-          <select multiple id="fEntObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
+          <select multiple id="fEntObras" aria-label="Obras trabalhadas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
           <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Selecione as obras que trabalhou hoje</div>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);">\u23F0 Horas trabalhadas</label>
-          <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" aria-label="Horas trabalhadas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> Bloqueios criativos</label>
-          <textarea id="fEntBloqueios" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
+          <textarea id="fEntBloqueios" aria-label="Bloqueios criativos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-check"></i> Avan\xE7os</label>
-          <textarea id="fEntAvancos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
+          <textarea id="fEntAvancos" aria-label="Avan\xE7os" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-lightbulb"></i> Descobertas</label>
-          <textarea id="fEntDescobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
+          <textarea id="fEntDescobertas" aria-label="Descobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);">\u{1F4F7} Fotos do dia</label>
-          <input type="file" id="fEntFotos" accept="image/*" multiple style="font-size:0.8rem;">
-          <div class="photo-strip" id="photoStrip">${fotos.map((f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">\u{1F4F7}</button></div>`).join("")}</div>
+          <input type="file" id="fEntFotos" accept="image/*" multiple aria-label="Fotos do dia" style="font-size:0.8rem;">
+          <div class="photo-strip" id="photoStrip">${fotos.map((f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}" aria-label="Remover foto">\u{1F4F7}</button></div>`).join("")}</div>
         </div>
         <div class="modal-acoes" style="grid-column:1/-1;">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -16713,15 +16894,15 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           descobertas: document.getElementById("fEntDescobertas").value.trim()
         };
         if (!dados.data) {
-          mostrarToast("A data \xE9 obrigat\xF3ria.");
+          mostrarToast("A data \xE9 obrigat\xF3ria.", "aviso");
           return;
         }
         if (entrada) {
           this.dataStore.atualizar("entradasDiario", id, dados);
-          mostrarToast("Entrada atualizada!");
+          mostrarToast("Entrada atualizada!", "sucesso");
         } else {
           this.dataStore.adicionar("entradasDiario", dados);
-          mostrarToast("Entrada registrada no di\xE1rio!");
+          mostrarToast("Entrada registrada no di\xE1rio!", "sucesso");
         }
         fecharModal();
         this._fotosTemporarias = [];
@@ -16732,7 +16913,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const strip = document.getElementById("photoStrip");
       if (!strip) return;
       strip.innerHTML = this._fotosTemporarias.map(
-        (f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">\u{1F4F7}</button></div>`
+        (f) => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}" aria-label="Remover foto">\u{1F4F7}</button></div>`
       ).join("");
       strip.querySelectorAll(".ps-remove").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -16741,36 +16922,43 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         });
       });
     }
-    excluirEntrada(id) {
-      if (!confirm("Excluir esta entrada do di\xE1rio?")) return;
+    async excluirEntrada(id) {
+      if (!await confirmarAcao("Excluir esta entrada do di\xE1rio?")) return;
+      const item = this.dataStore.buscarPorId("entradasDiario", id);
       this.dataStore.remover("entradasDiario", id);
-      mostrarToast("Entrada exclu\xEDda.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Entrada exclu\xEDda.", () => {
+        dataStore2.dados.entradasDiario.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     // ======================= CRUD ETAPAS DE PROCESSO =======================
-    abrirFormEtapa(id = null) {
+    abrirFormEtapa(id = null, tituloPrefill = null) {
       const obraId = this._filtroObraProc;
       if (!obraId) {
-        mostrarToast("Selecione uma obra primeiro.");
+        mostrarToast("Selecione uma obra primeiro.", "aviso");
         return;
       }
       const proc = this.processos.find((p) => p.obraId === obraId);
       let etapa = null;
       if (id && proc) etapa = (proc.etapas || []).find((e) => e.id === id);
+      const tituloEtapa = etapa ? etapa.titulo : tituloPrefill;
       const etapaOpts = this.etapasPadrao.map(
-        (e) => `<option value="${e}" ${etapa && etapa.titulo === e ? "selected" : ""}>${e}</option>`
+        (e) => `<option value="${e}" ${tituloEtapa === e ? "selected" : ""}>${e}</option>`
       ).join("");
+      const isCustomTitulo = tituloPrefill && !this.etapasPadrao.includes(tituloPrefill);
       abrirModal(`
       <h3>${etapa ? '<i class="fas fa-pen"></i> Editar Etapa' : '<i class="fas fa-plus"></i> Nova Etapa do Processo'}</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo"><option value="">\u2192 Personalizada \u2014</option>${etapaOpts}</select></div>
-        <div class="campo-form"><label>Ou digite t\xEDtulo personalizado</label><input type="text" id="fEtpTituloCustom" value="${etapa && !this.etapasPadrao.includes(etapa.titulo) ? etapa.titulo || "" : ""}" placeholder="Ex.: Aplica\xE7\xE3o de verniz" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
-        <div class="campo-form"><label><i class="fas fa-calendar-alt"></i> Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || "" : (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Descri\xE7\xE3o</label><textarea id="fEtpDesc" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || "" : ""}</textarea></div>
-        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Notas t\xE9cnicas (cores, pinc\xE9is, misturas)</label><textarea id="fEtpNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || "" : ""}</textarea></div>
-        <div class="campo-form"><label>\u{1F4F7} Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*"></div>
+        <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo" aria-label="Etapa"><option value="">\u2192 Personalizada \u2014</option>${etapaOpts}</select></div>
+        <div class="campo-form"><label>Ou digite t\xEDtulo personalizado</label><input type="text" id="fEtpTituloCustom" value="${(etapa && !this.etapasPadrao.includes(etapa.titulo) ? etapa.titulo : isCustomTitulo ? tituloPrefill : "") || ""}" placeholder="Ex.: Aplica\xE7\xE3o de verniz" aria-label="T\xEDtulo personalizado" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label><i class="fas fa-calendar-alt"></i> Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || "" : (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" aria-label="Data da etapa" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Descri\xE7\xE3o</label><textarea id="fEtpDesc" aria-label="Descri\xE7\xE3o da etapa" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || "" : ""}</textarea></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Notas t\xE9cnicas (cores, pinc\xE9is, misturas)</label><textarea id="fEtpNotas" aria-label="Notas t\xE9cnicas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || "" : ""}</textarea></div>
+        <div class="campo-form"><label>\u{1F4F7} Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*" aria-label="Foto da etapa"></div>
         ${etapa && etapa.foto ? `<div style="margin-bottom:8px;"><img src="${etapa.foto}" style="max-width:150px;max-height:100px;border-radius:4px;"></div>` : ""}
-        <div class="campo-form"><label>\u{1F4C9} Link de v\xEDdeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || "" : ""}" placeholder="https://..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label>\u{1F4C9} Link de v\xEDdeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || "" : ""}" placeholder="https://..." aria-label="Link de v\xEDdeo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">${etapa ? "Atualizar" : "Adicionar Etapa"}</button>
@@ -16782,7 +16970,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
         e.preventDefault();
         const titulo = document.getElementById("fEtpTitulo").value || document.getElementById("fEtpTituloCustom").value.trim();
         if (!titulo) {
-          mostrarToast("T\xEDtulo da etapa \xE9 obrigat\xF3rio.");
+          mostrarToast("T\xEDtulo da etapa \xE9 obrigat\xF3rio.", "aviso");
           return;
         }
         const dadosEtapa = {
@@ -16814,40 +17002,47 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           const idx = proc.etapas.findIndex((e) => e.id === etapa.id);
           if (idx >= 0) proc.etapas[idx] = dadosEtapa;
           this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
-          mostrarToast("Etapa atualizada!");
+          mostrarToast("Etapa atualizada!", "sucesso");
         } else {
           proc.etapas.push(dadosEtapa);
           this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
-          mostrarToast("Etapa adicionada!");
+          mostrarToast("Etapa adicionada!", "sucesso");
         }
       } else {
         this.dataStore.adicionar("etapasProcesso", {
           obraId,
           etapas: [dadosEtapa]
         });
-        mostrarToast("Processo criado e etapa adicionada!");
+        mostrarToast("Processo criado e etapa adicionada!", "sucesso");
       }
       fecharModal();
       this.rerenderizar();
     }
-    excluirEtapa(id) {
-      if (!confirm("Excluir esta etapa do processo?")) return;
+    async excluirEtapa(id) {
+      if (!await confirmarAcao("Excluir esta etapa do processo?")) return;
       const obraId = this._filtroObraProc;
       const proc = this.processos.find((p) => p.obraId === obraId);
       if (!proc) return;
+      const etapa = (proc.etapas || []).find((e) => e.id === id);
       proc.etapas = (proc.etapas || []).filter((e) => e.id !== id);
       if (proc.etapas.length === 0) {
         this.dataStore.remover("etapasProcesso", proc.id);
       } else {
         this.dataStore.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
       }
-      mostrarToast("Etapa exclu\xEDda.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Etapa exclu\xEDda.", () => {
+        if (proc) {
+          proc.etapas.push(etapa);
+          dataStore2.atualizar("etapasProcesso", proc.id, { etapas: proc.etapas });
+        }
+      });
       this.rerenderizar();
     }
     // ======================= PDF MAKING OF =======================
     exportarProcessoPDF() {
       if (typeof window.jspdf === "undefined" || !window.jspdf.jsPDF) {
-        mostrarToast("jsPDF n\xE3o carregado.");
+        mostrarToast("jsPDF n\xE3o carregado.", "erro");
         return;
       }
       mostrarLoading("Exportando making of...");
@@ -16855,7 +17050,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       const obra = obraStore().items.find((o) => o.id === obraId);
       const proc = this.processos.find((p) => p.obraId === obraId);
       if (!obra || !proc) {
-        mostrarToast("Selecione uma obra com processo documentado.");
+        mostrarToast("Selecione uma obra com processo documentado.", "aviso");
         return;
       }
       const { jsPDF } = window.jspdf;
@@ -16951,7 +17146,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       }
       doc.save(`making-of-${(obra.titulo || "obra").replace(/\s+/g, "-").toLowerCase()}.pdf`);
       esconderLoading();
-      mostrarToast("Making Of exportado em PDF!");
+      mostrarToast("Making Of exportado em PDF!", "sucesso");
     }
   };
   var PortalView = class extends BaseView {
@@ -16989,16 +17184,23 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       portal.ultimoAcesso = (/* @__PURE__ */ new Date()).toISOString();
       this.dataStore.salvar();
       this.cliente = { id: portal.clienteId, nome: portal.clienteNome };
-      this.encomendas = this.dataStore.listar("encomendas").filter(
-        (e) => e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
-      );
+      if (portal.encomendaId) {
+        const enc = this.dataStore.buscarPorId("encomendas", portal.encomendaId);
+        this.encomendas = enc ? [enc] : [];
+      } else {
+        this.encomendas = this.dataStore.listar("encomendas").filter(
+          (e) => e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
+        );
+      }
       const encomendasHtml = this.encomendas.length > 0 ? this.encomendas.map((e) => this.renderEncomendaCard(e)).join("") : '<div class="portal-vazio">Nenhuma encomenda encontrada para este cliente.</div>';
       const artista = configStore().artista?.nome || "Artista";
+      const plural = this.encomendas.length > 1 ? "s" : "";
+      const titulo = this.encomendas.length === 1 ? "Acompanhamento de Encomenda" : "Acompanhamento de Encomendas";
       return `
       <div class="portal-wrapper">
         <div class="portal-header">
           <div class="portal-header-info">
-            <h2><i class="fas fa-box"></i> Acompanhamento de Encomendas</h2>
+            <h2><i class="fas fa-box"></i> ${titulo}</h2>
             <p class="portal-sub">${portal.clienteNome} \xB7 via ${artista}</p>
           </div>
         </div>
@@ -17071,60 +17273,168 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       this.removerListeners();
     }
   };
+  var STATUS_ENCOMENDA = ["recebido", "esboco", "em_producao", "ajustes_finais", "acabamento", "pronto_para_envio", "entregue", "cancelado"];
+  var STATUS_MAP = {
+    recebido: { rotulo: "Recebido", cor: "#3b82f6" },
+    esboco: { rotulo: "Esbo\xE7o", cor: "#8b5cf6" },
+    em_producao: { rotulo: "Em Produ\xE7\xE3o", cor: "#f59e0b" },
+    ajustes_finais: { rotulo: "Ajustes Finais", cor: "#f97316" },
+    acabamento: { rotulo: "Acabamento", cor: "#ec4899" },
+    pronto_para_envio: { rotulo: "Pronto p/ Envio", cor: "#14b8a6" },
+    entregue: { rotulo: "Entregue", cor: "#065f46" },
+    cancelado: { rotulo: "Cancelado", cor: "#dc2626" }
+  };
   var EncomendasView = class extends BaseView {
     constructor(dataStore2, router2) {
       super(dataStore2, router2);
       this.filtroStatus = "";
       this.busca = "";
+      this.selecionados = /* @__PURE__ */ new Set();
+      this.modo = localStorage.getItem("atelier-crm-view-mode-encomendas") || "lista";
+      this.mostrarCanceladas = false;
     }
     render() {
       const encomendas = this.filtrarEncomendas();
       const todas = this.dataStore.listar("encomendas") || [];
-      const linhas = encomendas.map((e) => this.renderLinha(e)).join("");
-      const statusOpts = ["", "criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
+      const statusOpts = ["", ...STATUS_ENCOMENDA].map(
         (s) => `<option value="${s}" ${this.filtroStatus === s ? "selected" : ""}>${s ? this.rotuloStatus(s) : "Todos"}</option>`
       ).join("");
-      const totalPendente = todas.filter((e) => !["entregue", "cancelado", "finalizado"].includes(e.status)).length;
+      const totalPendente = todas.filter((e) => e.status !== "entregue" && e.status !== "cancelado").length;
       const totalPrevisto = todas.reduce((s, e) => s + (e.valor || 0), 0);
-      const chipsStatus = ["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map((st) => {
+      const chipsStatus = STATUS_ENCOMENDA.map((st) => {
         const qtd = todas.filter((e) => e.status === st).length;
-        const stInfo = { criado: { rot: "Criado", cor: "#3b82f6" }, em_andamento: { rot: "Andamento", cor: "#f59e0b" }, aprovacao: { rot: "Aprova\xE7\xE3o", cor: "#8b5cf6" }, finalizado: { rot: "Finalizado", cor: "#16a34a" }, entregue: { rot: "Entregue", cor: "#065f46" }, cancelado: { rot: "Cancelado", cor: "#dc2626" } };
-        return qtd ? `<span class="chip-filtro" style="font-size:0.72rem;padding:2px 8px;border:1px solid ${stInfo[st].cor}40;background:${stInfo[st].cor}15;color:${stInfo[st].cor};">${stInfo[st].rot}: ${qtd}</span>` : "";
+        const info = STATUS_MAP[st];
+        return qtd ? `<span class="chip-filtro" style="font-size:0.72rem;padding:2px 8px;border:1px solid ${info.cor}40;background:${info.cor}15;color:${info.cor};">${info.rotulo}: ${qtd}</span>` : "";
       }).join("");
+      const conteudo = encomendas.length > 0 ? this.modo === "lista" ? this.renderTabela(encomendas) : this.modo === "grid" ? this.renderCards(encomendas) : this.renderKanban(encomendas) : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-box"></i></div><p>Nenhuma encomenda encontrada.</p></div></div>`;
       return `
       <div class="view-cabecalho">
         <div>
           <h2>Encomendas</h2>
           <p class="subtitulo">${todas.length} encomenda${todas.length === 1 ? "" : "s"} \xB7 ${totalPendente} pendente${totalPendente === 1 ? "" : "s"} \xB7 ${formatarMoeda(totalPrevisto)} previsto</p>
         </div>
-        <button class="btn-gradient" id="btnNovaEncomenda">\u271A Nova Encomenda</button>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk" style="${this.modo === "kanban" ? "display:none" : ""}">
+            <input type="checkbox" id="selectAllEnc" aria-label="Selecionar todas as encomendas" ${this.selecionados.size === encomendas.length && encomendas.length > 0 ? "checked" : ""}>
+            <label for="selectAllEnc">Todos</label>
+          </div>
+          <div class="toggle-visualizacao">
+            <button id="btnListaEnc" class="${this.modo === "lista" ? "ativo" : ""}" title="Tabela">\u2630 Lista</button>
+            <button id="btnGridEnc" class="${this.modo === "grid" ? "ativo" : ""}" title="Cards">\u25A6 Cards</button>
+            <button id="btnKanbanEnc" class="${this.modo === "kanban" ? "ativo" : ""}" title="Kanban">\u{1F4CB} Kanban</button>
+          </div>
+          <button class="btn-gradient" id="btnNovaEncomenda">\u271A Nova Encomenda</button>
+        </div>
       </div>
+      ${this.selecionados.size > 0 ? this.renderBarraBulk() : ""}
       ${chipsStatus ? `<div class="vendas-summary">${chipsStatus}</div>` : ""}
       <div class="filtros-linha">
-        <input type="text" id="buscaEncomenda" placeholder="<i class="fas fa-search"></i> Buscar por cliente ou descri\xE7\xE3o..." value="${sanitizarHTML(this.busca)}" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
-        <select id="filtroStatusEncomenda" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${statusOpts}</select>
+        <input type="text" id="buscaEncomenda" placeholder="Buscar por cliente ou descricao..." value="${sanitizarHTML(this.busca)}" aria-label="Buscar encomendas" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        ${this.modo === "kanban" ? `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;white-space:nowrap;color:var(--text-muted);"><input type="checkbox" id="chkMostrarCanceladas" ${this.mostrarCanceladas ? "checked" : ""}> Mostrar canceladas</label>` : `<select id="filtroStatusEncomenda" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${statusOpts}</select>`}
         <button class="btn-secundario" id="btnPortaisCliente"><i class="fas fa-link"></i> Links de Acesso</button>
       </div>
-      ${encomendas.length > 0 ? `
+      ${conteudo}
+    `;
+    }
+    renderKanban(encomendas) {
+      const statusColunas = this.mostrarCanceladas ? STATUS_ENCOMENDA : STATUS_ENCOMENDA.filter((s) => s !== "cancelado");
+      return `
+      <div class="kanban-board" id="kanbanBoardEnc">
+        ${statusColunas.map((st) => {
+        const info = STATUS_MAP[st];
+        const cards = encomendas.filter((e) => e.status === st);
+        return `
+            <div class="kanban-coluna" data-status="${st}">
+              <div class="kanban-coluna-header" style="border-left:4px solid ${info.cor};">
+                <span class="kanban-coluna-titulo">${info.rotulo}</span>
+                <span class="kanban-coluna-contagem">${cards.length}</span>
+              </div>
+              <div class="kanban-coluna-corpo">
+                ${cards.map((e) => this._kanbanCardHtml(e)).join("")}
+                ${cards.length === 0 ? '<div class="kanban-vazio">Nenhuma</div>' : ""}
+              </div>
+            </div>`;
+      }).join("")}
+      </div>`;
+    }
+    _kanbanCardHtml(e) {
+      const info = STATUS_MAP[e.status] || { rotulo: e.status, cor: "#6b7280" };
+      const dias = e.prazo ? Math.ceil((new Date(e.prazo) - /* @__PURE__ */ new Date()) / 864e5) : null;
+      const prazoHtml = dias !== null ? `<span style="font-size:0.72rem;${dias < 0 ? "color:#dc2626;font-weight:600;" : dias <= 15 ? "color:#f59e0b;" : "color:var(--text-muted);"}">${formatarData(e.prazo)}${dias < 0 ? " \u26A0" : ""}</span>` : "";
+      const stIdx = STATUS_ENCOMENDA.indexOf(e.status);
+      const temAnterior = stIdx > 0 && STATUS_ENCOMENDA[stIdx - 1] !== "cancelado";
+      const temProximo = stIdx >= 0 && stIdx < STATUS_ENCOMENDA.length - 1;
+      return `
+      <div class="kanban-card" draggable="true" data-id="${e.id}">
+        <div class="kanban-card-corpo">
+          <div class="kanban-card-nome"><strong>${sanitizarHTML(e.clienteNome) || "\u2014"}</strong></div>
+          <div class="kanban-card-desc">${sanitizarRich(e.descricao) || "\u2014"}</div>
+          <div class="kanban-card-meta">
+            <span style="font-weight:600;">${formatarMoeda(e.valor || 0)}</span>
+            ${prazoHtml}
+          </div>
+        </div>
+        <div class="kanban-card-acoes">
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar"><i class="fas fa-pen"></i></button>
+          <button class="kanban-mobile-menu-btn" data-id="${e.id}" title="Mover etapa" aria-label="Mover etapa"><i class="fas fa-ellipsis-v"></i></button>
+          <div class="kanban-mobile-dropdown" data-id="${e.id}">
+            ${temAnterior ? `<button class="kanban-mover-btn" data-id="${e.id}" data-status="${STATUS_ENCOMENDA[stIdx - 1]}" data-direcao="anterior">\u2191 ${STATUS_MAP[STATUS_ENCOMENDA[stIdx - 1]]?.rotulo}</button>` : ""}
+            ${temProximo ? `<button class="kanban-mover-btn" data-id="${e.id}" data-status="${STATUS_ENCOMENDA[stIdx + 1]}" data-direcao="proximo">\u2193 ${STATUS_MAP[STATUS_ENCOMENDA[stIdx + 1]]?.rotulo}</button>` : ""}
+          </div>
+        </div>
+      </div>`;
+    }
+    renderTabela(encomendas) {
+      const linhas = encomendas.map((e) => this.renderLinha(e)).join("");
+      return `
       <div class="tabela-wrapper">
         <table>
+          <caption class="sr-only">Lista de encomendas</caption>
           <thead><tr>
-            <th>Cliente</th><th>Descri\xE7\xE3o</th><th>Valor</th><th>Prazo</th><th>Status</th><th>A\xE7\xF5es</th>
+            <th style="width:36px;"></th><th>Cliente</th><th>Descri\xE7\xE3o</th><th>Valor</th><th>Prazo</th><th>Status</th><th>A\xE7\xF5es</th>
           </tr></thead>
           <tbody>${linhas}</tbody>
         </table>
-      </div>` : `
-      <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-box"></i></div><p>Nenhuma encomenda encontrada.</p></div>
-      </div>`}
-    `;
+      </div>`;
+    }
+    renderCards(encomendas) {
+      return `
+      <div class="grid-encomendas stagger-in">
+        ${encomendas.map((e) => {
+        const st = STATUS_MAP[e.status] || { rotulo: e.status, cor: "#6b7280" };
+        const dias = e.prazo ? Math.ceil((new Date(e.prazo) - /* @__PURE__ */ new Date()) / 864e5) : null;
+        const prazoCard = dias !== null ? `<span style="${dias < 0 ? "color:#dc2626;font-weight:600;" : dias <= 15 ? "color:#f59e0b;" : ""}">${formatarData(e.prazo)}${dias < 0 ? " (atrasado)" : ` (${dias}d)`}</span>` : "\u2014";
+        return `
+            <div class="card-encomenda ${this.selecionados.has(e.id) ? "selecionada" : ""}">
+              <div class="checkbox-bulk">
+                <input type="checkbox" class="checkbox-item-enc" data-id="${e.id}" aria-label="Selecionar ${e.clienteNome || "encomenda"}" ${this.selecionados.has(e.id) ? "checked" : ""}>
+              </div>
+              <div class="enc-header">
+                <strong>${sanitizarHTML(e.clienteNome) || "\u2014"}</strong>
+                ${e.clienteEmail ? `<span class="enc-email">${sanitizarHTML(e.clienteEmail)}</span>` : ""}
+              </div>
+              <div class="enc-descricao">${sanitizarRich(e.descricao) || "\u2014"}</div>
+              <div class="enc-valor-prazo">
+                <span class="enc-valor">${formatarMoeda(e.valor || 0)}</span>
+                <span class="enc-prazo">${prazoCard}</span>
+              </div>
+              <span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span>
+              <div class="enc-acoes">
+                <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Portal" aria-label="Gerar link do portal"><i class="fas fa-link"></i></button>
+                <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i class="fas fa-pen"></i></button>
+                <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Atualizar" aria-label="Adicionar atualiza\xE7\xE3o"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Exportar" aria-label="Baixar portal HTML"><i class="fas fa-download"></i></button>
+                <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>`;
+      }).join("")}
+      </div>`;
     }
     rotuloStatus(s) {
-      const m = { criado: "Criado", em_andamento: "Em Andamento", aprovacao: "Aprova\xE7\xE3o", finalizado: "Finalizado", entregue: "Entregue", cancelado: "Cancelado" };
-      return m[s] || s;
+      return STATUS_MAP[s]?.rotulo || s;
     }
     classeStatus(s) {
-      const m = { criado: "", em_andamento: "exposicao", aprovacao: "reservada", finalizado: "vendida", entregue: "vendida", cancelado: "" };
+      const m = { entregue: "vendida" };
       return m[s] || "";
     }
     filtrarEncomendas() {
@@ -17137,31 +17447,69 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       return lista.sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0));
     }
     renderLinha(e) {
-      const statusMap = {
-        criado: { rotulo: "Criado", cor: "#3b82f6" },
-        em_andamento: { rotulo: "Em Andamento", cor: "#f59e0b" },
-        aprovacao: { rotulo: "Aprova\xE7\xE3o", cor: "#8b5cf6" },
-        finalizado: { rotulo: "Finalizado", cor: "#16a34a" },
-        entregue: { rotulo: "Entregue", cor: "#065f46" },
-        cancelado: { rotulo: "Cancelado", cor: "#dc2626" }
-      };
-      const st = statusMap[e.status] || { rotulo: e.status, cor: "#6b7280" };
+      const st = STATUS_MAP[e.status] || { rotulo: e.status, cor: "#6b7280" };
       const dias = e.prazo ? Math.ceil((new Date(e.prazo) - /* @__PURE__ */ new Date()) / 864e5) : null;
       const prazoHtml = dias !== null ? `<span style="${dias < 0 ? "color:#dc2626;font-weight:600;" : dias <= 15 ? "color:#f59e0b;" : ""}">${formatarData(e.prazo)}${dias < 0 ? " (atrasado)" : ` (${dias}d)`}</span>` : "\u2014";
       return `
-      <tr>
+      <tr class="${this.selecionados.has(e.id) ? "linha-selecionada" : ""}">
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" class="checkbox-item-enc" data-id="${e.id}" aria-label="Selecionar ${e.clienteNome || "encomenda"}" ${this.selecionados.has(e.id) ? "checked" : ""}>
+        </td>
         <td><strong>${sanitizarHTML(e.clienteNome) || "\u2014"}</strong>${e.clienteEmail ? `<br><span style="font-size:0.75rem;color:var(--text-muted);">${sanitizarHTML(e.clienteEmail)}</span>` : ""}</td>
         <td>${sanitizarRich(e.descricao) || "\u2014"}</td>
         <td>${formatarMoeda(e.valor || 0)}</td>
         <td>${prazoHtml}</td>
         <td><span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span></td>
         <td>
-          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar"><i class="fas fa-pen"></i></button>
-          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualiza\xE7\xE3o"><i class="fas fa-pencil-alt"></i></button>
-          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+          <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Gerar link do portal" aria-label="Gerar link do portal"><i class="fas fa-link"></i></button>
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i class="fas fa-pen"></i></button>
+          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualiza\xE7\xE3o" aria-label="Adicionar atualiza\xE7\xE3o"><i class="fas fa-pencil-alt"></i></button>
+          <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Baixar portal HTML" aria-label="Baixar portal HTML"><i class="fas fa-download"></i></button>
+          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `;
+    }
+    renderBarraBulk() {
+      return `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} encomenda${this.selecionados.size === 1 ? "" : "s"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkExportEnc"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkExcluirEnc">\u{1F5D1} Excluir</button>
+          <button class="btn-secundario" id="bulkCancelarEnc">\u2715 Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    async bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "exportar": {
+          const encomendas = ids.map((id) => this.dataStore.buscarPorId("encomendas", id)).filter(Boolean);
+          const csv = [
+            ["cliente", "email", "descricao", "valor", "prazo", "status"].join(","),
+            ...encomendas.map((e) => [e.clienteNome, e.clienteEmail || "", e.descricao || "", e.valor || 0, e.prazo || "", e.status].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+          ].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `encomendas-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          mostrarToast(`${encomendas.length} encomenda(s) exportada(s)`, "sucesso");
+          break;
+        }
+        case "excluir": {
+          if (!await confirmarAcao(`Excluir ${ids.length} encomenda(s) permanentemente?`)) return;
+          ids.forEach((id) => this.dataStore.remover("encomendas", id));
+          mostrarToast(`${ids.length} encomenda(s) exclu\xEDda(s)`, "sucesso");
+          break;
+        }
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
     }
     // --- Modais ---
     abrirModalForm(enc) {
@@ -17171,38 +17519,40 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       this._encImagens = e.imagens ? [...e.imagens] : [];
       this._encImagensRef = [];
       const optsClientes = clientes.map((c) => `<option value="${c.id}" ${c.nome === e.clienteNome ? "selected" : ""}>${c.nome} (${c.email || ""})</option>`).join("");
+      const statusOpts = STATUS_ENCOMENDA.map(
+        (s) => `<option value="${s}" ${e.status === s ? "selected" : ""}>${this.rotuloStatus(s)}</option>`
+      ).join("");
+      const extraStatus = e.status && !STATUS_ENCOMENDA.includes(e.status) ? `<option value="${e.status}" selected>${e.status}</option>` : "";
       abrirModal(`
       <h3>${isEdit ? '<i class="fas fa-pen"></i> Editar' : '<i class="fas fa-box"></i> Nova'} Encomenda</h3>
       <form id="formEncomenda">
         <div class="campo-form"><label>Cliente</label>
           <div style="display:flex;gap:6px;">
-            <select id="encClienteSelect" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+            <select id="encClienteSelect" aria-label="Cliente" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
               <option value="">\u2014 Digitar nome manualmente \u2014</option>
               ${optsClientes}
             </select>
           </div>
         </div>
-        <div class="campo-form"><label>Nome do Cliente</label><input type="text" id="encClienteNome" value="${sanitizarHTML(e.clienteNome || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label>Nome do Cliente</label><input type="text" id="encClienteNome" value="${sanitizarHTML(e.clienteNome || "")}" aria-label="Nome do Cliente" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div><label>Email</label><input type="email" id="encClienteEmail" value="${sanitizarHTML(e.clienteEmail || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
-          <div><label>Telefone</label><input type="text" id="encClienteTel" value="${sanitizarHTML(e.clienteTelefone || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Email</label><input type="email" id="encClienteEmail" value="${sanitizarHTML(e.clienteEmail || "")}" aria-label="Email" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Telefone</label><input type="text" id="encClienteTel" value="${sanitizarHTML(e.clienteTelefone || "")}" aria-label="Telefone" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
-        <div class="campo-form"><label>Descri\xE7\xE3o</label><textarea id="encDescricao" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
+        <div class="campo-form"><label>Descri\xE7\xE3o</label><textarea id="encDescricao" aria-label="Descri\xE7\xE3o" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div><label>Valor (R$)</label><input type="number" id="encValor" value="${e.valor || 0}" min="0" step="0.01" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
-          <div><label>Prazo</label><input type="date" id="encPrazo" value="${e.prazo ? new Date(e.prazo).toISOString().slice(0, 10) : ""}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Valor (R$)</label><input type="number" id="encValor" value="${e.valor || 0}" min="0" step="0.01" aria-label="Valor" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Prazo</label><input type="date" id="encPrazo" value="${e.prazo ? new Date(e.prazo).toISOString().slice(0, 10) : ""}" aria-label="Prazo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
         <div class="campo-form"><label>Status</label>
-          <select id="encStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
-            ${["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
-        (s) => `<option value="${s}" ${e.status === s ? "selected" : ""}>${this.rotuloStatus(s)}</option>`
-      ).join("")}
+          <select id="encStatus" aria-label="Status" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            ${extraStatus}${statusOpts}
           </select>
         </div>
         <div class="campo-form">
           <label>Fotos da obra/refer\xEAncias</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <input type="file" id="encImagens" accept="image/*" multiple style="display:none">
+            <input type="file" id="encImagens" accept="image/*" multiple aria-label="Fotos da obra" style="display:none">
             <button type="button" class="btn-secundario" id="btnEncAddImagens" style="font-size:0.8rem;padding:6px 12px;"><i class="fas fa-camera"></i> Adicionar Fotos</button>
             <span id="encContagemImagens" style="font-size:0.8rem;color:var(--text-muted);">${(e.imagens || []).length > 0 ? `${e.imagens.length} foto(s)` : ""}</span>
           </div>
@@ -17210,7 +17560,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
             ${e.imagens && e.imagens.length > 0 ? e.imagens.map((img, i) => `
               <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
                 <img src="${img.startsWith("idb:") ? IDB_IMG_PLACEHOLDER : img}" style="width:100%;height:100%;object-fit:cover;">
-                <button type="button" class="btn-remover-foto-enc" data-idx="${i}" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">\u2715</button>
+                <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">\u2715</button>
               </div>`).join("") : ""}
           </div>
         </div>
@@ -17278,27 +17628,27 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       container.innerHTML = this._encImagens.map((img, i) => `
       <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
         <img src="${img}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        <button type="button" class="btn-remover-foto-enc" data-idx="${i}" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">\u2715</button>
+        <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">\u2715</button>
       </div>`).join("");
       if (contagem) contagem.textContent = `${this._encImagens.length} foto(s)`;
     }
     abrirModalAtualizacao(encId) {
       const enc = this.dataStore.buscarPorId("encomendas", encId);
       if (!enc) {
-        mostrarToast("Encomenda n\xE3o encontrada.");
+        mostrarToast("Encomenda n\xE3o encontrada.", "aviso");
         return;
       }
-      const statusOpts = ["criado", "em_andamento", "aprovacao", "finalizado", "entregue", "cancelado"].map(
+      const statusOpts = STATUS_ENCOMENDA.map(
         (s) => `<option value="${s}" ${enc.status === s ? "selected" : ""}>${this.rotuloStatus(s)}</option>`
       ).join("");
       abrirModal(`
       <h3><i class="fas fa-pencil-alt"></i> Atualizar Status \u2014 ${sanitizarHTML(enc.descricao)}</h3>
       <form id="formAtualizacao">
         <div class="campo-form"><label>Novo Status</label>
-          <select id="atuStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">${statusOpts}</select>
+          <select id="atuStatus" aria-label="Novo status" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">${statusOpts}</select>
         </div>
         <div class="campo-form"><label>Mensagem para o cliente</label>
-          <textarea id="atuMensagem" placeholder="Ex: Iniciei a pintura, as cores est\xE3o secando..." style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:80px;background:var(--bg);color:var(--text);"></textarea>
+          <textarea id="atuMensagem" aria-label="Mensagem para o cliente" placeholder="Ex: Iniciei a pintura, as cores est\xE3o secando..." style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:80px;background:var(--bg);color:var(--text);"></textarea>
         </div>
         <div class="campo-form" style="font-size:0.8rem;color:var(--text-muted);">
           <i class="fas fa-lightbulb"></i> Esta atualiza\xE7\xE3o ficar\xE1 vis\xEDvel no portal do cliente.
@@ -17330,9 +17680,9 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
           </div>
           <div class="portal-item-acoes">
             <input type="text" readonly value="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.75rem;width:240px;background:var(--bg);color:var(--text);" onclick="this.select()">
-            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link"><i class="fas fa-clipboard"></i></button>
-            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? "Desativar" : "Ativar"}">${p.ativo ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>'}</button>
-            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link" aria-label="Copiar link"><i class="fas fa-clipboard"></i></button>
+            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? "Desativar" : "Ativar"}" aria-label="${p.ativo ? "Desativar portal" : "Ativar portal"}">${p.ativo ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>'}</button>
+            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" aria-label="Remover portal" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       `;
@@ -17346,7 +17696,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       <hr style="margin:12px 0;border-color:var(--border);">
       <h4 style="font-size:0.85rem;margin:0 0 8px;">Gerar novo link</h4>
       <div style="display:flex;gap:8px;align-items:center;">
-        <select id="selClientePortal" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        <select id="selClientePortal" aria-label="Selecionar cliente" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
           ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
         </select>
         <button class="btn-primario" id="btnGerarPortal"><i class="fas fa-link"></i> Gerar Link</button>
@@ -17355,7 +17705,7 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
       <h4 style="font-size:0.85rem;margin:0 0 8px;">P\xE1gina aut\xF4noma do portal</h4>
       <p class="texto-ajuda" style="margin-bottom:8px;">Gere um arquivo HTML completo para hospedar em servi\xE7os gratuitos como GitHub Pages ou Vercel.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <select id="selClientePortalExport" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+        <select id="selClientePortalExport" aria-label="Selecionar cliente para exportar" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
           ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
         </select>
         <button class="btn-primario" id="btnExportarPortal"><i class="fas fa-download"></i> Baixar HTML</button>
@@ -17377,12 +17727,12 @@ ${this.catLabels[d.categoria] || d.categoria || ""}${d.instituicao ? "\n" + d.in
 4. Use o link: https://seuusuario.github.io/seurepo/portal-cliente.html
 
 Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
-        navigator.clipboard.writeText(texto).then(() => mostrarToast("Instru\xE7\xF5es copiadas!")).catch(() => mostrarToast("Erro ao copiar."));
+        navigator.clipboard.writeText(texto).then(() => mostrarToast("Instru\xE7\xF5es copiadas!", "info")).catch(() => mostrarToast("Erro ao copiar.", "erro"));
       });
       document.querySelector(".portais-lista")?.addEventListener("click", (e) => {
         if (e.target.closest(".btn-copiar-link")) {
           const link = e.target.closest(".btn-copiar-link").dataset.link;
-          navigator.clipboard.writeText(link).then(() => mostrarToast("Link copiado!")).catch(() => mostrarToast("Erro ao copiar."));
+          navigator.clipboard.writeText(link).then(() => mostrarToast("Link copiado!", "info")).catch(() => mostrarToast("Erro ao copiar.", "erro"));
         }
         if (e.target.closest(".btn-toggle-portal")) {
           this.togglePortal(e.target.closest(".btn-toggle-portal").dataset.id);
@@ -17401,10 +17751,10 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         descricao: document.getElementById("encDescricao")?.value?.trim() || "",
         valor: Number(document.getElementById("encValor")?.value) || 0,
         prazo: document.getElementById("encPrazo")?.value || "",
-        status: document.getElementById("encStatus")?.value || "criado"
+        status: document.getElementById("encStatus")?.value || "recebido"
       };
       if (!dados.clienteNome || !dados.descricao) {
-        mostrarToast("Preencha nome do cliente e descri\xE7\xE3o.");
+        mostrarToast("Preencha nome do cliente e descri\xE7\xE3o.", "aviso");
         return;
       }
       const imagens = [];
@@ -17429,57 +17779,80 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         const atual = this.dataStore.buscarPorId("encomendas", encExistente.id);
         dados.atualizacoes = atual?.atualizacoes || [];
         this.dataStore.atualizar("encomendas", encExistente.id, dados);
-        mostrarToast("Encomenda atualizada!");
+        mostrarToast("Encomenda atualizada!", "sucesso");
         activityLogger.registrar("atualizacao", "Encomenda atualizada", dados.clienteNome, "atualizacao");
       } else {
-        dados.atualizacoes = [{ data: (/* @__PURE__ */ new Date()).toISOString(), status: "criado", mensagem: "Pedido registrado." }];
+        dados.atualizacoes = [{ data: (/* @__PURE__ */ new Date()).toISOString(), status: "recebido", mensagem: "Pedido registrado." }];
         this.dataStore.adicionar("encomendas", dados);
-        mostrarToast("Encomenda criada!");
+        mostrarToast("Encomenda criada!", "sucesso");
         activityLogger.registrar("criacao", "Nova encomenda", dados.clienteNome, "criacao");
       }
       fecharModal();
       this.rerenderizar();
     }
-    salvarAtualizacao(enc) {
-      const novoStatus = document.getElementById("atuStatus")?.value || enc.status;
-      const mensagem = document.getElementById("atuMensagem")?.value?.trim() || "";
+    salvarAtualizacao(enc, statusOverride) {
+      const novoStatus = statusOverride || document.getElementById("atuStatus")?.value || enc.status;
+      const mensagem = statusOverride ? "Status alterado via Kanban." : document.getElementById("atuMensagem")?.value?.trim() || "";
       const atualizacoes = enc.atualizacoes || [];
       atualizacoes.push({ data: (/* @__PURE__ */ new Date()).toISOString(), status: novoStatus, mensagem: mensagem || "Status atualizado." });
       this.dataStore.atualizar("encomendas", enc.id, { status: novoStatus, atualizacoes });
-      mostrarToast("Atualiza\xE7\xE3o registrada!");
+      mostrarToast(`Encomenda movida para "${this.rotuloStatus(novoStatus)}"`, "sucesso");
       activityLogger.registrar("atualizacao", `Encomenda: ${novoStatus}`, enc.clienteNome, "atualizacao");
       fecharModal();
       this.rerenderizar();
     }
-    gerarLinkPortal() {
-      const sel = document.getElementById("selClientePortal");
-      if (!sel || !sel.value) {
-        mostrarToast("Selecione um cliente.");
-        return;
-      }
-      const cliente = clienteStore().items.find((c) => c.id === sel.value);
-      if (!cliente) {
-        mostrarToast("Cliente n\xE3o encontrado.");
-        return;
+    async _moverParaStatus(encId, novoStatus) {
+      const enc = this.dataStore.buscarPorId("encomendas", encId);
+      if (!enc || enc.status === novoStatus) return;
+      const atualizacoes = enc.atualizacoes || [];
+      atualizacoes.push({ data: (/* @__PURE__ */ new Date()).toISOString(), status: novoStatus, mensagem: "Status alterado via Kanban." });
+      this.dataStore.atualizar("encomendas", encId, { status: novoStatus, atualizacoes });
+      mostrarToast(`Encomenda movida para "${this.rotuloStatus(novoStatus)}"`, "sucesso");
+      activityLogger.registrar("atualizacao", `Encomenda: ${novoStatus}`, enc.clienteNome, "atualizacao");
+      this.rerenderizar();
+    }
+    gerarLinkPortal(encomendaId) {
+      let cliente;
+      let enc;
+      if (encomendaId) {
+        enc = this.dataStore.buscarPorId("encomendas", encomendaId);
+        if (!enc) {
+          mostrarToast("Encomenda n\xE3o encontrada.", "aviso");
+          return;
+        }
+        cliente = clienteStore().items.find((c) => c.nome === enc.clienteNome) || { id: enc.clienteEmail || enc.id, nome: enc.clienteNome };
+      } else {
+        const sel = document.getElementById("selClientePortal");
+        if (!sel || !sel.value) {
+          mostrarToast("Selecione um cliente.", "aviso");
+          return;
+        }
+        cliente = clienteStore().items.find((c) => c.id === sel.value);
+        if (!cliente) {
+          mostrarToast("Cliente n\xE3o encontrado.", "aviso");
+          return;
+        }
       }
       const portais = this.dataStore.listar("portais") || [];
-      const existente = portais.find((p) => p.clienteId === cliente.id);
+      const existente = encomendaId ? portais.find((p) => p.encomendaId === encomendaId) : portais.find((p) => p.clienteId === cliente.id && !p.encomendaId);
       if (existente) {
+        const link = window.location.origin + window.location.pathname + "#portal?token=" + existente.token;
         if (existente.ativo) {
-          mostrarToast("Este cliente j\xE1 possui um link ativo.");
+          mostrarToast("Link j\xE1 existe: " + link, "aviso");
           return;
         }
         existente.ativo = true;
         this.dataStore.salvar();
-        mostrarToast("Link reativado!");
+        mostrarToast("Link reativado: " + link, "sucesso");
         this.rerenderizar();
         fecharModal();
         return;
       }
-      const token = "pt_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      const token = "enc_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
       const portal = {
         id: "portal_" + Date.now(),
         clienteId: cliente.id,
+        encomendaId: encomendaId || "",
         clienteNome: cliente.nome,
         token,
         ativo: true,
@@ -17488,8 +17861,8 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       };
       this.dataStore.dados.portais.push(portal);
       this.dataStore.salvar();
-      mostrarToast("Link gerado! Compartilhe com o cliente.");
-      activityLogger.registrar("criacao", "Link de portal gerado", cliente.nome, "criacao");
+      mostrarToast("Link gerado!", "sucesso");
+      activityLogger.registrar("criacao", "Link de portal gerado", encomendaId ? enc?.descricao || cliente.nome : cliente.nome, "criacao");
       this.rerenderizar();
       fecharModal();
     }
@@ -17501,81 +17874,144 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       this.rerenderizar();
       fecharModal();
     }
-    removerPortal(portalId) {
-      if (!confirm("Remover este link de acesso?")) return;
+    async removerPortal(portalId) {
+      if (!await confirmarAcao("Remover este link de acesso?")) return;
+      const item = this.dataStore.buscarPorId("portais", portalId);
       this.dataStore.remover("portais", portalId);
-      this.dataStore.salvar();
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Link removido.", () => {
+        dataStore2.dados.portais.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
       fecharModal();
     }
-    exportarPortalHTML() {
-      const sel = document.getElementById("selClientePortalExport");
-      if (!sel || !sel.value) {
-        mostrarToast("Selecione um cliente.");
+    async exportarPortalHTML(encomendaId) {
+      const enc = encomendaId ? this.dataStore.buscarPorId("encomendas", encomendaId) : null;
+      if (!enc) {
+        mostrarToast("Selecione uma encomenda para exportar.", "aviso");
         return;
       }
-      const cliente = clienteStore().items.find((c) => c.id === sel.value);
-      if (!cliente) {
-        mostrarToast("Cliente n\xE3o encontrado.");
-        return;
-      }
-      const encomendas = this.dataStore.listar("encomendas").filter((e) => e.clienteNome === cliente.nome);
-      if (encomendas.length === 0) {
-        mostrarToast("Este cliente n\xE3o possui encomendas.");
-        return;
-      }
+      const config = this.dataStore.obter("configuracoes") || {};
       mostrarLoading(true);
-      Promise.all(encomendas.map(async (e) => {
-        const imgs = await Promise.all((e.imagens || []).map(async (img) => {
-          if (img && img.startsWith("idb:")) {
-            try {
-              return await imageStore.carregar(img);
-            } catch {
-            }
+      const imgs = [];
+      for (const img of enc.imagens || []) {
+        if (img && img.startsWith("idb:")) {
+          try {
+            const url = await imageStore.carregar(img);
+            imgs.push(url || img);
+          } catch {
+            imgs.push(img);
           }
-          return img || "";
-        }));
-        return { ...e, imagens: imgs.filter(Boolean) };
-      })).then((encs) => {
-        const config = this.dataStore.obter("configuracoes") || {};
-        const dados = {
-          artista: config.nomeArtista || "Artista",
-          contatoEmail: config.email || "",
-          contatoTel: config.contato || "",
-          token: cliente.id,
-          encomendas: encs
-        };
-        fetch("portal-cliente.html").then((r) => r.text()).then((html) => {
-          const dataStr = JSON.stringify(dados);
-          const tag = '<script id="portalData" type="application/json">';
-          const s = html.indexOf(tag);
-          const e = html.indexOf("<\/script>", s);
-          const novo = html.slice(0, s + tag.length) + "\n" + dataStr + "\n" + html.slice(e);
-          downloadHTML(novo, `portal-${cliente.nome.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}.html`);
-        }).catch(() => {
-          const html = gerarPortalHTML(dados);
-          downloadHTML(html, `portal-${cliente.nome.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}.html`);
-        });
-      });
+        } else {
+          imgs.push(img || "");
+        }
+      }
+      const encomenda = { ...enc, imagens: imgs.filter(Boolean) };
+      const dados = {
+        artista: config.nomeArtista || "Artista",
+        contatoEmail: config.email || "",
+        contatoTel: config.contato || "",
+        encomenda
+      };
+      try {
+        const resp = await fetch("portal-cliente.html");
+        const html = await resp.text();
+        const dataStr = JSON.stringify(dados);
+        const tag = '<script id="portalData" type="application/json">';
+        const s = html.indexOf(tag);
+        const e = html.indexOf("<\/script>", s);
+        const novo = html.slice(0, s + tag.length) + "\n" + dataStr + "\n" + html.slice(e);
+        downloadHTML(novo, `encomenda-${enc.id.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}.html`);
+      } catch {
+        const html = gerarPortalHTML(dados);
+        downloadHTML(html, `encomenda-${enc.id.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}.html`);
+      }
+      esconderLoading();
     }
-    excluirEncomenda(id) {
-      if (!confirm("Excluir esta encomenda permanentemente?")) return;
+    async excluirEncomenda(id) {
+      if (!await confirmarAcao("Excluir esta encomenda permanentemente?")) return;
+      const item = this.dataStore.buscarPorId("encomendas", id);
       this.dataStore.remover("encomendas", id);
-      mostrarToast("Encomenda exclu\xEDda.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Encomenda exclu\xEDda.", () => {
+        dataStore2.dados.encomendas.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     aposRenderizar() {
       this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
       document.getElementById("btnNovaEncomenda")?.addEventListener("click", () => this.abrirModalForm(null));
-      document.getElementById("buscaEncomenda")?.addEventListener("input", (e) => {
-        this.busca = e.target.value;
+      const salvarModo = (modo) => {
+        this.modo = modo;
+        localStorage.setItem("atelier-crm-view-mode-encomendas", modo);
         this.rerenderizar();
-      });
+      };
+      document.getElementById("btnListaEnc")?.addEventListener("click", () => salvarModo("lista"));
+      document.getElementById("btnGridEnc")?.addEventListener("click", () => salvarModo("grid"));
+      document.getElementById("btnKanbanEnc")?.addEventListener("click", () => salvarModo("kanban"));
+      document.getElementById("buscaEncomenda")?.addEventListener("input", debounce2((e) => {
+        this.busca = e.target.value;
+        this.rerenderizar(true);
+      }, 250));
       document.getElementById("filtroStatusEncomenda")?.addEventListener("change", (e) => {
         this.filtroStatus = e.target.value;
         this.rerenderizar();
       });
       document.getElementById("btnPortaisCliente")?.addEventListener("click", () => this.abrirModalPortais());
+      document.getElementById("chkMostrarCanceladas")?.addEventListener("change", (e) => {
+        this.mostrarCanceladas = e.target.checked;
+        this.rerenderizar();
+      });
+      const selectAll = document.getElementById("selectAllEnc");
+      if (selectAll) {
+        selectAll.addEventListener("change", (e) => {
+          const encomendas = this.filtrarEncomendas();
+          if (e.target.checked) {
+            encomendas.forEach((enc) => this.selecionados.add(enc.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item-enc")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkExportEnc")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkExcluirEnc")?.addEventListener("click", () => this.bulkAcao("excluir"));
+      document.getElementById("bulkCancelarEnc")?.addEventListener("click", () => {
+        this.selecionados.clear();
+        this.rerenderizar();
+      });
+      document.querySelectorAll(".btn-portal-enc").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const enc = this.dataStore.buscarPorId("encomendas", btn.dataset.id);
+          if (!enc) return;
+          const portais = this.dataStore.listar("portais") || [];
+          const portal = portais.find((p) => p.encomendaId === enc.id);
+          if (portal && portal.ativo) {
+            const link = window.location.origin + window.location.pathname + "#portal?token=" + portal.token;
+            navigator.clipboard.writeText(link).then(() => mostrarToast("Link copiado: " + link, "info")).catch(() => {
+            });
+          } else {
+            this.gerarLinkPortal(enc.id);
+          }
+        });
+      });
+      document.querySelectorAll(".btn-exportar-enc").forEach((btn) => {
+        btn.addEventListener("click", () => this.exportarPortalHTML(btn.dataset.id));
+      });
       document.querySelectorAll(".btn-editar-enc").forEach((btn) => {
         btn.addEventListener("click", () => {
           const enc = this.dataStore.buscarPorId("encomendas", btn.dataset.id);
@@ -17588,6 +18024,66 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       document.querySelectorAll(".btn-remover-enc").forEach((btn) => {
         btn.addEventListener("click", () => this.excluirEncomenda(btn.dataset.id));
       });
+      const kanbanBoard = document.getElementById("kanbanBoardEnc");
+      if (kanbanBoard) {
+        let arrastandoId = null;
+        kanbanBoard.querySelectorAll(".kanban-card").forEach((card) => {
+          card.addEventListener("dragstart", (e) => {
+            arrastandoId = card.dataset.id;
+            e.dataTransfer.setData("text/plain", card.dataset.id);
+            e.dataTransfer.effectAllowed = "move";
+            card.classList.add("arrastando");
+          });
+          card.addEventListener("dragend", () => {
+            card.classList.remove("arrastando");
+            kanbanBoard.querySelectorAll(".kanban-coluna").forEach((col) => col.classList.remove("kanban-coluna--drag-over"));
+            arrastandoId = null;
+          });
+        });
+        kanbanBoard.querySelectorAll(".kanban-coluna-corpo").forEach((colBody) => {
+          colBody.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            colBody.closest(".kanban-coluna")?.classList.add("kanban-coluna--drag-over");
+          });
+          colBody.addEventListener("dragleave", () => {
+            colBody.closest(".kanban-coluna")?.classList.remove("kanban-coluna--drag-over");
+          });
+          colBody.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const col = colBody.closest(".kanban-coluna");
+            col?.classList.remove("kanban-coluna--drag-over");
+            const id = e.dataTransfer.getData("text/plain");
+            const novoStatus = col?.dataset.status;
+            if (id && novoStatus) {
+              this._moverParaStatus(id, novoStatus);
+            }
+          });
+        });
+        kanbanBoard.addEventListener("click", (e) => {
+          const menuBtn = e.target.closest(".kanban-mobile-menu-btn");
+          if (menuBtn) {
+            e.stopPropagation();
+            const id = menuBtn.dataset.id;
+            kanbanBoard.querySelectorAll(".kanban-mobile-dropdown.visivel").forEach((d) => {
+              if (d.dataset.id !== id) d.classList.remove("visivel");
+            });
+            const dropdown = kanbanBoard.querySelector(`.kanban-mobile-dropdown[data-id="${id}"]`);
+            dropdown?.classList.toggle("visivel");
+            return;
+          }
+          const moverBtn = e.target.closest(".kanban-mover-btn");
+          if (moverBtn) {
+            const id = moverBtn.dataset.id;
+            const status = moverBtn.dataset.status;
+            if (id && status) {
+              this._moverParaStatus(id, status);
+            }
+            return;
+          }
+          kanbanBoard.querySelectorAll(".kanban-mobile-dropdown.visivel").forEach((d) => d.classList.remove("visivel"));
+        });
+      }
     }
   };
   var ImageLightbox = class {
@@ -17697,10 +18193,10 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       <div class="lb-topbar">
         <span class="lb-counter">${this.currentIndex + 1} / ${this.images.length}</span>
         <div class="lb-top-actions">
-          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow">\u25B6</button>
-          <button class="lb-btn lb-ctrl-download" title="Download">\u2B07</button>
-          <button class="lb-btn lb-ctrl-share" title="Compartilhar"><i class="fas fa-link"></i></button>
-          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)">\u2715</button>
+          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow" aria-label="Iniciar slideshow">\u25B6</button>
+          <button class="lb-btn lb-ctrl-download" title="Download" aria-label="Baixar imagem">\u2B07</button>
+          <button class="lb-btn lb-ctrl-share" title="Compartilhar" aria-label="Compartilhar"><i class="fas fa-link"></i></button>
+          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)" aria-label="Fechar">\u2715</button>
         </div>
       </div>
       <div class="lb-main">
@@ -17713,8 +18209,8 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           </div>
         </div>
       </div>
-      <button class="lb-nav lb-nav-prev" title="Anterior (\u2190)">\u25C0</button>
-      <button class="lb-nav lb-nav-next" title="Pr\xF3ximo (\u2192)">\u25B6</button>
+      <button class="lb-nav lb-nav-prev" title="Anterior (\u2190)" aria-label="Imagem anterior">\u25C0</button>
+      <button class="lb-nav lb-nav-next" title="Pr\xF3ximo (\u2192)" aria-label="Pr\xF3xima imagem">\u25B6</button>
       <div class="lb-thumbstrip">
         <div class="lb-thumb-track"></div>
       </div>
@@ -17739,7 +18235,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       if (!track2) return;
       track2.innerHTML = this.images.map((img, i) => `
       <div class="lb-thumb ${i === this.currentIndex ? "ativo" : ""}" data-idx="${i}">
-        <img src="${img.src}" alt="" loading="lazy">
+        <img src="${img.src}" alt="Miniatura da obra" loading="lazy">
       </div>
     `).join("");
       track2.querySelectorAll(".lb-thumb").forEach((el) => {
@@ -17779,12 +18275,13 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       const tempImg = new Image();
       tempImg.onload = () => {
         imgEl.src = img.src;
+        imgEl.alt = img.title || "Imagem da obra";
         imgEl.style.opacity = "1";
         if (loader) loader.style.display = "none";
         this._applyTransform();
       };
       tempImg.onerror = () => {
-        imgEl.alt = "Erro ao carregar";
+        imgEl.alt = "Erro ao carregar imagem";
         imgEl.style.opacity = "1";
         if (loader) loader.style.display = "none";
       };
@@ -18105,6 +18602,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           <span style="color:var(--text-muted);font-size:0.85rem;">${this.arquivoCarregado}</span>
         </div>
         <table class="ei-preview-tabela">
+          <caption class="sr-only">Pr\xE9-visualiza\xE7\xE3o dos dados a importar</caption>
           <thead><tr><th>Cole\xE7\xE3o</th><th>Registros</th><th>A\xE7\xE3o</th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -18141,6 +18639,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         <p style="margin-bottom:12px;color:var(--text-muted);font-size:0.85rem;">\xDAltimos ${historico.length} backups exportados.</p>
         <div class="tabela-wrapper">
           <table>
+            <caption class="sr-only">Hist\xF3rico de exporta\xE7\xF5es</caption>
             <thead><tr><th>Data</th><th>Tipo</th><th>Tamanho</th></tr></thead>
             <tbody>${linhas}</tbody>
           </table>
@@ -18277,48 +18776,88 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
     constructor(dataStore2, router2) {
       super(dataStore2, router2);
       this.busca = "";
+      this.selecionados = /* @__PURE__ */ new Set();
+      this.modo = "lista";
     }
     render() {
       const exposicoes = this.filtrarExposicoes();
       const todas = this.dataStore.listar("exposicoes") || [];
       const ativas = todas.filter((e) => e.status !== "encerrada").length;
-      const linhas = exposicoes.map((ex) => `
-      <tr>
-        <td><strong>${sanitizarHTML(ex.nome) || "-"}</strong></td>
-        <td>${sanitizarHTML(ex.local) || "-"}</td>
-        <td>${formatarData(ex.data)}</td>
-        <td><span class="tag-status ${ex.status === "confirmada" ? "exposicao" : ex.status === "encerrada" ? "vendida" : ""}" style="background:${ex.status === "confirmada" ? "#16a34a20" : ex.status === "encerrada" ? "#6b728020" : "#f59e0b20"};color:${ex.status === "confirmada" ? "#16a34a" : ex.status === "encerrada" ? "#6b7280" : "#f59e0b"};">${ex.status || "planejada"}</span></td>
-        <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar"><i class="fas fa-pen"></i></button>
-          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>
-    `).join("");
+      const conteudo = exposicoes.length > 0 ? this.modo === "lista" ? this.renderTabela(exposicoes) : this.renderCards(exposicoes) : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma exposicao encontrada.</p></div></div>`;
       return `
       <div class="view-cabecalho">
         <div>
           <h2>Exposicoes</h2>
           <p class="subtitulo">${todas.length} exposicao${todas.length === 1 ? "" : "es"} \xB7 ${ativas} ativa${ativas === 1 ? "" : "s"}</p>
         </div>
-        <button class="btn-gradient" id="btnNovaExposicao">\u271A Nova Exposicao</button>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk">
+            <input type="checkbox" id="selectAllExp" aria-label="Selecionar todas as exposi\xE7\xF5es" ${this.selecionados.size === exposicoes.length && exposicoes.length > 0 ? "checked" : ""}>
+            <label for="selectAllExp">Todos</label>
+          </div>
+          <div class="toggle-visualizacao">
+            <button id="btnListaExp" class="${this.modo === "lista" ? "ativo" : ""}" title="Tabela">\u2630 Lista</button>
+            <button id="btnGridExp" class="${this.modo === "grid" ? "ativo" : ""}" title="Cards">\u25A6 Cards</button>
+          </div>
+          <button class="btn-gradient" id="btnNovaExposicao">\u271A Nova Exposicao</button>
+        </div>
       </div>
+      ${this.selecionados.size > 0 ? this.renderBarraBulk() : ""}
       <div class="catalogo-filtros">
         <div class="campo-filtro busca">
           <label>Buscar</label>
-          <input type="text" id="buscaExposicao" placeholder="Nome ou local..." value="${sanitizarHTML(this.busca)}">
+          <input type="text" id="buscaExposicao" placeholder="Nome ou local..." value="${sanitizarHTML(this.busca)}" aria-label="Buscar exposi\xE7\xF5es">
         </div>
       </div>
-      ${exposicoes.length ? `
+      ${conteudo}
+    `;
+    }
+    renderTabela(exposicoes) {
+      const linhas = exposicoes.map((ex) => `
+      <tr class="${this.selecionados.has(ex.id) ? "linha-selecionada" : ""}">
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" class="checkbox-item-exp" data-id="${ex.id}" aria-label="Selecionar ${ex.nome || "exposi\xE7\xE3o"}" ${this.selecionados.has(ex.id) ? "checked" : ""}>
+        </td>
+        <td><strong>${sanitizarHTML(ex.nome) || "-"}</strong></td>
+        <td>${sanitizarHTML(ex.local) || "-"}</td>
+        <td>${formatarData(ex.data)}</td>
+        <td><span class="tag-status ${ex.status === "confirmada" ? "exposicao" : ex.status === "encerrada" ? "vendida" : ""}" style="background:${ex.status === "confirmada" ? "#16a34a20" : ex.status === "encerrada" ? "#6b728020" : "#f59e0b20"};color:${ex.status === "confirmada" ? "#16a34a" : ex.status === "encerrada" ? "#6b7280" : "#f59e0b"};">${ex.status || "planejada"}</span></td>
+        <td class="acoes-linha-tabela">
+          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposi\xE7\xE3o"><i class="fas fa-pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposi\xE7\xE3o" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join("");
+      return `
       <div class="tabela-wrapper">
         <table>
-          <thead><tr><th>Nome</th><th>Local</th><th>Data</th><th>Status</th><th></th></tr></thead>
+          <caption class="sr-only">Lista de exposi\xE7\xF5es</caption>
+          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>Local</th><th>Data</th><th>Status</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
-      </div>` : `
-      <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma exposicao encontrada.</p></div>
-      </div>`}
-    `;
+      </div>`;
+    }
+    renderCards(exposicoes) {
+      return `
+      <div class="grid-exposicoes stagger-in">
+        ${exposicoes.map((ex) => `
+          <div class="card-exposicao ${this.selecionados.has(ex.id) ? "selecionada" : ""}">
+            <div class="checkbox-bulk">
+              <input type="checkbox" class="checkbox-item-exp" data-id="${ex.id}" aria-label="Selecionar ${ex.nome || "exposi\xE7\xE3o"}" ${this.selecionados.has(ex.id) ? "checked" : ""}>
+            </div>
+            <div class="exp-header">
+              <strong>${sanitizarHTML(ex.nome) || "-"}</strong>
+              <span class="exp-local">${sanitizarHTML(ex.local) || "-"}</span>
+            </div>
+            <span class="exp-data">${formatarData(ex.data)}</span>
+            <span class="tag-status ${ex.status === "confirmada" ? "exposicao" : ex.status === "encerrada" ? "vendida" : ""}" style="background:${ex.status === "confirmada" ? "#16a34a20" : ex.status === "encerrada" ? "#6b728020" : "#f59e0b20"};color:${ex.status === "confirmada" ? "#16a34a" : ex.status === "encerrada" ? "#6b7280" : "#f59e0b"};">${ex.status || "planejada"}</span>
+            <div class="exp-acoes">
+              <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposi\xE7\xE3o"><i class="fas fa-pen"></i></button>
+              <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposi\xE7\xE3o" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
     }
     filtrarExposicoes() {
       let lista = this.dataStore.listar("exposicoes") || [];
@@ -18328,25 +18867,66 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       }
       return lista.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
     }
+    renderBarraBulk() {
+      return `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} exposi\xE7\xE3o${this.selecionados.size === 1 ? "" : "\xF5es"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkExportExp"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario btn-danger" id="bulkExcluirExp">\u{1F5D1} Excluir</button>
+          <button class="btn-secundario" id="bulkCancelarExp">\u2715 Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    async bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "exportar": {
+          const exposicoes = ids.map((id) => this.dataStore.buscarPorId("exposicoes", id)).filter(Boolean);
+          const csv = [
+            ["nome", "local", "data", "status", "descricao"].join(","),
+            ...exposicoes.map((ex) => [ex.nome, ex.local || "", ex.data || "", ex.status || "", ex.descricao || ""].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+          ].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `exposicoes-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          mostrarToast(`${exposicoes.length} exposi\xE7\xE3o(\xF5es) exportada(s)`, "sucesso");
+          break;
+        }
+        case "excluir": {
+          if (!await confirmarAcao(`Excluir ${ids.length} exposi\xE7\xE3o(\xF5es) permanentemente?`)) return;
+          ids.forEach((id) => this.dataStore.remover("exposicoes", id));
+          mostrarToast(`${ids.length} exposi\xE7\xE3o(\xF5es) exclu\xEDda(s)`, "sucesso");
+          break;
+        }
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
+    }
     abrirFormExposicao(existente) {
       const e = existente || {};
       abrirModal(`
       <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : "\u271A Nova"} Exposicao</h3>
       <form id="formExposicao">
-        <div class="campo-form"><label>Nome *</label><input type="text" id="expoNome" value="${sanitizarHTML(e.nome || "")}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label>Nome *</label><input type="text" id="expoNome" value="${sanitizarHTML(e.nome || "")}" required aria-label="Nome da exposi\xE7\xE3o" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div><label>Local</label><input type="text" id="expoLocal" value="${sanitizarHTML(e.local || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
-          <div><label>Data</label><input type="date" id="expoData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Local</label><input type="text" id="expoLocal" value="${sanitizarHTML(e.local || "")}" aria-label="Local" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Data</label><input type="date" id="expoData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" aria-label="Data" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
         <div class="campo-form">
           <label>Status</label>
-          <select id="expoStatus" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+          <select id="expoStatus" aria-label="Status" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
             <option value="planejada" ${e.status === "planejada" || !e.status ? "selected" : ""}>Planejada</option>
             <option value="confirmada" ${e.status === "confirmada" ? "selected" : ""}>Confirmada</option>
             <option value="encerrada" ${e.status === "encerrada" ? "selected" : ""}>Encerrada</option>
           </select>
         </div>
-        <div class="campo-form"><label>Descricao</label><textarea id="expoDescricao" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
+        <div class="campo-form"><label>Descricao</label><textarea id="expoDescricao" aria-label="Descri\xE7\xE3o" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || "")}</textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarExpo">Cancelar</button>
           <button type="submit" class="btn-primario">${e.id ? "Salvar" : "Criar"}</button>
@@ -18368,30 +18948,73 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         descricao: document.getElementById("expoDescricao")?.value?.trim() || ""
       };
       if (!dados.nome) {
-        mostrarToast("Preencha o nome da exposicao.");
+        mostrarToast("Preencha o nome da exposicao.", "aviso");
         return;
       }
       if (existente && existente.id) {
         this.dataStore.atualizar("exposicoes", existente.id, dados);
-        mostrarToast("Exposicao atualizada!");
+        mostrarToast("Exposicao atualizada!", "sucesso");
       } else {
         this.dataStore.adicionar("exposicoes", dados);
-        mostrarToast("Exposicao criada!");
+        mostrarToast("Exposicao criada!", "sucesso");
       }
       fecharModal();
       this.rerenderizar();
     }
-    excluirExposicao(id) {
-      if (!confirm("Excluir esta exposicao permanentemente?")) return;
+    async excluirExposicao(id) {
+      if (!await confirmarAcao("Excluir esta exposicao permanentemente?")) return;
+      const item = this.dataStore.buscarPorId("exposicoes", id);
       this.dataStore.remover("exposicoes", id);
-      mostrarToast("Exposicao excluida.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Exposicao excluida.", () => {
+        dataStore2.dados.exposicoes.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     aposRenderizar() {
       this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
       document.getElementById("btnNovaExposicao")?.addEventListener("click", () => this.abrirFormExposicao(null));
-      document.getElementById("buscaExposicao")?.addEventListener("input", (e) => {
+      document.getElementById("btnListaExp")?.addEventListener("click", () => {
+        this.modo = "lista";
+        this.rerenderizar();
+      });
+      document.getElementById("btnGridExp")?.addEventListener("click", () => {
+        this.modo = "grid";
+        this.rerenderizar();
+      });
+      document.getElementById("buscaExposicao")?.addEventListener("input", debounce2((e) => {
         this.busca = e.target.value;
+        this.rerenderizar(true);
+      }, 250));
+      const selectAll = document.getElementById("selectAllExp");
+      if (selectAll) {
+        selectAll.addEventListener("change", (e) => {
+          const exposicoes = this.filtrarExposicoes();
+          if (e.target.checked) {
+            exposicoes.forEach((ex) => this.selecionados.add(ex.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item-exp")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkExportExp")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkExcluirExp")?.addEventListener("click", () => this.bulkAcao("excluir"));
+      document.getElementById("bulkCancelarExp")?.addEventListener("click", () => {
+        this.selecionados.clear();
         this.rerenderizar();
       });
       document.querySelectorAll("[data-editar-expo]").forEach((el) => {
@@ -18404,12 +19027,21 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         el.addEventListener("click", () => this.excluirExposicao(el.dataset.excluirExpo));
       });
     }
-    rerenderizar() {
+    rerenderizar(manterFoco = false) {
       const c = document.getElementById("viewPrincipal");
-      if (c) {
-        this.removerListeners();
-        c.innerHTML = this.render();
-        this.aposRenderizar();
+      if (!c) return;
+      const idFoco = manterFoco ? document.activeElement.id : null;
+      this.removerListeners();
+      c.innerHTML = this.render();
+      this.aposRenderizar();
+      if (idFoco) {
+        const el = document.getElementById(idFoco);
+        if (el) {
+          el.focus();
+          const v = el.value;
+          el.value = "";
+          el.value = v;
+        }
       }
     }
   };
@@ -18418,6 +19050,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       super(dataStore2, router2);
       this.filtroTipo = "";
       this.busca = "";
+      this.selecionados = /* @__PURE__ */ new Set();
     }
     render() {
       const transacoes = this.filtrarTransacoes();
@@ -18426,30 +19059,42 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       const saidas = todas.filter((t) => t.tipo === "saida").reduce((s, t) => s + Number(t.valor || 0), 0);
       const saldo = entradas - saidas;
       const linhas = transacoes.map((t) => `
-      <tr>
+      <tr class="${this.selecionados.has(t.id) ? "linha-selecionada" : ""}">
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" class="checkbox-item-fin" data-id="${t.id}" aria-label="Selecionar ${t.descricao || "transa\xE7\xE3o"}" ${this.selecionados.has(t.id) ? "checked" : ""}>
+        </td>
         <td>${sanitizarRich(t.descricao)}</td>
         <td><span class="tag-status ${t.tipo === "entrada" ? "vendida" : ""}" style="background:${t.tipo === "entrada" ? "#16a34a20" : "#dc262620"};color:${t.tipo === "entrada" ? "#16a34a" : "#dc2626"};">${t.tipo === "entrada" ? '<i class="fas fa-dollar-sign"></i> Entrada' : "\u{1F4B8} Saida"}</span></td>
         <td style="font-weight:600;color:${t.tipo === "entrada" ? "#16a34a" : "#dc2626"};">${t.tipo === "entrada" ? "+" : "-"}${formatarMoeda(t.valor)}</td>
         <td>${formatarData(t.data)}</td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir" aria-label="Excluir transa\xE7\xE3o"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join("");
       const categorias = [...new Set(todas.map((t) => t.categoria).filter(Boolean))];
-      const catsHtml = categorias.map((cat) => {
+      const catsComTotal = categorias.map((cat) => {
         const total = todas.filter((t) => t.categoria === cat).reduce((s, t) => s + Number(t.valor || 0), 0);
         const pct = entradas + saidas > 0 ? Math.round(total / (entradas + saidas) * 100) : 0;
-        return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.8rem;border-bottom:1px solid var(--border);"><span>${sanitizarHTML(cat)}</span><span style="font-weight:600;">${formatarMoeda(total)} (${pct}%)</span></div>`;
+        return { nome: cat, total, pct };
+      }).sort((a, b) => b.total - a.total);
+      const maxTotal = catsComTotal.length > 0 ? catsComTotal[0].total : 1;
+      const catsHtml = catsComTotal.map((cat, i) => {
+        const hue = (i * 47 + 200) % 360;
+        return `
+        <div class="cat-bar-linha">
+          <div class="cat-bar-label"><span>${sanitizarHTML(cat.nome)}</span><span class="cat-bar-valor">${formatarMoeda(cat.total)} (${cat.pct}%)</span></div>
+          <div class="cat-bar-trilha"><div class="cat-bar-preenchimento" style="width:${Math.round(cat.total / maxTotal * 100)}%;background:hsl(${hue},55%,50%);"></div></div>
+        </div>`;
       }).join("");
       const tabela = transacoes.length ? `
       <div class="tabela-wrapper" style="margin-top:16px;">
         <table>
-          <thead><tr><th>Descricao</th><th>Tipo</th><th>Valor</th><th>Data</th><th></th></tr></thead>
+          <caption class="sr-only">Lista de transa\xE7\xF5es</caption>
+          <thead><tr><th style="width:36px;"></th><th>Descricao</th><th>Tipo</th><th>Valor</th><th>Data</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
-      </div>
-    ` : `
+      </div>` : `
       <div class="tabela-wrapper" style="margin-top:16px;">
         <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-chart-bar"></i></div><p>Nenhuma transacao encontrada.</p></div>
       </div>
@@ -18460,8 +19105,15 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           <h2>Financeiro</h2>
           <p class="subtitulo">${todas.length} transacao${todas.length === 1 ? "" : "es"} \xB7 ${formatarMoeda(entradas)} entradas \xB7 ${formatarMoeda(saidas)} saidas</p>
         </div>
-        <button class="btn-gradient" id="btnNovaTransacao">\u271A Nova Transacao</button>
+        <div class="catalogo-acoes">
+          <div class="selecao-bulk">
+            <input type="checkbox" id="selectAllFin" aria-label="Selecionar todas as transa\xE7\xF5es" ${this.selecionados.size === transacoes.length && transacoes.length > 0 ? "checked" : ""}>
+            <label for="selectAllFin">Todos</label>
+          </div>
+          <button class="btn-gradient" id="btnNovaTransacao">\u271A Nova Transacao</button>
+        </div>
       </div>
+      ${this.selecionados.size > 0 ? this.renderBarraBulk() : ""}
       <div class="grid-cards">
         <div class="card"><div class="rotulo-card" style="color:#16a34a;"><i class="fas fa-dollar-sign"></i> Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
         <div class="card"><div class="rotulo-card" style="color:#dc2626;">\u{1F4B8} Saidas</div><div class="valor-card">${formatarMoeda(saidas)}</div></div>
@@ -18471,7 +19123,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       <div class="catalogo-filtros" style="margin-top:12px;">
         <div class="campo-filtro busca">
           <label>Buscar</label>
-          <input type="text" id="buscaTransacao" placeholder="Descricao..." value="${sanitizarHTML(this.busca)}">
+          <input type="text" id="buscaTransacao" placeholder="Descricao..." value="${sanitizarHTML(this.busca)}" aria-label="Buscar transa\xE7\xF5es">
         </div>
         <div class="campo-filtro">
           <label>Tipo</label>
@@ -18494,25 +19146,97 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       }
       return lista.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
     }
+    renderBarraBulk() {
+      return `
+      <div class="bulk-actions-bar">
+        <span class="bulk-info">${this.selecionados.size} transa\xE7\xE3o${this.selecionados.size === 1 ? "" : "\xF5es"} selecionada${this.selecionados.size === 1 ? "" : "s"}</span>
+        <div class="bulk-buttons">
+          <button class="btn-secundario" id="bulkExportFin"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkCategoriaFin"><i class="fas fa-tag"></i> Categoria</button>
+          <button class="btn-secundario btn-danger" id="bulkExcluirFin">\u{1F5D1} Excluir</button>
+          <button class="btn-secundario" id="bulkCancelarFin">\u2715 Cancelar</button>
+        </div>
+      </div>
+    `;
+    }
+    async bulkAcao(acao) {
+      const ids = Array.from(this.selecionados);
+      if (ids.length === 0) return;
+      switch (acao) {
+        case "exportar": {
+          const transacoes = ids.map((id) => this.dataStore.buscarPorId("transacoes", id)).filter(Boolean);
+          const csv = [
+            ["descricao", "tipo", "valor", "data", "categoria"].join(","),
+            ...transacoes.map((t) => [t.descricao, t.tipo, t.valor || 0, t.data || "", t.categoria || ""].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+          ].join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `transacoes-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          mostrarToast(`${transacoes.length} transa\xE7\xE3o(\xF5es) exportada(s)`, "sucesso");
+          break;
+        }
+        case "categoria": {
+          const todas = this.dataStore.listar("transacoes") || [];
+          const cats = [...new Set(todas.map((t) => t.categoria).filter(Boolean))].sort();
+          abrirModal(`
+          <h3>Mudar categoria em lote</h3>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">${ids.length} transa\xE7\xE3o(\xF5es) selecionada(s).</p>
+          <select id="loteCategoriaSelect" aria-label="Nova categoria" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+            <option value="">\u2014 Selecione \u2014</option>
+            ${["Venda", "Comissao", "Material", "Inscricao", "Frete", "Embalagem", "Ferramenta", "Assinatura", "Outro", ...cats].filter((v, i, a) => a.indexOf(v) === i).map((c) => `<option value="${c}">${c}</option>`).join("")}
+          </select>
+          <div class="modal-acoes" style="margin-top:12px;">
+            <button type="button" class="btn-secundario" id="btnCancelarLoteCat">Cancelar</button>
+            <button type="button" class="btn-primario" id="btnAplicarLoteCat">Aplicar</button>
+          </div>
+        `);
+          document.getElementById("btnCancelarLoteCat")?.addEventListener("click", fecharModal);
+          document.getElementById("btnAplicarLoteCat")?.addEventListener("click", () => {
+            const novaCat = document.getElementById("loteCategoriaSelect")?.value;
+            if (!novaCat) {
+              mostrarToast("Selecione uma categoria.", "aviso");
+              return;
+            }
+            ids.forEach((id) => this.dataStore.atualizar("transacoes", id, { categoria: novaCat }));
+            mostrarToast(`${ids.length} transa\xE7\xE3o(\xF5es) atualizada(s) para "${novaCat}"`, "sucesso");
+            fecharModal();
+            this.selecionados.clear();
+            this.rerenderizar();
+          });
+          return;
+        }
+        case "excluir": {
+          if (!await confirmarAcao(`Excluir ${ids.length} transa\xE7\xE3o(\xF5es) permanentemente?`)) return;
+          ids.forEach((id) => this.dataStore.remover("transacoes", id));
+          mostrarToast(`${ids.length} transa\xE7\xE3o(\xF5es) exclu\xEDda(s)`, "sucesso");
+          break;
+        }
+      }
+      this.selecionados.clear();
+      this.rerenderizar();
+    }
     abrirFormTransacao(existente) {
       const e = existente || {};
       abrirModal(`
       <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : "\u271A Nova"} Transacao</h3>
       <form id="formTransacao">
-        <div class="campo-form"><label>Descricao *</label><input type="text" id="transDescricao" value="${sanitizarHTML(e.descricao || "")}" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label>Descricao *</label><input type="text" id="transDescricao" value="${sanitizarHTML(e.descricao || "")}" required aria-label="Descri\xE7\xE3o" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div><label>Tipo *</label>
-            <select id="transTipo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            <select id="transTipo" aria-label="Tipo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
               <option value="entrada" ${e.tipo === "entrada" || !e.tipo ? "selected" : ""}><i class="fas fa-dollar-sign"></i> Entrada</option>
               <option value="saida" ${e.tipo === "saida" ? "selected" : ""}>\u{1F4B8} Saida</option>
             </select>
           </div>
-          <div><label>Valor (R$) *</label><input type="number" id="transValor" value="${e.valor || ""}" min="0" step="0.01" required style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Valor (R$) *</label><input type="number" id="transValor" value="${e.valor || ""}" min="0" step="0.01" required aria-label="Valor" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div><label>Data</label><input type="date" id="transData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Data</label><input type="date" id="transData" value="${e.data || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}" aria-label="Data" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
           <div><label>Categoria</label>
-            <select id="transCategoria" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            <select id="transCategoria" aria-label="Categoria" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
               <option value="">\u2014 Selecione \u2014</option>
               ${["Venda", "Comissao", "Material", "Inscricao", "Frete", "Embalagem", "Ferramenta", "Assinatura", "Outro"].map(
         (cat) => `<option value="${cat}" ${e.categoria === cat ? "selected" : ""}>${cat}</option>`
@@ -18520,7 +19244,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
             </select>
           </div>
         </div>
-        <div class="campo-form"><label>Notas</label><textarea id="transNotas" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:50px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.notas || "")}</textarea></div>
+        <div class="campo-form"><label>Notas</label><textarea id="transNotas" aria-label="Notas" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:50px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.notas || "")}</textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarTrans">Cancelar</button>
           <button type="submit" class="btn-primario">${e.id ? "Salvar" : "Adicionar"}</button>
@@ -18543,46 +19267,91 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         notas: document.getElementById("transNotas")?.value?.trim() || ""
       };
       if (!dados.descricao || !dados.valor) {
-        mostrarToast("Preencha descricao e valor.");
+        mostrarToast("Preencha descricao e valor.", "aviso");
         return;
       }
       if (existente && existente.id) {
         this.dataStore.atualizar("transacoes", existente.id, dados);
-        mostrarToast("Transacao atualizada!");
+        mostrarToast("Transacao atualizada!", "sucesso");
       } else {
         this.dataStore.adicionar("transacoes", dados);
-        mostrarToast("Transacao adicionada!");
+        mostrarToast("Transacao adicionada!", "sucesso");
       }
       fecharModal();
       this.rerenderizar();
     }
-    excluirTransacao(id) {
-      if (!confirm("Excluir esta transacao?")) return;
+    async excluirTransacao(id) {
+      if (!await confirmarAcao("Excluir esta transacao?")) return;
+      const item = this.dataStore.buscarPorId("transacoes", id);
       this.dataStore.remover("transacoes", id);
-      mostrarToast("Transacao excluida.");
+      const { dataStore: dataStore2 } = this;
+      mostrarToastComDesfazer("Transacao excluida.", () => {
+        dataStore2.dados.transacoes.push(item);
+        dataStore2.salvar();
+      });
       this.rerenderizar();
     }
     aposRenderizar() {
       this.removerListeners();
+      const container = document.getElementById("viewPrincipal");
       document.getElementById("btnNovaTransacao")?.addEventListener("click", () => this.abrirFormTransacao(null));
-      document.getElementById("buscaTransacao")?.addEventListener("input", (e) => {
+      document.getElementById("buscaTransacao")?.addEventListener("input", debounce2((e) => {
         this.busca = e.target.value;
-        this.rerenderizar();
-      });
+        this.rerenderizar(true);
+      }, 250));
       document.getElementById("filtroTipoTransacao")?.addEventListener("change", (e) => {
         this.filtroTipo = e.target.value;
+        this.rerenderizar();
+      });
+      const selectAll = document.getElementById("selectAllFin");
+      if (selectAll) {
+        selectAll.addEventListener("change", (e) => {
+          const transacoes = this.filtrarTransacoes();
+          if (e.target.checked) {
+            transacoes.forEach((t) => this.selecionados.add(t.id));
+          } else {
+            this.selecionados.clear();
+          }
+          this.rerenderizar();
+        });
+      }
+      container.addEventListener("change", (e) => {
+        if (e.target.classList.contains("checkbox-item-fin")) {
+          const id = e.target.dataset.id;
+          if (e.target.checked) {
+            this.selecionados.add(id);
+          } else {
+            this.selecionados.delete(id);
+          }
+          this.rerenderizar();
+        }
+      });
+      document.getElementById("bulkExportFin")?.addEventListener("click", () => this.bulkAcao("exportar"));
+      document.getElementById("bulkCategoriaFin")?.addEventListener("click", () => this.bulkAcao("categoria"));
+      document.getElementById("bulkExcluirFin")?.addEventListener("click", () => this.bulkAcao("excluir"));
+      document.getElementById("bulkCancelarFin")?.addEventListener("click", () => {
+        this.selecionados.clear();
         this.rerenderizar();
       });
       document.querySelectorAll("[data-excluir-transacao]").forEach((el) => {
         el.addEventListener("click", () => this.excluirTransacao(el.dataset.excluirTransacao));
       });
     }
-    rerenderizar() {
+    rerenderizar(manterFoco = false) {
       const c = document.getElementById("viewPrincipal");
-      if (c) {
-        this.removerListeners();
-        c.innerHTML = this.render();
-        this.aposRenderizar();
+      if (!c) return;
+      const idFoco = manterFoco ? document.activeElement.id : null;
+      this.removerListeners();
+      c.innerHTML = this.render();
+      this.aposRenderizar();
+      if (idFoco) {
+        const el = document.getElementById(idFoco);
+        if (el) {
+          el.focus();
+          const v = el.value;
+          el.value = "";
+          el.value = v;
+        }
       }
     }
   };
@@ -18626,32 +19395,33 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       const interval = document.getElementById("cfgSyncInterval");
       if (interval) configStore().syncAutoBackupInterval = Number(interval.value) || 30;
       configStore().salvar();
-      mostrarToast("Configura\xE7\xF5es salvas com sucesso!");
+      if (typeof atualizarThemeColor === "function") atualizarThemeColor();
+      mostrarToast("Configura\xE7\xF5es salvas com sucesso!", "sucesso");
     }
     _salvarPin() {
       const pinVal = document.getElementById("cfgPin")?.value;
       if (pinVal && pinVal.length === 4 && /^\d{4}$/.test(pinVal)) {
         configStore().pin = pinVal;
         configStore().salvar();
-        mostrarToast("PIN salvo com sucesso!");
+        mostrarToast("PIN salvo com sucesso!", "sucesso");
         document.getElementById("cfgPin").value = "";
       } else {
-        mostrarToast("Digite um PIN de 4 d\xEDgitos.");
+        mostrarToast("Digite um PIN de 4 d\xEDgitos.", "aviso");
       }
     }
-    _removerPin() {
-      if (confirm("Remover o PIN de acesso?")) {
-        configStore().pin = "";
-        configStore().autoLock = false;
-        configStore().salvar();
-        mostrarToast("PIN removido.");
-        if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
-      }
+    async _removerPin() {
+      if (!await confirmarAcao("Remover o PIN de acesso?", { textoConfirmar: "Remover", perigoso: false })) return;
+      configStore().pin = "";
+      configStore().autoLock = false;
+      configStore().salvar();
+      mostrarToast("PIN removido.", "sucesso");
+      if (this.router.viewAtual === "configuracoes") this.router.navegar("configuracoes");
     }
     render() {
       const cfg = configStore().artista || {};
       const textoGarantia = configStore().textoGarantia || "";
       const idiomaAtual = configStore().idioma || "pt-BR";
+      const temaAtual = configStore().tema || "classico";
       const altoContraste = configStore().altoContraste || false;
       const tamanhoFonte = configStore().tamanhoFonte || "medio";
       const pinAtivo = configStore().pin || "";
@@ -18664,6 +19434,16 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         { v: "fr", r: "\u{1F1EB}\u{1F1F7} Fran\xE7ais" },
         { v: "it", r: "\u{1F1EE}\u{1F1F9} Italiano" }
       ];
+      const temas = [
+        { id: "classico", label: "Cl\xE1ssico", icone: "\u{1F3A8}", sidebar: "#111827", bg: "#fdfaf6", accent: "#2563eb", textBar: "rgba(255,255,255,0.35)", contentBar: "rgba(0,0,0,0.15)" },
+        { id: "escuro", label: "Escuro", icone: "\u{1F319}", sidebar: "#000000", bg: "#0f0f0f", accent: "#00d4ff", textBar: "rgba(255,255,255,0.25)", contentBar: "rgba(255,255,255,0.12)" },
+        { id: "galeria", label: "Galeria", icone: "\u{1F5BC}\uFE0F", sidebar: "#fafafa", bg: "#fafafa", accent: "#000000", textBar: "rgba(0,0,0,0.15)", contentBar: "rgba(0,0,0,0.1)" },
+        { id: "boho", label: "Boho", icone: "\u{1F33F}", sidebar: "#4a3f35", bg: "#f7f3ee", accent: "#c17f59", textBar: "rgba(255,255,255,0.25)", contentBar: "rgba(0,0,0,0.12)" },
+        { id: "clean", label: "Clean", icone: "\u26AA", sidebar: "#ffffff", bg: "#ffffff", accent: "#1a1a1a", textBar: "rgba(0,0,0,0.1)", contentBar: "rgba(0,0,0,0.08)" },
+        { id: "dourado", label: "Dourado", icone: "\u{1F451}", sidebar: "#050505", bg: "#0d0d0d", accent: "#c9a227", textBar: "rgba(255,255,255,0.25)", contentBar: "rgba(255,255,255,0.1)" },
+        { id: "marmore", label: "M\xE1rmore", icone: "\u{1F3DB}\uFE0F", sidebar: "#2b1f18", bg: "#f2ece6", accent: "#a0522d", textBar: "rgba(255,255,255,0.25)", contentBar: "rgba(0,0,0,0.12)" },
+        { id: "esmeralda", label: "Esmeralda", icone: "\u{1F49A}", sidebar: "#040a06", bg: "#0a120e", accent: "#00c853", textBar: "rgba(255,255,255,0.2)", contentBar: "rgba(255,255,255,0.1)" }
+      ];
       return `
       <div class="view-cabecalho">
         <div>
@@ -18675,36 +19455,36 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         <h3><i class="fas fa-user"></i> Perfil do Artista</h3>
         <div class="campo-form">
           <label>Nome / Nome do Ateli\xEA</label>
-          <input type="text" id="cfgNome" value="${sanitizarHTML(cfg.nome || "")}">
+          <input type="text" id="cfgNome" aria-label="Nome do Ateli\xEA" value="${sanitizarHTML(cfg.nome || "")}">
         </div>
         <div class="campo-form">
           <label>E-mail</label>
-          <input type="email" id="cfgEmail" value="${sanitizarHTML(cfg.email || "")}">
+          <input type="email" id="cfgEmail" aria-label="E-mail" value="${sanitizarHTML(cfg.email || "")}">
         </div>
         <div class="campo-form">
           <label>Telefone</label>
-          <input type="text" id="cfgTelefone" value="${sanitizarHTML(cfg.telefone || "")}">
+          <input type="text" id="cfgTelefone" aria-label="Telefone" value="${sanitizarHTML(cfg.telefone || "")}">
         </div>
         <div class="campo-form">
           <label>Texto de garantia/autenticidade (usado nos recibos e propostas)</label>
-          <textarea id="cfgTextoGarantia" style="min-height:110px;">${sanitizarHTML(textoGarantia)}</textarea>
+          <textarea id="cfgTextoGarantia" aria-label="Texto de garantia" style="min-height:110px;">${sanitizarHTML(textoGarantia)}</textarea>
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3><i class="fas fa-globe"></i> Idioma</h3>
         <div class="campo-form">
           <label>Idioma da interface</label>
-          <select id="cfgIdioma">${idiomas.map((i) => `<option value="${i.v}" ${idiomaAtual === i.v ? "selected" : ""}>${i.r}</option>`).join("")}</select>
+          <select id="cfgIdioma" aria-label="Idioma da interface">${idiomas.map((i) => `<option value="${i.v}" ${idiomaAtual === i.v ? "selected" : ""}>${i.r}</option>`).join("")}</select>
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>\u267F Acessibilidade</h3>
         <div class="campo-form">
-          <label><input type="checkbox" id="cfgAltoContraste" ${altoContraste ? "checked" : ""}> <i class="fas fa-lock"></i> Alto contraste</label>
+          <label><input type="checkbox" id="cfgAltoContraste" aria-label="Alto contraste" ${altoContraste ? "checked" : ""}> <i class="fas fa-lock"></i> Alto contraste</label>
         </div>
         <div class="campo-form">
           <label>Tamanho da fonte</label>
-          <select id="cfgTamanhoFonte">
+          <select id="cfgTamanhoFonte" aria-label="Tamanho da fonte">
             <option value="pequeno" ${tamanhoFonte === "pequeno" ? "selected" : ""}>Pequeno</option>
             <option value="medio" ${tamanhoFonte === "medio" ? "selected" : ""}>M\xE9dio</option>
             <option value="grande" ${tamanhoFonte === "grande" ? "selected" : ""}>Grande</option>
@@ -18712,17 +19492,40 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>\u{1F3AD} Tema Visual</h3>
+        <p class="texto-ajuda" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Passe o mouse ou use Tab para pr\xE9-visualizar. Clique para confirmar.</p>
+        <div class="tema-grid">
+          ${temas.map((t) => `
+            <div class="tema-card${temaAtual === t.id ? " ativo" : ""}" data-tema="${t.id}" tabindex="0" role="button" aria-label="Tema ${t.label}">
+              <div class="tema-mockup" style="background:${t.bg}">
+                <div class="tema-mockup-sidebar" style="background:${t.sidebar}">
+                  <span class="bar" style="background:${t.textBar}"></span>
+                  <span class="bar ativa" style="background:${t.accent}"></span>
+                  <span class="bar" style="background:${t.textBar}"></span>
+                </div>
+                <div class="tema-mockup-content">
+                  <span class="bar" style="background:${t.contentBar}"></span>
+                  <span class="bar" style="background:${t.contentBar}"></span>
+                  <span class="bar accent" style="background:${t.accent}"></span>
+                </div>
+              </div>
+              <span class="tema-label">${t.icone} ${t.label}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>\u{1F510} Seguran\xE7a</h3>
         <div class="campo-form">
           <label>PIN de acesso (4 d\xEDgitos) ${pinAtivo ? '<i class="fas fa-lock"></i> Ativo' : '<i class="fas fa-times"></i> Desativado'}</label>
           <div style="display:flex;gap:8px;">
-            <input type="password" id="cfgPin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
+            <input type="password" id="cfgPin" aria-label="PIN de acesso" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
             <button class="btn-secundario" id="btnSalvarPin" style="font-size:0.8rem;padding:6px 14px;">${pinAtivo ? "Alterar" : "Ativar"} PIN</button>
             ${pinAtivo ? `<button class="btn-secundario" id="btnRemoverPin" style="font-size:0.8rem;padding:6px 14px;color:#dc2626;">Remover PIN</button>` : ""}
           </div>
         </div>
         <div class="campo-form">
-          <label><input type="checkbox" id="cfgAutoLock" ${configStore().autoLock ? "checked" : ""}> \u{1F510} Bloquear automaticamente ap\xF3s inatividade</label>
+          <label><input type="checkbox" id="cfgAutoLock" aria-label="Bloquear automaticamente ap\xF3s inatividade" ${configStore().autoLock ? "checked" : ""}> \u{1F510} Bloquear automaticamente ap\xF3s inatividade</label>
         </div>
       </div>
 
@@ -18762,7 +19565,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         <div class="sync-panel" id="syncPanelGoogleDrive" style="display:none;">
           <div class="campo-form">
             <label>Google Drive Client ID (OAuth 2.0)</label>
-            <input type="text" id="cfgGoogleClientId" value="${sanitizarHTML(s.syncGoogleClientId || "")}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+            <input type="text" id="cfgGoogleClientId" aria-label="Google Drive Client ID" value="${sanitizarHTML(s.syncGoogleClientId || "")}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
             <button class="btn-secundario" id="btnGoogleAuth"><i class="fas fa-key"></i> Autenticar</button>
@@ -18775,11 +19578,11 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         <div class="sync-panel" id="syncPanelWebDAV" style="display:none;">
           <div class="campo-form">
             <label>URL do servidor WebDAV</label>
-            <input type="url" id="cfgWebDAVUrl" value="${sanitizarHTML(s.syncWebDAVUrl || "")}" placeholder="https://meu-servidor.com/remote.php/dav/files/usuario/" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+            <input type="url" id="cfgWebDAVUrl" aria-label="URL do servidor WebDAV" value="${sanitizarHTML(s.syncWebDAVUrl || "")}" placeholder="https://meu-servidor.com/remote.php/dav/files/usuario/" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
           </div>
           <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div><label>Usu\xE1rio</label><input type="text" id="cfgWebDAVUser" value="${sanitizarHTML(s.syncWebDAVUser || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
-            <div><label>Senha</label><input type="password" id="cfgWebDAVPass" value="${sanitizarHTML(s.syncWebDAVPass || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+            <div><label>Usu\xE1rio</label><input type="text" id="cfgWebDAVUser" aria-label="Usu\xE1rio" value="${sanitizarHTML(s.syncWebDAVUser || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+            <div><label>Senha</label><input type="password" id="cfgWebDAVPass" aria-label="Senha" value="${sanitizarHTML(s.syncWebDAVPass || "")}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
             <button class="btn-secundario" id="btnWebDAVTest"><i class="fas fa-link"></i> Testar Conex\xE3o</button>
@@ -18790,10 +19593,10 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         </div>
 
         <div class="campo-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-          <label><input type="checkbox" id="cfgAutoSync" ${s.syncAutoBackup ? "checked" : ""}> <i class="fas fa-sync"></i> Backup autom\xE1tico no IndexedDB</label>
+          <label><input type="checkbox" id="cfgAutoSync" aria-label="Backup autom\xE1tico no IndexedDB" ${s.syncAutoBackup ? "checked" : ""}> <i class="fas fa-sync"></i> Backup autom\xE1tico no IndexedDB</label>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:0.75rem;color:var(--text-muted);">A cada</span>
-            <select id="cfgSyncInterval" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
+            <select id="cfgSyncInterval" aria-label="Intervalo de backup" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
               ${[5, 10, 15, 30, 60, 120].map((m) => `<option value="${m}" ${(s.syncAutoBackupInterval || 30) === m ? "selected" : ""}>${m} min</option>`).join("")}
             </select>
           </div>
@@ -18823,6 +19626,52 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         btnRem.addEventListener("click", h);
         this._bindCache["btnRemoverPin"] = { el: btnRem, handler: h, type: "click" };
       }
+      this._temaSalvoPreview = configStore().tema || "classico";
+      document.querySelectorAll(".tema-card").forEach((card) => {
+        const temaId = card.dataset.tema;
+        let blurTimer = null;
+        const enter = () => {
+          if (blurTimer) {
+            clearTimeout(blurTimer);
+            blurTimer = null;
+          }
+          this._previewTema(temaId);
+        };
+        const leave = () => {
+          if (document.activeElement !== card) this._reverterTema();
+        };
+        const foc = () => {
+          if (blurTimer) {
+            clearTimeout(blurTimer);
+            blurTimer = null;
+          }
+          this._previewTema(temaId);
+        };
+        const blr = () => {
+          blurTimer = setTimeout(() => {
+            if (!document.querySelector(".tema-card:focus")) this._reverterTema();
+          }, 80);
+        };
+        const clickHandler = () => this._confirmarTema(temaId, card);
+        const keyHandler = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            this._confirmarTema(temaId, card);
+          }
+        };
+        card.addEventListener("mouseenter", enter);
+        card.addEventListener("mouseleave", leave);
+        card.addEventListener("focus", foc);
+        card.addEventListener("blur", blr);
+        card.addEventListener("click", clickHandler);
+        card.addEventListener("keydown", keyHandler);
+        this._bindCache["tema_" + temaId + "_enter"] = { el: card, handler: enter, type: "mouseenter" };
+        this._bindCache["tema_" + temaId + "_leave"] = { el: card, handler: leave, type: "mouseleave" };
+        this._bindCache["tema_" + temaId + "_focus"] = { el: card, handler: foc, type: "focus" };
+        this._bindCache["tema_" + temaId + "_blur"] = { el: card, handler: blr, type: "blur" };
+        this._bindCache["tema_" + temaId + "_click"] = { el: card, handler: clickHandler, type: "click" };
+        this._bindCache["tema_" + temaId + "_key"] = { el: card, handler: keyHandler, type: "keydown" };
+      });
       document.querySelectorAll(".sync-tab").forEach((tab) => {
         tab.addEventListener("click", () => {
           document.querySelectorAll(".sync-tab").forEach((t) => t.classList.remove("ativo"));
@@ -18854,10 +19703,29 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       document.getElementById("btnWebDAVTest")?.addEventListener("click", async () => {
         this._salvar();
         const ok = await cloudSync.testarWebDAV();
-        mostrarToast(ok ? '<i class="fas fa-check"></i> Conex\xE3o WebDAV OK!' : '<i class="fas fa-times"></i> Falha na conex\xE3o WebDAV');
+        mostrarToast(ok ? '<i class="fas fa-check"></i> Conex\xE3o WebDAV OK!' : '<i class="fas fa-times"></i> Falha na conex\xE3o WebDAV', ok ? "sucesso" : "erro");
       });
       document.getElementById("btnWebDAVBackup")?.addEventListener("click", () => cloudSync.backupWebDAV());
       document.getElementById("btnWebDAVListar")?.addEventListener("click", () => this._listarWebDAV());
+    }
+    _previewTema(temaId) {
+      document.body.setAttribute("data-tema", temaId);
+      if (typeof atualizarThemeColor === "function") atualizarThemeColor();
+    }
+    _reverterTema() {
+      document.body.setAttribute("data-tema", this._temaSalvoPreview);
+      if (typeof atualizarThemeColor === "function") atualizarThemeColor();
+    }
+    _confirmarTema(temaId, card) {
+      configStore().tema = temaId;
+      configStore().salvar();
+      this._temaSalvoPreview = temaId;
+      this._reverterTema();
+      document.querySelectorAll(".tema-card").forEach((c) => c.classList.remove("ativo"));
+      card.classList.add("ativo");
+      const sel = document.getElementById("seletorTema");
+      if (sel) sel.value = temaId;
+      mostrarToast(`Tema ${temaId} aplicado!`, "sucesso");
     }
     async _mostrarIDBSnapshots() {
       const container = document.getElementById("idbSnapshotList");
@@ -18876,8 +19744,8 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
               <span style="font-size:0.75rem;color:var(--text);">${s.label || s.timestamp}</span>
               <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(s.timestamp).toLocaleString("pt-BR")}</span>
               <span>
-                <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar">\u21A9\uFE0F</button>
-                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar" aria-label="Restaurar">\u21A9\uFE0F</button>
+                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" aria-label="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
               </span>
             </div>
           `).join("")}
@@ -18913,7 +19781,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
             <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
             <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(b.data).toLocaleString("pt-BR")}</span>
-            <button class="btn-miniatura btn-restaurar-gd" data-id="${b.id}" title="Restaurar">\u21A9\uFE0F</button>
+            <button class="btn-miniatura btn-restaurar-gd" data-id="${b.id}" title="Restaurar" aria-label="Restaurar">\u21A9\uFE0F</button>
           </div>
         `).join("")}
       </div>
@@ -18939,7 +19807,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
             <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
             <span style="font-size:0.7rem;color:var(--text-muted);">${b.data || ""}</span>
-            <button class="btn-miniatura btn-restaurar-wd" data-nome="${b.nome}" title="Restaurar">\u21A9\uFE0F</button>
+            <button class="btn-miniatura btn-restaurar-wd" data-nome="${b.nome}" title="Restaurar" aria-label="Restaurar">\u21A9\uFE0F</button>
           </div>
         `).join("")}
       </div>
@@ -18993,7 +19861,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
       return new Promise((resolve, reject) => {
         const req = store.add(snapshot);
         req.onsuccess = () => {
-          mostrarToast("Snapshot salvo no IndexedDB!");
+          mostrarToast("Snapshot salvo no IndexedDB!", "sucesso");
           resolve(req.result);
         };
         req.onerror = () => reject(req.error);
@@ -19028,7 +19896,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           if (snap) {
             this.dataStore.dados = JSON.parse(JSON.stringify(snap.dados));
             this.dataStore.salvar();
-            mostrarToast("Snapshot restaurado com sucesso!");
+            mostrarToast("Snapshot restaurado com sucesso!", "sucesso");
             resolve(true);
           } else {
             reject(new Error("Snapshot n\xE3o encontrado"));
@@ -19057,7 +19925,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
     async autenticarGoogle() {
       const clientId = this.googleClientId;
       if (!clientId) {
-        mostrarToast("Configure o Client ID do Google Drive nas Configura\xE7\xF5es.");
+        mostrarToast("Configure o Client ID do Google Drive nas Configura\xE7\xF5es.", "aviso");
         return false;
       }
       return new Promise((resolve) => {
@@ -19067,7 +19935,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         const authUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=" + encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&scope=" + encodeURIComponent(scope) + "&state=" + state;
         const w = window.open(authUrl, "google_oauth", "width=600,height=700");
         if (!w) {
-          mostrarToast("Pop-up bloqueado. Permita pop-ups para usar o Google Drive.");
+          mostrarToast("Pop-up bloqueado. Permita pop-ups para usar o Google Drive.", "aviso");
           resolve(false);
           return;
         }
@@ -19084,7 +19952,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
               if (token) {
                 this.dataStore.dados.config.syncGoogleToken = token;
                 this.dataStore.salvar();
-                mostrarToast("Google Drive autenticado!");
+                mostrarToast("Google Drive autenticado!", "sucesso");
                 w.close();
                 clearInterval(checkInterval);
                 resolve(true);
@@ -19159,7 +20027,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           this.dataStore.dados.config.syncLastBackup = (/* @__PURE__ */ new Date()).toISOString();
           this.dataStore.salvar();
           esconderLoading();
-          mostrarToast("Backup enviado para Google Drive!");
+          mostrarToast("Backup enviado para Google Drive!", "sucesso");
           return true;
         }
         esconderLoading();
@@ -19202,7 +20070,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           this.dataStore.dados = dados;
           this.dataStore.salvar();
           esconderLoading();
-          mostrarToast("Backup restaurado do Google Drive!");
+          mostrarToast("Backup restaurado do Google Drive!", "sucesso");
           return true;
         }
         esconderLoading();
@@ -19249,7 +20117,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
         this.dataStore.dados.config.syncLastBackup = (/* @__PURE__ */ new Date()).toISOString();
         this.dataStore.salvar();
         esconderLoading();
-        mostrarToast("Backup enviado para WebDAV!");
+        mostrarToast("Backup enviado para WebDAV!", "sucesso");
         return true;
       } catch (e) {
         esconderLoading();
@@ -19289,7 +20157,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
           this.dataStore.dados = dados;
           this.dataStore.salvar();
           esconderLoading();
-          mostrarToast("Backup restaurado do WebDAV!");
+          mostrarToast("Backup restaurado do WebDAV!", "sucesso");
           return true;
         }
         esconderLoading();
@@ -19803,7 +20671,7 @@ Ou hospede no Vercel arrastando o arquivo para vercel.com/new`;
     setTimeout(() => URL.revokeObjectURL(url), 5e3);
   }
   function gerarPortalHTML(dados) {
-    const d = JSON.stringify(dados).replace(/<\/script>/g, "<\\/script>");
+    const d = JSON.stringify({ artista: dados.artista, contatoEmail: dados.contatoEmail, contatoTel: dados.contatoTel, encomenda: dados.encomenda }).replace(/<\/script>/g, "<\/script>");
     return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -19839,29 +20707,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <body><div class="container" id="app"></div>
 <script id="portalData" type="application/json">${d}<\/script>
 <script>
-const STAGES=[
-{key:'criado',label:'Pedido Recebido',icon:'fa-clipboard',pct:0},
-{key:'em_andamento',label:'Em Andamento',icon:'fa-paint-brush',pct:25},
-{key:'aprovacao',label:'Aprova\xE7\xE3o',icon:'fa-check',pct:50},
-{key:'finalizado',label:'Finalizado',icon:'fa-star',pct:75},
-{key:'entregue',label:'Entregue',icon:'fa-box',pct:100}];
-const SS={criado:{cor:'#3b82f6',bg:'#eff6ff'},em_andamento:{cor:'#f59e0b',bg:'#fffbeb'},aprovacao:{cor:'#8b5cf6',bg:'#f5f3ff'},finalizado:{cor:'#16a34a',bg:'#f0fdf4'},entregue:{cor:'#065f46',bg:'#ecfdf5'},cancelado:{cor:'#dc2626',bg:'#fef2f2'}};
-function $(id){return document.getElementById(id)}
+var STAGES=[
+{key:'criado',label:'Pedido Recebido',icon:'fa-clipboard'},
+{key:'em_andamento',label:'Em Andamento',icon:'fa-paint-brush'},
+{key:'aprovacao',label:'Aprova\xE7\xE3o',icon:'fa-check'},
+{key:'finalizado',label:'Finalizado',icon:'fa-star'},
+{key:'entregue',label:'Entregue',icon:'fa-box'}];
+var SS={criado:{cor:'#3b82f6',bg:'#eff6ff'},em_andamento:{cor:'#f59e0b',bg:'#fffbeb'},aprovacao:{cor:'#8b5cf6',bg:'#f5f3ff'},finalizado:{cor:'#16a34a',bg:'#f0fdf4'},entregue:{cor:'#065f46',bg:'#ecfdf5'},cancelado:{cor:'#dc2626',bg:'#fef2f2'}};
 function render(){
 var data=JSON.parse(document.getElementById('portalData').textContent);
-var token=new URLSearchParams(window.location.search).get('token')||data.token;
-var encs=token?data.encomendas.filter(function(e){return token===data.token||e.clienteEmail===token}):data.encomendas;
+var e=data.encomenda;
 var app=document.getElementById('app');
-if(!encs.length){app.innerHTML='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista">Portal do Cliente</p></div><div class="card" style="text-align:center;padding:40px;color:var(--text-mu)"><p><i class="fas fa-search"></i> Nada encontrado. Verifique o link.</p></div>';return}
-var h='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomendas</p></div>';
-encs.forEach(function(e){h+=rc(e,data)});
-h+='<div class="card cc"><h2><i class="fas fa-envelope"></i> Contato</h2>';
+if(!e){app.innerHTML='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista">Portal do Cliente</p></div><div class="card" style="text-align:center;padding:40px;color:var(--text-mu)"><p><i class="fas fa-search"></i> Encomenda n\xE3o encontrada.</p></div>';return}
+var h='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomenda</p></div>';
+h+=rc(e);h+='<div class="card cc"><h2><i class="fas fa-envelope"></i> Contato</h2>';
 if(data.contatoEmail)h+='<div class="cr"><i class="fas fa-envelope"></i> '+s(data.contatoEmail)+'</div>';
 if(data.contatoTel)h+='<div class="cr"><i class="fas fa-phone"></i> '+s(data.contatoTel)+'</div>';
-h+='</div><div class="pf2"><p>D\xFAvidas? Entre em contato direto com o artista.</p></div>';
-app.innerHTML=h
+h+='</div><div class="pf2"><p>D\xFAvidas? Entre em contato direto com o artista.</p></div>';app.innerHTML=h;
 }
-function rc(e,data){
+function rc(e){
 var st=SS[e.status]||{cor:'#6b7280',bg:'#f9fafb'};
 var si=STAGES.findIndex(function(x){return x.key===e.status});
 var pct=si>=0?si/(STAGES.length-1)*100:0;
@@ -19924,13 +20788,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         el.style.animationDuration = "0.4s";
       });
     });
-  }
-  function debounce2(fn, ms = 200) {
-    let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), ms);
-    };
   }
   var ATALHOS_PADRAO = {
     "ctrl+k": { desc: "Busca global (spotlight)", acao: () => abrirSpotlight() },
@@ -20276,7 +21133,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
               if (entrada === pin) {
                 _telaBloqueada = false;
                 fecharModal();
-                mostrarToast("Bem-vindo de volta!");
+                mostrarToast("Bem-vindo de volta!", "sucesso");
                 iniciarMonitorInatividade();
               } else {
                 tentativas++;
@@ -20380,7 +21237,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   }
   var tourPassos = [
     { alvo: ".sidebar", titulo: '<i class="fas fa-palette"></i> Bem-vindo ao Atelier CRM!', desc: "Este \xE9 seu hub criativo. Navegue entre os m\xF3dulos pelo menu lateral.", pos: "right" },
-    { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 6 temas.", pos: "bottom" },
+    { alvo: "#seletorTema", titulo: "\u{1F3AD} Escolha seu Tema", desc: "Personalize o visual com 8 temas.", pos: "bottom" },
     { alvo: "#btnBackup", titulo: '<i class="fas fa-save"></i> Backup Seguro', desc: "Exporte seus dados periodicamente.", pos: "bottom" },
     { alvo: '[data-rota="catalogo"]', titulo: '<i class="fas fa-images"></i> Cat\xE1logo de Obras', desc: "Cadastre, edite e gerencie seu portf\xF3lio.", pos: "right" },
     { alvo: '[data-rota="vendas"]', titulo: '<i class="fas fa-dollar-sign"></i> Vendas e Recibos', desc: "Registre vendas e gere recibos em PDF.", pos: "right" },
@@ -20500,7 +21357,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   });
   document.getElementById("btnBackup").addEventListener("click", () => {
     dataStore.exportarBackup();
-    mostrarToast("Backup exportado com sucesso!");
+    mostrarToast("Backup exportado com sucesso!", "sucesso");
   });
   document.getElementById("modalOverlay").addEventListener("click", (e) => {
     if (e.target.id === "modalOverlay") fecharModal();
@@ -20508,17 +21365,25 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   if (window.innerWidth <= 860) {
     document.getElementById("sidebar").classList.add("colapsada");
   }
-  var _mostrarToastOriginal = window.mostrarToast;
   window.mostrarToast = function(mensagem, tipo = "info") {
     const toast = document.getElementById("toast");
-    if (!toast) return _mostrarToastOriginal?.(mensagem);
-    toast.textContent = mensagem;
-    toast.className = "toast " + tipo;
+    const msgEl = document.getElementById("toastMsg");
+    const iconEl = toast?.querySelector("i");
+    if (!toast || !msgEl) return;
+    const icones = { sucesso: "fa-check-circle", erro: "fa-times-circle", aviso: "fa-exclamation-triangle", info: "fa-info-circle" };
+    const temIconeProprio = /<i\s|[\u{1F000}-\u{1FFFF}]/u.test(mensagem);
+    if (iconEl && tipo && icones[tipo] && !temIconeProprio) {
+      iconEl.className = "fas " + icones[tipo];
+    }
+    msgEl.textContent = mensagem;
+    toast.className = "toast" + (tipo && icones[tipo] ? " " + tipo : "");
     toast.classList.add("mostrar");
     clearTimeout(window._toastTimeout);
     window._toastTimeout = setTimeout(() => {
-      toast.classList.remove("mostrar");
-      toast.className = "toast";
+      toast.classList.add("saindo");
+      setTimeout(() => {
+        toast.classList.remove("mostrar", "saindo");
+      }, 250);
     }, 2800);
   };
   var _navegarOriginal = Router.prototype.navegar;
@@ -20756,7 +21621,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       sanitizarHTML,
       sanitizarURL,
       sanitizarRich,
-      debounce: debounce2,
       gerarImagemPlaceholder,
       calcularObrasPorMes,
       gerarGraficoSVG,
@@ -20764,6 +21628,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       abrirModal,
       fecharModal,
       mostrarToast,
+      confirmarAcao,
+      mostrarToastComDesfazer,
       renderizarDashboard,
       renderizarViewPlaceholder,
       PDFGenerator,

@@ -210,42 +210,42 @@ export class ReferenciasView extends BaseView {
         <button type="button" data-tipo-ref="nota"><i class="fas fa-pencil-alt"></i> Nota</button>
       </div>
       <form id="formReferencia">
-        <div class="campo-form"><label>Título (opcional)</label><input type="text" id="campoTituloRef"></div>
+        <div class="campo-form"><label>Título (opcional)</label><input type="text" id="campoTituloRef" aria-label="Título"></div>
 
         <div class="campo-form" data-bloco-tipo="imagem">
           <label>Imagem</label>
-          <input type="file" id="campoArquivoRef" accept="image/*">
+          <input type="file" id="campoArquivoRef" accept="image/*" aria-label="Imagem">
           <img id="previewImagemRef" class="preview-imagem-form" style="display:none;">
         </div>
 
         <div class="campo-form" data-bloco-tipo="link" style="display:none;">
           <label>URL da imagem/página</label>
-          <input type="url" id="campoUrlRef" placeholder="https://...">
+          <input type="url" id="campoUrlRef" aria-label="URL da imagem" placeholder="https://...">
           <p class="texto-ajuda">Se a URL apontar para uma imagem, o preview aparecerá automaticamente no board.</p>
         </div>
 
         <div class="campo-form" data-bloco-tipo="nota" style="display:none;">
           <label>Nota</label>
-          <textarea id="campoNotaRef" placeholder="Escreva sua ideia, inspiração ou observação..."></textarea>
+          <textarea id="campoNotaRef" aria-label="Nota" placeholder="Escreva sua ideia, inspiração ou observação..."></textarea>
         </div>
 
         <div class="form-linha">
           <div class="campo-form">
             <label>Categoria</label>
-            <input type="text" id="campoCategoriaRef" list="listaCategoriasRef" placeholder="cor, época, artista, emoção...">
+            <input type="text" id="campoCategoriaRef" aria-label="Categoria" list="listaCategoriasRef" placeholder="cor, época, artista, emoção...">
             <datalist id="listaCategoriasRef">
               <option value="cor"><option value="época"><option value="artista"><option value="emoção"><option value="composição">
             </datalist>
           </div>
           <div class="campo-form">
             <label>Obra vinculada</label>
-            <select id="campoObraVinculadaRef">
+            <select id="campoObraVinculadaRef" aria-label="Obra vinculada">
               <option value="">Nenhuma</option>
               ${obras.map(o => `<option value="${o.id}">${o.titulo}</option>`).join('')}
             </select>
           </div>
         </div>
-        <div class="campo-form"><label>Tags (separadas por vírgula)</label><input type="text" id="campoTagsRef" placeholder="Ex: quente, retrato, luz suave"></div>
+        <div class="campo-form"><label>Tags (separadas por vírgula)</label><input type="text" id="campoTagsRef" aria-label="Tags" placeholder="Ex: quente, retrato, luz suave"></div>
 
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarReferencia">Cancelar</button>
@@ -285,11 +285,11 @@ export class ReferenciasView extends BaseView {
     document.getElementById('formReferencia').addEventListener('submit', (e) => {
       e.preventDefault();
 
-      if (tipoAtual === 'imagem' && !imagemBase64) { mostrarToast('Selecione uma imagem para continuar.'); return; }
+      if (tipoAtual === 'imagem' && !imagemBase64) { mostrarToast('Selecione uma imagem para continuar.', 'aviso'); return; }
       const url = document.getElementById('campoUrlRef').value.trim();
-      if (tipoAtual === 'link' && !url) { mostrarToast('Informe a URL do link de referência.'); return; }
+      if (tipoAtual === 'link' && !url) { mostrarToast('Informe a URL do link de referência.', 'aviso'); return; }
       const nota = document.getElementById('campoNotaRef').value.trim();
-      if (tipoAtual === 'nota' && !nota) { mostrarToast('Escreva o conteúdo da nota.'); return; }
+      if (tipoAtual === 'nota' && !nota) { mostrarToast('Escreva o conteúdo da nota.', 'aviso'); return; }
 
       const tags = document.getElementById('campoTagsRef').value.split(',').map(t => t.trim()).filter(Boolean);
 
@@ -306,22 +306,24 @@ export class ReferenciasView extends BaseView {
 
       this.dataStore.adicionar('referencias', referencia);
       fecharModal();
-      mostrarToast('Referência adicionada ao board!');
+      mostrarToast('Referência adicionada ao board!', 'sucesso');
       this.rerenderizar();
     });
   }
 
-  excluirReferencia(id) {
-    if (!confirm('Remover este item do board de referências?')) return;
+  async excluirReferencia(id) {
+    if (!await confirmarAcao('Remover este item do board de referências?')) return;
+    const item = this.dataStore.buscarPorId('referencias', id);
     this.dataStore.remover('referencias', id);
-    mostrarToast('Referência removida.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Referência removida.', () => { dataStore.dados.referencias.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
   // Modo apresentação em tela cheia: navega pelos itens filtrados atualmente exibidos
   abrirApresentacao(indiceInicial) {
     this.itensApresentacao = this.referenciasFiltradas();
-    if (!this.itensApresentacao.length) { mostrarToast('Não há itens para apresentar.'); return; }
+    if (!this.itensApresentacao.length) { mostrarToast('Não há itens para apresentar.', 'aviso'); return; }
     this.indiceApresentacao = indiceInicial || 0;
 
     const overlay = document.createElement('div');
@@ -332,6 +334,7 @@ export class ReferenciasView extends BaseView {
     const botaoFechar = document.createElement('button');
     botaoFechar.className = 'btn-fechar-apresentacao';
     botaoFechar.textContent = '✕';
+    botaoFechar.setAttribute('aria-label', 'Fechar apresentação');
     botaoFechar.addEventListener('click', () => this.fecharApresentacao());
     document.body.appendChild(botaoFechar);
     overlay.dataset.temBotaoFechar = 'true';

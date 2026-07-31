@@ -152,18 +152,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   "artista": "Seu Nome",
   "contatoEmail": "artista@exemplo.com",
   "contatoTel": "(21) 99999-0000",
-  "encomendas": [],
-  "token": ""
+  "encomenda": null
 }
 </script>
 
 <script>
 const STAGES = [
-  { key: 'criado',     label: 'Pedido Recebido',   icon: 'fa-clipboard',    pct: 0  },
-  { key: 'em_andamento', label: 'Em Andamento',      icon: 'fa-paint-brush', pct: 25 },
-  { key: 'aprovacao',  label: 'Aprovação',          icon: 'fa-check',        pct: 50 },
-  { key: 'finalizado', label: 'Finalizado',         icon: 'fa-star',         pct: 75 },
-  { key: 'entregue',   label: 'Entregue',           icon: 'fa-box',          pct: 100 }
+  { key: 'criado',     label: 'Pedido Recebido',   icon: 'fa-clipboard' },
+  { key: 'em_andamento', label: 'Em Andamento',      icon: 'fa-paint-brush' },
+  { key: 'aprovacao',  label: 'Aprovação',          icon: 'fa-check' },
+  { key: 'finalizado', label: 'Finalizado',         icon: 'fa-star' },
+  { key: 'entregue',   label: 'Entregue',           icon: 'fa-box' }
 ];
 
 const STATUS_STYLE = {
@@ -179,19 +178,18 @@ function $(id) { return document.getElementById(id); }
 
 function render() {
   const data = JSON.parse(document.getElementById('portalData').textContent);
-  const token = new URLSearchParams(window.location.search).get('token') || data.token;
-  const encomendas = token ? data.encomendas.filter(e => token === data.token || e.clienteEmail === token) : data.encomendas;
+  const enc = data.encomenda;
   const app = document.getElementById('app');
 
-  if (!encomendas.length) {
+  if (!enc) {
     app.innerHTML = `
       <div class="portal-header">
-        <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${sanitizar(data.artista)}</h1>
+        <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${s(data.artista)}</h1>
         <p class="artista">Portal do Cliente</p>
       </div>
       <div class="card error-card">
         <div class="error-icon"><i class="fas fa-search"></i></div>
-        <h2>Nada encontrado</h2>
+        <h2>Encomenda não encontrada</h2>
         <p>Verifique o link de acesso ou entre em contato com o artista.</p>
       </div>`;
     return;
@@ -199,15 +197,15 @@ function render() {
 
   const html = `
     <div class="portal-header">
-      <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${sanitizar(data.artista)}</h1>
-      <p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomendas</p>
+      <h1><i class="fas fa-palette" style="color:var(--accent)"></i> ${s(data.artista)}</h1>
+      <p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomenda</p>
     </div>
-    ${encomendas.map(e => renderCard(e, data)).join('')}
+    ${renderCard(enc)}
     <div class="contact-card card">
       <h2><i class="fas fa-envelope"></i> Contato</h2>
-      <div class="contact-row"><i class="fas fa-user"></i> ${sanitizar(data.artista)}</div>
-      ${data.contatoEmail ? `<div class="contact-row"><i class="fas fa-envelope"></i> ${sanitizar(data.contatoEmail)}</div>` : ''}
-      ${data.contatoTel ? `<div class="contact-row"><i class="fas fa-phone"></i> ${sanitizar(data.contatoTel)}</div>` : ''}
+      <div class="contact-row"><i class="fas fa-user"></i> ${s(data.artista)}</div>
+      ${data.contatoEmail ? `<div class="contact-row"><i class="fas fa-envelope"></i> ${s(data.contatoEmail)}</div>` : ''}
+      ${data.contatoTel ? `<div class="contact-row"><i class="fas fa-phone"></i> ${s(data.contatoTel)}</div>` : ''}
     </div>
     <div class="portal-footer">
       <p>Dúvidas? Entre em contato direto com o artista.</p>
@@ -218,7 +216,7 @@ function render() {
   initLightbox();
 }
 
-function renderCard(e, data) {
+function renderCard(e) {
   const st = STATUS_STYLE[e.status] || { cor: '#6b7280', bg: '#f9fafb' };
   const stageIdx = STAGES.findIndex(s => s.key === e.status);
   const currentPct = stageIdx >= 0 ? stageIdx / (STAGES.length - 1) * 100 : 0;

@@ -47,10 +47,18 @@ export class Router {
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('ativo', item.dataset.rota === chave);
     });
-    this.container.innerHTML = this.rotas[chave].render();
-    if (typeof this.rotas[chave].aposRender === 'function') {
-      this.rotas[chave].aposRender();
-    }
+    this.container.style.opacity = '0';
+    this.container.style.transform = 'translateY(4px)';
+    requestAnimationFrame(() => {
+      this.container.innerHTML = this.rotas[chave].render();
+      if (typeof this.rotas[chave].aposRender === 'function') {
+        this.rotas[chave].aposRender();
+      }
+      requestAnimationFrame(() => {
+        this.container.style.opacity = '1';
+        this.container.style.transform = 'translateY(0)';
+      });
+    });
     const bc = document.getElementById('breadcrumbAtual');
     if (bc) bc.textContent = this.rotas[chave].rotulo;
     if (window.innerWidth <= 860) { document.getElementById('sidebar').classList.add('colapsada'); }

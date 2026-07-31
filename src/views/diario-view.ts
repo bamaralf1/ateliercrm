@@ -192,7 +192,7 @@ export class DiarioView extends BaseView {
         ${fotos.length > 0 ? `<div class="dc-fotos">${fotos.map(f => `<img src="${f}" onclick="window.open('${f}')">`).join('')}</div>` : ''}
         <div class="diario-acoes">
           <button data-acao="editarEntrada" data-id="${e.id}"><i class="fas fa-pen"></i> Editar</button>
-          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+          <button data-acao="excluirEntrada" data-id="${e.id}" style="color:#dc2626;" aria-label="Excluir entrada"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     `;
@@ -268,9 +268,9 @@ export class DiarioView extends BaseView {
     return `
       <div class="cal-toolbar">
         <div class="cal-nav">
-          <button id="calMesAnt">◀</button>
+          <button id="calMesAnt" aria-label="Mês anterior">◀</button>
           <span>${nomeMes}</span>
-          <button id="calMesProx">▶</button>
+          <button id="calMesProx" aria-label="Próximo mês">▶</button>
           <button id="calHoje" style="margin-left:4px;font-size:0.75rem;padding:4px 10px;">Hoje</button>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
@@ -323,11 +323,44 @@ export class DiarioView extends BaseView {
         <button class="btn-primario" id="btnNovaEtapa" style="font-size:0.75rem;padding:5px 12px;margin-left:8px;" ${!obraId ? 'disabled' : ''}><i class="fas fa-plus"></i> Nova Etapa</button>
         ${obraId ? `<button class="btn-secundario" id="btnExportarProcessoPDF" style="font-size:0.75rem;padding:5px 12px;margin-left:4px;">📤 Exportar Making Of PDF</button>` : ''}
       </div>
-      ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : (
-        etapas.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;">📉</p><p>Nenhuma etapa documentada para esta obra ainda.<br>Clique em "Nova Etapa" para iniciar a linha do tempo do processo criativo.</p></div>` : ''
-      )}
-      ${etapas.length > 0 ? `
-        <div style="margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">${etapas.length} etapa(s)  ·  ${obras.find(o => o.id === obraId)?.titulo || ''}</div>
+      ${!obraId ? '<p style="color:var(--text-muted);font-size:0.85rem;">Selecione uma obra para ver o processo criativo documentado.</p>' : ''}
+      ${obraId ? (() => {
+        const docsCount = this.etapasPadrao.filter(p => etapas.some(e => e.titulo === p)).length;
+        const totalPadrao = this.etapasPadrao.length;
+        const pct = totalPadrao > 0 ? Math.round(docsCount / totalPadrao * 100) : 0;
+        const dotsHtml = this.etapasPadrao.map((padrao, i) => {
+          const etapaDoc = etapas.find(e => e.titulo === padrao);
+          const documentada = !!etapaDoc;
+          const dataStr = etapaDoc && etapaDoc.data ? new Date(etapaDoc.data).toLocaleDateString('pt-BR') : '';
+          return `
+            <div class="proc-dot-wrapper" style="left:${totalPadrao > 1 ? (i / (totalPadrao - 1)) * 100 : 50}%">
+              <div class="proc-dot ${documentada ? 'proc-dot--preenchido' : 'proc-dot--vazio'} ${!documentada ? 'proc-dot--clicavel' : ''}" data-titulo="${sanitizarHTML(padrao)}" tabindex="0" role="button" aria-label="${documentada ? padrao + ' — ' + dataStr : 'Adicionar ' + padrao}">
+                ${documentada ? '<i class="fas fa-check" style="font-size:0.55rem;color:#fff;"></i>' : ''}
+                <span class="proc-tooltip">${sanitizarHTML(padrao)}${dataStr ? '<br><span style="font-size:0.65rem;opacity:0.8;">' + dataStr + '</span>' : '<br><span style="font-size:0.65rem;opacity:0.8;">Clique para adicionar</span>'}</span>
+              </div>
+            </div>`;
+        }).join('');
+        return `
+        <div class="proc-progresso">
+          <div class="proc-progresso-header">
+            <span><i class="fas fa-chart-line"></i> Progresso do processo criativo</span>
+            <span class="proc-progresso-pct">${docsCount} de ${totalPadrao} etapas — ${pct}%</span>
+          </div>
+          <div class="proc-barra">
+            <div class="proc-barra-trilha">
+              <div class="proc-barra-preenchimento" style="width:${pct}%"></div>
+            </div>
+            <div class="proc-dots-container">${dotsHtml}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-muted);margin-top:18px;padding:0 2px;">
+            <span>${this.etapasPadrao[0] || ''}</span>
+            <span>${this.etapasPadrao[this.etapasPadrao.length - 1] || ''}</span>
+          </div>
+          <div style="margin-top:6px;font-size:0.78rem;color:var(--text-muted);">${etapas.length} etapa(s) documentada(s) · ${etapas.filter(e => !this.etapasPadrao.includes(e.titulo)).length} personalizada(s)</div>
+        </div>`;
+      })() : ''}
+      ${obraId && etapas.length === 0 ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-size:1.2rem;">📉</p><p>Nenhuma etapa documentada para esta obra ainda.<br>Clique em "Nova Etapa" para iniciar a linha do tempo do processo criativo.</p></div>` : ''}
+      ${obraId && etapas.length > 0 ? `
         <div class="proc-timeline">
           ${etapas.sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)).map((et, i) => `
             <div class="proc-step">
@@ -339,7 +372,7 @@ export class DiarioView extends BaseView {
               ${et.videoLink ? `<div class="ps-video">📉 <a href="${et.videoLink}" target="_blank">Ver vídeo time-lapse</a></div>` : ''}
               <div class="diario-acoes">
                 <button data-acao="editarEtapa" data-id="${et.id}"><i class="fas fa-pen"></i> Editar</button>
-                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button data-acao="excluirEtapa" data-id="${et.id}" style="color:#dc2626;" aria-label="Excluir etapa"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           `).join('')}
@@ -569,6 +602,18 @@ export class DiarioView extends BaseView {
     document.getElementById('btnNovaCitacao')?.addEventListener('click', () => this.rerenderizar());
     document.getElementById('btnNovoPrompt')?.addEventListener('click', () => this.rerenderizar());
 
+    // Progress bar dot clicks — abre form pré-preenchido
+    const procProgresso = document.querySelector('.proc-progresso');
+    if (procProgresso) {
+      procProgresso.addEventListener('click', (e) => {
+        const dot = e.target.closest('.proc-dot--clicavel');
+        if (dot) {
+          const titulo = dot.dataset.titulo;
+          if (titulo) this.abrirFormEtapa(null, titulo);
+        }
+      });
+    }
+
     // Delegated actions
     const container = document.getElementById('diarioContent') || document.getElementById('viewPrincipal');
     if (container) {
@@ -604,7 +649,7 @@ export class DiarioView extends BaseView {
     this._selHumor = humorVal;
 
     const humorBtns = [1, 2, 3, 4, 5].map(n =>
-      `<button type="button" class="humor-btn ${n === this._selHumor ? 'selecionado' : ''}" data-humor="${n}">${this.humorEmojis[n]}</button>`
+      `<button type="button" class="humor-btn ${n === this._selHumor ? 'selecionado' : ''}" data-humor="${n}" aria-label="Humor ${this.humorLabels[n]}">${this.humorEmojis[n]}</button>`
     ).join('');
 
     abrirModal(`
@@ -612,7 +657,7 @@ export class DiarioView extends BaseView {
       <form id="formModal" class="diario-form-grid">
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-calendar-alt"></i> Data</label>
-          <input type="date" id="fEntData" value="${dataVal}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          <input type="date" id="fEntData" value="${dataVal}" required aria-label="Data" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);">😀 Humor criativo</label>
@@ -625,33 +670,33 @@ export class DiarioView extends BaseView {
             <button type="button" class="btn-toolbar" data-insere="<strong></strong>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><strong>Negrito</strong></button>
             <button type="button" class="btn-toolbar" data-insere="<em></em>" style="font-size:0.7rem;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;"><em>Itálico</em></button>
           </div>
-          <textarea id="fEntTexto" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
+          <textarea id="fEntTexto" aria-label="O que trabalhou hoje" style="width:100%;min-height:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:inherit;" placeholder="Descreva seu dia criativo...">${textoVal}</textarea>
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-images"></i> Obras trabalhadas (segure Ctrl para múltiplas)</label>
-          <select multiple id="fEntObras" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
+          <select multiple id="fEntObras" aria-label="Obras trabalhadas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;min-height:60px;font-size:0.85rem;background:var(--bg);color:var(--text);">${obraOpts}</select>
           <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Selecione as obras que trabalhou hoje</div>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);">⏰ Horas trabalhadas</label>
-          <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+          <input type="number" id="fEntHoras" value="${horasVal}" min="0" step="0.5" aria-label="Horas trabalhadas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> Bloqueios criativos</label>
-          <textarea id="fEntBloqueios" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
+          <textarea id="fEntBloqueios" aria-label="Bloqueios criativos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que te travou hoje?">${bloqueiosVal}</textarea>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-check"></i> Avanços</label>
-          <textarea id="fEntAvancos" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
+          <textarea id="fEntAvancos" aria-label="Avanços" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que conquistou hoje?">${avancosVal}</textarea>
         </div>
         <div>
           <label style="font-size:0.8rem;color:var(--text-muted);"><i class="fas fa-lightbulb"></i> Descobertas</label>
-          <textarea id="fEntDescobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
+          <textarea id="fEntDescobertas" aria-label="Descobertas" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;background:var(--bg);color:var(--text);min-height:40px;" placeholder="O que aprendeu hoje?">${descobertasVal}</textarea>
         </div>
         <div class="campo-full">
           <label style="font-size:0.8rem;color:var(--text-muted);">📷 Fotos do dia</label>
-          <input type="file" id="fEntFotos" accept="image/*" multiple style="font-size:0.8rem;">
-          <div class="photo-strip" id="photoStrip">${fotos.map(f => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">📷</button></div>`).join('')}</div>
+          <input type="file" id="fEntFotos" accept="image/*" multiple aria-label="Fotos do dia" style="font-size:0.8rem;">
+          <div class="photo-strip" id="photoStrip">${fotos.map(f => `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}" aria-label="Remover foto">📷</button></div>`).join('')}</div>
         </div>
         <div class="modal-acoes" style="grid-column:1/-1;">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -724,14 +769,14 @@ export class DiarioView extends BaseView {
         descobertas: document.getElementById('fEntDescobertas').value.trim()
       };
 
-      if (!dados.data) { mostrarToast('A data é obrigatória.'); return; }
+      if (!dados.data) { mostrarToast('A data é obrigatória.', 'aviso'); return; }
 
       if (entrada) {
         this.dataStore.atualizar('entradasDiario', id, dados);
-        mostrarToast('Entrada atualizada!');
+        mostrarToast('Entrada atualizada!', 'sucesso');
       } else {
         this.dataStore.adicionar('entradasDiario', dados);
-        mostrarToast('Entrada registrada no diário!');
+        mostrarToast('Entrada registrada no diário!', 'sucesso');
       }
       fecharModal();
       this._fotosTemporarias = [];
@@ -743,7 +788,7 @@ export class DiarioView extends BaseView {
     const strip = document.getElementById('photoStrip');
     if (!strip) return;
     strip.innerHTML = this._fotosTemporarias.map(f =>
-      `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}">📷</button></div>`
+      `<div class="ps-item"><img src="${f}"><button type="button" class="ps-remove" data-foto="${f}" aria-label="Remover foto">📷</button></div>`
     ).join('');
     // Re-bind remove buttons
     strip.querySelectorAll('.ps-remove').forEach(btn => {
@@ -754,37 +799,41 @@ export class DiarioView extends BaseView {
     });
   }
 
-  excluirEntrada(id) {
-    if (!confirm('Excluir esta entrada do diário?')) return;
+  async excluirEntrada(id) {
+    if (!await confirmarAcao('Excluir esta entrada do diário?')) return;
+    const item = this.dataStore.buscarPorId('entradasDiario', id);
     this.dataStore.remover('entradasDiario', id);
-    mostrarToast('Entrada excluída.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Entrada excluída.', () => { dataStore.dados.entradasDiario.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
   // ======================= CRUD ETAPAS DE PROCESSO =======================
-  abrirFormEtapa(id = null) {
+  abrirFormEtapa(id = null, tituloPrefill = null) {
     const obraId = this._filtroObraProc;
-    if (!obraId) { mostrarToast('Selecione uma obra primeiro.'); return; }
+    if (!obraId) { mostrarToast('Selecione uma obra primeiro.', 'aviso'); return; }
 
     const proc = this.processos.find(p => p.obraId === obraId);
     let etapa = null;
     if (id && proc) etapa = (proc.etapas || []).find(e => e.id === id);
 
+    const tituloEtapa = etapa ? etapa.titulo : tituloPrefill;
     const etapaOpts = this.etapasPadrao.map(e =>
-      `<option value="${e}" ${(etapa && etapa.titulo === e) ? 'selected' : ''}>${e}</option>`
+      `<option value="${e}" ${tituloEtapa === e ? 'selected' : ''}>${e}</option>`
     ).join('');
+    const isCustomTitulo = tituloPrefill && !this.etapasPadrao.includes(tituloPrefill);
 
     abrirModal(`
       <h3>${etapa ? '<i class="fas fa-pen"></i> Editar Etapa' : '<i class="fas fa-plus"></i> Nova Etapa do Processo'}</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo"><option value="">→ Personalizada —</option>${etapaOpts}</select></div>
-        <div class="campo-form"><label>Ou digite título personalizado</label><input type="text" id="fEtpTituloCustom" value="${etapa && !this.etapasPadrao.includes(etapa.titulo) ? (etapa.titulo || '') : ''}" placeholder="Ex.: Aplicação de verniz" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
-        <div class="campo-form"><label><i class="fas fa-calendar-alt"></i> Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || '' : new Date().toISOString().slice(0, 10)}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
-        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Descrição</label><textarea id="fEtpDesc" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || '' : ''}</textarea></div>
-        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Notas técnicas (cores, pincéis, misturas)</label><textarea id="fEtpNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || '' : ''}</textarea></div>
-        <div class="campo-form"><label>📷 Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*"></div>
+        <div class="campo-form"><label>Etapa</label><select id="fEtpTitulo" aria-label="Etapa"><option value="">→ Personalizada —</option>${etapaOpts}</select></div>
+        <div class="campo-form"><label>Ou digite título personalizado</label><input type="text" id="fEtpTituloCustom" value="${(etapa && !this.etapasPadrao.includes(etapa.titulo) ? etapa.titulo : isCustomTitulo ? tituloPrefill : '') || ''}" placeholder="Ex.: Aplicação de verniz" aria-label="Título personalizado" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);"></div>
+        <div class="campo-form"><label><i class="fas fa-calendar-alt"></i> Data</label><input type="date" id="fEtpData" value="${etapa ? etapa.data || '' : new Date().toISOString().slice(0, 10)}" aria-label="Data da etapa" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Descrição</label><textarea id="fEtpDesc" aria-label="Descrição da etapa" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:70px;font-family:inherit;">${etapa ? etapa.descricao || '' : ''}</textarea></div>
+        <div class="campo-form"><label><i class="fas fa-pencil-alt"></i> Notas técnicas (cores, pincéis, misturas)</label><textarea id="fEtpNotas" aria-label="Notas técnicas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;min-height:50px;">${etapa ? etapa.notasTecnicas || '' : ''}</textarea></div>
+        <div class="campo-form"><label>📷 Foto da etapa</label><input type="file" id="fEtpFoto" accept="image/*" aria-label="Foto da etapa"></div>
         ${etapa && etapa.foto ? `<div style="margin-bottom:8px;"><img src="${etapa.foto}" style="max-width:150px;max-height:100px;border-radius:4px;"></div>` : ''}
-        <div class="campo-form"><label>📉 Link de vídeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || '' : ''}" placeholder="https://..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
+        <div class="campo-form"><label>📉 Link de vídeo (YouTube/Vimeo)</label><input type="url" id="fEtpVideo" value="${etapa ? etapa.videoLink || '' : ''}" placeholder="https://..." aria-label="Link de vídeo" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;"></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">${etapa ? 'Atualizar' : 'Adicionar Etapa'}</button>
@@ -797,7 +846,7 @@ export class DiarioView extends BaseView {
       e.preventDefault();
 
       const titulo = document.getElementById('fEtpTitulo').value || document.getElementById('fEtpTituloCustom').value.trim();
-      if (!titulo) { mostrarToast('Título da etapa é obrigatório.'); return; }
+      if (!titulo) { mostrarToast('Título da etapa é obrigatório.', 'aviso'); return; }
 
       const dadosEtapa = {
         id: etapa ? etapa.id : 'etp_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -831,46 +880,50 @@ export class DiarioView extends BaseView {
         const idx = proc.etapas.findIndex(e => e.id === etapa.id);
         if (idx >= 0) proc.etapas[idx] = dadosEtapa;
         this.dataStore.atualizar('etapasProcesso', proc.id, { etapas: proc.etapas });
-        mostrarToast('Etapa atualizada!');
+        mostrarToast('Etapa atualizada!', 'sucesso');
       } else {
         proc.etapas.push(dadosEtapa);
         this.dataStore.atualizar('etapasProcesso', proc.id, { etapas: proc.etapas });
-        mostrarToast('Etapa adicionada!');
+        mostrarToast('Etapa adicionada!', 'sucesso');
       }
     } else {
       this.dataStore.adicionar('etapasProcesso', {
         obraId,
         etapas: [dadosEtapa]
       });
-      mostrarToast('Processo criado e etapa adicionada!');
+      mostrarToast('Processo criado e etapa adicionada!', 'sucesso');
     }
     fecharModal();
     this.rerenderizar();
   }
 
-  excluirEtapa(id) {
-    if (!confirm('Excluir esta etapa do processo?')) return;
+  async excluirEtapa(id) {
+    if (!await confirmarAcao('Excluir esta etapa do processo?')) return;
     const obraId = this._filtroObraProc;
     const proc = this.processos.find(p => p.obraId === obraId);
     if (!proc) return;
+    const etapa = (proc.etapas || []).find(e => e.id === id);
     proc.etapas = (proc.etapas || []).filter(e => e.id !== id);
     if (proc.etapas.length === 0) {
       this.dataStore.remover('etapasProcesso', proc.id);
     } else {
       this.dataStore.atualizar('etapasProcesso', proc.id, { etapas: proc.etapas });
     }
-    mostrarToast('Etapa excluída.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Etapa excluída.', () => {
+      if (proc) { proc.etapas.push(etapa); dataStore.atualizar('etapasProcesso', proc.id, { etapas: proc.etapas }); }
+    });
     this.rerenderizar();
   }
 
   // ======================= PDF MAKING OF =======================
   exportarProcessoPDF() {
-    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) { mostrarToast('jsPDF não carregado.'); return; }
+    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) { mostrarToast('jsPDF não carregado.', 'erro'); return; }
     mostrarLoading('Exportando making of...');
     const obraId = this._filtroObraProc;
     const obra = obraStore().items.find(o => o.id === obraId);
     const proc = this.processos.find(p => p.obraId === obraId);
-    if (!obra || !proc) { mostrarToast('Selecione uma obra com processo documentado.'); return; }
+    if (!obra || !proc) { mostrarToast('Selecione uma obra com processo documentado.', 'aviso'); return; }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -924,7 +977,7 @@ export class DiarioView extends BaseView {
 
     doc.save(`making-of-${(obra.titulo || 'obra').replace(/\s+/g, '-').toLowerCase()}.pdf`);
     esconderLoading();
-    mostrarToast('Making Of exportado em PDF!');
+    mostrarToast('Making Of exportado em PDF!', 'sucesso');
   }
 
 }

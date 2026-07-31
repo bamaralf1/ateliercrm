@@ -46,16 +46,23 @@ export function esconderLoading() {
 }
 
 export function abrirModal(htmlConteudo) {
-  document.getElementById('modalCaixa').innerHTML = htmlConteudo;
-  document.getElementById('modalOverlay').classList.add('aberto');
+  const caixa = document.getElementById('modalCaixa');
+  const overlay = document.getElementById('modalOverlay');
+  caixa.innerHTML = htmlConteudo;
+  overlay.classList.add('aberto');
+  const h3 = caixa.querySelector('h3');
+  if (h3 && !h3.id) h3.id = 'modalTitulo_' + Date.now();
+  if (h3) caixa.setAttribute('aria-labelledby', h3.id);
 }
 
 export function fecharModal() {
   const overlay = document.getElementById('modalOverlay');
+  const caixa = document.getElementById('modalCaixa');
   overlay.classList.remove('aberto');
+  caixa.removeAttribute('aria-labelledby');
   setTimeout(() => {
     if (!overlay.classList.contains('aberto')) {
-      document.getElementById('modalCaixa').innerHTML = '';
+      caixa.innerHTML = '';
     }
   }, 300);
 }
@@ -172,6 +179,7 @@ export function renderizarViewPlaceholder({ titulo, subtitulo, icone, colecao, d
   const tabelaHtml = itens.length ? `
     <div class="tabela-wrapper">
       <table>
+        <caption class="sr-only">${titulo}</caption>
         <thead>
           <tr>${colunas.map(c => `<th>${c}</th>`).join('')}</tr>
         </thead>
@@ -283,22 +291,22 @@ export function montarCampoHtml(campo) {
       const r = typeof o === 'object' ? o.rotulo : o;
       return `<option value="${v}">${r}</option>`;
     }).join('');
-    return `<div class="campo-form"><label>${campo.rotulo}</label><select id="campo_${campo.nome}"${req}>${opcoesHtml}</select></div>`;
+    return `<div class="campo-form"><label>${campo.rotulo}</label><select id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}>${opcoesHtml}</select></div>`;
   }
   if (campo.tipo === 'textarea') {
-    return `<div class="campo-form"><label>${campo.rotulo}</label><textarea id="campo_${campo.nome}"${req}></textarea></div>`;
+    return `<div class="campo-form"><label>${campo.rotulo}</label><textarea id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}></textarea></div>`;
   }
   if (campo.tipo === 'dimensoes') {
     return `<div class="campo-form"><label>${campo.rotulo}</label><div class="form-linha">
-      <input type="number" id="campoAltura" placeholder="Altura">
-      <input type="number" id="campoLargura" placeholder="Largura">
-      <input type="number" id="campoProfundidade" placeholder="Profundidade">
+      <input type="number" id="campoAltura" placeholder="Altura" aria-label="Altura">
+      <input type="number" id="campoLargura" placeholder="Largura" aria-label="Largura">
+      <input type="number" id="campoProfundidade" placeholder="Profundidade" aria-label="Profundidade">
     </div></div>`;
   }
   if (campo.tipo === 'file') {
-    return `<div class="campo-form"><label>${campo.rotulo}</label><input type="file" id="campo_${campo.nome}" accept="image/*"${req}></div>`;
+    return `<div class="campo-form"><label>${campo.rotulo}</label><input type="file" id="campo_${campo.nome}" accept="image/*" aria-label="${campo.rotulo}"${req}></div>`;
   }
-  return `<div class="campo-form"><label>${campo.rotulo}</label><input type="${campo.tipo}" id="campo_${campo.nome}"${req}></div>`;
+  return `<div class="campo-form"><label>${campo.rotulo}</label><input type="${campo.tipo}" id="campo_${campo.nome}" aria-label="${campo.rotulo}"${req}></div>`;
 }
 
 export function abrirModalNovoItem(colecao, dataStore, router) {
@@ -327,10 +335,18 @@ export function abrirModalNovoItem(colecao, dataStore, router) {
       }
     });
     dataStore.adicionar(colecao, dados);
-    mostrarToast(`${colecao.charAt(0).toUpperCase() + colecao.slice(1)} cadastrado com sucesso!`);
+    mostrarToast(`${colecao.charAt(0).toUpperCase() + colecao.slice(1)} cadastrado com sucesso!`, 'sucesso');
     fecharModal();
     router.navegar(colecao);
   });
+}
+
+export function debounce(fn, delayMs = 250) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delayMs);
+  };
 }
 
 

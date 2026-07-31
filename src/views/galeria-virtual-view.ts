@@ -88,9 +88,9 @@ export class GaleriaVirtualView {
           <span class="hint-controle">Arraste para girar · Scroll para zoom</span>
         </div>
         <div class="hud-tour ${this.tourAtivo ? 'visivel' : ''}" id="hudTour">
-          <button class="tour-btn" id="tourPrev">◀</button>
-          <button class="tour-btn ${this.tourAtivo ? 'ativo' : ''}" id="tourPlayPause">${this.tourAtivo ? '⏸' : '▶'}</button>
-          <button class="tour-btn" id="tourNext">▶</button>
+           <button class="tour-btn" id="tourPrev" aria-label="Obra anterior">◀</button>
+          <button class="tour-btn ${this.tourAtivo ? 'ativo' : ''}" id="tourPlayPause" aria-label="Reproduzir ou pausar tour">${this.tourAtivo ? '⏸' : '▶'}</button>
+          <button class="tour-btn" id="tourNext" aria-label="Próxima obra">▶</button>
           <span class="tour-progresso" id="tourProgresso">1 / ${this.obrasVisiveis.length}</span>
         </div>
       </div>`;

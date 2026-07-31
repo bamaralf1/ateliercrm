@@ -19,14 +19,14 @@ export class CertificadosView extends BaseView {
         <td>${formatarData(c.dataEmissao || c.criadoEm)}</td>
         <td class="acoes-linha-tabela">
           <button class="btn-icone-tabela" data-baixar-certificado="${c.id}"><i class="fas fa-file"></i> PDF</button>
-          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}" aria-label="Excluir certificado"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
 
     const tabela = certificados.length ? `
       <div class="tabela-wrapper">
-        <table>
+        <table><caption class="sr-only">Lista de certificados</caption>
           <thead><tr><th>Obra</th><th>Nº de Série</th><th>Edição</th><th>Emitido em</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -65,10 +65,12 @@ export class CertificadosView extends BaseView {
     this._bindCache['delegCertificados'] = { el: container, handler: delegHandler, type: 'click' };
   }
 
-  excluirCertificado(id) {
-    if (!confirm('Excluir este certificado do histórico? O PDF já baixado não será afetado.')) return;
+  async excluirCertificado(id) {
+    if (!await confirmarAcao('Excluir este certificado do histórico? O PDF já baixado não será afetado.')) return;
+    const item = this.dataStore.buscarPorId('certificados', id);
     this.dataStore.remover('certificados', id);
-    mostrarToast('Certificado excluído do histórico.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Certificado excluído do histórico.', () => { dataStore.dados.certificados.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
@@ -93,19 +95,19 @@ export class CertificadosView extends BaseView {
       <form id="formCertificado">
         <div class="campo-form">
           <label>Origem dos dados</label>
-          <select id="campoOrigemCertificado">
+          <select id="campoOrigemCertificado" aria-label="Origem dos dados">
             <option value="">— Preencher manualmente —</option>
             ${obras.map(o => `<option value="${o.id}">${o.titulo}</option>`).join('')}
           </select>
         </div>
         <div class="campo-form">
           <label>Título da obra *</label>
-          <input type="text" id="campoTituloCert" required>
+          <input type="text" id="campoTituloCert" required aria-label="Título da obra">
         </div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Técnica *</label>
-            <select id="campoTecnicaCert" required>
+            <select id="campoTecnicaCert" required aria-label="Técnica">
               <option value="">Selecione...</option>
               <option value="óleo">Óleo</option>
               <option value="aquarela">Aquarela</option>
@@ -113,13 +115,13 @@ export class CertificadosView extends BaseView {
               <option value="outra">Outra</option>
             </select>
           </div>
-          <div class="campo-form"><label>Ano</label><input type="number" id="campoAnoCert" value="${new Date().getFullYear()}"></div>
+          <div class="campo-form"><label>Ano</label><input type="number" id="campoAnoCert" aria-label="Ano" value="${new Date().getFullYear()}"></div>
         </div>
-        <div class="campo-form"><label>Dimensões (ex: 60 x 80 cm)</label><input type="text" id="campoDimensoesCert"></div>
+        <div class="campo-form"><label>Dimensões (ex: 60 x 80 cm)</label><input type="text" id="campoDimensoesCert" aria-label="Dimensões"></div>
         <div class="form-linha">
           <div class="campo-form">
             <label>Edição</label>
-            <select id="campoEdicaoTipo">
+            <select id="campoEdicaoTipo" aria-label="Edição">
               <option value="unica">Única</option>
               <option value="limitada">Limitada</option>
             </select>
@@ -127,18 +129,18 @@ export class CertificadosView extends BaseView {
           <div class="campo-form" id="blocoEdicaoLimitada" style="display:none;">
             <label>Nº / Total</label>
             <div class="form-linha">
-              <input type="number" id="campoEdicaoAtual" placeholder="Ex: 2" min="1">
-              <input type="number" id="campoEdicaoTotal" placeholder="Ex: 10" min="1">
+              <input type="number" id="campoEdicaoAtual" aria-label="Número da edição atual" placeholder="Ex: 2" min="1">
+              <input type="number" id="campoEdicaoTotal" aria-label="Total de edições" placeholder="Ex: 10" min="1">
             </div>
           </div>
         </div>
         <div class="form-linha">
-          <div class="campo-form"><label>Local</label><input type="text" id="campoLocalCert" placeholder="Ex: Rio Bonito/RJ"></div>
-          <div class="campo-form"><label>Data</label><input type="date" id="campoDataCert" value="${new Date().toISOString().slice(0, 10)}"></div>
+          <div class="campo-form"><label>Local</label><input type="text" id="campoLocalCert" aria-label="Local" placeholder="Ex: Rio Bonito/RJ"></div>
+          <div class="campo-form"><label>Data</label><input type="date" id="campoDataCert" aria-label="Data" value="${new Date().toISOString().slice(0, 10)}"></div>
         </div>
         <div class="campo-form">
           <label>Assinatura do artista</label>
-          <canvas id="canvasAssinaturaCert" class="area-assinatura" width="500" height="150"></canvas>
+          <canvas id="canvasAssinaturaCert" class="area-assinatura" width="500" height="150" aria-label="Assinatura do artista"></canvas>
           <div class="legenda-assinatura">
             <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:400;color:var(--text-muted);">
               <input type="checkbox" id="campoSalvarAssinatura" ${assinaturaSalva ? 'checked' : ''}> Usar/salvar como assinatura padrão
@@ -204,7 +206,7 @@ export class CertificadosView extends BaseView {
       e.preventDefault();
       const tituloObra = document.getElementById('campoTituloCert').value.trim();
       const tecnica = document.getElementById('campoTecnicaCert').value;
-      if (!tituloObra || !tecnica) { mostrarToast('Preencha ao menos o título e a técnica da obra.'); return; }
+      if (!tituloObra || !tecnica) { mostrarToast('Preencha ao menos o título e a técnica da obra.', 'aviso'); return; }
 
       const edicaoTipo = document.getElementById('campoEdicaoTipo').value;
       const cert = {
@@ -233,7 +235,7 @@ export class CertificadosView extends BaseView {
 
       const registrado = this.dataStore.adicionar('certificados', cert);
       fecharModal();
-      mostrarToast('Gerando certificado em PDF...');
+      mostrarToast('Gerando certificado em PDF...', 'info');
       await this.gerarPdfCertificado(registrado, assinaturaDataUrl);
       this.router.navegar('certificados');
     });
@@ -244,14 +246,14 @@ export class CertificadosView extends BaseView {
     const cert = this.dataStore.buscarPorId('certificados', id);
     if (!cert) return;
     const assinaturaSalva = configStore().artista?.assinatura || '';
-    mostrarToast('Gerando PDF...');
+    mostrarToast('Gerando PDF...', 'info');
     await this.gerarPdfCertificado(cert, assinaturaSalva);
   }
 
   // Monta o PDF do certificado com jsPDF puro: borda decorativa, foto, texto
   // padrão de autenticidade, edição, assinatura e QR Code de validação
   async gerarPdfCertificado(cert, assinaturaDataUrl) {
-    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).'); return; }
+    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).', 'erro'); return; }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -368,7 +370,7 @@ export class CertificadosView extends BaseView {
     doc.text(`Emitido em ${new Date().toLocaleDateString('pt-BR')} · Atelier CRM`, w / 2, h - 14, { align: 'center' });
 
     doc.save(`certificado-${cert.numeroSerie.toLowerCase()}.pdf`);
-    mostrarToast('Certificado gerado com sucesso!');
+    mostrarToast('Certificado gerado com sucesso!', 'sucesso');
   }
 }
 

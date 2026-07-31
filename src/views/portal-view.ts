@@ -38,21 +38,28 @@ export class PortalView extends BaseView {
     this.dataStore.salvar();
 
     this.cliente = { id: portal.clienteId, nome: portal.clienteNome };
-    this.encomendas = this.dataStore.listar('encomendas').filter(e =>
-      e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
-    );
+    if (portal.encomendaId) {
+      const enc = this.dataStore.buscarPorId('encomendas', portal.encomendaId);
+      this.encomendas = enc ? [enc] : [];
+    } else {
+      this.encomendas = this.dataStore.listar('encomendas').filter(e =>
+        e.clienteNome === portal.clienteNome || e.clienteEmail === portal.clienteId
+      );
+    }
 
     const encomendasHtml = this.encomendas.length > 0
       ? this.encomendas.map(e => this.renderEncomendaCard(e)).join('')
       : '<div class="portal-vazio">Nenhuma encomenda encontrada para este cliente.</div>';
 
     const artista = configStore().artista?.nome || 'Artista';
+    const plural = this.encomendas.length > 1 ? 's' : '';
+    const titulo = this.encomendas.length === 1 ? 'Acompanhamento de Encomenda' : 'Acompanhamento de Encomendas';
 
     return `
       <div class="portal-wrapper">
         <div class="portal-header">
           <div class="portal-header-info">
-            <h2><i class="fas fa-box"></i> Acompanhamento de Encomendas</h2>
+            <h2><i class="fas fa-box"></i> ${titulo}</h2>
             <p class="portal-sub">${portal.clienteNome} · via ${artista}</p>
           </div>
         </div>

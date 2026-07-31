@@ -29,7 +29,8 @@ export class ConfiguracoesView extends BaseView {
     const interval = document.getElementById('cfgSyncInterval');
     if (interval) configStore().syncAutoBackupInterval = Number(interval.value) || 30;
     configStore().salvar();
-    mostrarToast('Configurações salvas com sucesso!');
+    if (typeof atualizarThemeColor === 'function') atualizarThemeColor();
+    mostrarToast('Configurações salvas com sucesso!', 'sucesso');
   }
 
   _salvarPin() {
@@ -37,27 +38,27 @@ export class ConfiguracoesView extends BaseView {
     if (pinVal && pinVal.length === 4 && /^\d{4}$/.test(pinVal)) {
       configStore().pin = pinVal;
       configStore().salvar();
-      mostrarToast('PIN salvo com sucesso!');
+      mostrarToast('PIN salvo com sucesso!', 'sucesso');
       document.getElementById('cfgPin').value = '';
     } else {
-      mostrarToast('Digite um PIN de 4 dígitos.');
+      mostrarToast('Digite um PIN de 4 dígitos.', 'aviso');
     }
   }
 
-  _removerPin() {
-    if (confirm('Remover o PIN de acesso?')) {
-      configStore().pin = '';
-      configStore().autoLock = false;
-      configStore().salvar();
-      mostrarToast('PIN removido.');
-      if (this.router.viewAtual === 'configuracoes') this.router.navegar('configuracoes');
-    }
+  async _removerPin() {
+    if (!await confirmarAcao('Remover o PIN de acesso?', { textoConfirmar: 'Remover', perigoso: false })) return;
+    configStore().pin = '';
+    configStore().autoLock = false;
+    configStore().salvar();
+    mostrarToast('PIN removido.', 'sucesso');
+    if (this.router.viewAtual === 'configuracoes') this.router.navegar('configuracoes');
   }
 
   render() {
     const cfg = configStore().artista || {};
     const textoGarantia = configStore().textoGarantia || '';
     const idiomaAtual = configStore().idioma || 'pt-BR';
+    const temaAtual = configStore().tema || 'classico';
     const altoContraste = configStore().altoContraste || false;
     const tamanhoFonte = configStore().tamanhoFonte || 'medio';
     const pinAtivo = configStore().pin || '';
@@ -72,6 +73,17 @@ export class ConfiguracoesView extends BaseView {
       { v: 'it', r: '🇮🇹 Italiano' }
     ];
 
+    const temas = [
+      { id: 'classico', label: 'Clássico', icone: '🎨', sidebar: '#111827', bg: '#fdfaf6', accent: '#2563eb', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
+      { id: 'escuro', label: 'Escuro', icone: '🌙', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
+      { id: 'galeria', label: 'Galeria', icone: '🖼️', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
+      { id: 'boho', label: 'Boho', icone: '🌿', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
+      { id: 'clean', label: 'Clean', icone: '⚪', sidebar: '#ffffff', bg: '#ffffff', accent: '#1a1a1a', textBar: 'rgba(0,0,0,0.1)', contentBar: 'rgba(0,0,0,0.08)' },
+      { id: 'dourado', label: 'Dourado', icone: '👑', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
+      { id: 'marmore', label: 'Mármore', icone: '🏛️', sidebar: '#2b1f18', bg: '#f2ece6', accent: '#a0522d', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
+      { id: 'esmeralda', label: 'Esmeralda', icone: '💚', sidebar: '#040a06', bg: '#0a120e', accent: '#00c853', textBar: 'rgba(255,255,255,0.2)', contentBar: 'rgba(255,255,255,0.1)' },
+    ];
+
     return `
       <div class="view-cabecalho">
         <div>
@@ -83,36 +95,36 @@ export class ConfiguracoesView extends BaseView {
         <h3><i class="fas fa-user"></i> Perfil do Artista</h3>
         <div class="campo-form">
           <label>Nome / Nome do Ateliê</label>
-          <input type="text" id="cfgNome" value="${sanitizarHTML(cfg.nome || '')}">
+          <input type="text" id="cfgNome" aria-label="Nome do Ateliê" value="${sanitizarHTML(cfg.nome || '')}">
         </div>
         <div class="campo-form">
           <label>E-mail</label>
-          <input type="email" id="cfgEmail" value="${sanitizarHTML(cfg.email || '')}">
+          <input type="email" id="cfgEmail" aria-label="E-mail" value="${sanitizarHTML(cfg.email || '')}">
         </div>
         <div class="campo-form">
           <label>Telefone</label>
-          <input type="text" id="cfgTelefone" value="${sanitizarHTML(cfg.telefone || '')}">
+          <input type="text" id="cfgTelefone" aria-label="Telefone" value="${sanitizarHTML(cfg.telefone || '')}">
         </div>
         <div class="campo-form">
           <label>Texto de garantia/autenticidade (usado nos recibos e propostas)</label>
-          <textarea id="cfgTextoGarantia" style="min-height:110px;">${sanitizarHTML(textoGarantia)}</textarea>
+          <textarea id="cfgTextoGarantia" aria-label="Texto de garantia" style="min-height:110px;">${sanitizarHTML(textoGarantia)}</textarea>
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3><i class="fas fa-globe"></i> Idioma</h3>
         <div class="campo-form">
           <label>Idioma da interface</label>
-          <select id="cfgIdioma">${idiomas.map(i => `<option value="${i.v}" ${idiomaAtual === i.v ? 'selected' : ''}>${i.r}</option>`).join('')}</select>
+          <select id="cfgIdioma" aria-label="Idioma da interface">${idiomas.map(i => `<option value="${i.v}" ${idiomaAtual === i.v ? 'selected' : ''}>${i.r}</option>`).join('')}</select>
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>♿ Acessibilidade</h3>
         <div class="campo-form">
-          <label><input type="checkbox" id="cfgAltoContraste" ${altoContraste ? 'checked' : ''}> <i class="fas fa-lock"></i> Alto contraste</label>
+          <label><input type="checkbox" id="cfgAltoContraste" aria-label="Alto contraste" ${altoContraste ? 'checked' : ''}> <i class="fas fa-lock"></i> Alto contraste</label>
         </div>
         <div class="campo-form">
           <label>Tamanho da fonte</label>
-          <select id="cfgTamanhoFonte">
+          <select id="cfgTamanhoFonte" aria-label="Tamanho da fonte">
             <option value="pequeno" ${tamanhoFonte === 'pequeno' ? 'selected' : ''}>Pequeno</option>
             <option value="medio" ${tamanhoFonte === 'medio' ? 'selected' : ''}>Médio</option>
             <option value="grande" ${tamanhoFonte === 'grande' ? 'selected' : ''}>Grande</option>
@@ -120,17 +132,40 @@ export class ConfiguracoesView extends BaseView {
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
+        <h3>🎭 Tema Visual</h3>
+        <p class="texto-ajuda" style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Passe o mouse ou use Tab para pré-visualizar. Clique para confirmar.</p>
+        <div class="tema-grid">
+          ${temas.map(t => `
+            <div class="tema-card${temaAtual === t.id ? ' ativo' : ''}" data-tema="${t.id}" tabindex="0" role="button" aria-label="Tema ${t.label}">
+              <div class="tema-mockup" style="background:${t.bg}">
+                <div class="tema-mockup-sidebar" style="background:${t.sidebar}">
+                  <span class="bar" style="background:${t.textBar}"></span>
+                  <span class="bar ativa" style="background:${t.accent}"></span>
+                  <span class="bar" style="background:${t.textBar}"></span>
+                </div>
+                <div class="tema-mockup-content">
+                  <span class="bar" style="background:${t.contentBar}"></span>
+                  <span class="bar" style="background:${t.contentBar}"></span>
+                  <span class="bar accent" style="background:${t.accent}"></span>
+                </div>
+              </div>
+              <span class="tema-label">${t.icone} ${t.label}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>🔐 Segurança</h3>
         <div class="campo-form">
           <label>PIN de acesso (4 dígitos) ${pinAtivo ? '<i class="fas fa-lock"></i> Ativo' : '<i class="fas fa-times"></i> Desativado'}</label>
           <div style="display:flex;gap:8px;">
-            <input type="password" id="cfgPin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
+            <input type="password" id="cfgPin" aria-label="PIN de acesso" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
             <button class="btn-secundario" id="btnSalvarPin" style="font-size:0.8rem;padding:6px 14px;">${pinAtivo ? 'Alterar' : 'Ativar'} PIN</button>
             ${pinAtivo ? `<button class="btn-secundario" id="btnRemoverPin" style="font-size:0.8rem;padding:6px 14px;color:#dc2626;">Remover PIN</button>` : ''}
           </div>
         </div>
         <div class="campo-form">
-          <label><input type="checkbox" id="cfgAutoLock" ${configStore().autoLock ? 'checked' : ''}> 🔐 Bloquear automaticamente após inatividade</label>
+          <label><input type="checkbox" id="cfgAutoLock" aria-label="Bloquear automaticamente após inatividade" ${configStore().autoLock ? 'checked' : ''}> 🔐 Bloquear automaticamente após inatividade</label>
         </div>
       </div>
 
@@ -170,7 +205,7 @@ export class ConfiguracoesView extends BaseView {
         <div class="sync-panel" id="syncPanelGoogleDrive" style="display:none;">
           <div class="campo-form">
             <label>Google Drive Client ID (OAuth 2.0)</label>
-            <input type="text" id="cfgGoogleClientId" value="${sanitizarHTML(s.syncGoogleClientId || '')}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+            <input type="text" id="cfgGoogleClientId" aria-label="Google Drive Client ID" value="${sanitizarHTML(s.syncGoogleClientId || '')}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
             <button class="btn-secundario" id="btnGoogleAuth"><i class="fas fa-key"></i> Autenticar</button>
@@ -183,11 +218,11 @@ export class ConfiguracoesView extends BaseView {
         <div class="sync-panel" id="syncPanelWebDAV" style="display:none;">
           <div class="campo-form">
             <label>URL do servidor WebDAV</label>
-            <input type="url" id="cfgWebDAVUrl" value="${sanitizarHTML(s.syncWebDAVUrl || '')}" placeholder="https://meu-servidor.com/remote.php/dav/files/usuario/" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
+            <input type="url" id="cfgWebDAVUrl" aria-label="URL do servidor WebDAV" value="${sanitizarHTML(s.syncWebDAVUrl || '')}" placeholder="https://meu-servidor.com/remote.php/dav/files/usuario/" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
           </div>
           <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div><label>Usuário</label><input type="text" id="cfgWebDAVUser" value="${sanitizarHTML(s.syncWebDAVUser || '')}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
-            <div><label>Senha</label><input type="password" id="cfgWebDAVPass" value="${sanitizarHTML(s.syncWebDAVPass || '')}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+            <div><label>Usuário</label><input type="text" id="cfgWebDAVUser" aria-label="Usuário" value="${sanitizarHTML(s.syncWebDAVUser || '')}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
+            <div><label>Senha</label><input type="password" id="cfgWebDAVPass" aria-label="Senha" value="${sanitizarHTML(s.syncWebDAVPass || '')}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
             <button class="btn-secundario" id="btnWebDAVTest"><i class="fas fa-link"></i> Testar Conexão</button>
@@ -198,10 +233,10 @@ export class ConfiguracoesView extends BaseView {
         </div>
 
         <div class="campo-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-          <label><input type="checkbox" id="cfgAutoSync" ${s.syncAutoBackup ? 'checked' : ''}> <i class="fas fa-sync"></i> Backup automático no IndexedDB</label>
+          <label><input type="checkbox" id="cfgAutoSync" aria-label="Backup automático no IndexedDB" ${s.syncAutoBackup ? 'checked' : ''}> <i class="fas fa-sync"></i> Backup automático no IndexedDB</label>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:0.75rem;color:var(--text-muted);">A cada</span>
-            <select id="cfgSyncInterval" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
+            <select id="cfgSyncInterval" aria-label="Intervalo de backup" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
               ${[5,10,15,30,60,120].map(m => `<option value="${m}" ${(s.syncAutoBackupInterval || 30) === m ? 'selected' : ''}>${m} min</option>`).join('')}
             </select>
           </div>
@@ -232,6 +267,50 @@ export class ConfiguracoesView extends BaseView {
       btnRem.addEventListener('click', h);
       this._bindCache['btnRemoverPin'] = { el: btnRem, handler: h, type: 'click' };
     }
+
+    // Theme card preview
+    this._temaSalvoPreview = configStore().tema || 'classico';
+    document.querySelectorAll('.tema-card').forEach(card => {
+      const temaId = card.dataset.tema;
+      let blurTimer = null;
+
+      const enter = () => {
+        if (blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
+        this._previewTema(temaId);
+      };
+      const leave = () => {
+        if (document.activeElement !== card) this._reverterTema();
+      };
+      const foc = () => {
+        if (blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
+        this._previewTema(temaId);
+      };
+      const blr = () => {
+        blurTimer = setTimeout(() => {
+          if (!document.querySelector('.tema-card:focus')) this._reverterTema();
+        }, 80);
+      };
+      const clickHandler = () => this._confirmarTema(temaId, card);
+      const keyHandler = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this._confirmarTema(temaId, card);
+        }
+      };
+
+      card.addEventListener('mouseenter', enter);
+      card.addEventListener('mouseleave', leave);
+      card.addEventListener('focus', foc);
+      card.addEventListener('blur', blr);
+      card.addEventListener('click', clickHandler);
+      card.addEventListener('keydown', keyHandler);
+      this._bindCache['tema_' + temaId + '_enter'] = { el: card, handler: enter, type: 'mouseenter' };
+      this._bindCache['tema_' + temaId + '_leave'] = { el: card, handler: leave, type: 'mouseleave' };
+      this._bindCache['tema_' + temaId + '_focus'] = { el: card, handler: foc, type: 'focus' };
+      this._bindCache['tema_' + temaId + '_blur'] = { el: card, handler: blr, type: 'blur' };
+      this._bindCache['tema_' + temaId + '_click'] = { el: card, handler: clickHandler, type: 'click' };
+      this._bindCache['tema_' + temaId + '_key'] = { el: card, handler: keyHandler, type: 'keydown' };
+    });
 
     // Sync tabs
     document.querySelectorAll('.sync-tab').forEach(tab => {
@@ -275,10 +354,30 @@ export class ConfiguracoesView extends BaseView {
     document.getElementById('btnWebDAVTest')?.addEventListener('click', async () => {
       this._salvar();
       const ok = await cloudSync.testarWebDAV();
-      mostrarToast(ok ? '<i class="fas fa-check"></i> Conexão WebDAV OK!' : '<i class="fas fa-times"></i> Falha na conexão WebDAV');
+      mostrarToast(ok ? '<i class="fas fa-check"></i> Conexão WebDAV OK!' : '<i class="fas fa-times"></i> Falha na conexão WebDAV', ok ? 'sucesso' : 'erro');
     });
     document.getElementById('btnWebDAVBackup')?.addEventListener('click', () => cloudSync.backupWebDAV());
     document.getElementById('btnWebDAVListar')?.addEventListener('click', () => this._listarWebDAV());
+  }
+
+  _previewTema(temaId) {
+    document.body.setAttribute('data-tema', temaId);
+    if (typeof atualizarThemeColor === 'function') atualizarThemeColor();
+  }
+  _reverterTema() {
+    document.body.setAttribute('data-tema', this._temaSalvoPreview);
+    if (typeof atualizarThemeColor === 'function') atualizarThemeColor();
+  }
+  _confirmarTema(temaId, card) {
+    configStore().tema = temaId;
+    configStore().salvar();
+    this._temaSalvoPreview = temaId;
+    this._reverterTema();
+    document.querySelectorAll('.tema-card').forEach(c => c.classList.remove('ativo'));
+    card.classList.add('ativo');
+    const sel = document.getElementById('seletorTema');
+    if (sel) sel.value = temaId;
+    mostrarToast(`Tema ${temaId} aplicado!`, 'sucesso');
   }
 
   async _mostrarIDBSnapshots() {
@@ -295,8 +394,8 @@ export class ConfiguracoesView extends BaseView {
               <span style="font-size:0.75rem;color:var(--text);">${s.label || s.timestamp}</span>
               <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(s.timestamp).toLocaleString('pt-BR')}</span>
               <span>
-                <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar">↩️</button>
-                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar" aria-label="Restaurar">↩️</button>
+                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" aria-label="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
               </span>
             </div>
           `).join('')}
@@ -328,7 +427,7 @@ export class ConfiguracoesView extends BaseView {
           <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
             <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
             <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(b.data).toLocaleString('pt-BR')}</span>
-            <button class="btn-miniatura btn-restaurar-gd" data-id="${b.id}" title="Restaurar">↩️</button>
+            <button class="btn-miniatura btn-restaurar-gd" data-id="${b.id}" title="Restaurar" aria-label="Restaurar">↩️</button>
           </div>
         `).join('')}
       </div>
@@ -350,7 +449,7 @@ export class ConfiguracoesView extends BaseView {
           <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--bg);border-radius:4px;margin-bottom:4px;border:1px solid var(--border);">
             <span style="font-size:0.75rem;color:var(--text);">${b.nome}</span>
             <span style="font-size:0.7rem;color:var(--text-muted);">${b.data || ''}</span>
-            <button class="btn-miniatura btn-restaurar-wd" data-nome="${b.nome}" title="Restaurar">↩️</button>
+            <button class="btn-miniatura btn-restaurar-wd" data-nome="${b.nome}" title="Restaurar" aria-label="Restaurar">↩️</button>
           </div>
         `).join('')}
       </div>

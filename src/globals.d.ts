@@ -4,8 +4,10 @@ declare function mostrarToast(mensagem: string, tipo?: string): void;
 declare function mostrarLoading(mostrar: boolean): void;
 declare function esconderLoading(): void;
 declare function abrirModal(titulo: string, conteudo: string): void;
+declare function confirmarAcao(mensagem: string, opcoes?: { textoConfirmar?: string; titulo?: string; perigoso?: boolean }): Promise<boolean>;
+declare function mostrarToastComDesfazer(mensagem: string, aoDesfazer: () => void): void;
 declare function fecharModal(): void;
-declare function debounce<T extends (...args: unknown[]) => unknown>(fn: T, ms: number): T;
+declare function debounce(fn: (...args: any[]) => void, delayMs?: number): (...args: any[]) => void;
 declare function formatarMoeda(valor: number): string;
 declare function formatarData(data: string | Date): string;
 declare function capitalizarTexto(texto: string): string;
@@ -19,7 +21,7 @@ declare function sanitizarHTML(str: string): string;
 declare function salvarHistorico(termo: string): void;
 declare function resolverImagensIDB(container?: HTMLElement): void;
 declare function downloadHTML(html: string, nomeArquivo: string): void;
-declare function gerarPortalHTML(dados: { artista: string; contatoEmail: string; contatoTel: string; token: string; encomendas: any[] }): string;
+declare function gerarPortalHTML(dados: { artista: string; contatoEmail: string; contatoTel: string; encomenda: any }): string;
 declare const IDB_IMG_PLACEHOLDER: string;
 
 interface ImageStore {

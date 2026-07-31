@@ -4,8 +4,8 @@
   "description": "**Gestão completa para artistas plásticos** — Um sistema CRM single-page (SPA) que roda 100% no navegador, sem necessidade de servidor. Seus dados ficam salvos localmente no `localStorage`.",
   "main": "sw.js",
   "scripts": {
-    "dev": "node tools/concat-source.js && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path 2>&1 | tail -1 && vite",
-    "build": "node tools/concat-source.js && tsc && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path 2>&1 | tail -1 && vite build",
+    "dev": "node tools/concat-source.js && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path && vite",
+    "build": "node tools/concat-source.js && tsc && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path && vite build",
     "bundle": "node tools/concat-source.js && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path",
     "preview": "vite preview",
     "pretest": "node tools/concat-source.js && tsc",

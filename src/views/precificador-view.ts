@@ -57,7 +57,7 @@ export class PrecificadorView extends BaseView {
                 `<option value="${m}" ${this.moeda === m ? 'selected' : ''}>${m}</option>`
               ).join('')}
             </select>
-            <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de câmbio">💱</button>
+            <button class="btn-miniatura" id="btnEditarTaxas" title="Editar taxas de câmbio" aria-label="Editar taxas de câmbio">💱</button>
           </div>
           <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precificação</button>
           <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relatório PDF</button>
@@ -68,26 +68,26 @@ export class PrecificadorView extends BaseView {
           <div class="calc-grid">
             <div class="campo-calc" style="grid-column:1/-1">
               <label>Obra de referência</label>
-              <select class="sel-obra-calc" id="selObraCalc"><option value="">— Selecionar obra —</option>${opcoesObra}</select>
+               <select class="sel-obra-calc" id="selObraCalc" aria-label="Obra de referência"><option value="">— Selecionar obra —</option>${opcoesObra}</select>
             </div>
             <div class="campo-calc">
               <label><i class="fas fa-dollar-sign"></i> Custo materiais (${this.moeda})</label>
-              <input type="number" id="calcMateriais" value="${this.calc.materiais}" min="0" step="0.1">
+               <input type="number" id="calcMateriais" aria-label="Custo materiais" value="${this.calc.materiais}" min="0" step="0.1">
             </div>
             <div class="campo-calc">
               <label>⏱ Horas trabalhadas</label>
-              <input type="number" id="calcHoras" value="${this.calc.horas}" min="0" step="0.5">
+               <input type="number" id="calcHoras" aria-label="Horas trabalhadas" value="${this.calc.horas}" min="0" step="0.5">
             </div>
             <div class="campo-calc">
               <label>🙵 Valor hora (${this.moeda})</label>
-              <input type="number" id="calcValorHora" value="${this.calc.valorHora}" min="0" step="1">
+               <input type="number" id="calcValorHora" aria-label="Valor hora" value="${this.calc.valorHora}" min="0" step="1">
             </div>
             <div class="campo-calc">
               <label>📐 Dimensões (cm)</label>
               <div style="display:flex;gap:6px;">
-                <input type="number" id="calcLargura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
+                 <input type="number" id="calcLargura" aria-label="Largura" value="${this.calc.largura}" min="0" placeholder="Larg." style="flex:1">
                 <span style="align-self:center;color:var(--text-muted);font-size:0.8rem;">×</span>
-                <input type="number" id="calcAltura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
+                <input type="number" id="calcAltura" aria-label="Altura" value="${this.calc.altura}" min="0" placeholder="Alt." style="flex:1">
               </div>
             </div>
             <div class="campo-calc">
@@ -209,6 +209,7 @@ export class PrecificadorView extends BaseView {
         <h3><i class="fas fa-chart-bar"></i> Análise de Break-Even</h3>
         <div class="be-tabela-wrapper">
           <table class="be-tabela">
+            <caption class="sr-only">Análise de Break-Even</caption>
             <thead><tr>
               <th>Obra</th><th>Custo Total</th><th>Preço</th><th>Margem</th><th>Markup</th><th>Lucro</th>
             </tr></thead>
@@ -279,6 +280,7 @@ export class PrecificadorView extends BaseView {
         ${ultimas.length > 0 ? `
         <h4 style="margin:12px 0 6px;font-size:0.8rem;color:var(--text-muted);">Maiores discrepâncias</h4>
         <table class="be-tabela">
+          <caption class="sr-only">Maiores discrepâncias entre preço sugerido e real</caption>
           <thead><tr><th>Obra</th><th>Sugerido</th><th>Real</th><th>Erro</th></tr></thead>
           <tbody>${ultimas.map(u => `<tr class="${u.pctErro > 20 ? 'be-baixa' : 'be-alta'}">
             <td>${u.titulo || '—'}</td>
@@ -403,7 +405,7 @@ export class PrecificadorView extends BaseView {
                 </div>
                 <div class="regra-acoes">
                   <button class="btn-miniatura btn-aplicar-regra" data-idx="${i}">▶ Aplicar</button>
-                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;">✕</button>
+                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;" aria-label="Remover regra">✕</button>
                 </div>
               </div>
             `).join('')}
@@ -411,8 +413,8 @@ export class PrecificadorView extends BaseView {
           <hr style="margin:12px 0;border-color:var(--border);">
           <h4 style="margin:0 0 8px;font-size:0.85rem;">Nova Regra</h4>
           <div class="regra-form">
-            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input">
-            <select id="regraTecnica" class="regra-input">
+            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input" aria-label="Nome da regra">
+            <select id="regraTecnica" class="regra-input" aria-label="Técnica">
               <option value="">Qualquer técnica</option>
               <option value="óleo">Óleo</option>
               <option value="aquarela">Aquarela</option>
@@ -421,15 +423,15 @@ export class PrecificadorView extends BaseView {
               <option value="outra">Outra</option>
             </select>
             <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1">
-              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1">
+              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1" aria-label="Largura mínima">
+              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1" aria-label="Largura máxima">
+              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1" aria-label="Altura mínima">
+              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1" aria-label="Altura máxima">
             </div>
             <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1">
-              <input type="number" id="regraBase" placeholder="Preço base" class="regra-input" value="0" style="flex:1">
-              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1">
+              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1" aria-label="Multiplicador">
+              <input type="number" id="regraBase" placeholder="Preço base" class="regra-input" value="0" style="flex:1" aria-label="Preço base">
+              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1" aria-label="Complexidade">
             </div>
             <button class="btn-primario" id="btnAdicionarRegra" style="grid-column:1/-1;">+ Adicionar Regra</button>
           </div>
@@ -453,7 +455,7 @@ export class PrecificadorView extends BaseView {
             ${['USD','EUR','GBP'].map(m => `
               <div class="taxa-item">
                 <label>${m}</label>
-                <input type="number" id="taxa${m}" value="${tx[m] || 1}" step="0.01" min="0.01">
+                <input type="number" id="taxa${m}" value="${tx[m] || 1}" step="0.01" min="0.01" aria-label="Taxa de câmbio ${m}">
               </div>
             `).join('')}
           </div>
@@ -605,6 +607,7 @@ export class PrecificadorView extends BaseView {
         <div>
           <h4 style="margin:0 0 8px;font-size:0.85rem;color:var(--text-muted);">Média de Preço por Técnica</h4>
           <table class="tabela-media">
+            <caption class="sr-only">Média de preço por técnica</caption>
             <tr><th>Técnica</th><th>Média</th><th>Obras</th></tr>
             ${tecRows.map(r => `<tr><td>${r.tec}</td><td>${this.fmt(r.media)}</td><td>${r.count}</td></tr>`).join('')}
           </table>
@@ -687,7 +690,7 @@ export class PrecificadorView extends BaseView {
           </div>
           ${circM}
           <div class="meta-edit">
-            <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100">
+            <input type="number" id="metaMensalInput" value="${metaMensal}" min="0" step="100" aria-label="Meta mensal">
             <button class="btn-secundario" id="btnSalvarMetaMensal">Salvar</button>
           </div>
           ${projecao ? `<div class="meta-projecao"><i class="fas fa-chart-line"></i> ${projecao}</div>` : ''}
@@ -701,7 +704,7 @@ export class PrecificadorView extends BaseView {
           </div>
           ${circA}
           <div class="meta-edit">
-            <input type="number" id="metaAnualInput" value="${metaAnual}" min="0" step="1000">
+            <input type="number" id="metaAnualInput" value="${metaAnual}" min="0" step="1000" aria-label="Meta anual">
             <button class="btn-secundario" id="btnSalvarMetaAnual">Salvar</button>
           </div>
           <div class="meta-projecao">📆 ${diasRestantes} dias restantes no mês</div>
@@ -758,7 +761,7 @@ export class PrecificadorView extends BaseView {
       this.cfgRoot.taxasCambio = tx;
       configStore().salvar();
       document.getElementById('taxasOverlay').style.display = 'none';
-      mostrarToast('Taxas de câmbio salvas!');
+      mostrarToast('Taxas de câmbio salvas!', 'sucesso');
       this.rerenderizar();
     });
 
@@ -852,13 +855,13 @@ export class PrecificadorView extends BaseView {
     document.getElementById('btnSalvarMetaMensal')?.addEventListener('click', () => {
       const v = Number(document.getElementById('metaMensalInput')?.value) || 0;
       this.salvarConfig({ metaMensal: v });
-      mostrarToast('Meta mensal salva!');
+      mostrarToast('Meta mensal salva!', 'sucesso');
       this.rerenderizar();
     });
     document.getElementById('btnSalvarMetaAnual')?.addEventListener('click', () => {
       const v = Number(document.getElementById('metaAnualInput')?.value) || 0;
       this.salvarConfig({ metaAnual: v });
-      mostrarToast('Meta anual salva!');
+      mostrarToast('Meta anual salva!', 'sucesso');
       this.rerenderizar();
     });
 
@@ -891,10 +894,10 @@ export class PrecificadorView extends BaseView {
 
   salvarPrecoNaObra() {
     const obraId = this.calc.obraId || document.getElementById('selObraCalc')?.value;
-    if (!obraId) { mostrarToast('Selecione uma obra primeiro.'); return; }
+    if (!obraId) { mostrarToast('Selecione uma obra primeiro.', 'aviso'); return; }
     const precoSugerido = this.calcularPreco(this.calc);
     const obra = obraStore().porId(obraId);
-    if (!obra) { mostrarToast('Obra não encontrada.'); return; }
+    if (!obra) { mostrarToast('Obra não encontrada.', 'aviso'); return; }
 
     const hist = obra.historicoPrecos || [];
     if (obra.preco && Number(obra.preco) > 0) {
@@ -908,14 +911,14 @@ export class PrecificadorView extends BaseView {
       horasTrabalho: Number(this.calc.horas) || 0,
       historicoPrecos: hist
     });
-    mostrarToast(`Preço ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ''}"!`);
+    mostrarToast(`Preço ${this.fmt(precoSugerido)} salvo na obra "${obra.titulo || ''}"!`, 'sucesso');
     this.rerenderizar();
   }
 
   // --- Regras ---
   adicionarRegra() {
     const nome = document.getElementById('regraNome')?.value?.trim();
-    if (!nome) { mostrarToast('Informe um nome para a regra.'); return; }
+    if (!nome) { mostrarToast('Informe um nome para a regra.', 'aviso'); return; }
 
     const regras = this.cfgRoot.precificadorRegras || [];
     regras.push({
@@ -932,7 +935,7 @@ export class PrecificadorView extends BaseView {
     });
     this.cfgRoot.precificadorRegras = regras;
     configStore().salvar();
-    mostrarToast('Regra adicionada!');
+    mostrarToast('Regra adicionada!', 'sucesso');
     this.rerenderizar();
   }
 
@@ -970,13 +973,13 @@ export class PrecificadorView extends BaseView {
         count++;
       }
     });
-    mostrarToast(`Regra "${regra.nome}" aplicada em ${count} obra${count > 1 ? 's' : ''}.`);
+    mostrarToast(`Regra "${regra.nome}" aplicada em ${count} obra${count > 1 ? 's' : ''}.`, 'sucesso');
     this.rerenderizar();
   }
 
   aplicarRegrasEmTodas() {
     const regras = this.cfgRoot.precificadorRegras || [];
-    if (regras.length === 0) { mostrarToast('Nenhuma regra cadastrada.'); return; }
+    if (regras.length === 0) { mostrarToast('Nenhuma regra cadastrada.', 'aviso'); return; }
 
     const obras = obraStore().items || [];
     const semPreco = obras.filter(o => !o.preco || Number(o.preco) === 0);
@@ -1002,14 +1005,14 @@ export class PrecificadorView extends BaseView {
         count++;
       }
     });
-    mostrarToast(`Regras aplicadas em ${count} obra${count > 1 ? 's' : ''} sem preço.`);
+    mostrarToast(`Regras aplicadas em ${count} obra${count > 1 ? 's' : ''} sem preço.`, 'sucesso');
     this.rerenderizar();
   }
 
   // --- PDF Export ---
   exportarRelatorioPDF() {
     if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
-      mostrarToast('jsPDF não carregado. Tente novamente.');
+      mostrarToast('jsPDF não carregado. Tente novamente.', 'erro');
       return;
     }
     mostrarLoading('Gerando relatório de precificação...');
@@ -1137,6 +1140,6 @@ export class PrecificadorView extends BaseView {
 
     doc.save('relatorio-precificacao.pdf');
     esconderLoading();
-    mostrarToast('Relatório PDF exportado com sucesso!');
+    mostrarToast('Relatório PDF exportado com sucesso!', 'sucesso');
   }
 }

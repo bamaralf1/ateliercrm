@@ -41,7 +41,7 @@ export class ClientesView extends BaseView {
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAllCli" ${this.selecionados.size === clientes.length && clientes.length > 0 ? 'checked' : ''}>
+            <input type="checkbox" id="selectAllCli" aria-label="Selecionar todos os clientes" ${this.selecionados.size === clientes.length && clientes.length > 0 ? 'checked' : ''}>
             <label for="selectAllCli">Todos</label>
           </div>
           <div class="toggle-visualizacao">
@@ -79,7 +79,7 @@ export class ClientesView extends BaseView {
     const linhas = clientes.map(c => `
       <tr class="${this.selecionados.has(c.id) ? 'linha-selecionada' : ''}">
         <td onclick="event.stopPropagation()">
-          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
+          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
         </td>
         <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong></td>
         <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${c.email || '-'}</td>
@@ -87,14 +87,15 @@ export class ClientesView extends BaseView {
         <td>${c.aquisicoes || 0}</td>
         <td>${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('') || '-'}</td>
         <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
-          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
-          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i class="fas fa-pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
     return `
       <div class="tabela-wrapper">
         <table>
+          <caption class="sr-only">Lista de clientes</caption>
           <thead><tr><th style="width:36px;"></th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Aquisições</th><th>Tags</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -108,7 +109,7 @@ export class ClientesView extends BaseView {
         ${clientes.map(c => `
           <div class="card-cliente ${this.selecionados.has(c.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
             </div>
             <div class="cc-avatar">${(c.nome || '?').charAt(0).toUpperCase()}</div>
             <div class="cc-info" data-abrir-ficha-cliente="${c.id}">
@@ -120,8 +121,8 @@ export class ClientesView extends BaseView {
               <div class="cc-tags">${(c.tags || []).slice(0, 2).map(t => `<span class="badge-tag">${t}</span>`).join('')}</div>
             </div>
             <div class="cc-acoes">
-              <button data-editar-cliente="${c.id}" title="Editar"><i class="fas fa-pen"></i></button>
-              <button data-excluir-cliente="${c.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+              <button data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i class="fas fa-pen"></i></button>
+              <button data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         `).join('')}
@@ -138,7 +139,7 @@ export class ClientesView extends BaseView {
     document.getElementById('btnNovoCliente')?.addEventListener('click', () => this.abrirFormulario());
 
     const campoBusca = document.getElementById('buscaClientes');
-    if (campoBusca) campoBusca.addEventListener('input', (e) => { this.busca = e.target.value; this.rerenderizar(true); });
+    if (campoBusca) campoBusca.addEventListener('input', debounce((e) => { this.busca = e.target.value; this.rerenderizar(true); }, 250));
 
     const selectAll = document.getElementById('selectAllCli');
     if (selectAll) {
@@ -197,7 +198,7 @@ export class ClientesView extends BaseView {
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = `clientes-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click(); URL.revokeObjectURL(a.href);
-        mostrarToast(`${clientes.length} cliente(s) exportado(s)`);
+        mostrarToast(`${clientes.length} cliente(s) exportado(s)`, 'sucesso');
         break;
       }
       case 'excluir': {
@@ -207,7 +208,7 @@ export class ClientesView extends BaseView {
             clienteStore().remover(id);
           }
         });
-        mostrarToast(`${ids.length} cliente(s) excluído(s) (com vendas preservados)`);
+        mostrarToast(`${ids.length} cliente(s) excluído(s) (com vendas preservados)`, 'sucesso');
         break;
       }
     }
@@ -256,7 +257,7 @@ export class ClientesView extends BaseView {
     document.getElementById('formCliente').addEventListener('submit', (e) => {
       e.preventDefault();
       const nome = document.getElementById('campoNomeCliente').value.trim();
-      if (!nome) { mostrarToast('O nome do cliente é obrigatório.'); return; }
+      if (!nome) { mostrarToast('O nome do cliente é obrigatório.', 'aviso'); return; }
       const tags = document.getElementById('campoTagsCliente').value.split(',').map(t => t.trim()).filter(Boolean);
       const dados = {
         nome,
@@ -268,24 +269,25 @@ export class ClientesView extends BaseView {
       };
       if (existente) {
         clienteStore().atualizar(existente.id, dados);
-        mostrarToast('Cliente atualizado com sucesso!');
+        mostrarToast('Cliente atualizado com sucesso!', 'sucesso');
       } else {
         dados.aquisicoes = 0;
         clienteStore().adicionar(dados);
-        mostrarToast('Cliente cadastrado com sucesso!');
+        mostrarToast('Cliente cadastrado com sucesso!', 'sucesso');
       }
       fecharModal();
       this.router.navegar('clientes');
     });
   }
 
-  excluirCliente(id) {
+  async excluirCliente(id) {
     const cliente = clienteStore().porId(id);
     if (!cliente) return;
     const temVendas = vendaStore().items.some(v => v.clienteId === id);
-    if (temVendas) { mostrarToast('Este cliente possui vendas registradas e não pode ser excluído.'); return; }
-    if (!confirm(`Excluir o cliente "${cliente.nome}"?`)) return;
+    if (temVendas) { mostrarToast('Este cliente possui vendas registradas e não pode ser excluído.', 'aviso'); return; }
+    if (!await confirmarAcao(`Excluir o cliente "${cliente.nome}"?`)) return;
     clienteStore().remover(id);
+    mostrarToastComDesfazer('Cliente excluído.', () => { clienteStore().items.unshift(cliente); clienteStore()._persistir(); });
     this.rerenderizar();
   }
 

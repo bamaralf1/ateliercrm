@@ -86,8 +86,8 @@ export class DashboardView extends BaseView {
         </div>
         <div class="dashboard-acoes">
           <button class="btn-gradient" id="btnDownloadDashboard" title="Baixar dashboard como imagem"><i class="fas fa-camera"></i> Exportar</button>
-          <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets">⚙️</button>
-          <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados"><i class="fas fa-sync"></i></button>
+           <button class="btn-secundario" id="btnConfigWidgets" title="Configurar widgets" aria-label="Configurar widgets">⚙️</button>
+           <button class="btn-secundario" id="btnAtualizarDashboard" title="Atualizar dados" aria-label="Atualizar dados"><i class="fas fa-sync"></i></button>
         </div>
       </div>
 
@@ -467,13 +467,13 @@ export class DashboardView extends BaseView {
 
     document.getElementById('btnAtualizarDashboard')?.addEventListener('click', () => this.rerenderizar());
     document.getElementById('btnDownloadDashboard')?.addEventListener('click', () => {
-      if (typeof html2canvas === 'undefined') { mostrarToast('Biblioteca de captura indisponível.'); return; }
-      mostrarToast('Gerando imagem do dashboard...');
+      if (typeof html2canvas === 'undefined') { mostrarToast('Biblioteca de captura indisponível.', 'erro'); return; }
+      mostrarToast('Gerando imagem do dashboard...', 'info');
       const el = document.getElementById('viewPrincipal').querySelector('.kpi-grid')?.parentElement || document.getElementById('viewPrincipal');
       html2canvas(el, { backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#ffffff', scale: 2, useCORS: true, logging: false }).then(canvas => {
         const link = document.createElement('a'); link.download = `dashboard-${new Date().toISOString().slice(0,10)}.png`;
-        link.href = canvas.toDataURL('image/png'); link.click(); mostrarToast('Dashboard exportado!');
-      }).catch(() => mostrarToast('Erro ao gerar imagem.'));
+        link.href = canvas.toDataURL('image/png'); link.click(); mostrarToast('Dashboard exportado!', 'sucesso');
+      }).catch(() => mostrarToast('Erro ao gerar imagem.', 'erro'));
     });
     document.getElementById('btnAtalhoNovaObra')?.addEventListener('click', () => { this.router.navegar('catalogo'); setTimeout(() => eventBus.emitir('abrir-nova-obra'), 200); });
     document.getElementById('btnAtalhoVenda')?.addEventListener('click', () => { this.router.navegar('vendas'); setTimeout(() => eventBus.emitir('abrir-nova-venda'), 200); });

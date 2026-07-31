@@ -88,7 +88,7 @@
         <div class="mat-acoes">
           <button data-acao="editarMaterial" data-id="${m.id}">âœï¸ Editar</button>
           <button data-acao="consumirMaterial" data-id="${m.id}">ðŸ“‰ Consumir</button>
-          <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;">ðŸ—‘ï¸</button>
+           <button data-acao="excluirMaterial" data-id="${m.id}" style="color:#dc2626;" aria-label="Excluir material">ðŸ—‘ï¸</button>
         </div>
       </div>
     `;
@@ -114,6 +114,7 @@
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum consumo registrado.</p>' : `
       <table class="cons-table">
+        <caption class="sr-only">Lista de consumos</caption>
         <tr><th>Material</th><th>Obra</th><th>Qtd</th><th>Custo</th><th>Data</th><th>Notas</th><th></th></tr>
         ${rows.map(r => `
           <tr>
@@ -123,7 +124,7 @@
             <td>${r.custo !== null ? formatarMoeda(r.custo) : 'â€”'}</td>
             <td>${r.data || 'â€”'}</td>
             <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${r.notas || ''}</td>
-            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;">ðŸ—‘ï¸</button></td>
+            <td><button data-acao="excluirConsumo" data-id="${r.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);color:#dc2626;cursor:pointer;" aria-label="Excluir consumo">ðŸ—‘ï¸</button></td>
           </tr>
         `).join('')}
       </table>`}
@@ -150,7 +151,7 @@
         <button class="btn-secundario" id="btnAddItemLista" style="font-size:0.8rem;padding:6px 14px;">➕ Adicionar item manual</button>
         <button class="btn-secundario" id="btnExportarListaTXT" style="font-size:0.8rem;padding:6px 14px;">ðŸ“ž Exportar TXT</button>
       </div>
-      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista automÃ¡tica".</p>' : ''}
+      ${paraComprar.length === 0 && comprados.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum item na lista. Clique em "Gerar lista automática".</p>' : ''}
       <ul class="lista-compras">
         ${paraComprar.map(m => this.renderItemCompra(m, false)).join('')}
         ${comprados.map(m => this.renderItemCompra(m, true)).join('')}
@@ -164,13 +165,13 @@
       <li class="${comprado ? 'comprado' : ''}">
         <div class="lc-info">
           <div class="lc-nome">${this.catIcones[m.categoria] || 'ðŸ“¦'} ${m.nome}</div>
-          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? 'Â· '+m.marca : ''}</div>
+          <div class="lc-cat">${this.catLabels[m.categoria] || m.categoria} ${m.marca ? '· '+m.marca : ''}</div>
         </div>
         <div class="lc-qtd">${comprado ? 'âœ”ï¸' : `Qtd: ${qtdSugerida} ${m.unidade || 'un'}`}</div>
         ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ''}
         <div class="lc-acoes">
-          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}">â†©ï¸</button>` : `<button data-acao="marcarComprado" data-id="${m.id}">âœ”</button>`}
-          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;">ðŸ—‘ï¸</button>
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">â†©ï¸</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado">âœ”</button>`}
+          <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;" aria-label="Remover da lista">ðŸ—‘ï¸</button>
         </div>
       </li>
     `;
@@ -192,19 +193,19 @@
           return `
             <div class="forn-card">
               <div class="forn-nome">ðŸª ${f.nome}</div>
-              <div class="forn-contato">${f.contato || ''}${f.email ? ' Â· '+f.email : ''}</div>
+              <div class="forn-contato">${f.contato || ''}${f.email ? ' · '+f.email : ''}</div>
               <div class="forn-esp">ðŸ“’ ${f.especialidade || 'Sem especialidade'}</div>
               ${f.avaliacao ? `<div class="forn-estrelas">${'â˜…'.repeat(Math.min(5, Number(f.avaliacao)))}${'â˜†'.repeat(Math.max(0, 5 - Number(f.avaliacao)))}</div>` : ''}
               ${f.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">ðŸ“ ${f.notas}</div>` : ''}
               ${hist.length > 0 ? `
                 <div class="forn-hist">
-                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">HistÃ³rico (Total: ${formatarMoeda(totalGasto)})</div>
+                  <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Histórico (Total: ${formatarMoeda(totalGasto)})</div>
                   ${hist.map(h => `<div class="hist-item"><span>${h.data || ''} â€” ${h.itens || ''}</span><span>${formatarMoeda(Number(h.valor) || 0)}</span></div>`).join('')}
                 </div>
               ` : ''}
               <div class="forn-acoes">
                 <button data-acao="editarFornecedor" data-id="${f.id}">âœï¸ Editar</button>
-                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;">ðŸ—‘ï¸</button>
+                <button data-acao="excluirFornecedor" data-id="${f.id}" style="color:#dc2626;" aria-label="Excluir fornecedor">ðŸ—‘ï¸</button>
               </div>
             </div>
           `;
@@ -223,7 +224,7 @@
       <div style="margin-bottom:12px;">
         <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
           <option value="">â€” Selecione uma obra â€”</option>
-          ${obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem tÃ­tulo'} ${o.preco ? 'â€” '+formatarMoeda(o.preco) : ''}</option>`).join('')}
+          ${obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'} ${o.preco ? 'â€” '+formatarMoeda(o.preco) : ''}</option>`).join('')}
         </select>
       </div>
       <div id="custoObraDetalhe">
@@ -234,7 +235,7 @@
 
   renderCustoDetalhe(obraId) {
     const obra = obraStore().items.find(o => o.id === obraId);
-    if (!obra) return '<p style="color:var(--text-muted);">Obra nÃ£o encontrada.</p>';
+    if (!obra) return '<p style="color:var(--text-muted);">Obra não encontrada.</p>';
     const consumosObra = this.consumos.filter(c => c.obraId === obraId);
     const materiais = this.materiais;
 
@@ -254,11 +255,11 @@
       <div class="custo-obra-header">
         <div class="custo-obra-card">
           <div class="co-valor">${formatarMoeda(Math.round(custoTotal))}</div>
-          <div class="co-label">ðŸ’° Custo de produÃ§Ã£o</div>
+          <div class="co-label">ðŸ’° Custo de produção</div>
         </div>
         <div class="custo-obra-card">
           <div class="co-valor">${precoVenda > 0 ? formatarMoeda(precoVenda) : 'â€”'}</div>
-          <div class="co-label">ðŸ·ï¸ PreÃ§o de venda</div>
+          <div class="co-label">ðŸ·ï¸ Preço de venda</div>
         </div>
         <div class="custo-obra-card">
           <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + '%' : 'â€”'}</div>
@@ -267,6 +268,7 @@
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `
       <table class="cons-table">
+        <caption class="sr-only">Detalhamento de custos</caption>
         <tr><th>Material</th><th>Qtd</th><th>Valor unit.</th><th>Custo</th><th>Data</th><th>Notas</th></tr>
         ${rows.map(r => `<tr><td class="cons-obra">${r.matNome}</td><td>${r.quantidade}</td><td>${materiais.find(m => m.id === r.materialId)?.precoUnitario ? 'R$ '+Number(materiais.find(m => m.id === r.materialId).precoUnitario).toFixed(2) : 'â€”'}</td><td>${formatarMoeda(Math.round(r.custo))}</td><td>${r.data || 'â€”'}</td><td style="font-size:0.75rem;color:var(--text-muted);">${r.notas || ''}</td></tr>`).join('')}
         <tr style="font-weight:600;"><td>TOTAL</td><td></td><td></td><td>${formatarMoeda(Math.round(custoTotal))}</td><td></td><td></td></tr>
@@ -352,20 +354,20 @@
     const catOpts = cats.map(c => `<option value="${c}" ${mat && mat.categoria === c ? 'selected' : ''}>${this.catIcones[c]} ${this.catLabels[c]}</option>`).join('');
 
     abrirModal(`
-      <h3>${mat ? 'âœï¸ Editar' : isLista ? 'âž• Adicionar Ã  Lista' : 'âž• Novo Material'}</h3>
+      <h3>${mat ? 'âœï¸ Editar' : isLista ? 'âž• Adicionar à Lista' : 'âž• Novo Material'}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || '' : ''}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fMatCat" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${catOpts}</select></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Subcategoria</label><input type="text" id="fMatSub" value="${mat ? mat.subcategoria || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || 'un' : 'un'}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. mÃ­nima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">PreÃ§o unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisiÃ§Ã£o</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || '' : ''}</textarea></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fMatNome" value="${mat ? mat.nome || '' : ''}" required aria-label="Nome" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Categoria</label><select id="fMatCat" aria-label="Categoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${catOpts}</select></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Subcategoria</label><input type="text" id="fMatSub" value="${mat ? mat.subcategoria || '' : ''}" aria-label="Subcategoria" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Marca</label><input type="text" id="fMatMarca" value="${mat ? mat.marca || '' : ''}" aria-label="Marca" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Quantidade atual</label><input type="number" id="fMatQtd" value="${mat ? mat.quantidade || 0 : 0}" min="0" aria-label="Quantidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Unidade</label><input type="text" id="fMatUn" value="${mat ? mat.unidade || 'un' : 'un'}" aria-label="Unidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Qtd. mínima (alerta)</label><input type="number" id="fMatMin" value="${mat ? mat.quantidadeMinima || 0 : 0}" min="0" aria-label="Quantidade mínima" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Preço unit. (R$)</label><input type="number" id="fMatPreco" value="${mat ? mat.precoUnitario || 0 : 0}" min="0" step="0.01" aria-label="Preço unitário" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Local</label><input type="text" id="fMatLocal" value="${mat ? mat.local || '' : ''}" aria-label="Local" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Data aquisição</label><input type="date" id="fMatData" value="${mat ? mat.dataAquisicao || '' : ''}" aria-label="Data de aquisição" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fMatNotas" aria-label="Notas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${mat ? mat.notas || '' : ''}</textarea></div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -390,24 +392,26 @@
         dataAquisicao: document.getElementById('fMatData').value,
         notas: document.getElementById('fMatNotas').value.trim()
       };
-      if (!dados.nome) { mostrarToast('O nome Ã© obrigatÃ³rio.'); return; }
+      if (!dados.nome) { mostrarToast('O nome é obrigatório.', 'aviso'); return; }
       if (isLista) dados.comprado = false;
       if (mat) {
         this.dataStore.atualizar('materiais', id, dados);
-        mostrarToast('Material atualizado!');
+        mostrarToast('Material atualizado!', 'sucesso');
       } else {
         this.dataStore.adicionar('materiais', dados);
-        mostrarToast('Material adicionado!');
+        mostrarToast('Material adicionado!', 'sucesso');
       }
       fecharModal();
       this.rerenderizar();
     });
   }
 
-  excluirMaterial(id) {
-    if (!confirm('Excluir este material?')) return;
+  async excluirMaterial(id) {
+    if (!await confirmarAcao('Excluir este material?')) return;
+    const item = this.dataStore.buscarPorId('materiais', id);
     this.dataStore.remover('materiais', id);
-    mostrarToast('Material excluÃ­do.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Material excluído.', () => { dataStore.dados.materiais.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
@@ -415,15 +419,15 @@
     const mat = this.dataStore.buscarPorId('materiais', id);
     if (!mat) return;
     const obras = this.obras;
-    const opcoes = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem tÃ­tulo'}</option>`).join('');
+    const opcoes = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
 
     abrirModal(`
       <h3>ðŸ“‰ Consumir: ${mat.nome}</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Obra</label><select id="fConsObra">${opcoes}</select></div>
-        <div class="campo-form"><label>Quantidade (${mat.unidade || 'un'} â€” atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1"></div>
-        <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${new Date().toISOString().slice(0, 10)}"></div>
-        <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="campo-form"><label>Obra</label><select id="fConsObra" aria-label="Obra">${opcoes}</select></div>
+        <div class="campo-form"><label>Quantidade (${mat.unidade || 'un'} â€” atual: ${mat.quantidade})</label><input type="number" id="fConsQtd" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsData" value="${new Date().toISOString().slice(0, 10)}" aria-label="Data"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotas" aria-label="Notas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">Consumir</button>
@@ -435,7 +439,7 @@
     document.getElementById('formModal').addEventListener('submit', (e) => {
       e.preventDefault();
       const qtd = Number(document.getElementById('fConsQtd').value) || 0;
-      if (qtd <= 0) { mostrarToast('Quantidade invÃ¡lida.'); return; }
+      if (qtd <= 0) { mostrarToast('Quantidade inválida.', 'aviso'); return; }
       const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
       this.dataStore.atualizar('materiais', id, { quantidade: novaQtd });
       this.dataStore.adicionar('consumos', {
@@ -446,7 +450,7 @@
         notas: document.getElementById('fConsNotas').value.trim()
       });
       fecharModal();
-      mostrarToast(`${qtd} ${mat.unidade || 'un'} consumido(s) de "${mat.nome}". Novo estoque: ${novaQtd}.`);
+      mostrarToast(`${qtd} ${mat.unidade || 'un'} consumido(s) de "${mat.nome}". Novo estoque: ${novaQtd}.`, 'info');
       this.rerenderizar();
     });
   }
@@ -456,16 +460,16 @@
     const materiais = this.materiais;
     const obras = this.obras;
     const matOpts = materiais.map(m => `<option value="${m.id}">${this.catIcones[m.categoria] || 'ðŸ“¦'} ${m.nome} (${m.quantidade} ${m.unidade || 'un'})</option>`).join('');
-    const obrOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem tÃ­tulo'}</option>`).join('');
+    const obrOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
 
     abrirModal(`
       <h3>ðŸ“‹ Registrar Consumo</h3>
       <form id="formModal">
-        <div class="campo-form"><label>Material</label><select id="fConsMat">${matOpts}</select></div>
-        <div class="campo-form"><label>Obra</label><select id="fConsObraFull">${obrOpts}</select></div>
-        <div class="campo-form"><label>Quantidade</label><input type="number" id="fConsQtdFull" value="1" min="0.1" step="0.1"></div>
-        <div class="campo-form"><label>Data</label><input type="date" id="fConsDataFull" value="${new Date().toISOString().slice(0, 10)}"></div>
-        <div class="campo-form"><label>Notas</label><textarea id="fConsNotasFull" placeholder="Ex.: Camada de fundo"></textarea></div>
+        <div class="campo-form"><label>Material</label><select id="fConsMat" aria-label="Material">${matOpts}</select></div>
+        <div class="campo-form"><label>Obra</label><select id="fConsObraFull" aria-label="Obra">${obrOpts}</select></div>
+        <div class="campo-form"><label>Quantidade</label><input type="number" id="fConsQtdFull" value="1" min="0.1" step="0.1" aria-label="Quantidade"></div>
+        <div class="campo-form"><label>Data</label><input type="date" id="fConsDataFull" value="${new Date().toISOString().slice(0, 10)}" aria-label="Data"></div>
+        <div class="campo-form"><label>Notas</label><textarea id="fConsNotasFull" aria-label="Notas" placeholder="Ex.: Camada de fundo"></textarea></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
           <button type="submit" class="btn-primario">Registrar</button>
@@ -478,7 +482,7 @@
       e.preventDefault();
       const matId = document.getElementById('fConsMat').value;
       const qtd = Number(document.getElementById('fConsQtdFull').value) || 0;
-      if (qtd <= 0) { mostrarToast('Quantidade invÃ¡lida.'); return; }
+      if (qtd <= 0) { mostrarToast('Quantidade inválida.', 'aviso'); return; }
       const mat = this.dataStore.buscarPorId('materiais', matId);
       if (mat) {
         const novaQtd = Math.max(0, (Number(mat.quantidade) || 0) - qtd);
@@ -492,15 +496,17 @@
         notas: document.getElementById('fConsNotasFull').value.trim()
       });
       fecharModal();
-      mostrarToast('Consumo registrado e estoque atualizado!');
+      mostrarToast('Consumo registrado e estoque atualizado!', 'sucesso');
       this.rerenderizar();
     });
   }
 
-  excluirConsumo(id) {
-    if (!confirm('Excluir este registro de consumo?')) return;
+  async excluirConsumo(id) {
+    if (!await confirmarAcao('Excluir este registro de consumo?')) return;
+    const item = this.dataStore.buscarPorId('consumos', id);
     this.dataStore.remover('consumos', id);
-    mostrarToast('Registro excluÃ­do.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Registro excluído.', () => { dataStore.dados.consumos.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
@@ -512,12 +518,12 @@
       <h3>${f ? 'âœï¸ Editar Fornecedor' : 'âž• Novo Fornecedor'}</h3>
       <form id="formModal" style="display:grid;gap:10px;">
         <div class="modal-form-grid">
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || '' : ''}" required style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || '' : ''}" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);">AvaliaÃ§Ã£o (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
-          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || '' : ''}</textarea></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Nome *</label><input type="text" id="fFornNome" value="${f ? f.nome || '' : ''}" required aria-label="Nome do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Contato</label><input type="text" id="fFornContato" value="${f ? f.contato || '' : ''}" aria-label="Contato" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">E-mail</label><input type="email" id="fFornEmail" value="${f ? f.email || '' : ''}" aria-label="E-mail do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Especialidade</label><input type="text" id="fFornEsp" value="${f ? f.especialidade || '' : ''}" aria-label="Especialidade" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);">Avaliação (1-5)</label><input type="number" id="fFornAval" value="${f ? f.avaliacao || 0 : 0}" min="0" max="5" aria-label="Avaliação" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;"></div>
+          <div class="campo-full"><label style="font-size:0.8rem;color:var(--text-muted);">Notas</label><textarea id="fFornNotas" aria-label="Notas do fornecedor" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);box-sizing:border-box;min-height:50px;">${f ? f.notas || '' : ''}</textarea></div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarModal">Cancelar</button>
@@ -530,7 +536,7 @@
     document.getElementById('formModal').addEventListener('submit', (e) => {
       e.preventDefault();
       const nome = document.getElementById('fFornNome').value.trim();
-      if (!nome) { mostrarToast('O nome Ã© obrigatÃ³rio.'); return; }
+      if (!nome) { mostrarToast('O nome é obrigatório.', 'aviso'); return; }
       const dados = {
         nome,
         contato: document.getElementById('fFornContato').value.trim(),
@@ -540,17 +546,19 @@
         notas: document.getElementById('fFornNotas').value.trim(),
         historicoCompras: f ? (f.historicoCompras || []) : []
       };
-      if (f) { this.dataStore.atualizar('fornecedores', id, dados); mostrarToast('Fornecedor atualizado!'); }
-      else { this.dataStore.adicionar('fornecedores', dados); mostrarToast('Fornecedor adicionado!'); }
+      if (f) { this.dataStore.atualizar('fornecedores', id, dados); mostrarToast('Fornecedor atualizado!', 'sucesso'); }
+      else { this.dataStore.adicionar('fornecedores', dados); mostrarToast('Fornecedor adicionado!', 'sucesso'); }
       fecharModal();
       this.rerenderizar();
     });
   }
 
-  excluirFornecedor(id) {
-    if (!confirm('Excluir este fornecedor?')) return;
+  async excluirFornecedor(id) {
+    if (!await confirmarAcao('Excluir este fornecedor?')) return;
+    const item = this.dataStore.buscarPorId('fornecedores', id);
     this.dataStore.remover('fornecedores', id);
-    mostrarToast('Fornecedor excluÃ­do.');
+    const { dataStore } = this;
+    mostrarToastComDesfazer('Fornecedor excluído.', () => { dataStore.dados.fornecedores.push(item); dataStore.salvar(); });
     this.rerenderizar();
   }
 
@@ -566,25 +574,25 @@
         count++;
       }
     });
-    mostrarToast(`${count} item(ns) adicionado(s) à lista de compras!`);
+    mostrarToast(`${count} item(ns) adicionado(s) à lista de compras!`, 'sucesso');
     this.rerenderizar();
   }
 
   marcarComprado(id, comprado) {
     this.dataStore.atualizar('materiais', id, { comprado });
-    mostrarToast(comprado ? 'Marcado como comprado!' : 'Reaberto na lista.');
+    mostrarToast(comprado ? 'Marcado como comprado!' : 'Reaberto na lista.', 'info');
     this.rerenderizar();
   }
 
   removerDaLista(id) {
     this.dataStore.atualizar('materiais', id, { comprado: undefined });
-    mostrarToast('Item removido da lista.');
+    mostrarToast('Item removido da lista.', 'info');
     this.rerenderizar();
   }
 
   exportarListaTXT() {
     const materiais = this.materiais.filter(m => m.comprado === false);
-    if (materiais.length === 0) { mostrarToast('Lista vazia.'); return; }
+    if (materiais.length === 0) { mostrarToast('Lista vazia.', 'aviso'); return; }
 
     let txt = '=== LISTA DE COMPRAS â€” ATELIER ===\n';
     txt += `Gerada em: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
@@ -608,7 +616,7 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    mostrarToast('Lista exportada em TXT!');
+    mostrarToast('Lista exportada em TXT!', 'sucesso');
   }
 
 }

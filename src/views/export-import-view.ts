@@ -98,6 +98,7 @@ export class ExportImportView extends BaseView {
           <span style="color:var(--text-muted);font-size:0.85rem;">${this.arquivoCarregado}</span>
         </div>
         <table class="ei-preview-tabela">
+          <caption class="sr-only">Pré-visualização dos dados a importar</caption>
           <thead><tr><th>Coleção</th><th>Registros</th><th>Ação</th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
@@ -135,6 +136,7 @@ export class ExportImportView extends BaseView {
         <p style="margin-bottom:12px;color:var(--text-muted);font-size:0.85rem;">Últimos ${historico.length} backups exportados.</p>
         <div class="tabela-wrapper">
           <table>
+            <caption class="sr-only">Histórico de exportações</caption>
             <thead><tr><th>Data</th><th>Tipo</th><th>Tamanho</th></tr></thead>
             <tbody>${linhas}</tbody>
           </table>

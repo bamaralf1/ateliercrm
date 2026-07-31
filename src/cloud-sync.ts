@@ -38,7 +38,7 @@ export class CloudSync {
     };
     return new Promise((resolve, reject) => {
       const req = store.add(snapshot);
-      req.onsuccess = () => { mostrarToast('Snapshot salvo no IndexedDB!'); resolve(req.result); };
+      req.onsuccess = () => { mostrarToast('Snapshot salvo no IndexedDB!', 'sucesso'); resolve(req.result); };
       req.onerror = () => reject(req.error);
     });
   }
@@ -71,7 +71,7 @@ export class CloudSync {
         if (snap) {
           this.dataStore.dados = JSON.parse(JSON.stringify(snap.dados));
           this.dataStore.salvar();
-          mostrarToast('Snapshot restaurado com sucesso!');
+          mostrarToast('Snapshot restaurado com sucesso!', 'sucesso');
           resolve(true);
         } else { reject(new Error('Snapshot não encontrado')); }
       };
@@ -96,7 +96,7 @@ export class CloudSync {
 
   async autenticarGoogle() {
     const clientId = this.googleClientId;
-    if (!clientId) { mostrarToast('Configure o Client ID do Google Drive nas Configurações.'); return false; }
+    if (!clientId) { mostrarToast('Configure o Client ID do Google Drive nas Configurações.', 'aviso'); return false; }
     return new Promise((resolve) => {
       const redirectUri = window.location.origin + window.location.pathname;
       const scope = 'https://www.googleapis.com/auth/drive.file';
@@ -109,7 +109,7 @@ export class CloudSync {
 
       // Abre popup ou redireciona
       const w = window.open(authUrl, 'google_oauth', 'width=600,height=700');
-      if (!w) { mostrarToast('Pop-up bloqueado. Permita pop-ups para usar o Google Drive.'); resolve(false); return; }
+      if (!w) { mostrarToast('Pop-up bloqueado. Permita pop-ups para usar o Google Drive.', 'aviso'); resolve(false); return; }
 
       const checkInterval = setInterval(() => {
         try {
@@ -120,7 +120,7 @@ export class CloudSync {
             if (token) {
               this.dataStore.dados.config.syncGoogleToken = token;
               this.dataStore.salvar();
-              mostrarToast('Google Drive autenticado!');
+              mostrarToast('Google Drive autenticado!', 'sucesso');
               w.close();
               clearInterval(checkInterval);
               resolve(true);
@@ -195,7 +195,7 @@ export class CloudSync {
         this.dataStore.dados.config.syncLastBackup = new Date().toISOString();
         this.dataStore.salvar();
         esconderLoading();
-        mostrarToast('Backup enviado para Google Drive!');
+        mostrarToast('Backup enviado para Google Drive!', 'sucesso');
         return true;
       }
       esconderLoading();
@@ -231,7 +231,7 @@ export class CloudSync {
         this.dataStore.dados = dados;
         this.dataStore.salvar();
         esconderLoading();
-        mostrarToast('Backup restaurado do Google Drive!');
+        mostrarToast('Backup restaurado do Google Drive!', 'sucesso');
         return true;
       }
       esconderLoading();
@@ -279,7 +279,7 @@ export class CloudSync {
       this.dataStore.dados.config.syncLastBackup = new Date().toISOString();
       this.dataStore.salvar();
       esconderLoading();
-      mostrarToast('Backup enviado para WebDAV!');
+      mostrarToast('Backup enviado para WebDAV!', 'sucesso');
       return true;
     } catch (e) {
       esconderLoading();
@@ -318,7 +318,7 @@ export class CloudSync {
         this.dataStore.dados = dados;
         this.dataStore.salvar();
         esconderLoading();
-        mostrarToast('Backup restaurado do WebDAV!');
+        mostrarToast('Backup restaurado do WebDAV!', 'sucesso');
         return true;
       }
       esconderLoading();

@@ -1,5 +1,6 @@
 // Bootstrap e inicialização
 import { StoreBridge } from './store-bridge'
+import { confirmarAcao, mostrarToastComDesfazer } from './confirmacao'
 
 // Renderiza o Dashboard
 export function renderizarDashboard(dataStore) {
@@ -168,7 +169,7 @@ export function downloadHTML(html, nomeArquivo) {
 }
 
 export function gerarPortalHTML(dados) {
-  const d = JSON.stringify(dados).replace(/<\/script>/g, '<\\/script>');
+  const d = JSON.stringify({ artista: dados.artista, contatoEmail: dados.contatoEmail, contatoTel: dados.contatoTel, encomenda: dados.encomenda }).replace(/<\/script>/g, '</script>');
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -204,29 +205,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <body><div class="container" id="app"></div>
 <script id="portalData" type="application/json">${d}</script>
 <script>
-const STAGES=[
-{key:'criado',label:'Pedido Recebido',icon:'fa-clipboard',pct:0},
-{key:'em_andamento',label:'Em Andamento',icon:'fa-paint-brush',pct:25},
-{key:'aprovacao',label:'Aprova\u00e7\u00e3o',icon:'fa-check',pct:50},
-{key:'finalizado',label:'Finalizado',icon:'fa-star',pct:75},
-{key:'entregue',label:'Entregue',icon:'fa-box',pct:100}];
-const SS={criado:{cor:'#3b82f6',bg:'#eff6ff'},em_andamento:{cor:'#f59e0b',bg:'#fffbeb'},aprovacao:{cor:'#8b5cf6',bg:'#f5f3ff'},finalizado:{cor:'#16a34a',bg:'#f0fdf4'},entregue:{cor:'#065f46',bg:'#ecfdf5'},cancelado:{cor:'#dc2626',bg:'#fef2f2'}};
-function $(id){return document.getElementById(id)}
+var STAGES=[
+{key:'criado',label:'Pedido Recebido',icon:'fa-clipboard'},
+{key:'em_andamento',label:'Em Andamento',icon:'fa-paint-brush'},
+{key:'aprovacao',label:'Aprova\u00e7\u00e3o',icon:'fa-check'},
+{key:'finalizado',label:'Finalizado',icon:'fa-star'},
+{key:'entregue',label:'Entregue',icon:'fa-box'}];
+var SS={criado:{cor:'#3b82f6',bg:'#eff6ff'},em_andamento:{cor:'#f59e0b',bg:'#fffbeb'},aprovacao:{cor:'#8b5cf6',bg:'#f5f3ff'},finalizado:{cor:'#16a34a',bg:'#f0fdf4'},entregue:{cor:'#065f46',bg:'#ecfdf5'},cancelado:{cor:'#dc2626',bg:'#fef2f2'}};
 function render(){
 var data=JSON.parse(document.getElementById('portalData').textContent);
-var token=new URLSearchParams(window.location.search).get('token')||data.token;
-var encs=token?data.encomendas.filter(function(e){return token===data.token||e.clienteEmail===token}):data.encomendas;
+var e=data.encomenda;
 var app=document.getElementById('app');
-if(!encs.length){app.innerHTML='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista">Portal do Cliente</p></div><div class="card" style="text-align:center;padding:40px;color:var(--text-mu)"><p><i class="fas fa-search"></i> Nada encontrado. Verifique o link.</p></div>';return}
-var h='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomendas</p></div>';
-encs.forEach(function(e){h+=rc(e,data)});
-h+='<div class="card cc"><h2><i class="fas fa-envelope"></i> Contato</h2>';
+if(!e){app.innerHTML='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista">Portal do Cliente</p></div><div class="card" style="text-align:center;padding:40px;color:var(--text-mu)"><p><i class="fas fa-search"></i> Encomenda n\u00e3o encontrada.</p></div>';return}
+var h='<div class="ph"><h1><i class="fas fa-palette" style="color:var(--accent)"></i> '+s(data.artista)+'</h1><p class="artista"><i class="fas fa-paint-brush"></i> Acompanhamento de Encomenda</p></div>';
+h+=rc(e);h+='<div class="card cc"><h2><i class="fas fa-envelope"></i> Contato</h2>';
 if(data.contatoEmail)h+='<div class="cr"><i class="fas fa-envelope"></i> '+s(data.contatoEmail)+'</div>';
 if(data.contatoTel)h+='<div class="cr"><i class="fas fa-phone"></i> '+s(data.contatoTel)+'</div>';
-h+='</div><div class="pf2"><p>D\u00favidas? Entre em contato direto com o artista.</p></div>';
-app.innerHTML=h
+h+='</div><div class="pf2"><p>D\u00favidas? Entre em contato direto com o artista.</p></div>';app.innerHTML=h;
 }
-function rc(e,data){
+function rc(e){
 var st=SS[e.status]||{cor:'#6b7280',bg:'#f9fafb'};
 var si=STAGES.findIndex(function(x){return x.key===e.status});
 var pct=si>=0?si/(STAGES.length-1)*100:0;
@@ -295,10 +292,6 @@ export function aplicarTransicaoView(container, chave) {
       el.style.animationDuration = '0.4s';
     });
   });
-}
-
-export function debounce(fn, ms = 200) {
-  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
 const ATALHOS_PADRAO = {
@@ -584,7 +577,7 @@ export function bloquearTela() {
           if (entrada.length >= 4) return;
           entrada += btn.dataset.val;
           if (entrada.length === 4) {
-            if (entrada === pin) { _telaBloqueada = false; fecharModal(); mostrarToast('Bem-vindo de volta!'); iniciarMonitorInatividade(); }
+            if (entrada === pin) { _telaBloqueada = false; fecharModal(); mostrarToast('Bem-vindo de volta!', 'sucesso'); iniciarMonitorInatividade(); }
             else { tentativas++; entrada = ''; render(); }
           } else { render(); }
         });
@@ -681,7 +674,7 @@ export function obterDicaDoDia() {
 // Tour
 const tourPassos = [
   { alvo: '.sidebar', titulo: '<i class="fas fa-palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
-  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 6 temas.', pos: 'bottom' },
+  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 8 temas.', pos: 'bottom' },
   { alvo: '#btnBackup', titulo: '<i class="fas fa-save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
   { alvo: '[data-rota="catalogo"]', titulo: '<i class="fas fa-images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
   { alvo: '[data-rota="vendas"]', titulo: '<i class="fas fa-dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
@@ -770,7 +763,7 @@ document.getElementById('btnColapsar').addEventListener('click', () => {
 
 document.getElementById('btnBackup').addEventListener('click', () => {
   dataStore.exportarBackup();
-  mostrarToast('Backup exportado com sucesso!');
+  mostrarToast('Backup exportado com sucesso!', 'sucesso');
 });
 
 document.getElementById('modalOverlay').addEventListener('click', (e) => {
@@ -780,15 +773,22 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 if (window.innerWidth <= 860) { document.getElementById('sidebar').classList.add('colapsada'); }
 
 // Override mostrarToast com suporte a tipos
-const _mostrarToastOriginal = window.mostrarToast;
 window.mostrarToast = function(mensagem, tipo = 'info') {
   const toast = document.getElementById('toast');
-  if (!toast) return _mostrarToastOriginal?.(mensagem);
-  toast.textContent = mensagem;
-  toast.className = 'toast ' + tipo;
+  const msgEl = document.getElementById('toastMsg');
+  const iconEl = toast?.querySelector('i');
+  if (!toast || !msgEl) return;
+  const icones = { sucesso: 'fa-check-circle', erro: 'fa-times-circle', aviso: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+  const temIconeProprio = /<i\s|[\u{1F000}-\u{1FFFF}]/u.test(mensagem);
+  if (iconEl && tipo && icones[tipo] && !temIconeProprio) { iconEl.className = 'fas ' + icones[tipo]; }
+  msgEl.textContent = mensagem;
+  toast.className = 'toast' + (tipo && icones[tipo] ? ' ' + tipo : '');
   toast.classList.add('mostrar');
   clearTimeout(window._toastTimeout);
-  window._toastTimeout = setTimeout(() => { toast.classList.remove('mostrar'); toast.className = 'toast'; }, 2800);
+  window._toastTimeout = setTimeout(() => {
+    toast.classList.add('saindo');
+    setTimeout(() => { toast.classList.remove('mostrar', 'saindo'); }, 250);
+  }, 2800);
 };
 
 // Override Router.navegar para view transitions
@@ -1013,7 +1013,6 @@ if (typeof module !== 'undefined' && module.exports) {
     sanitizarHTML,
     sanitizarURL,
     sanitizarRich,
-    debounce,
     gerarImagemPlaceholder,
     calcularObrasPorMes,
     gerarGraficoSVG,
@@ -1021,6 +1020,8 @@ if (typeof module !== 'undefined' && module.exports) {
     abrirModal,
     fecharModal,
     mostrarToast,
+    confirmarAcao,
+    mostrarToastComDesfazer,
     renderizarDashboard,
     renderizarViewPlaceholder,
     PDFGenerator,

@@ -25,6 +25,11 @@ export class DataStore {
     if (this.dados.config && this.dados.config.autoLock === undefined) { this.dados.config.autoLock = false; migrou = true; }
     if (this.dados.config && this.dados.config.tourCompleted === undefined) { this.dados.config.tourCompleted = false; migrou = true; }
     if (!this.dados.portais) { this.dados.portais = []; migrou = true; }
+    // Migração portais: encomendaId
+    if (this.dados.portais && this.dados.portais.length > 0 && !this.dados.portais[0].encomendaId) {
+      this.dados.portais.forEach(p => { p.encomendaId = ''; });
+      migrou = true;
+    }
     // Migração encomendas: add campos novos
     if (this.dados.encomendas && this.dados.encomendas.length > 0 && !this.dados.encomendas[0].atualizacoes) {
       this.dados.encomendas.forEach(e => { e.atualizacoes = e.atualizacoes || []; e.valor = e.valor || 0; e.imagens = e.imagens || []; e.criadoEm = e.criadoEm || new Date().toISOString(); });

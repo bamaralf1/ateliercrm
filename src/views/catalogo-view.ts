@@ -12,6 +12,7 @@ export class CatalogoView extends BaseView {
     this.imagemDestacadaRef = '';
     this.modoComparacao = false;
     this.idsComparacao = [];
+    this._skeletonAtivo = false;
     this._escutarEvento('abrir-nova-obra', () => this.abrirFormulario());
   }
 
@@ -46,9 +47,11 @@ export class CatalogoView extends BaseView {
     const obras = this.obrasFiltradas();
     const anos = this.anosDisponiveis();
 
-    const conteudoLista = obras.length
-      ? (this.modo === 'grid' ? this.renderGrid(obras) : this.renderLista(obras))
-      : this.renderEstadoVazio();
+    const conteudoLista = this._skeletonAtivo && this.modo === 'grid'
+      ? this.renderSkeletonGrid()
+      : obras.length
+        ? (this.modo === 'grid' ? this.renderGrid(obras) : this.renderLista(obras))
+        : this.renderEstadoVazio();
 
     const filtrosAtivos = Object.entries(this.filtros).filter(([k, v]) => v !== '' && k !== 'ordenar').length + (this.filtroRapido ? 1 : 0);
 
@@ -60,7 +63,7 @@ export class CatalogoView extends BaseView {
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk">
-            <input type="checkbox" id="selectAll" ${this.selecionados.size === obras.length && obras.length > 0 ? 'checked' : ''}>
+            <input type="checkbox" id="selectAll" aria-label="Selecionar todas as obras" ${this.selecionados.size === obras.length && obras.length > 0 ? 'checked' : ''}>
             <label for="selectAll">Selecionar todos</label>
           </div>
           <button class="btn-secundario" id="btnComparar" title="Comparar obras selecionadas" ${this.selecionados.size < 2 ? 'disabled' : ''}><i class="fas fa-chart-bar"></i> Comparar</button>
@@ -84,7 +87,7 @@ export class CatalogoView extends BaseView {
 
       ${conteudoLista}
 
-      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra"><i class="fas fa-plus"></i></button>
+      <button class="fab-nova-obra" id="fabNovaObra" title="Nova Obra" aria-label="Nova Obra"><i class="fas fa-plus"></i></button>
     `;
   }
 
@@ -154,9 +157,9 @@ export class CatalogoView extends BaseView {
         <div class="campo-filtro">
           <label>Faixa de preço (R$)</label>
           <div class="faixa-preco">
-            <input type="number" id="filtroPrecoMin" placeholder="Mín." value="${this.filtros.precoMin}">
+            <input type="number" id="filtroPrecoMin" placeholder="Mín." aria-label="Preço mínimo" value="${this.filtros.precoMin}">
             <span>—</span>
-            <input type="number" id="filtroPrecoMax" placeholder="Máx." value="${this.filtros.precoMax}">
+            <input type="number" id="filtroPrecoMax" placeholder="Máx." aria-label="Preço máximo" value="${this.filtros.precoMax}">
           </div>
         </div>
         <div class="campo-filtro">
@@ -193,19 +196,40 @@ export class CatalogoView extends BaseView {
     `;
   }
 
+  renderSkeletonGrid() {
+    const cards = Array.from({ length: 8 }, (_, i) => `
+      <div class="sk-card-obra">
+        <div class="sk-shimmer sk-imagem" style="animation-delay:${i * 0.05}s"></div>
+        <div class="sk-shimmer sk-linha" style="width:70%;animation-delay:${i * 0.05}s"></div>
+        <div class="sk-shimmer sk-linha" style="width:50%;animation-delay:${i * 0.05}s"></div>
+      </div>
+    `).join('');
+    return `<div class="sk-grid">${cards}</div>`;
+  }
+
+  _rerenderizarComSkeleton() {
+    if (this.modo !== 'grid') { this.rerenderizar(true); return; }
+    this._skeletonAtivo = true;
+    this.rerenderizar(true);
+    setTimeout(() => {
+      this._skeletonAtivo = false;
+      this.rerenderizar(true);
+    }, 150);
+  }
+
   renderGrid(obras) {
     return `
       <div class="grid-obras stagger-in">
         ${obras.map(o => `
           <div class="card-obra ${o.favorita ? 'favorita' : ''} ${this.selecionados.has(o.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || 'obra'}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i class="fas fa-star"></i></div>' : ''}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
               <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
               ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
-              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria">▶</button>
+              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${o.titulo}">▶</button>
             </div>
             <div class="corpo-card-obra" data-abrir-ficha="${o.id}">
               <div class="titulo-obra">${o.titulo}</div>
@@ -216,8 +240,8 @@ export class CatalogoView extends BaseView {
               </div>
             </div>
             <div class="acoes-card-obra">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação"><i class="fas fa-chart-bar"></i></button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${o.titulo}">${o.favorita ? '★' : '☆'}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${o.titulo} à comparação"><i class="fas fa-chart-bar"></i></button>
               <button data-editar-obra="${o.id}">✎ Editar</button>
               <button class="btn-excluir-obra" data-excluir-obra="${o.id}">🗑 Excluir</button>
             </div>
@@ -233,7 +257,7 @@ export class CatalogoView extends BaseView {
         ${obras.map(o => `
           <div class="linha-obra-lista ${o.favorita ? 'favorita' : ''} ${this.selecionados.has(o.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk-lista">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || 'obra'}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<span class="icone-favorita-lista"><i class="fas fa-star"></i></span>' : ''}
             <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
@@ -244,10 +268,10 @@ export class CatalogoView extends BaseView {
             <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
             <span class="preco-lista">${formatarMoeda(o.preco)}</span>
             <div class="acoes-lista">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação"><i class="fas fa-chart-bar"></i></button>
-              <button data-editar-obra="${o.id}">✎</button>
-              <button data-excluir-obra="${o.id}">🗑</button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${o.titulo}">${o.favorita ? '★' : '☆'}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${o.titulo} à comparação"><i class="fas fa-chart-bar"></i></button>
+              <button data-editar-obra="${o.id}" aria-label="Editar obra">✎</button>
+              <button data-excluir-obra="${o.id}" aria-label="Excluir ${o.titulo}">🗑</button>
             </div>
           </div>
         `).join('')}
@@ -279,30 +303,30 @@ export class CatalogoView extends BaseView {
 
     const btnGrid = document.getElementById('btnModoGrid');
     const btnLista = document.getElementById('btnModoLista');
-    if (btnGrid) btnGrid.addEventListener('click', () => { this.modo = 'grid'; this.rerenderizar(); });
+    if (btnGrid) btnGrid.addEventListener('click', () => { this.modo = 'grid'; this._rerenderizarComSkeleton(); });
     if (btnLista) btnLista.addEventListener('click', () => { this.modo = 'lista'; this.rerenderizar(); });
 
     const campoBusca = document.getElementById('filtroBusca');
-    if (campoBusca) campoBusca.addEventListener('input', (e) => { this.filtros.busca = e.target.value; this.rerenderizar(true); });
+    if (campoBusca) campoBusca.addEventListener('input', debounce((e) => { this.filtros.busca = e.target.value; this._rerenderizarComSkeleton(); }, 250));
 
     ['filtroTecnica', 'filtroStatus', 'filtroAno', 'filtroPrecoMin', 'filtroPrecoMax'].forEach(idCampo => {
       const el = document.getElementById(idCampo);
       if (!el) return;
       const chave = { filtroTecnica: 'tecnica', filtroStatus: 'status', filtroAno: 'ano', filtroPrecoMin: 'precoMin', filtroPrecoMax: 'precoMax' }[idCampo];
-      el.addEventListener('change', (e) => { this.filtros[chave] = e.target.value; this.rerenderizar(); });
+      el.addEventListener('change', (e) => { this.filtros[chave] = e.target.value; this._rerenderizarComSkeleton(); });
     });
 
     const ordenarEl = document.getElementById('filtroOrdenar');
     if (ordenarEl) ordenarEl.addEventListener('change', (e) => {
       this.filtros.ordenar = e.target.value;
-      this.rerenderizar();
+      this._rerenderizarComSkeleton();
     });
 
     const btnLimpar = document.getElementById('btnLimparFiltros');
     if (btnLimpar) btnLimpar.addEventListener('click', () => {
       this.filtros = { busca: '', tecnica: '', status: '', ano: '', precoMin: '', precoMax: '', ordenar: 'recentes' };
       this.filtroRapido = '';
-      this.rerenderizar();
+      this._rerenderizarComSkeleton();
     });
 
     // Keyboard shortcuts for bulk selection
@@ -382,13 +406,13 @@ export class CatalogoView extends BaseView {
     document.getElementById('btnNovaObraRapida')?.addEventListener('click', () => this.abrirFormulario());
     document.getElementById('btnSlideshowTodas')?.addEventListener('click', () => {
       const obras = this.obrasFiltradas();
-      if (obras.length === 0) { mostrarToast('Nenhuma obra para exibir.'); return; }
+      if (obras.length === 0) { mostrarToast('Nenhuma obra para exibir.', 'aviso'); return; }
       const imagens = obras.map(o => ({ src: this.obterImagem(o), legenda: `${o.titulo} · ${formatarMoeda(o.preco)}` }));
       abrirLightbox(imagens, 0);
     });
     document.getElementById('btnExportarTodas')?.addEventListener('click', () => {
       const ids = this.obrasFiltradas().map(o => o.id);
-      if (ids.length === 0) { mostrarToast('Nenhuma obra para exportar.'); return; }
+      if (ids.length === 0) { mostrarToast('Nenhuma obra para exportar.', 'aviso'); return; }
       this.exportarObrasJSON(ids);
     });
 
@@ -413,7 +437,7 @@ export class CatalogoView extends BaseView {
         const f = alvoChipRapido.dataset.filtro;
         this.filtroRapido = this.filtroRapido === f ? '' : f;
         this.aplicarFiltroRapido();
-        this.rerenderizar();
+        this._rerenderizarComSkeleton();
         return;
       }
       if (alvoChipSalvo) { this.carregarFiltroSalvo(parseInt(alvoChipSalvo.dataset.indice)); return; }
@@ -466,7 +490,7 @@ export class CatalogoView extends BaseView {
     }
   }
 
-  bulkAcao(acao) {
+  async bulkAcao(acao) {
     const ids = Array.from(this.selecionados);
     if (ids.length === 0) return;
 
@@ -476,14 +500,14 @@ export class CatalogoView extends BaseView {
           const obra = obraStore().porId(id);
           if (obra) { obra.favorita = true; obraStore().atualizar(id, obra); }
         });
-        mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} favoritada${ids.length === 1 ? '' : 's'}`);
+        mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} favoritada${ids.length === 1 ? '' : 's'}`, 'sucesso');
         break;
       case 'desfavoritar':
         ids.forEach(id => {
           const obra = obraStore().porId(id);
           if (obra) { obra.favorita = false; obraStore().atualizar(id, obra); }
         });
-        mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} desfavoritada${ids.length === 1 ? '' : 's'}`);
+        mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} desfavoritada${ids.length === 1 ? '' : 's'}`, 'sucesso');
         break;
       case 'mudarStatus':
         abrirModal(`
@@ -508,7 +532,7 @@ export class CatalogoView extends BaseView {
             const obra = obraStore().porId(id);
             if (obra) { obra.status = novoStatus; obraStore().atualizar(id, obra); }
           });
-          mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} atualizada${ids.length === 1 ? '' : 's'}`);
+          mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} atualizada${ids.length === 1 ? '' : 's'}`, 'sucesso');
           this.selecionados.clear();
           fecharModal();
           this.rerenderizar();
@@ -522,9 +546,12 @@ export class CatalogoView extends BaseView {
         this.exportarCatalogoPDF(ids);
         break;
       case 'excluir':
-        if (!confirm(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? '' : 's'}? Esta ação não pode ser desfeita.`)) return;
-        ids.forEach(id => obraStore().remover(id));
-        mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} excluída${ids.length === 1 ? '' : 's'}`);
+        if (!await confirmarAcao(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? '' : 's'}? Esta ação não pode ser desfeita.`)) return;
+        const excluidas = [];
+        ids.forEach(id => { const o = obraStore().porId(id); if (o) excluidas.push(o); obraStore().remover(id); });
+        mostrarToastComDesfazer(`${ids.length} obra${ids.length === 1 ? '' : 's'} excluída${ids.length === 1 ? '' : 's'}`, () => {
+          excluidas.forEach(o => { obraStore().items.unshift(o); }); obraStore()._persistir();
+        });
         break;
     }
 
@@ -542,11 +569,11 @@ export class CatalogoView extends BaseView {
     a.href = url; a.download = `atelier-crm-obras-${timestamp}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} exportada${ids.length === 1 ? '' : 's'}`);
+    mostrarToast(`${ids.length} obra${ids.length === 1 ? '' : 's'} exportada${ids.length === 1 ? '' : 's'}`, 'sucesso');
   }
 
   exportarCatalogoPDF(ids) {
-    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível.'); return; }
+    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível.', 'erro'); return; }
     const obras = ids.map(id => obraStore().porId(id)).filter(Boolean);
     if (obras.length === 0) return;
     mostrarLoading('Gerando catálogo PDF...');
@@ -612,7 +639,7 @@ export class CatalogoView extends BaseView {
     const nomeArquivo = `catalogo-${obras.length}-obras-${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(nomeArquivo);
     esconderLoading();
-    mostrarToast(`Catálogo PDF exportado com ${obras.length} obra${obras.length === 1 ? '' : 's'}!`);
+    mostrarToast(`Catálogo PDF exportado com ${obras.length} obra${obras.length === 1 ? '' : 's'}!`, 'sucesso');
   }
 
   /* ------------------------------------------------------------------------
@@ -676,9 +703,9 @@ export class CatalogoView extends BaseView {
         <div class="campo-form">
           <label>Dimensões (cm)</label>
           <div class="form-linha">
-            <input type="number" id="campoAltura" placeholder="Altura" value="${dim.altura || ''}">
-            <input type="number" id="campoLargura" placeholder="Largura" value="${dim.largura || ''}">
-            <input type="number" id="campoProfundidade" placeholder="Profundidade" value="${dim.profundidade || ''}">
+            <input type="number" id="campoAltura" placeholder="Altura" aria-label="Altura em cm" value="${dim.altura || ''}">
+            <input type="number" id="campoLargura" placeholder="Largura" aria-label="Largura em cm" value="${dim.largura || ''}">
+            <input type="number" id="campoProfundidade" placeholder="Profundidade" aria-label="Profundidade em cm" value="${dim.profundidade || ''}">
           </div>
         </div>
         <div class="campo-form">
@@ -713,7 +740,7 @@ export class CatalogoView extends BaseView {
               <p>Arraste imagens para cá ou clique para selecionar</p>
               <p class="texto-ajuda">JPG, PNG · Múltiplos arquivos · Máx 5 imagens</p>
             </div>
-            <input type="file" id="campoImagens" accept="image/*" multiple style="display:none">
+            <input type="file" id="campoImagens" accept="image/*" multiple style="display:none" aria-label="Selecionar imagens da obra">
           </div>
           <div class="preview-galeria" id="previewGaleria">
             ${this.imagensFormAtual.length === 0 ? '<p class="texto-ajuda">Nenhuma imagem selecionada ainda.</p>' : ''}
@@ -737,7 +764,7 @@ export class CatalogoView extends BaseView {
       const tecnica = document.getElementById('campoTecnica').value;
       const preco = document.getElementById('campoPreco').value;
       if (!titulo || !tecnica || preco === '') {
-        mostrarToast('Preencha os campos obrigatórios: título, técnica e preço.');
+        mostrarToast('Preencha os campos obrigatórios: título, técnica e preço.', 'aviso');
         return;
       }
 
@@ -774,11 +801,11 @@ export class CatalogoView extends BaseView {
 
       if (obraExistente) {
         obraStore().atualizar(obraExistente.id, dadosObra);
-        mostrarToast('Obra atualizada com sucesso!');
+        mostrarToast('Obra atualizada com sucesso!', 'sucesso');
       } else {
         dadosObra.dataCadastro = new Date().toISOString();
         obraStore().adicionar(dadosObra);
-        mostrarToast('Obra cadastrada com sucesso!');
+        mostrarToast('Obra cadastrada com sucesso!', 'sucesso');
       }
 
       fecharModal();
@@ -815,7 +842,7 @@ export class CatalogoView extends BaseView {
 
   processarArquivos(files) {
     if (this.imagensFormAtual.length + files.length > 5) {
-      mostrarToast('Máximo de 5 imagens por obra.');
+      mostrarToast('Máximo de 5 imagens por obra.', 'aviso');
       return;
     }
 
@@ -886,9 +913,9 @@ export class CatalogoView extends BaseView {
           <div class="miniatura-imagem ${img === this.imagemDestacadaAtual ? 'destacada' : ''}" draggable="true" data-idx="${i}">
             <img src="${img}" alt="Imagem ${i + 1}">
             <div class="miniaturas-acoes">
-              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? 'ativo' : ''}" data-destacar="${i}" title="Marcar como destacada"><i class="fas fa-star"></i></button>
-              <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem">✎</button>
-              <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem">✕</button>
+              <button type="button" class="btn-miniatura ${img === this.imagemDestacadaAtual ? 'ativo' : ''}" data-destacar="${i}" title="Marcar como destacada" aria-label="Marcar imagem ${i + 1} como destacada"><i class="fas fa-star"></i></button>
+              <button type="button" class="btn-miniatura" data-editar-img="${i}" title="Editar imagem" aria-label="Editar imagem">✎</button>
+              <button type="button" class="btn-miniatura" data-remover-img="${i}" title="Remover imagem" aria-label="Remover imagem">✕</button>
             </div>
             <span class="mi-ordem">${i + 1}</span>
           </div>
@@ -968,7 +995,7 @@ export class CatalogoView extends BaseView {
           <p>Arraste imagens para cá</p>
           <p class="texto-ajuda">JPG, PNG · Múltiplos arquivos · Sem limite</p>
         </div>
-        <input type="file" id="batchFileInput" accept="image/*" multiple style="display:none">
+        <input type="file" id="batchFileInput" accept="image/*" multiple style="display:none" aria-label="Selecionar arquivos de imagem para importação em lote">
       </div>
       <div id="batchPreviewContainer"></div>
       <div class="batch-campos-comuns" id="batchCamposComuns" style="display:none;">
@@ -1003,7 +1030,7 @@ export class CatalogoView extends BaseView {
 
     const processarLote = (files) => {
       const imgFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-      if (imgFiles.length === 0) { mostrarToast('Nenhuma imagem encontrada.'); return; }
+      if (imgFiles.length === 0) { mostrarToast('Nenhuma imagem encontrada.', 'aviso'); return; }
       let concluidas = 0;
       imgFiles.forEach(f => {
         const reader = new FileReader();
@@ -1046,7 +1073,7 @@ export class CatalogoView extends BaseView {
             ${imagens.map((img, i) => `
               <div class="batch-item" data-idx="${i}">
                 <img src="${img}" alt="Obra ${i + 1}">
-                <button class="batch-remover" data-idx="${i}" title="Remover">✕</button>
+                <button class="batch-remover" data-idx="${i}" title="Remover" aria-label="Remover obra ${i + 1}">✕</button>
                 <span class="batch-label">Obra ${i + 1}</span>
               </div>
             `).join('')}
@@ -1078,7 +1105,7 @@ export class CatalogoView extends BaseView {
         }));
         obras.forEach(o => obraStore().adicionar(o));
         fecharModal();
-        mostrarToast(`${obras.length} obra(s) importada(s) com sucesso!`);
+        mostrarToast(`${obras.length} obra(s) importada(s) com sucesso!`, 'sucesso');
         this.router.navegar('catalogo');
       });
     };
@@ -1124,7 +1151,7 @@ export class CatalogoView extends BaseView {
             </div>
             <div class="editor-controle-grupo">
               <label>Brilho: ${brilho > 0 ? '+' : ''}${brilho}</label>
-              <input type="range" id="sliderBrilho" min="-100" max="100" value="${brilho}" style="width:100%">
+              <input type="range" id="sliderBrilho" min="-100" max="100" value="${brilho}" style="width:100%" aria-label="Ajustar brilho">
             </div>
             <div class="editor-controle-grupo">
               <label>Cortar</label>
@@ -1148,7 +1175,7 @@ export class CatalogoView extends BaseView {
         this.imagensFormAtual[idx] = aplicarTransformacoes();
         this.renderizarPreviewGaleria();
         fecharModal();
-        mostrarToast('Imagem editada com sucesso!');
+        mostrarToast('Imagem editada com sucesso!', 'sucesso');
       });
     };
 
@@ -1209,8 +1236,8 @@ export class CatalogoView extends BaseView {
           <div class="ficha-imagem-principal">
             <img id="fichaImgPrincipal" class="idb-placeholder" src="${imgPrinc}" alt="${o.titulo}"${imgPrincIdb}>
             ${temMultiplas ? `
-            <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev">◀</button>
-            <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext">▶</button>
+            <button class="ficha-nav-btn ficha-nav-prev" id="fichaNavPrev" aria-label="Imagem anterior">◀</button>
+            <button class="ficha-nav-btn ficha-nav-next" id="fichaNavNext" aria-label="Próxima imagem">▶</button>
             <button class="ficha-slideshow-btn" id="fichaSlideshow">▶ Iniciar Slideshow</button>
             ` : ''}
           </div>
@@ -1226,6 +1253,7 @@ export class CatalogoView extends BaseView {
           <div class="titulo-ficha">${o.titulo}</div>
           <div class="serie-ficha">${o.serie ? 'Série: ' + o.serie : '&nbsp;'}</div>
           <table class="tabela-ficha">
+            <caption class="sr-only">Ficha técnica da obra</caption>
             <tr><td>Técnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
             <tr><td>Dimensões</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
             <tr><td>Ano</td><td>${o.ano || '-'}</td></tr>
@@ -1286,7 +1314,7 @@ export class CatalogoView extends BaseView {
     if (navigator.share) {
       navigator.share({ title: obra.titulo, text: texto }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(texto).then(() => mostrarToast('Informação copiadas para a área de transferência!')).catch(() => {});
+      navigator.clipboard.writeText(texto).then(() => mostrarToast('Informação copiadas para a área de transferência!', 'info')).catch(() => {});
     }
   }
 
@@ -1341,7 +1369,7 @@ export class CatalogoView extends BaseView {
      COMPARAÇÃO LADO A LADO
      ------------------------------------------------------------------------ */
   abrirComparacao(ids) {
-    if (ids.length < 2) { mostrarToast('Selecione pelo menos 2 obras para comparar.'); return; }
+    if (ids.length < 2) { mostrarToast('Selecione pelo menos 2 obras para comparar.', 'aviso'); return; }
     const obras = ids.map(id => obraStore().porId(id)).filter(Boolean);
     if (obras.length < 2) return;
 
@@ -1356,6 +1384,7 @@ export class CatalogoView extends BaseView {
         <h3 class="comparacao-titulo">${o.titulo}</h3>
         ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ''}
         <table class="comparacao-tabela">
+          <caption class="sr-only">Informações da obra</caption>
           <tr><td>Técnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
           <tr><td>Dimensões</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
           <tr><td>Ano</td><td>${o.ano || '-'}</td></tr>
@@ -1404,7 +1433,7 @@ export class CatalogoView extends BaseView {
   }
 
   exportarComparacaoPDF(obras) {
-    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível.'); return; }
+    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível.', 'erro'); return; }
     mostrarLoading('Gerando comparação em PDF...');
 
     const { jsPDF } = window.jspdf;
@@ -1453,24 +1482,23 @@ export class CatalogoView extends BaseView {
 
     doc.save(`comparacao-obras-${new Date().toISOString().slice(0, 10)}.pdf`);
     esconderLoading();
-    mostrarToast('Comparação exportada em PDF!');
+    mostrarToast('Comparação exportada em PDF!', 'sucesso');
   }
 
   /* ------------------------------------------------------------------------
      EXCLUSÃO E EXPORTAÇÃO INDIVIDUAL
      ------------------------------------------------------------------------ */
-  excluirObra(id) {
+  async excluirObra(id) {
     const obra = obraStore().porId(id);
     if (!obra) return;
-    const confirmado = confirm(`Excluir a obra "${obra.titulo}"? Essa ação não pode ser desfeita.`);
-    if (!confirmado) return;
+    if (!await confirmarAcao(`Excluir a obra "${obra.titulo}"? Essa ação não pode ser desfeita.`)) return;
     obraStore().remover(id);
-    mostrarToast('Obra excluída.');
+    mostrarToastComDesfazer('Obra excluída.', () => { obraStore().items.unshift(obra); obraStore()._persistir(); });
     this.rerenderizar();
   }
 
   exportarPDF(obra) {
-    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).'); return; }
+    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).', 'erro'); return; }
     mostrarLoading('Gerando ficha técnica em PDF...');
 
     const { jsPDF } = window.jspdf;
@@ -1531,6 +1559,6 @@ export class CatalogoView extends BaseView {
     const nomeArquivo = `ficha-${(obra.titulo || 'obra').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.pdf`;
     doc.save(nomeArquivo);
     esconderLoading();
-    mostrarToast('PDF exportado com sucesso!');
+    mostrarToast('PDF exportado com sucesso!', 'sucesso');
   }
 }

@@ -107,10 +107,10 @@ export class ImageLightbox {
       <div class="lb-topbar">
         <span class="lb-counter">${this.currentIndex + 1} / ${this.images.length}</span>
         <div class="lb-top-actions">
-          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow">▶</button>
-          <button class="lb-btn lb-ctrl-download" title="Download">⬇</button>
-          <button class="lb-btn lb-ctrl-share" title="Compartilhar"><i class="fas fa-link"></i></button>
-          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)">✕</button>
+          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow" aria-label="Iniciar slideshow">▶</button>
+          <button class="lb-btn lb-ctrl-download" title="Download" aria-label="Baixar imagem">⬇</button>
+          <button class="lb-btn lb-ctrl-share" title="Compartilhar" aria-label="Compartilhar"><i class="fas fa-link"></i></button>
+          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)" aria-label="Fechar">✕</button>
         </div>
       </div>
       <div class="lb-main">
@@ -123,8 +123,8 @@ export class ImageLightbox {
           </div>
         </div>
       </div>
-      <button class="lb-nav lb-nav-prev" title="Anterior (←)">◀</button>
-      <button class="lb-nav lb-nav-next" title="Próximo (→)">▶</button>
+      <button class="lb-nav lb-nav-prev" title="Anterior (←)" aria-label="Imagem anterior">◀</button>
+      <button class="lb-nav lb-nav-next" title="Próximo (→)" aria-label="Próxima imagem">▶</button>
       <div class="lb-thumbstrip">
         <div class="lb-thumb-track"></div>
       </div>
@@ -152,7 +152,7 @@ export class ImageLightbox {
     if (!track) return;
     track.innerHTML = this.images.map((img, i) => `
       <div class="lb-thumb ${i === this.currentIndex ? 'ativo' : ''}" data-idx="${i}">
-        <img src="${img.src}" alt="" loading="lazy">
+        <img src="${img.src}" alt="Miniatura da obra" loading="lazy">
       </div>
     `).join('');
     track.querySelectorAll('.lb-thumb').forEach(el => {
@@ -198,12 +198,13 @@ export class ImageLightbox {
     const tempImg = new Image();
     tempImg.onload = () => {
       imgEl.src = img.src;
+      imgEl.alt = img.title || 'Imagem da obra';
       imgEl.style.opacity = '1';
       if (loader) loader.style.display = 'none';
       this._applyTransform();
     };
     tempImg.onerror = () => {
-      imgEl.alt = 'Erro ao carregar';
+      imgEl.alt = 'Erro ao carregar imagem';
       imgEl.style.opacity = '1';
       if (loader) loader.style.display = 'none';
     };
