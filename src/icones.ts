@@ -17,6 +17,7 @@ export const ICONES = {
   configuracoes: '<i class="fas fa-cog"></i>',
   exportar: '<i class="fas fa-file-export"></i>',
   portal: '<i class="fas fa-external-link-alt"></i>',
+  planos: '<i class="fas fa-crown"></i>',
   // Ações comuns
   novo: '<i class="fas fa-plus"></i>',
   salvar: '<i class="fas fa-save"></i>',

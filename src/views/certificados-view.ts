@@ -233,6 +233,13 @@ export class CertificadosView extends BaseView {
         configStore().salvar();
       }
 
+      const check = window.Freemium ? window.Freemium.podeAdicionar('certificados') : { ok: true };
+      if (!check.ok) {
+        fecharModal();
+        mostrarPaywall('Certificados — limite de ' + check.limite + ' no plano Grátis');
+        mostrarToast('Limite do plano Grátis atingido. Assine o Pro.', 'aviso');
+        return;
+      }
       const registrado = this.dataStore.adicionar('certificados', cert);
       fecharModal();
       mostrarToast('Gerando certificado em PDF...', 'info');

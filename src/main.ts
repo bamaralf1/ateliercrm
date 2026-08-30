@@ -342,6 +342,8 @@ export function obterDicaDoDia() {
 const _dataStore = new DataStore();
 const dataStore = new StoreBridge(_dataStore);
 (window as any).dataStore = dataStore;
+const freemium = new Freemium(dataStore);
+(window as any).Freemium = freemium;
 const themeEngine = new ThemeEngine(dataStore);
 const router = new Router(dataStore);
 const eventBus = new EventBus();
@@ -366,6 +368,7 @@ const exposicoesView = new ExposicoesView(dataStore, router);
 const financeiroView = new FinanceiroView(dataStore, router);
 const configuracoesView = new ConfiguracoesView(dataStore, router);
 const exportImportView = new ExportImportView(dataStore, router);
+const planosView = new PlanosView(dataStore, router);
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
 // Event listeners

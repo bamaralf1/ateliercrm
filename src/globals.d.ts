@@ -1,7 +1,6 @@
 // Globais do Atelier CRM — funções expostas no escopo global pelo main.ts
 
-declare function mostrarToast(mensagem: string, tipo?: string): void;
-declare function mostrarLoading(mostrar: boolean): void;
+declare function mostrarToast(mensagem: string, tipo?: string): void;declare function mostrarLoading(mostrar: boolean): void;
 declare function esconderLoading(): void;
 declare function abrirModal(titulo: string, conteudo: string): void;
 declare function confirmarAcao(mensagem: string, opcoes?: { textoConfirmar?: string; titulo?: string; perigoso?: boolean }): Promise<boolean>;
@@ -33,6 +32,13 @@ interface ImageStore {
   migrar(obras: any[]): Promise<number>;
 }
 declare const imageStore: ImageStore;
+
+// Freemium (plano.ts)
+declare function mostrarPaywall(recurso?: string): void;
+declare function bannerUpgrade(): string;
+interface Window {
+  Freemium?: any;
+}
 
 // Biblioteca de códigos de barras / QR Code
 declare class QRCode {

@@ -3717,5 +3717,116 @@
     100% { background-position: -200% 0; }
   }
 
-  /* --- Responsive adjustments for premium elements --- */
+  /* === FREEMIUM / PLANOS === */
+  .plano-gratis-chip {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 18px; margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--card), color-mix(in srgb, var(--card) 92%, var(--accent)));
+    border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+    font-size: 0.9rem; color: var(--text);
+  }
+  .btn-upgrade {
+    background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 18px; font-weight: 600;
+    cursor: pointer; font-size: 0.85rem;
+  }
+  .btn-upgrade:hover { filter: brightness(1.05); }
+
+  .plano-ativo-banner {
+    display: flex; align-items: center; gap: 14px; padding: 14px 18px; margin-bottom: 20px;
+    background: linear-gradient(135deg, #14532d, #1e40af); color: #fff;
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .plano-ativo-icone { font-size: 1.8rem; }
+  .plano-ativo-meta { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+  .plano-ativo-banner .btn-secundario { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+  .planos-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px; margin-bottom: 28px;
+  }
+  .plano-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column;
+    position: relative; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .plano-card.destaque { border-color: #f59e0b; box-shadow: 0 8px 30px rgba(245,158,11,0.18); }
+  .plano-card.ativo { border-color: #16a34a; }
+  .plano-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff;
+    font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 20px;
+    letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .plano-pro.destaque { transform: scale(1.02); }
+  .plano-nome { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+  .plano-preco { font-size: 2.2rem; font-weight: 800; margin: 6px 0; }
+  .plano-preco span { font-size: 0.9rem; font-weight: 400; color: var(--text-muted); }
+  .plano-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+  .plano-lista { list-style: none; margin-bottom: 20px; font-size: 0.85rem; flex: 1; }
+  .plano-lista li { padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .plano-lista li i { color: #16a34a; margin-top: 3px; }
+  .plano-lista li i.fa-lock { color: var(--text-muted); }
+  .plano-cta { margin-top: 4px; }
+  .plano-cta .btn-assinar, .btn-assinar {
+    width: 100%; padding: 12px; background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+  }
+  .plano-cta .btn-assinar:hover { filter: brightness(1.05); }
+  .btn-plano-ativo {
+    width: 100%; padding: 12px; background: #16a34a; color: #fff;
+    border: none; border-radius: 10px; font-weight: 700; cursor: default;
+  }
+
+  .planos-section { margin-bottom: 28px; }
+  .planos-section h3 { margin-bottom: 12px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .planos-tabela { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .planos-tabela th, .planos-tabela td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  .planos-tabela th { background: color-mix(in srgb, var(--card) 90%, var(--accent)); font-weight: 600; }
+  .planos-tabela td.liberado { color: #16a34a; text-align: center; width: 60px; }
+  .planos-tabela td.bloqueado { color: var(--text-muted); text-align: center; width: 60px; }
+
+  .plano-ativar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .plano-ativar p { font-size: 0.85rem; color: var(--text-muted); margin: 8px 0; }
+  .planos-ativar-form { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+  .planos-ativar-form input {
+    flex: 1; min-width: 240px; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.9rem; background: var(--bg); color: var(--text);
+    font-family: monospace; text-transform: uppercase;
+  }
+  .plano-ativar-msg { font-size: 0.85rem; margin: 6px 0; font-weight: 600; }
+  .plano-ativar-msg.ok { color: #16a34a; }
+  .plano-ativar-msg.erro { color: #dc2626; }
+  .plano-ajuda code { background: var(--bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-family: monospace; }
+
+  /* Paywall overlay */
+  .paywall-overlay {
+    position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); padding: 20px; animation: fadeInDown 0.25s ease;
+  }
+  .paywall-card {
+    background: var(--card); border-radius: 16px; padding: 32px; max-width: 440px; width: 100%;
+    text-align: center; position: relative; box-shadow: 0 25px 70px rgba(0,0,0,0.45);
+    border: 1px solid var(--border);
+  }
+  .paywall-fechar {
+    position: absolute; top: 12px; right: 16px; background: none; border: none;
+    font-size: 1.6rem; line-height: 1; color: var(--text-muted); cursor: pointer;
+  }
+  .paywall-icone { font-size: 3rem; }
+  .paywall-card h3 { margin: 10px 0 8px; font-size: 1.3rem; }
+  .paywall-card p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+  .paywall-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .paywall-btns .btn-primario { background: linear-gradient(135deg, #f59e0b, #d97706); border: none; }
+
+  /* Upgrade banner (reutilizável) */
+  .upgrade-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 10px 16px; margin-bottom: 16px; font-size: 0.85rem;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af); color: #fff;
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .upgrade-banner button { background: #f59e0b; border: none; color: #fff; font-weight: 700; border-radius: 8px; padding: 6px 16px; cursor: pointer; }
+
+  /* Responsive adjustments for premium elements */
 

@@ -40,6 +40,16 @@ export class StoreBridge {
   }
 
   adicionar(colecao: string, item: any) {
+    // Freemium: verifica limite de quantidade no plano gratuito
+    if (typeof window !== 'undefined' && window.Freemium) {
+      const check = window.Freemium.podeAdicionar(colecao);
+      if (!check.ok) {
+        const limite = check.limite;
+        mostrarPaywall(`${capitalizarTexto(colecao)} — limite de ${limite} itens no plano Grátis`);
+        mostrarToast('Limite do plano Grátis atingido. Assine o Pro para itens ilimitados.', 'aviso');
+        return null;
+      }
+    }
     const store = this._piniaStore(colecao)
     if (store) {
       item.id = crypto.randomUUID ? crypto.randomUUID() : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 1000)

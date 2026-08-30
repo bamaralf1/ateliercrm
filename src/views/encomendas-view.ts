@@ -555,6 +555,10 @@ export class EncomendasView extends BaseView {
   }
 
   gerarLinkPortal(encomendaId) {
+    if (window.Freemium && !window.Freemium.recursoLiberado('portal_cliente')) {
+      mostrarPaywall('Portal do Cliente');
+      return;
+    }
     const cfg = configStore();
     if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) {
       mostrarToast('Para compartilhar um portal em outro dispositivo, configure o Portal Remoto nas Configurações. Seus dados continuam locais.', 'aviso');

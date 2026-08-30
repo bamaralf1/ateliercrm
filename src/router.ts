@@ -6,6 +6,7 @@ const SIDEBAR_GRUPOS = [
   { titulo: 'Criativo', rotas: ['diario', 'galeriaVirtual', 'referencias', 'exposicoes'] },
   { titulo: 'Negócios', rotas: ['precificador', 'financeiro', 'rede', 'atelier'] },
   { titulo: 'Sistema', rotas: ['configuracoes', 'exportar'] },
+  { titulo: '', rotas: ['planos'] },
 ];
 
 export class Router {
@@ -31,7 +32,8 @@ export class Router {
       rede:         { rotulo: 'Rede',         icone: ICONES.rede, render: () => redeView.render(), aposRender: () => redeView.aposRenderizar() },
       financeiro:   { rotulo: 'Financeiro',   icone: ICONES.financeiro, render: () => financeiroView.render(), aposRender: () => financeiroView.aposRenderizar() },
       configuracoes:{ rotulo: 'Configurações',icone: ICONES.configuracoes, render: () => configuracoesView.render(), aposRender: () => configuracoesView.aposRenderizar() },
-      exportar:     { rotulo: 'Exportar/Importar', icone: ICONES.exportar, render: () => exportImportView.render(), aposRender: () => exportImportView.aposRenderizar() }
+      exportar:     { rotulo: 'Exportar/Importar', icone: ICONES.exportar, render: () => exportImportView.render(), aposRender: () => exportImportView.aposRenderizar() },
+      planos:       { rotulo: 'Planos',        icone: ICONES.planos || '<i class="fas fa-crown"></i>', render: () => planosView.render(), aposRender: () => planosView.aposRenderizar() }
     };
   }
 
@@ -65,6 +67,12 @@ export class Router {
 
   navegar(chave) {
     if (!this.rotas[chave]) return;
+    // Gate de rotas premium
+    const ROTAS_PREMIUM = { galeriaVirtual: 'Galeria Virtual 2D' };
+    if (ROTAS_PREMIUM[chave] && window.Freemium && !window.Freemium.recursoLiberado('galeria_virtual')) {
+      mostrarPaywall(ROTAS_PREMIUM[chave]);
+      return;
+    }
     this.viewAtual = chave;
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('ativo', item.dataset.rota === chave);

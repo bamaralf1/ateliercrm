@@ -303,6 +303,11 @@ export class PrecificadorView extends BaseView {
   mudarAba(aba) {
     const tabMap = { calcular: 'Calcular', orcamentos: 'Orcamentos', regras: 'Regras', inteligencia: 'Inteligencia' };
     if (!tabMap[aba]) return;
+    const premiumTab = { orcamentos: 'Orçamentos Premium', regras: 'Regras de precificação', inteligencia: 'Inteligência do Precificador' }[aba];
+    if (premiumTab && window.Freemium && !window.Freemium.recursoLiberado('precificador_' + (aba === 'inteligencia' ? 'ml' : (aba === 'regras' ? 'regras' : 'orcamentos')))) {
+      mostrarPaywall(premiumTab);
+      return;
+    }
     this.tabAtiva = aba;
     localStorage.setItem('atelier-crm-tab-precificador', aba);
     document.querySelectorAll('#precTabs .prec-tab').forEach(t => {

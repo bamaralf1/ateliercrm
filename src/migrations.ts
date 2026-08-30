@@ -68,6 +68,19 @@ export const MIGRACIONS: Migration[] = [
       // PIN hash — a migração real é async e feita no construtor do DataStore
       // Esta versão marca que o schema suporta PIN hasheado
     }
+  },
+  {
+    version: 6,
+    up: (dados) => {
+      // Plano freemium
+      if (dados.config && !dados.config.plano) {
+        dados.config.plano = {
+          tier: 'free',
+          ativo: false,
+          pagamentoUrl: 'https://checkout.stripe.com/pay/cs_test_seu_link_aqui'
+        };
+      }
+    }
   }
 ];
 

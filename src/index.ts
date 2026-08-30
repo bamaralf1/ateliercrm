@@ -25,6 +25,8 @@ import './views/export-import-view';
 import './views/exposicoes-view';
 import './views/financeiro-view';
 import './views/configuracoes-view';
+import './views/planos-view';
 import './cloud-sync';
+import './plano';
 
 export {}
