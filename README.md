@@ -105,9 +105,14 @@ ateliercrm/
 ├── src/              # Módulos TypeScript, views, serviços e estilos
 ├── __tests__/        # Testes Jest
 ├── supabase/         # Migration e Edge Function opcionais do portal remoto
+├── tools/            # Scripts de build (concat-source.js, gen-icons.js)
+├── public/           # Assets estáticos copiados para o deploy (Vite)
+│   ├── sw.js         # Service Worker offline-first
+│   ├── offline.html  # Fallback offline
+│   └── icon-*.png    # Ícones PWA (192/512, any e maskable)
 ├── index.html        # Casca da aplicação
-├── translations.js   # Sistema de traduções multi-idioma
-└── sw.js             # Service Worker para cache offline
+├── manifest.json     # Manifest PWA (ícones, shortcuts, launch handler)
+└── vite.config.ts    # Config do build Vite
 ```
 
 ## 🔧 Troubleshooting

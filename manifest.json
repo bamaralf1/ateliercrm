@@ -1,25 +1,65 @@
 {
+  "id": "/",
   "name": "Atelier CRM",
   "short_name": "Atelier",
-  "description": "Gestão completa para artistas plásticos",
-  "start_url": "/index.html",
+  "description": "Gestão completa para artistas plásticos: catálogo, clientes, vendas, orçamentos, finanças e muito mais.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#111827",
   "theme_color": "#2563eb",
   "categories": ["business", "art", "productivity"],
-  "icons": [
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "shortcuts": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%232563eb'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='320' fill='white' font-family='serif'%3EA%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "name": "Nova Obra",
+      "short_name": "Obra",
+      "url": "/#catalogo",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%232563eb'/%3E%3Ctext x='96' y='130' text-anchor='middle' font-size='120' fill='white' font-family='serif'%3EA%3C/text%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "name": "Nova Venda",
+      "short_name": "Venda",
+      "url": "/#vendas",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Novo Cliente",
+      "short_name": "Cliente",
+      "url": "/#clientes",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": []
 }
