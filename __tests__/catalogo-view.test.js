@@ -134,12 +134,13 @@ describe('CatalogoView', () => {
     });
   });
 
-  test('bulkAcao excluir remove obras selecionadas', () => {
-    global.confirm = jest.fn(() => true);
+  test('bulkAcao excluir remove obras selecionadas', async () => {
     const obras = ds.listar('obras').slice(0, 2);
     const ids = obras.map(o => o.id);
     ids.forEach(id => view.selecionados.add(id));
-    view.bulkAcao('excluir');
+    const exclusao = view.bulkAcao('excluir');
+    document.getElementById('btnConfirmarAcao').click();
+    await exclusao;
     ids.forEach(id => {
       expect(ds.buscarPorId('obras', id)).toBeUndefined();
     });

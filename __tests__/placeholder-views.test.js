@@ -93,29 +93,25 @@ describe('GaleriaVirtualView', () => {
     expect(html).toContain('Ir para Catálogo');
   });
 
-  test('render mostra "WebGL não disponível" quando threeReady é false', () => {
+  test('render mostra slideshow 2D com obra visível', () => {
     obraStore().items = [{ id: 'o1', titulo: 'Teste', status: 'disponível', imagem: 'data:,img' }];
     view = new GaleriaVirtualView(ds, { navegar: jest.fn(), viewAtual: 'galeriaVirtual' });
     const html = view.render();
-    expect(html).toContain('WebGL não disponível');
-    expect(html).toContain('threeContainer');
-  });
-
-  test('_checkWebGL retorna false em jsdom', () => {
-    expect(view._checkWebGL()).toBe(false);
+    expect(html).toContain('gv-slide-container');
+    expect(html).toContain('gvImagem');
+    expect(html).toContain('gv-thumbstrip');
+    expect(html).toContain('Teste');
   });
 
   test('toggleTour inicia quando parado', () => {
-    view.obrasVisiveis = [{ id: 'o1' }];
-    view.obraData = [{ id: 'o1' }];
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't', imagem: 'data:,img' }];
     view.tourAtivo = false;
     view.toggleTour();
     expect(view.tourAtivo).toBe(true);
   });
 
   test('toggleTour para quando ativo', () => {
-    view.obrasVisiveis = [{ id: 'o1' }];
-    view.obraData = [{ id: 'o1' }];
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't', imagem: 'data:,img' }];
     view.tourAtivo = true;
     view.toggleTour();
     expect(view.tourAtivo).toBe(false);
@@ -128,66 +124,64 @@ describe('GaleriaVirtualView', () => {
   });
 
   test('pararTour limpa timer e estado', () => {
-    view.obrasVisiveis = [{ id: 'o1' }];
-    view.obraData = [{ id: 'o1' }];
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't', imagem: 'data:,img' }];
     view.iniciarTour();
     view.pararTour();
     expect(view.tourAtivo).toBe(false);
     expect(view.tourInterval).toBeNull();
   });
 
+  test('anterior navega ciclicamente', () => {
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't' }, { id: 'o2', titulo: 't' }];
+    view.indiceAtual = 0;
+    view.anterior();
+    expect(view.indiceAtual).toBe(1);
+  });
+
+  test('proximo navega ciclicamente sem parar tour', () => {
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't' }, { id: 'o2', titulo: 't' }];
+    view.tourAtivo = true;
+    view.indiceAtual = 0;
+    view.proximo();
+    expect(view.indiceAtual).toBe(1);
+    view.proximo();
+    expect(view.indiceAtual).toBe(0);
+    expect(view.tourAtivo).toBe(true);
+  });
+
   test('tourAnterior navega ciclicamente', () => {
-    view.obrasVisiveis = [{ id: 'o1' }, { id: 'o2' }];
-    view.obraData = [{ id: 'o1' }, { id: 'o2' }];
-    view.tourIndex = 0;
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't' }, { id: 'o2', titulo: 't' }];
+    view.indiceAtual = 0;
     view.tourAnterior();
-    expect(view.tourIndex).toBe(1);
+    expect(view.indiceAtual).toBe(1);
   });
 
   test('tourProximo navega e para ao completar ciclo', () => {
-    view.obrasVisiveis = [{ id: 'o1' }, { id: 'o2' }];
-    view.obraData = [{ id: 'o1' }, { id: 'o2' }];
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't' }, { id: 'o2', titulo: 't' }];
     view.tourAtivo = true;
-    view.tourIndex = 0;
+    view.indiceAtual = 0;
     view.tourProximo();
-    expect(view.tourIndex).toBe(1);
+    expect(view.indiceAtual).toBe(1);
     view.tourProximo();
     expect(view.tourAtivo).toBe(false);
   });
 
-  test('_focarObraTour atualiza progresso', () => {
-    view.obrasVisiveis = [{ id: 'o1' }, { id: 'o2' }, { id: 'o3' }];
-    view.obraData = [{ id: 'o1' }, { id: 'o2' }, { id: 'o3' }];
-    view._focarObraTour(1);
-    expect(view.tourIndex).toBe(1);
+  test('_aplicarZoom limita entre mínimo e máximo', () => {
+    view._aplicarZoom(10);
+    expect(view.zoomNivel).toBe(view.zoomMax);
+    view._aplicarZoom(0.1);
+    expect(view.zoomNivel).toBe(view.zoomMin);
+    view._aplicarZoom(2);
+    expect(view.zoomNivel).toBe(2);
   });
 
-  test('_focarObraTour é seguro com índice inválido', () => {
-    view.obraData = [];
-    expect(() => view._focarObraTour(5)).not.toThrow();
-  });
-
-  test('destruirThree não lança sem renderer', () => {
-    expect(() => view.destruirThree()).not.toThrow();
-  });
-
-  test('destruir três chamadas seguras', () => {
-    view.obrasVisiveis = [{ id: 'o1' }];
-    view.obraData = [{ id: 'o1' }];
+  test('destruir é seguro com múltiplas chamadas', () => {
+    view.obrasVisiveis = [{ id: 'o1', titulo: 't', imagem: 'data:,img' }];
     expect(() => { view.destruir(); view.destruir(); view.destruir(); }).not.toThrow();
   });
 
   test('fecharZoom é seguro sem lightbox global', () => {
     expect(() => view.fecharZoom()).not.toThrow();
-  });
-
-  test('_onResize é seguro sem container', () => {
-    expect(() => view._onResize()).not.toThrow();
-  });
-
-  test('_checkClick é seguro sem raycaster', () => {
-    view.raycaster = null;
-    expect(() => view._checkClick()).not.toThrow();
   });
 
   test('aposRenderizar não lança quando não há obras', () => {

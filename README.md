@@ -19,7 +19,7 @@
 | **📚 Referências** | Board de referências visuais (imagens, links, notas) |
 | **📦 Encomendas** | Controle de trabalhos sob encomenda com prazos |
 | **🏛️ Exposições** | Agenda de mostras, feiras e editais |
-| **🥽 Galeria Virtual 3D** | Tour virtual 3D pelas obras disponíveis |
+| **🖼️ Galeria Virtual 2D** | Tour guiado, zoom e lightbox pelas obras disponíveis |
 | **💎 Precificador** | Calculadora inteligente de preços baseada em custos + hora + mercado |
 | **🔧 Atelier** | Gestão de estoque de materiais, fornecedores, consumo e custo por obra |
 | **📈 Financeiro** | Fluxo de caixa com entradas, saídas e saldo |
@@ -102,10 +102,12 @@ Depois acesse `http://localhost:8080`
 
 ```
 ateliercrm/
-├── index.html        # Aplicação principal (HTML + CSS inline)
+├── src/              # Módulos TypeScript, views, serviços e estilos
+├── __tests__/        # Testes Jest
+├── supabase/         # Migration e Edge Function opcionais do portal remoto
+├── index.html        # Casca da aplicação
 ├── translations.js   # Sistema de traduções multi-idioma
-├── sw.js             # Service Worker para cache offline
-└── README.md         # Documentação
+└── sw.js             # Service Worker para cache offline
 ```
 
 ## 🔧 Troubleshooting
@@ -124,6 +126,22 @@ ateliercrm/
 - **Importar:** Arraste o arquivo `.json` para a página ou use o seletor de arquivo
 - **Recomendação:** Faça backup semanal dos seus dados
 
+## 🔐 Privacidade e portal remoto
+
+- Dados, fotos e credenciais permanecem locais por padrão. Credenciais temporárias de Google Drive/WebDAV não entram no backup comum e são removidas ao encerrar a sessão do navegador.
+- Um link de Portal do Cliente só deve ser compartilhado depois de configurar o modo remoto. A integração opcional está em `supabase/`: aplique a migration e publique a Edge Function `public-portal`.
+- Use somente a **chave publicável** do Supabase no aplicativo. A chave secreta/service role pertence exclusivamente à Edge Function.
+- O portal remoto usa tokens criptograficamente aleatórios, guarda somente seu hash no banco e expira. Aceites exigem confirmação explícita.
+
+### Preparar o modo remoto
+
+1. Crie um projeto Supabase e habilite autenticação por e-mail para o artista.
+2. Aplique `supabase/migrations/20260829000000_atelier_crm_remote.sql`.
+3. Publique `supabase/functions/public-portal` e configure a `SUPABASE_SERVICE_ROLE_KEY` apenas no ambiente da função.
+4. Em Configurações → Portal remoto, informe a URL do projeto e a chave publicável.
+
+As políticas de banco restringem snapshots e portais ao artista autenticado. A função pública retorna somente o conteúdo já preparado para aquele token; ela nunca devolve dados internos do CRM.
+
 ## 🧪 Compatibilidade
 
 - Chrome 80+
@@ -137,7 +155,7 @@ ateliercrm/
 - [x] Catálogo de obras com fotos
 - [x] Clientes e vendas com recibos PDF
 - [x] Certificados de autenticidade com QR Code
-- [x] Galeria Virtual 3D
+- [x] Galeria Virtual 2D
 - [x] Precificador inteligente
 - [x] Gestão de ateliê (estoque/materiais)
 - [x] Rede profissional e networking
@@ -145,7 +163,8 @@ ateliercrm/
 - [x] Multi-idioma (5 idiomas)
 - [x] Acessibilidade WCAG 2.1 AA
 - [x] Service Worker offline
-- [ ] Sincronização com nuvem
+- [x] Snapshots locais, Google Drive e WebDAV
+- [x] Base opcional para portal remoto seguro (Supabase)
 - [ ] Versão mobile nativa (PWA)
 - [ ] Integração com impressoras fiscais
 - [ ] Marketplace integrado

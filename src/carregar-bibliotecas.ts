@@ -15,10 +15,6 @@ function carregarScript(url: string): Promise<void> {
   return prom;
 }
 
-export function carregarThreeJS(): Promise<void> {
-  return carregarScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
-}
-
 export function carregarD3(): Promise<void> {
   return carregarScript('https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js');
 }

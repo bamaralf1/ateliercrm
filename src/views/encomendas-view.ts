@@ -555,6 +555,11 @@ export class EncomendasView extends BaseView {
   }
 
   gerarLinkPortal(encomendaId) {
+    const cfg = configStore();
+    if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) {
+      mostrarToast('Para compartilhar um portal em outro dispositivo, configure o Portal Remoto nas Configurações. Seus dados continuam locais.', 'aviso');
+      return;
+    }
     let cliente;
     let enc;
     if (encomendaId) {
@@ -581,7 +586,9 @@ export class EncomendasView extends BaseView {
       return;
     }
 
-    const token = 'enc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
     const portal = {
       id: 'portal_' + Date.now(),
       clienteId: cliente.id,

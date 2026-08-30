@@ -545,7 +545,7 @@ export class CatalogoView extends BaseView {
       case 'exportarPDF':
         this.exportarCatalogoPDF(ids);
         break;
-      case 'excluir':
+      case 'excluir': {
         if (!await confirmarAcao(`Tem certeza que deseja excluir ${ids.length} obra${ids.length === 1 ? '' : 's'}? Esta ação não pode ser desfeita.`)) return;
         const excluidas = [];
         ids.forEach(id => { const o = obraStore().porId(id); if (o) excluidas.push(o); obraStore().remover(id); });
@@ -553,6 +553,7 @@ export class CatalogoView extends BaseView {
           excluidas.forEach(o => { obraStore().items.unshift(o); }); obraStore()._persistir();
         });
         break;
+      }
     }
 
     this.selecionados.clear();

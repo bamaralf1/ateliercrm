@@ -126,9 +126,10 @@ async function removeRecord(referencia: string): Promise<void> {
   freeOne(referencia);
 }
 
-// Migra todas as imagens base64 de obras para IDB
-async function migrateAll(obras: any[]): Promise<number> {
+// Migra todas as imagens base64 de obras e encomendas para IDB
+async function migrateAll(obras: any[], encomendas?: any[]): Promise<number> {
   let count = 0;
+  // Migrar obras
   for (const obra of obras) {
     const toMigrate = new Set<string>();
     if (obra.imagem && !obra.imagem.startsWith('idb:')) toMigrate.add(obra.imagem);
@@ -144,6 +145,20 @@ async function migrateAll(obras: any[]): Promise<number> {
     if (obra.imagemDestacada && idMap.has(obra.imagemDestacada)) obra.imagemDestacada = idMap.get(obra.imagemDestacada)!;
     if (obra.imagens) { obra.imagens = obra.imagens.map((i: string) => idMap.get(i) || i); }
     count += idMap.size;
+  }
+  // Migrar encomendas
+  if (encomendas) {
+    for (const enc of encomendas) {
+      if (!enc.imagens || enc.imagens.length === 0) continue;
+      const toMigrate = enc.imagens.filter((i: string) => i && !i.startsWith('idb:') && i.startsWith('data:'));
+      if (toMigrate.length === 0) continue;
+      for (const img of toMigrate) {
+        const r = await salvarRecord(img);
+        const idx = enc.imagens.indexOf(img);
+        if (idx >= 0) enc.imagens[idx] = r.medium;
+        count++;
+      }
+    }
   }
   return count;
 }

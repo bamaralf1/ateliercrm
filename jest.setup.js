@@ -29,3 +29,36 @@ global.print = () => {};
 
 // Mock scrollIntoView for jsdom
 Element.prototype.scrollIntoView = () => {};
+
+// Mock IndexedDB for jsdom
+const IDBStore = {};
+class IDBRequest {
+  constructor(result) { this.result = result; this.onsuccess = null; this.onerror = null; }
+}
+class IDBObjectStore {
+  constructor(name) { this._name = name; this._data = {}; }
+  get(key) { const req = new IDBRequest(this._data[key]); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
+  put(record) { this._data[record.id] = record; const req = new IDBRequest(); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
+  delete(key) { delete this._data[key]; const req = new IDBRequest(); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
+}
+class IDBTransaction {
+  constructor(stores, mode) { this._stores = stores; this.oncomplete = null; this.onerror = null; this.objectStore = (name) => this._storeObj || (this._storeObj = new IDBObjectStore(name)); }
+}
+class IDBOpenDBRequest {
+  constructor() { this.result = null; this.onupgradeneeded = null; this.onsuccess = null; this.onerror = null; }
+}
+let _idbStores = {};
+global.indexedDB = {
+  open: (name, version) => {
+    const req = new IDBOpenDBRequest();
+    if (!_idbStores[name]) _idbStores[name] = {};
+    setTimeout(() => {
+      const tx = new IDBTransaction();
+      tx._storeObj = { _data: _idbStores[name] };
+      if (req.onupgradeneeded) req.onupgradeneeded({ target: { result: { objectStoreNames: { contains: () => false }, objectStore: (n) => tx._storeObj } } });
+      req.result = { objectStore: (n) => tx._storeObj };
+      if (req.onsuccess) req.onsuccess();
+    }, 0);
+    return req;
+  }
+};

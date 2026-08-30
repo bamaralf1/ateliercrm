@@ -1,5 +1,13 @@
 // Router — Controla a navegação entre views (SPA sem reload)
 
+const SIDEBAR_GRUPOS = [
+  { titulo: '', rotas: ['dashboard'] },
+  { titulo: 'Gestão', rotas: ['catalogo', 'clientes', 'vendas', 'certificados', 'encomendas'] },
+  { titulo: 'Criativo', rotas: ['diario', 'galeriaVirtual', 'referencias', 'exposicoes'] },
+  { titulo: 'Negócios', rotas: ['precificador', 'financeiro', 'rede', 'atelier'] },
+  { titulo: 'Sistema', rotas: ['configuracoes', 'exportar'] },
+];
+
 export class Router {
   constructor(dataStore) {
     this.dataStore = dataStore;
@@ -30,14 +38,28 @@ export class Router {
   montarSidebar() {
     const navLista = document.getElementById('navLista');
     navLista.innerHTML = '';
-    Object.entries(this.rotas).forEach(([chave, rota]) => {
-      if (rota.oculta) return;
-      const li = document.createElement('li');
-      li.className = 'nav-item' + (chave === this.viewAtual ? ' ativo' : '');
-      li.dataset.rota = chave;
-      li.innerHTML = `<span class="icone">${rota.icone}</span><span class="rotulo">${rota.rotulo}</span>`;
-      li.addEventListener('click', () => this.navegar(chave));
-      navLista.appendChild(li);
+    const sidebarColapsada = document.getElementById('sidebar')?.classList.contains('colapsada');
+
+    SIDEBAR_GRUPOS.forEach(grupo => {
+      const rotasVisiveis = grupo.rotas.filter(r => !this.rotas[r]?.oculta);
+      if (rotasVisiveis.length === 0) return;
+
+      if (grupo.titulo && !sidebarColapsada) {
+        const sep = document.createElement('li');
+        sep.className = 'nav-separador';
+        sep.textContent = grupo.titulo;
+        navLista.appendChild(sep);
+      }
+
+      rotasVisiveis.forEach(chave => {
+        const rota = this.rotas[chave];
+        const li = document.createElement('li');
+        li.className = 'nav-item' + (chave === this.viewAtual ? ' ativo' : '');
+        li.dataset.rota = chave;
+        li.innerHTML = `<span class="icone">${rota.icone}</span><span class="rotulo">${rota.rotulo}</span>`;
+        li.addEventListener('click', () => this.navegar(chave));
+        navLista.appendChild(li);
+      });
     });
   }
 
@@ -49,15 +71,13 @@ export class Router {
     });
     this.container.style.opacity = '0';
     this.container.style.transform = 'translateY(4px)';
+    // O conteúdo precisa estar disponível imediatamente para teclado, leitores
+    // de tela e testes; apenas a animação é adiada para o próximo frame.
+    this.container.innerHTML = this.rotas[chave].render();
+    if (typeof this.rotas[chave].aposRender === 'function') this.rotas[chave].aposRender();
     requestAnimationFrame(() => {
-      this.container.innerHTML = this.rotas[chave].render();
-      if (typeof this.rotas[chave].aposRender === 'function') {
-        this.rotas[chave].aposRender();
-      }
-      requestAnimationFrame(() => {
-        this.container.style.opacity = '1';
-        this.container.style.transform = 'translateY(0)';
-      });
+      this.container.style.opacity = '1';
+      this.container.style.transform = 'translateY(0)';
     });
     const bc = document.getElementById('breadcrumbAtual');
     if (bc) bc.textContent = this.rotas[chave].rotulo;

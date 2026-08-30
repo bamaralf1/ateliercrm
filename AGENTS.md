@@ -65,17 +65,16 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - UI em 3 abas (IDB, Google Drive, WebDAV) com botões de testar conexão
 - CSS: `.sync-tabs`, `.sync-tab.ativo`, `.sync-panel`
 
-### Galeria 3D com Three.js (galeria-virtual-view.ts)
-- Three.js r128: WebGLRenderer com shadow mapping, ACES filmic tone mapping
-- Sala 3D realista: 4 paredes, chão, teto com texturas por ambiente
-- Obras como quadros emoldurados nas paredes com texturas carregadas via TextureLoader
-- Navegação: drag para orbitar (spherical coordinates com interpolação suave), scroll para zoom
-- 3 ambientes: Galeria Branca (paredes claras), Atelier Clássico (tons madeira), Museu Moderno (escuro)
-- Iluminação: AmbientLight + HemisphereLight + DirectionalLight com sombras + fill/rim lights
-- Tour guiado automático, rotação automática, overlay de zoom com detalhes da obra
-- Raycaster para clique nas obras (abre zoom)
-- Touch suportado, resize handler, fog para profundidade
-- Fallback: WebGL não detectado ou Three.js não carregado
+### Galeria Virtual 2D (slide com zoom) (galeria-virtual-view.ts)
+- **Substitui a antiga galeria 3D (Three.js)**: sem mais WebGL, Three.js não é mais carregado
+- Slide 2D com moldura branca + legenda (título, técnica · ano, preço); até 20 obras (disponíveis/em exposição)
+- Zoom: scroll wheel (1.15×), botões +/−, double-click (2.5×), teclado `+`/`-`/`0`, indicador de % — escala 1×–4×
+- Navegação: botões ◀▶, teclas ← →, thumbstrip inferior com destaque na obra ativa
+- Tour guiado: botão 🎧 na barra, HUD com play/pause/prev/next, avanço automático a cada 4s, progresso `N / total`; link `#galeria=virtual&tour=obras-disponiveis` inicia tour automático (tratado em `main.ts`)
+- Clique na obra abre o Lightbox Premium (compartilhado com Catálogo)
+- Botão Compartilhar copia convite com link do tour
+- Cleanup: `destruir()` para tour, keydown/resize; listeners de DOM morrem com o re-render
+- CSS: `.gv-2d`, `.gv-slide-container`, `.gv-slide`, `.gv-moldura`, `.gv-imagem`, `.gv-legenda`, `.gv-nav`, `.gv-zoom-controles`, `.gv-thumbstrip`, `.gv-thumb`, `.gv-hint`; responsivo mobile (thumbs 52px, nav menor, hint oculto)
 
 ### Lightbox Premium Unificado (image-lightbox.ts)
 - Classe singleton `ImageLightbox` + função global `abrirLightbox(images, index)`

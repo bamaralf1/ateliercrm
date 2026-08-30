@@ -4,9 +4,9 @@
   "description": "**Gestão completa para artistas plásticos** — Um sistema CRM single-page (SPA) que roda 100% no navegador, sem necessidade de servidor. Seus dados ficam salvos localmente no `localStorage`.",
   "main": "sw.js",
   "scripts": {
-    "dev": "node tools/concat-source.js && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path && vite",
-    "build": "node tools/concat-source.js && tsc && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path && vite build",
-    "bundle": "node tools/concat-source.js && npx esbuild src/atelier-crm.ts --bundle --outfile=js/atelier-crm.bundle.js --format=iife --target=es2020 --external:fs --external:path",
+    "dev": "node tools/concat-source.js && vite",
+    "build": "node tools/concat-source.js && vite build",
+    "bundle": "node tools/concat-source.js",
     "preview": "vite preview",
     "pretest": "node tools/concat-source.js && tsc",
     "test": "jest",
@@ -24,7 +24,6 @@
     "@babel/preset-env": "^7.29.7",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.1",
-    "@vitejs/plugin-vue": "^6.0.8",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
@@ -37,7 +36,6 @@
     "vite": "^8.1.5"
   },
   "dependencies": {
-    "@vue/devtools-api": "^8.2.1",
     "pinia": "^4.0.2",
     "vue": "^3.5.40"
   }

@@ -1,5 +1,5 @@
-const CACHE = 'atelier-crm-v4';
-const ASSETS = ['/', '/index.html', '/js/atelier-crm.bundle.js', '/manifest.json'];
+const CACHE = 'atelier-crm-v5';
+const ASSETS = ['./', './index.html', './js/atelier-crm.bundle.js', './translations.js', './manifest.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
@@ -13,6 +13,10 @@ self.addEventListener('activate', (e) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (e) => {
@@ -30,7 +34,7 @@ self.addEventListener('fetch', (e) => {
         return res;
       })
       .catch(() =>
-        caches.match(e.request).then((r) => r || caches.match('/index.html'))
+        caches.match(e.request).then((r) => r || (e.request.mode === 'navigate' ? caches.match('./index.html') : undefined))
       );
 
   e.respondWith(

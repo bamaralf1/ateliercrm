@@ -53,10 +53,11 @@ describe('ConfiguracoesView', () => {
     expect(useConfigStore().pin).toBeFalsy();
   });
 
-  test('_removerPin limpa PIN após confirmação', () => {
-    global.confirm = jest.fn(() => true);
+  test('_removerPin limpa PIN após confirmação', async () => {
     useConfigStore().pin = '1234';
-    view._removerPin();
+    const remocao = view._removerPin();
+    document.getElementById('btnConfirmarAcao').click();
+    await remocao;
     expect(useConfigStore().pin).toBe('');
   });
 

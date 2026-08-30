@@ -21,6 +21,7 @@ interface jsPDFInstance {
 
 /* Estruturas de dados do CRM */
 interface DadosCRM {
+  schemaVersion?: number;
   obras: Obra[];
   clientes: Cliente[];
   vendas: Venda[];
@@ -151,4 +152,4 @@ interface Interacao { id: string; contatoId: string; data: string; tipo: string;
 interface EventoCRM { id: string; nome: string; tipo: string; [key: string]: unknown; }
 interface EntradaDiario { id: string; data: string; humor: number; [key: string]: unknown; }
 interface EtapaProcesso { id: string; obraId: string; etapas: { id: string; titulo: string; data: string; descricao: string; [key: string]: unknown; }[]; criadoEm: string; }
-interface ConfigCRM { artista: { nome: string; email: string; telefone: string; assinatura: string; }; tema: string; contadorRecibos: Record<string, number>; contadorPropostas: Record<string, number>; contadorCertificados: Record<string, number>; textoGarantia: string; precificador: { valorHora: number; multiplicadorExperiencia: number; metaMensal: number; metaAnual: number; metaInicio: string; }; precificadorRegras: { id: string; nome: string; tecnica: string; larguraMin: number; larguraMax: number; alturaMin: number; alturaMax: number; complexidade: number; multiplicador: number; precoBase: number; }[]; moedaPadrao: string; taxasCambio: Record<string, number>; idioma: string; altoContraste: boolean; tamanhoFonte: string; pin: string; autoLock: boolean; tourCompleted: boolean; syncGoogleClientId: string; syncGoogleToken: string; syncWebDAVUrl: string; syncWebDAVUser: string; syncWebDAVPass: string; syncAutoBackup: boolean; syncAutoBackupInterval: number; syncLastBackup: string; }
+interface ConfigCRM { artista: { nome: string; email: string; telefone: string; assinatura: string; }; tema: string; contadorRecibos: Record<string, number>; contadorPropostas: Record<string, number>; contadorCertificados: Record<string, number>; textoGarantia: string; precificador: { valorHora: number; multiplicadorExperiencia: number; metaMensal: number; metaAnual: number; metaInicio: string; }; precificadorRegras: { id: string; nome: string; tecnica: string; larguraMin: number; larguraMax: number; alturaMin: number; complexidade: number; multiplicador: number; precoBase: number; }[]; moedaPadrao: string; taxasCambio: Record<string, number>; idioma: string; altoContraste: boolean; tamanhoFonte: string; pin: string; autoLock: boolean; tourCompleted: boolean; syncGoogleClientId: string; syncGoogleToken: string; syncWebDAVUrl: string; syncWebDAVUser: string; syncWebDAVPass: string; syncAutoBackup: boolean; syncAutoBackupInterval: number; syncLastBackup: string; supabaseUrl?: string; supabasePublishableKey?: string; syncSupabaseAccessToken?: string; syncSupabaseUserId?: string; }

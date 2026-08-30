@@ -96,11 +96,11 @@ describe('sanitizarRich', () => {
     const result = sanitizarRich('<p onclick="xss()">parágrafo</p>');
     expect(result).toBe('<p>parágrafo</p>');
   });
-  test('preserva tag com atributo style', () => {
-    expect(sanitizarRich('<span style="color:red">texto</span>')).toBe('<span style="color:red">texto</span>');
+  test('remove atributos inline de tag permitida', () => {
+    expect(sanitizarRich('<span style="color:red">texto</span>')).toBe('<span>texto</span>');
   });
-  test('remove event handlers mas preserva atributos seguros', () => {
-    expect(sanitizarRich('<div onclick="xss()" style="color:red">texto</div>')).toBe('<div style="color:red">texto</div>');
+  test('remove event handlers e atributos inline', () => {
+    expect(sanitizarRich('<div onclick="xss()" style="color:red">texto</div>')).toBe('<div>texto</div>');
   });
   test('retorna vazio para null/undefined', () => {
     expect(sanitizarRich(null)).toBe('');

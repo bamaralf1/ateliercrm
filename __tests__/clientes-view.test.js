@@ -69,10 +69,11 @@ describe('ClientesView', () => {
     expect(ds.buscarPorId('clientes', cliente.id)).toBeTruthy();
   });
 
-  test('excluirCliente remove cliente sem vendas', () => {
-    global.confirm = jest.fn(() => true);
+  test('excluirCliente remove cliente sem vendas', async () => {
     const cliente = ds.listar('clientes')[1];
-    view.excluirCliente(cliente.id);
+    const exclusao = view.excluirCliente(cliente.id);
+    document.getElementById('btnConfirmarAcao').click();
+    await exclusao;
     expect(ds.buscarPorId('clientes', cliente.id)).toBeUndefined();
   });
 

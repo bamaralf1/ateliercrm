@@ -1,4 +1,6 @@
 // DataStore — Gerencia toda a persistência em localStorage
+import { semCredenciais, isPinHashed, hashPin } from './secure-storage';
+import { executarMigricoes, CURRENT_SCHEMA_VERSION } from './migrations';
 
 export class DataStore {
   chave: string;
@@ -7,50 +9,29 @@ export class DataStore {
   constructor() {
     this.chave = 'atelier_crm_dados';
     this.dados = this.carregar();
-    let migrou = false;
-    ['materiais','fornecedores','consumos','contatosProfissionais','interacoes','eventos'].forEach(n => { if (!this.dados[n]) { this.dados[n] = []; migrou = true; } });
-    if (this.dados.config && !this.dados.config.precificador) {
-      this.dados.config.precificador = { valorHora: 60, multiplicadorExperiencia: 1.5, metaMensal: 10000, metaAnual: 120000, metaInicio: new Date().toISOString().slice(0, 7) };
-      migrou = true;
-    }
-    if (!this.dados.entradasDiario) { this.dados.entradasDiario = []; migrou = true; }
-    if (!this.dados.etapasProcesso) { this.dados.etapasProcesso = []; migrou = true; }
-    if (this.dados.config && this.dados.config.idioma === undefined) { this.dados.config.idioma = 'pt-BR'; migrou = true; }
-    if (this.dados.config && this.dados.config.altoContraste === undefined) { this.dados.config.altoContraste = false; migrou = true; }
-    if (this.dados.config && this.dados.config.tamanhoFonte === undefined) { this.dados.config.tamanhoFonte = 'medio'; migrou = true; }
-    if (this.dados.config && !this.dados.config.precificadorRegras) { this.dados.config.precificadorRegras = []; migrou = true; }
-    if (this.dados.config && !this.dados.config.moedaPadrao) { this.dados.config.moedaPadrao = 'BRL'; migrou = true; }
-    if (this.dados.config && !this.dados.config.taxasCambio) { this.dados.config.taxasCambio = { USD: 5.0, EUR: 5.5, GBP: 6.3 }; migrou = true; }
-    if (this.dados.config && this.dados.config.pin === undefined) { this.dados.config.pin = ''; migrou = true; }
-    if (this.dados.config && this.dados.config.autoLock === undefined) { this.dados.config.autoLock = false; migrou = true; }
-    if (this.dados.config && this.dados.config.tourCompleted === undefined) { this.dados.config.tourCompleted = false; migrou = true; }
-    if (!this.dados.portais) { this.dados.portais = []; migrou = true; }
-    // Migração portais: encomendaId
-    if (this.dados.portais && this.dados.portais.length > 0 && !this.dados.portais[0].encomendaId) {
-      this.dados.portais.forEach(p => { p.encomendaId = ''; });
-      migrou = true;
-    }
-    // Migração encomendas: add campos novos
-    if (this.dados.encomendas && this.dados.encomendas.length > 0 && !this.dados.encomendas[0].atualizacoes) {
-      this.dados.encomendas.forEach(e => { e.atualizacoes = e.atualizacoes || []; e.valor = e.valor || 0; e.imagens = e.imagens || []; e.criadoEm = e.criadoEm || new Date().toISOString(); });
-      migrou = true;
-    }
-    // Migração: múltiplas imagens por obra
-    if (this.dados.obras && this.dados.obras.length > 0 && !this.dados.obras[0].imagens) {
-      this.dados.obras.forEach(o => {
-        o.imagens = [];
-        if (o.imagem && !o.imagem.includes('svg+xml')) {
-          o.imagens.push(o.imagem);
-          o.imagemDestacada = o.imagem;
-        }
+    const migrou = executarMigricoes(this.dados);
+    // Migração async: hashear PIN em texto plano
+    if (this.dados.config && this.dados.config.pin && !isPinHashed(this.dados.config.pin)) {
+      const pinAntigo = this.dados.config.pin;
+      hashPin(pinAntigo).then(hashed => {
+        this.dados.config.pin = hashed;
+        this.salvar();
       });
-      migrou = true;
     }
     if (migrou) this.salvar();
+    // Migração async: imagens base64 → IDB
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && (window as any).imageStore && this.dados.obras?.length) {
+        (window as any).imageStore.migrar(this.dados.obras, this.dados.encomendas).then((migradas: number) => {
+          if (migradas > 0) this.salvar();
+        }).catch(() => {});
+      }
+    }, 2000);
   }
 
   estruturaPadrao() {
     return {
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       obras: [],
       clientes: [],
       vendas: [],
@@ -106,7 +87,8 @@ export class DataStore {
 
   salvar() {
     try {
-      localStorage.setItem(this.chave, JSON.stringify(this.dados));
+      // Backups e persistência local não carregam PIN, tokens ou senhas.
+      localStorage.setItem(this.chave, JSON.stringify(semCredenciais(this.dados)));
     } catch (e) {
       if (e.name === 'QuotaExceededError' || e.code === 22) {
         mostrarToast('Armazenamento local cheio. Exporte um backup e limpe dados antigos para continuar salvando.', 'erro');
@@ -119,7 +101,7 @@ export class DataStore {
   listar(colecao) { return this.dados[colecao] || []; }
 
   adicionar(colecao, item) {
-    item.id = 'id_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    item.id = crypto.randomUUID ? crypto.randomUUID() : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     item.criadoEm = item.criadoEm || new Date().toISOString();
     this.dados[colecao].push(item);
     this.salvar();
@@ -252,7 +234,7 @@ export class DataStore {
 
   exportarBackup() {
     mostrarLoading('Exportando backup...');
-    const conteudo = JSON.stringify(this.dados, null, 2);
+    const conteudo = JSON.stringify(semCredenciais(this.dados), null, 2);
     const blob = new Blob([conteudo], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -297,11 +279,23 @@ export class DataStore {
   importarBackup(jsonTexto) {
     try {
       const novosDados = JSON.parse(jsonTexto);
-      if (typeof novosDados !== 'object' || novosDados === null) throw new Error('Formato inválido: esperado objeto');
-      const colecoesEsperadas = ['obras', 'clientes', 'vendas', 'certificados', 'referencias', 'pedidos', 'exposicoes', 'transacoes', 'materiais', 'fornecedores', 'consumicoes', 'contatos', 'interacoes', 'eventos', 'diario', 'processos', 'config'];
-      const isBackupCompleto = colecoesEsperadas.some(c => c in novosDados);
-      if (isBackupCompleto) { this.dados = novosDados; }
-      else { Object.keys(novosDados).forEach(chave => { if (chave !== 'exportadoEm' && chave !== 'versao') this.dados[chave] = novosDados[chave]; }); }
+      if (!novosDados || typeof novosDados !== 'object' || Array.isArray(novosDados)) throw new Error('Formato inválido: esperado objeto');
+      const colecoesEsperadas = ['obras', 'clientes', 'vendas', 'certificados', 'referencias', 'encomendas', 'portais', 'exposicoes', 'transacoes', 'materiais', 'fornecedores', 'consumos', 'contatosProfissionais', 'interacoes', 'eventos', 'entradasDiario', 'etapasProcesso'];
+      const isBackupCompleto = colecoesEsperadas.some(c => c in novosDados) || 'config' in novosDados;
+      const aliases = { pedidos: 'encomendas', consumicoes: 'consumos', contatos: 'contatosProfissionais', diario: 'entradasDiario', processos: 'etapasProcesso' };
+      Object.entries(aliases).forEach(([antigo, atual]) => {
+        if (novosDados[antigo] && !novosDados[atual]) novosDados[atual] = novosDados[antigo];
+      });
+      const invalidas = colecoesEsperadas.filter(c => c in novosDados && !Array.isArray(novosDados[c]));
+      if (invalidas.length) throw new Error(`Coleções inválidas: ${invalidas.join(', ')}`);
+      if (novosDados.config && (typeof novosDados.config !== 'object' || Array.isArray(novosDados.config))) throw new Error('Configuração inválida');
+      if (isBackupCompleto) {
+        const padrao = this.estruturaPadrao();
+        this.dados = { ...padrao, ...novosDados, schemaVersion: CURRENT_SCHEMA_VERSION };
+      } else {
+        Object.keys(novosDados).forEach(chave => { if (chave !== 'exportadoEm' && chave !== 'versao' && chave !== 'schemaVersion') this.dados[chave] = novosDados[chave]; });
+      }
+      executarMigricoes(this.dados);
       this.salvar();
       return { sucesso: true, tipo: isBackupCompleto ? 'completo' : 'parcial' };
     } catch (e) { return { sucesso: false, erro: e.message }; }
@@ -311,7 +305,7 @@ export class DataStore {
     try {
       const dados = JSON.parse(jsonTexto);
       const preview = { valido: true, tipo: 'completo', colecoes: [] };
-      const colecoesEsperadas = ['obras', 'clientes', 'vendas', 'certificados', 'referencias', 'pedidos', 'exposicoes', 'transacoes', 'materiais', 'fornecedores', 'consumicoes', 'contatos', 'interacoes', 'eventos', 'diario', 'processos', 'config'];
+      const colecoesEsperadas = ['obras', 'clientes', 'vendas', 'certificados', 'referencias', 'encomendas', 'portais', 'exposicoes', 'transacoes', 'materiais', 'fornecedores', 'consumos', 'contatosProfissionais', 'interacoes', 'eventos', 'entradasDiario', 'etapasProcesso', 'config'];
       if (colecoesEsperadas.some(c => c in dados)) {
         preview.colecoes = colecoesEsperadas.filter(c => c in dados).map(c => ({ nome: c, quantidade: Array.isArray(dados[c]) ? dados[c].length : Object.keys(dados[c]).length }));
       } else {

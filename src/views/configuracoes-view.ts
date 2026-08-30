@@ -28,15 +28,20 @@ export class ConfiguracoesView extends BaseView {
     if (auto) configStore().syncAutoBackup = auto.checked;
     const interval = document.getElementById('cfgSyncInterval');
     if (interval) configStore().syncAutoBackupInterval = Number(interval.value) || 30;
+    const supabaseUrl = document.getElementById('cfgSupabaseUrl');
+    if (supabaseUrl) configStore().supabaseUrl = supabaseUrl.value.trim().replace(/\/$/, '');
+    const supabaseKey = document.getElementById('cfgSupabaseKey');
+    if (supabaseKey) configStore().supabasePublishableKey = supabaseKey.value.trim();
     configStore().salvar();
     if (typeof atualizarThemeColor === 'function') atualizarThemeColor();
     mostrarToast('Configurações salvas com sucesso!', 'sucesso');
   }
 
-  _salvarPin() {
+  async _salvarPin() {
     const pinVal = document.getElementById('cfgPin')?.value;
     if (pinVal && pinVal.length === 4 && /^\d{4}$/.test(pinVal)) {
-      configStore().pin = pinVal;
+      const hashed = await hashPin(pinVal);
+      configStore().pin = hashed;
       configStore().salvar();
       mostrarToast('PIN salvo com sucesso!', 'sucesso');
       document.getElementById('cfgPin').value = '';
@@ -191,6 +196,7 @@ export class ConfiguracoesView extends BaseView {
           <button class="sync-tab ativo" data-sync-tab="indexeddb"><i class="fas fa-save"></i> Local (IDB)</button>
           <button class="sync-tab" data-sync-tab="googledrive">☁️ Google Drive</button>
           <button class="sync-tab" data-sync-tab="webdav"><i class="fas fa-folder"></i> WebDAV</button>
+          <button class="sync-tab" data-sync-tab="portal-remoto"><i class="fas fa-share-alt"></i> Portal remoto</button>
         </div>
 
         <div class="sync-panel" id="syncPanelIndexedDB">
@@ -230,6 +236,13 @@ export class ConfiguracoesView extends BaseView {
             <button class="btn-secundario" id="btnWebDAVListar"><i class="fas fa-clipboard"></i> Listar Backups</button>
           </div>
           <div id="webdavBackupList" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="sync-panel" id="syncPanelPortalRemoto" style="display:none;">
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">Use uma chave publicável do Supabase. Os links de clientes são atendidos por uma Edge Function e expiram; nenhuma chave secreta vai para o navegador.</p>
+          <div class="campo-form"><label>URL do projeto Supabase</label><input type="url" id="cfgSupabaseUrl" value="${sanitizarHTML(s.supabaseUrl || '')}" placeholder="https://seu-projeto.supabase.co"></div>
+          <div class="campo-form"><label>Chave publicável</label><input type="text" id="cfgSupabaseKey" value="${sanitizarHTML(s.supabasePublishableKey || '')}" placeholder="sb_publishable_..."></div>
+          <p style="font-size:0.75rem;color:var(--warn);">A publicação do portal requer aplicar a migration e implantar a Edge Function incluídas no projeto.</p>
         </div>
 
         <div class="campo-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
@@ -318,7 +331,8 @@ export class ConfiguracoesView extends BaseView {
         document.querySelectorAll('.sync-tab').forEach(t => t.classList.remove('ativo'));
         tab.classList.add('ativo');
         document.querySelectorAll('.sync-panel').forEach(p => p.style.display = 'none');
-        const panel = document.getElementById('syncPanel' + tab.dataset.syncTab.replace('g', 'G').replace('i', 'I').replace('w', 'W'));
+        const paineis = { indexeddb: 'syncPanelIndexedDB', googledrive: 'syncPanelGoogleDrive', webdav: 'syncPanelWebDAV', 'portal-remoto': 'syncPanelPortalRemoto' };
+        const panel = document.getElementById(paineis[tab.dataset.syncTab]);
         if (panel) panel.style.display = 'block';
       });
     });

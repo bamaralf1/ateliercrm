@@ -42,7 +42,7 @@ export class StoreBridge {
   adicionar(colecao: string, item: any) {
     const store = this._piniaStore(colecao)
     if (store) {
-      item.id = 'id_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+      item.id = crypto.randomUUID ? crypto.randomUUID() : 'id_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
       item.criadoEm = item.criadoEm || new Date().toISOString()
       store.adicionar({ ...item })
       this.dataStore.dados[colecao] = store.items

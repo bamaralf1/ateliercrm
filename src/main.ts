@@ -1,6 +1,16 @@
 // Bootstrap e inicialização
 import { StoreBridge } from './store-bridge'
 import { confirmarAcao, mostrarToastComDesfazer } from './confirmacao'
+import { verificarPin, isPinHashed, hashPin } from './secure-storage'
+
+// Módulos extraídos
+import { iniciarObserverConfetti } from './confetti'
+import { iniciarTour } from './tour'
+import { registrarAtalhosTeclado } from './shortcuts'
+import { iniciarFab } from './fab'
+import { iniciarMonitorInatividade } from './security'
+import { iniciarNotificacoes } from './notificacoes'
+import { iniciarDragDrop } from './drag-drop'
 
 // Renderiza o Dashboard
 export function renderizarDashboard(dataStore) {
@@ -20,10 +30,10 @@ export function renderizarDashboard(dataStore) {
   const recentes = [...obras].sort((a, b) => new Date(b.dataCadastro || b.criadoEm) - new Date(a.dataCadastro || a.criadoEm)).slice(0, 5);
   const listaRecentesHtml = recentes.length ? recentes.map(o => `
     <li class="item-obra-recente">
-      <div class="thumb-obra">${o.imagem ? `<img src="${o.imagem}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || '<i class="fas fa-images"></i>')}</div>
+      <div class="thumb-obra">${o.imagem ? `<img src="${sanitizarURL(o.imagem)}" alt="${sanitizarHTML(o.titulo)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : (o.emoji || '<i class="fas fa-images"></i>')}</div>
       <div class="info-obra-recente">
-        <div class="nome">${o.titulo}</div>
-        <div class="meta">${o.tecnica || ''} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
+        <div class="nome">${sanitizarHTML(o.titulo)}</div>
+        <div class="meta">${sanitizarHTML(o.tecnica || '')} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
       </div>
       <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
     </li>
@@ -52,7 +62,7 @@ export function renderizarDashboard(dataStore) {
     </div>
     <div class="grid-painel">
       <div class="painel"><h3>🕐 Obras mais recentes</h3><ul class="lista-obras-recentes stagger-in">${listaRecentesHtml}</ul></div>
-      <div class="painel"><h3><i class="fas fa-clipboard"></i> Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map(a => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${a.titulo} <span class="activity-badge ${a.badge}">${a.badge}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join('') : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
+      <div class="painel"><h3><i class="fas fa-clipboard"></i> Atividades Recentes</h3><div class="activity-feed">${activityLogger.obterRecentes(5).length > 0 ? activityLogger.obterRecentes(5).map(a => `<div class="activity-item"><div class="activity-icone">${activityLogger.obterIcone(a.tipo)}</div><div class="activity-detalhes"><div class="activity-titulo">${sanitizarHTML(a.titulo)} <span class="activity-badge ${sanitizarHTML(a.badge)}">${sanitizarHTML(a.badge)}</span></div><div class="activity-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div></div></div>`).join('') : '<div class="estado-vazio"><p>Nenhuma atividade registrada ainda.</p></div>'}</div></div>
     </div>
     <div class="painel"><h3>⚡ Atalhos rápidos</h3><div class="atalhos-rapidos"><button class="btn-primario" id="btnAtalhoNovaObra">✚ Nova Obra</button><button class="btn-secundario" id="btnAtalhoVenda">✚ Nova Venda</button><button class="btn-secundario" id="btnAtalhoRecibo">🧾 Gerar Recibo</button><button class="btn-secundario" id="btnAtalhoClientes"><i class="fas fa-user"></i> Gerenciar Clientes</button></div></div>
   `;
@@ -71,7 +81,8 @@ export function sanitizarURL(str) {
   const s = String(str).trim();
   try {
     const u = new URL(s, window.location.origin);
-    return ['http:', 'https:', 'data:', 'mailto:'].includes(u.protocol) ? s : '';
+    if (['http:', 'https:', 'mailto:'].includes(u.protocol)) return s;
+    return /^data:image\/(png|jpe?g|webp|gif|svg\+xml);/i.test(s) ? s : '';
   } catch { return ''; }
 }
 
@@ -79,18 +90,13 @@ export function sanitizarRich(str) {
   if (!str) return '';
   const allowedTag = /<\/?(p|br|strong|em|b|i|u|ul|ol|li|span|div)(\s[^>]*)?>/gi;
   const escMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' };
-  const safeAttr = /\s+(style|class|id)\s*=\s*("[^"]*"|'[^']*')/gi;
   let lastIdx = 0; const partes = [];
   for (let match; (match = allowedTag.exec(str)) !== null; ) {
     const texto = str.slice(lastIdx, match.index);
     if (texto) partes.push(texto.replace(/[&<>"']/g, (m) => escMap[m]));
     const tag = match[0], tagName = match[1], attrs = match[2];
     if (tag[1] === '/' || !attrs || !attrs.trim()) { partes.push(tag); }
-    else {
-      const safe = []; safeAttr.lastIndex = 0;
-      for (let a; (a = safeAttr.exec(attrs)) !== null; ) safe.push(a[0]);
-      partes.push(`<${tagName}${safe.join('')}>`);
-    }
+    else partes.push(`<${tagName}>`);
     lastIdx = allowedTag.lastIndex;
   }
   const resto = str.slice(lastIdx);
@@ -169,7 +175,7 @@ export function downloadHTML(html, nomeArquivo) {
 }
 
 export function gerarPortalHTML(dados) {
-  const d = JSON.stringify({ artista: dados.artista, contatoEmail: dados.contatoEmail, contatoTel: dados.contatoTel, encomenda: dados.encomenda }).replace(/<\/script>/g, '</script>');
+  const d = JSON.stringify({ artista: dados.artista, contatoEmail: dados.contatoEmail, contatoTel: dados.contatoTel, encomenda: dados.encomenda }).replace(/<\/script>/g, '<\\/script>');
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -234,7 +240,7 @@ h+='<div class="card"><div style="display:flex;justify-content:space-between;ali
 h+='<div class="card"><h2><i class="fas fa-chart-line"></i> Progresso</h2><div class="pt"><div class="pf" style="width:'+pct+'%"></div></div><div class="sg">';
 STAGES.forEach(function(s,i){var c=i<si||(i===si&&e.status==='entregue')?'done':i===si?'active':'';h+='<div class="si"><div class="sd '+c+'"><i class="fas '+s.icon+'"></i></div><div class="sl '+(c?'active':'')+'">'+s.label+'</div></div>'});
 h+='</div></div>';
-h+='<div class="card"><h2><i class="fas fa-info-circle"></i> Detalhes</h2><div class="ig"><div class="il">Valor</div><div class="iv">'+fm(e.valor||0)+'</div><div class="il">Previs\u00e3o</div><div class="iv">'+(e.prazo?fd(e.prazo):'—')+'</div></div>';
+h+='<div class="card"><h2><i class="fas fa-info-circle"></i> Detalhes</h2><div class="ig"><div class="il">Valor</div><div class="iv">'+fm(e.valor||0)+'</div><div class="il">Previs\u00e3o</div><div class="iv">'+(e.prazo?fd(e.prazo):'\u2014')+'</div></div>';
 if(dp!==null&&dp>0)h+='<div style="display:flex;gap:12px;justify-content:center;margin-top:12px"><div style="text-align:center"><div style="font-size:1.6rem;font-weight:700">'+dp+'</div><div style="font-size:0.65rem;color:var(--text-mu)">Dias</div></div></div>';
 else if(dp!==null&&dp<=0)h+='<div style="color:#dc2626;text-align:center;padding:8px;margin-top:8px;background:#fef2f2;border-radius:8px"><i class="fas fa-clock"></i> Prazo encerrado</div>';
 h+='</div>';
@@ -248,7 +254,7 @@ else{h+='<div style="text-align:center;padding:12px;color:var(--text-mu)"><i cla
 h+='</div></div>';return h
 }
 function s(str){if(!str)return '';var d=document.createElement('div');d.textContent=str;return d.innerHTML}
-function fd(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}catch{return d}}
+function fd(d){if(!d)return '\u2014';try{return new Date(d).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}catch{return d}}
 function fm(v){try{return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0)}catch{return 'R$ 0,00'}}
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',render)}else{render()}
 </script>
@@ -284,7 +290,6 @@ export function aplicarTransicaoView(container, chave) {
   }
   if (transicaoHistorico.length > 20) transicaoHistorico.shift();
 
-  // Stagger child animation
   requestAnimationFrame(() => {
     const filhos = container.querySelectorAll('.stagger-in > *');
     filhos.forEach((el, i) => {
@@ -293,344 +298,6 @@ export function aplicarTransicaoView(container, chave) {
     });
   });
 }
-
-const ATALHOS_PADRAO = {
-  'ctrl+k': { desc: 'Busca global (spotlight)', acao: () => abrirSpotlight() },
-  'ctrl+n': { desc: 'Nova obra', acao: () => { router?.navegar('catalogo'); setTimeout(() => eventBus.emitir('abrir-nova-obra'), 200); } },
-  'ctrl+v': { desc: 'Nova venda', acao: () => { router?.navegar('vendas'); setTimeout(() => eventBus.emitir('abrir-nova-venda'), 200); } },
-  'ctrl+c': { desc: 'Novo cliente', acao: () => { router?.navegar('clientes'); setTimeout(() => eventBus.emitir('abrir-novo-cliente'), 200); } },
-  'ctrl+d': { desc: 'Dashboard', acao: () => router?.navegar('dashboard') },
-  'ctrl+g': { desc: 'Galeria Virtual', acao: () => router?.navegar('galeriaVirtual') },
-  'ctrl+p': { desc: 'Precificador', acao: () => router?.navegar('precificador') },
-  'ctrl+a': { desc: 'Atelier/Estoque', acao: () => router?.navegar('atelier') },
-  'ctrl+f': { desc: 'Financeiro', acao: () => router?.navegar('financeiro') },
-  'ctrl+r': { desc: 'Rede Profissional', acao: () => router?.navegar('rede') },
-  'ctrl+j': { desc: 'Diário Criativo', acao: () => router?.navegar('diario') },
-  'ctrl+b': { desc: 'Backup rápido', acao: () => { dataStore?.exportarBackup(); mostrarToast('Backup exportado!', 'sucesso'); activityLogger.registrar('export', 'Backup exportado', 'Backup completo do sistema', 'export'); } },
-  'ctrl+s': { desc: 'Salvar dados', acao: () => { dataStore?.salvar(); mostrarToast('Dados salvos!', 'sucesso'); activityLogger.registrar('atualizacao', 'Dados salvos', 'Salvamento manual', 'atualizacao'); } },
-  'Escape': { desc: 'Fechar modal', acao: () => fecharModal() },
-  '/': { desc: 'Mostrar todos os atalhos', acao: () => mostrarAtalhos() },
-  '?': { desc: 'Mostrar ajuda', acao: () => mostrarAtalhos() },
-};
-
-function carregarAtalhos() {
-  let personalizados = {};
-  try { personalizados = JSON.parse(localStorage.getItem('atelier_atalhos') || '{}'); } catch (e) { console.warn(e); }
-  const atalhos = [];
-  for (const [chave, cfg] of Object.entries(ATALHOS_PADRAO)) {
-    const personalizado = personalizados[chave];
-    const tecla = personalizado || chave;
-    const ctrl = tecla.startsWith('ctrl+');
-    const key = ctrl ? tecla.slice(5) : tecla;
-    atalhos.push({ key, ctrl, desc: cfg.desc, acao: cfg.acao, chave });
-  }
-  return atalhos;
-}
-
-let atalhos = carregarAtalhos();
-
-document.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) && e.key !== 'Escape') return;
-  const ctrl = e.ctrlKey || e.metaKey;
-  for (const a of atalhos) {
-    if (a.key === e.key && (a.ctrl ? ctrl : true)) { e.preventDefault(); a.acao(); return; }
-  }
-  if (e.key === 'Escape') {
-    if (document.querySelector('.spotlight-overlay')) document.querySelector('.spotlight-overlay').remove();
-    fecharModal();
-  }
-});
-
-export function abrirSpotlight() {
-  const overlay = document.createElement('div');
-  overlay.className = 'spotlight-overlay';
-  overlay.innerHTML = `<div class="spotlight-box"><input class="spotlight-input" placeholder="Buscar obras, clientes, vendas..." autofocus><div class="spotlight-results"></div><div class="spotlight-footer"><span>⬆⬇ Navegar</span><span>⏎ Abrir</span><span>ESC Fechar</span></div></div>`;
-  document.body.appendChild(overlay);
-  const input = overlay.querySelector('.spotlight-input');
-  const results = overlay.querySelector('.spotlight-results');
-  let destaqueIdx = -1;
-
-  function salvarHistorico(termo) {
-    if (!termo) return;
-    try {
-      let hist = JSON.parse(localStorage.getItem('atelier_spotlight_hist') || '[]');
-      hist = [termo, ...hist.filter(h => h !== termo)].slice(0, 5);
-      localStorage.setItem('atelier_spotlight_hist', JSON.stringify(hist));
-    } catch (e) { console.warn(e) }
-  }
-
-  function atualizarDestaque() {
-    results.querySelectorAll('.spotlight-item').forEach((el, i) => {
-      el.classList.toggle('destaque', i === destaqueIdx);
-      if (i === destaqueIdx) el.scrollIntoView({ block: 'nearest' });
-    });
-  }
-
-  function navegarParaItem(el) {
-    if (!el) return;
-    const rota = el.dataset.rota;
-    const payload = el.dataset.payload;
-    overlay.remove();
-    if (rota === 'catalogo' && payload) {
-      salvarHistorico(input.value);
-      router?.navegar('catalogo');
-    } else if (rota) {
-      salvarHistorico(input.value);
-      router?.navegar(rota);
-    }
-  }
-
-  function secao(titulo, icone) {
-    return `<div class="sp-secao"><span>${icone}</span> ${titulo}</div>`;
-  }
-
-  const buscar = debounce((termo) => {
-    destaqueIdx = -1;
-    if (!termo) {
-      try {
-        const hist = JSON.parse(localStorage.getItem('atelier_spotlight_hist') || '[]');
-        if (hist.length > 0) {
-          results.innerHTML = secao('Recentes', '🕐') + hist.map(h => `<div class="spotlight-item sp-historico" data-termo="${h}"><span class="si-icone">🕐</span><span>${h}</span><span class="si-info">busca recente</span></div>`).join('');
-          results.querySelectorAll('.sp-historico').forEach(el => el.addEventListener('click', () => { input.value = el.dataset.termo; buscar(el.dataset.termo); }));
-          return;
-        }
-      } catch (e) { console.warn(e) }
-      results.innerHTML = '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Digite para buscar em todo o sistema...</div>';
-      return;
-    }
-    const t = termo.toLowerCase();
-    const obras = (dataStore?.listar('obras') || []).filter(o => (o.titulo || '').toLowerCase().includes(t) || (o.descricao || '').toLowerCase().includes(t) || (o.tecnica || '').toLowerCase().includes(t) || (o.serie || '').toLowerCase().includes(t)).slice(0, 5);
-    const clientes = (dataStore?.listar('clientes') || []).filter(c => (c.nome || '').toLowerCase().includes(t) || (c.email || '').toLowerCase().includes(t)).slice(0, 5);
-    const vendas = (dataStore?.listar('vendas') || []).filter(v => (v.numeroRecibo || '').toLowerCase().includes(t) || (v.clienteNome || '').toLowerCase().includes(t)).slice(0, 5);
-    const contatos = (dataStore?.listar('contatosProfissionais') || []).filter(c => (c.nome || '').toLowerCase().includes(t) || (c.instituicao || '').toLowerCase().includes(t)).slice(0, 5);
-    const encomendas = (dataStore?.listar('encomendas') || []).filter(e => (e.cliente || '').toLowerCase().includes(t) || (e.descricao || '').toLowerCase().includes(t)).slice(0, 5);
-    const eventos = (dataStore?.listar('eventos') || []).filter(e => (e.nome || '').toLowerCase().includes(t)).slice(0, 5);
-
-    let html = '';
-    if (obras.length) { html += secao('Obras', '<i class="fas fa-images"></i>') + obras.map(o => `<div class="spotlight-item" data-rota="catalogo" data-payload="${o.id}"><span class="si-icone" style="background-image:url('${o.imagem || ''}');background-size:cover;width:28px;height:28px;border-radius:4px;"></span><span>${o.titulo}</span><span class="si-info">${o.tecnica || ''} · ${formatarMoeda(o.preco)}</span></div>`).join(''); }
-    if (clientes.length) { html += secao('Clientes', '<i class="fas fa-user"></i>') + clientes.map(c => `<div class="spotlight-item" data-rota="clientes"><span class="si-icone"><i class="fas fa-user"></i></span><span>${c.nome}</span><span class="si-info">${c.email || ''}</span></div>`).join(''); }
-    if (vendas.length) { html += secao('Vendas', '<i class="fas fa-dollar-sign"></i>') + vendas.map(v => `<div class="spotlight-item" data-rota="vendas"><span class="si-icone"><i class="fas fa-dollar-sign"></i></span><span>Recibo ${v.numeroRecibo || ''}</span><span class="si-info">${formatarMoeda(v.valorTotal || v.valor)}</span></div>`).join(''); }
-    if (contatos.length) { html += secao('Contatos', '🤝') + contatos.map(c => `<div class="spotlight-item" data-rota="rede"><span class="si-icone">🤝</span><span>${c.nome}</span><span class="si-info">${c.instituicao || ''}</span></div>`).join(''); }
-    if (encomendas.length) { html += secao('Encomendas', '<i class="fas fa-box"></i>') + encomendas.map(e => `<div class="spotlight-item" data-rota="encomendas"><span class="si-icone"><i class="fas fa-box"></i></span><span>${e.cliente}</span><span class="si-info">${e.descricao ? e.descricao.slice(0, 40) : ''}</span></div>`).join(''); }
-    if (eventos.length) { html += secao('Eventos', '🎪') + eventos.map(e => `<div class="spotlight-item" data-rota="exposicoes"><span class="si-icone">🎪</span><span>${e.nome}</span><span class="si-info">${e.tipo || ''}</span></div>`).join(''); }
-    results.innerHTML = html || '<div class="spotlight-item" style="color:var(--text-muted);justify-content:center;">Nenhum resultado encontrado.</div>';
-    results.querySelectorAll('.spotlight-item').forEach(el => { el.addEventListener('click', () => navegarParaItem(el)); });
-  }, 150);
-
-  input.addEventListener('input', () => buscar(input.value));
-  input.addEventListener('keydown', (e) => {
-    const itens = results.querySelectorAll('.spotlight-item:not(.sp-secao)');
-    if (e.key === 'ArrowDown') { e.preventDefault(); destaqueIdx = Math.min(itens.length - 1, destaqueIdx + 1); atualizarDestaque(); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); destaqueIdx = Math.max(-1, destaqueIdx - 1); atualizarDestaque(); }
-    else if (e.key === 'Enter' && destaqueIdx >= 0 && itens[destaqueIdx]) { navegarParaItem(itens[destaqueIdx]); }
-    else if (e.key === 'Enter' && itens.length === 1) { navegarParaItem(itens[0]); }
-  });
-
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-  setTimeout(() => input.focus(), 50);
-}
-
-export function iniciarFab() {
-  const fabMain = document.getElementById('fabMain');
-  const fabSpeedial = document.getElementById('fabSpeedial');
-  const fabBackdrop = document.getElementById('fabBackdrop');
-  if (!fabMain) return;
-
-  function fecharFab() {
-    fabMain.classList.remove('ativo');
-    fabSpeedial.classList.remove('visivel');
-    fabBackdrop.classList.remove('visivel');
-  }
-
-  function toggleFab() {
-    const aberto = fabMain.classList.toggle('ativo');
-    fabSpeedial.classList.toggle('visivel', aberto);
-    fabBackdrop.classList.toggle('visivel', aberto);
-  }
-
-  fabMain.addEventListener('click', toggleFab);
-  fabBackdrop.addEventListener('click', fecharFab);
-
-  const acoes = {
-    obra: () => { router?.navegar('catalogo'); setTimeout(() => eventBus.emitir('abrir-nova-obra'), 200); },
-    venda: () => { router?.navegar('vendas'); setTimeout(() => eventBus.emitir('abrir-nova-venda'), 200); },
-    cliente: () => { router?.navegar('clientes'); setTimeout(() => eventBus.emitir('abrir-novo-cliente'), 200); },
-    encomenda: () => { router?.navegar('encomendas'); },
-    contato: () => { router?.navegar('rede'); },
-    evento: () => { router?.navegar('exposicoes'); }
-  };
-
-  document.querySelectorAll('[data-fab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      fecharFab();
-      const acao = btn.dataset.fab;
-      if (acoes[acao]) acoes[acao]();
-    });
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && fabSpeedial?.classList.contains('visivel')) fecharFab();
-  });
-}
-
-export function mostrarAtalhos() {
-  const categorias = {
-    'Navegação': ['d', 'g', 'p', 'a', 'f', 'r', 'j'],
-    'Criação': ['n', 'v', 'c'],
-    'Dados': ['b', 's'],
-    'Ajuda': ['/', '?', 'k', 'Escape']
-  };
-  const itensPorCategoria = Object.entries(categorias).map(([cat, keys]) => {
-    const itens = atalhos.filter(a => keys.includes(a.key)).map(a => {
-      const keyHtml = a.ctrl ? `<span class="sc-key">${navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}</span><span class="sc-key">${a.key.toUpperCase()}</span>` : `<span class="sc-key">${a.key}</span>`;
-      return `<div class="sc-item"><span>${a.desc}</span><span>${keyHtml}</span></div>`;
-    }).join('');
-    return `<div class="sc-categoria"><h4>${cat}</h4><div class="shortcuts-grid">${itens}</div></div>`;
-  }).join('');
-  abrirModal(`<h3>⌨️ Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnPersonalizarAtalhos"><i class="fas fa-pen"></i> Personalizar</button><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
-  document.getElementById('btnCancelarModal')?.addEventListener('click', fecharModal);
-  document.getElementById('btnPersonalizarAtalhos')?.addEventListener('click', () => { fecharModal(); setTimeout(editarAtalhos, 300); });
-}
-
-export function editarAtalhos() {
-  const items = atalhos.filter(a => a.chave).map(a => {
-    const teclaAtual = (a.ctrl ? 'Ctrl+' : '') + a.key;
-    return `<div class="sc-edit-item"><span class="sc-edit-desc">${a.desc}</span><input class="sc-edit-input" data-chave="${a.chave}" value="${teclaAtual}" readonly><button class="btn-pequeno sc-edit-btn" data-chave="${a.chave}"><i class="fas fa-sync"></i></button></div>`;
-  }).join('');
-  abrirModal(`<h3>⌨️ Personalizar Atalhos</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Clique no botão ao lado do atalho e pressione a nova combinação de teclas. Ctrl+Letra ou apenas uma tecla.</p><div class="sc-edit-lista">${items}</div><div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnResetarAtalhos"><i class="fas fa-undo"></i> Restaurar Padrões</button><button class="btn-primario" id="btnSalvarAtalhos"><i class="fas fa-save"></i> Salvar</button></div>`);
-
-  let capturando = null;
-  document.querySelectorAll('.sc-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const chave = btn.dataset.chave;
-      if (capturando === chave) { capturando = null; btn.innerHTML = '<i class="fas fa-sync"></i>'; return; }
-      capturando = chave;
-      btn.innerHTML = '...';
-      const input = document.querySelector(`.sc-edit-input[data-chave="${chave}"]`);
-      if (input) { input.value = 'Pressione uma tecla...'; input.focus(); }
-    });
-  });
-
-  document.addEventListener('keydown', function capturar(e) {
-    if (!capturando) return;
-    e.preventDefault();
-    const input = document.querySelector(`.sc-edit-input[data-chave="${capturando}"]`);
-    const btn = document.querySelector(`.sc-edit-btn[data-chave="${capturando}"]`);
-    if (input) {
-      const ctrl = e.ctrlKey || e.metaKey;
-      input.value = ctrl ? 'Ctrl+' + e.key.toLowerCase() : e.key;
-      input.dataset.novo = input.value;
-    }
-    if (btn) btn.innerHTML = '<i class="fas fa-check" style="color:#22c55e"></i>';
-    capturando = null;
-  });
-
-  document.getElementById('btnResetarAtalhos')?.addEventListener('click', () => {
-    localStorage.removeItem('atelier_atalhos');
-    atalhos = carregarAtalhos();
-    mostrarToast('Atalhos restaurados!', 'sucesso');
-    fecharModal();
-  });
-  document.getElementById('btnSalvarAtalhos')?.addEventListener('click', () => {
-    const personalizados = {};
-    document.querySelectorAll('.sc-edit-input').forEach(inp => {
-      const novo = inp.dataset.novo;
-      if (novo && novo !== inp.value && inp.dataset.chave) {
-        personalizados[inp.dataset.chave] = novo;
-      }
-    });
-    localStorage.setItem('atelier_atalhos', JSON.stringify(personalizados));
-    atalhos = carregarAtalhos();
-    mostrarToast('Atalhos personalizados salvos!', 'sucesso');
-    fecharModal();
-  });
-}
-
-// Segurança
-let _inatividadeTimer = null;
-let _telaBloqueada = false;
-
-export function iniciarMonitorInatividade() {
-  if (!dataStore?.dados?.config?.autoLock || !dataStore?.dados?.config?.pin) return;
-  const resetTimer = () => {
-    if (_telaBloqueada) return;
-    clearTimeout(_inatividadeTimer);
-    _inatividadeTimer = setTimeout(() => bloquearTela(), 10 * 60 * 1000);
-  };
-  ['click', 'keydown', 'mousemove', 'touchstart'].forEach(ev => document.addEventListener(ev, resetTimer));
-  resetTimer();
-}
-
-export function bloquearTela() {
-  if (_telaBloqueada) return;
-  _telaBloqueada = true;
-  const pin = dataStore.dados.config.pin;
-  if (!pin) return;
-  let tentativas = 0;
-  function mostrarPinModal() {
-    let entrada = '';
-    const render = () => {
-      abrirModal(`<h3><i class="fas fa-lock"></i> Tela Bloqueada</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Digite seu PIN de 4 dígitos para continuar</p><div class="pin-display">${'•'.repeat(entrada.length).padEnd(4, '_')}</div>${tentativas > 0 ? '<p style="color:#ef4444;font-size:0.8rem;">PIN incorreto. Tente novamente.</p>' : ''}<div class="pin-pad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(v => v === '' ? '<button disabled></button>' : `<button data-val="${v}">${v}</button>`).join('')}</div><div class="modal-acoes"><button class="btn-secundario" id="btnSairPin">Sair</button></div>`);
-      document.querySelectorAll('.pin-pad button[data-val]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (btn.dataset.val === '⌫') { entrada = entrada.slice(0, -1); render(); return; }
-          if (entrada.length >= 4) return;
-          entrada += btn.dataset.val;
-          if (entrada.length === 4) {
-            if (entrada === pin) { _telaBloqueada = false; fecharModal(); mostrarToast('Bem-vindo de volta!', 'sucesso'); iniciarMonitorInatividade(); }
-            else { tentativas++; entrada = ''; render(); }
-          } else { render(); }
-        });
-      });
-      document.getElementById('btnSairPin')?.addEventListener('click', () => { fecharModal(); });
-      document.getElementById('btnCancelarModal')?.addEventListener('click', fecharModal);
-    };
-    render();
-  }
-  mostrarPinModal();
-}
-
-// Confetti
-export function dispararConfetti() {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'confetti-canvas';
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  const particles = Array.from({ length: 80 }, () => ({
-    x: canvas.width / 2 + (Math.random() - 0.5) * 200,
-    y: canvas.height / 2,
-    vx: (Math.random() - 0.5) * 8,
-    vy: -Math.random() * 10 - 4,
-    size: Math.random() * 6 + 3,
-    color: ['#ff0','#f0f','#0ff','#f00','#0f0','#00f','#ffa500','#ff69b4'][Math.floor(Math.random() * 8)],
-    rotation: Math.random() * 360,
-    rotSpeed: (Math.random() - 0.5) * 10,
-    gravity: 0.2 + Math.random() * 0.1
-  }));
-  let frame = 0;
-  const anim = () => {
-    frame++;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.rotation += p.rotSpeed;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation * Math.PI / 180);
-      ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
-      ctx.restore();
-    });
-    if (frame < 90) requestAnimationFrame(anim);
-    else canvas.remove();
-  };
-  anim();
-}
-
-// Observer para confetti em vendas
-const _vendaObserver = new MutationObserver(() => {
-  if (document.querySelector('.toast')?.textContent?.includes('Venda registrada')) {
-    dispararConfetti();
-  }
-});
-_vendaObserver.observe(document.getElementById('toast'), { childList: true, subtree: true, characterData: true });
 
 // Dicas do dia
 const dicasDiarias = [
@@ -669,52 +336,6 @@ const dicasDiarias = [
 export function obterDicaDoDia() {
   const diaDoAno = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   return dicasDiarias[diaDoAno % dicasDiarias.length];
-}
-
-// Tour
-const tourPassos = [
-  { alvo: '.sidebar', titulo: '<i class="fas fa-palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
-  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 8 temas.', pos: 'bottom' },
-  { alvo: '#btnBackup', titulo: '<i class="fas fa-save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
-  { alvo: '[data-rota="catalogo"]', titulo: '<i class="fas fa-images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
-  { alvo: '[data-rota="vendas"]', titulo: '<i class="fas fa-dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
-  { alvo: '[data-rota="diario"]', titulo: '<i class="fas fa-book-open"></i> Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
-  { alvo: '[data-rota="configuracoes"]', titulo: '⚙️ Configurações', desc: 'Configure idioma, segurança e dados do artista.', pos: 'right' }
-];
-
-export function iniciarTour() {
-  if (dataStore?.dados?.config?.tourCompleted) return;
-  let passoAtual = 0;
-  function mostrarPasso() {
-    const passo = tourPassos[passoAtual];
-    const alvo = document.querySelector(passo.alvo);
-    if (!alvo) { passoAtual++; if (passoAtual < tourPassos.length) mostrarPasso(); else finalizarTour(); return; }
-    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-    document.querySelectorAll('.tour-tooltip').forEach(el => el.remove());
-    alvo.classList.add('tour-highlight');
-    const rect = alvo.getBoundingClientRect();
-    const tooltip = document.createElement('div');
-    tooltip.className = 'tour-tooltip';
-    let top, left;
-    if (passo.pos === 'right') { left = rect.right + 12; top = rect.top; }
-    else if (passo.pos === 'bottom') { left = rect.left; top = rect.bottom + 12; }
-    else { left = rect.left; top = rect.bottom + 12; }
-    if (left + 320 > window.innerWidth) left = window.innerWidth - 340;
-    if (top < 10) top = 10;
-    tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
-    const isUltimo = passoAtual === tourPassos.length - 1;
-    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '<i class="fas fa-check"></i> Finalizar' : 'Próximo →'}</button></div>`;
-    document.body.appendChild(tooltip);
-    document.getElementById('tourNext')?.addEventListener('click', () => { if (isUltimo) finalizarTour(); else { passoAtual++; mostrarPasso(); } });
-    document.getElementById('tourPrev')?.addEventListener('click', () => { passoAtual--; mostrarPasso(); });
-    document.getElementById('tourSkip')?.addEventListener('click', finalizarTour);
-  }
-  function finalizarTour() {
-    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-    document.querySelectorAll('.tour-tooltip').forEach(el => el.remove());
-    if (dataStore) { dataStore.dados.config.tourCompleted = true; dataStore.salvar(); }
-  }
-  setTimeout(mostrarPasso, 600);
 }
 
 // Instâncias globais
@@ -795,7 +416,6 @@ window.mostrarToast = function(mensagem, tipo = 'info') {
   msgEl.textContent = mensagem;
   toast.className = 'toast' + (tipo && icones[tipo] ? ' ' + tipo : '');
   toast.classList.add('mostrar');
-  // Reinicia a barra de progresso
   if (progresso) {
     progresso.style.animation = 'none';
     void progresso.offsetWidth;
@@ -816,140 +436,20 @@ Router.prototype.navegar = function(chave) {
 };
 
 // Service Worker
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
 
 // Init
 themeEngine.inicializar();
 inicializarChartDefaults();
 router.inicializar();
+registrarAtalhosTeclado();
 setTimeout(() => iniciarMonitorInatividade(), 500);
 setTimeout(() => cloudSync.iniciarAutoBackup(), 2000);
 iniciarFab();
+iniciarObserverConfetti();
+iniciarNotificacoes();
+iniciarDragDrop();
 if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => iniciarTour(), 1000); }
-
-// Notification Center
-(function() {
-  const btnNotif = document.getElementById('btnNotificacoes');
-  const panel = document.getElementById('notifPanel');
-  const lista = document.getElementById('notifLista');
-  const badge = document.getElementById('notifBadge');
-  if (!btnNotif || !panel) return;
-
-  function lerLidas() {
-    try { return JSON.parse(localStorage.getItem('atelier-notif-lidas') || '[]'); } catch { return []; }
-  }
-  function salvarLidas(ids) { localStorage.setItem('atelier-notif-lidas', JSON.stringify(ids)); }
-  function atualizarBadge() {
-    const lidas = lerLidas();
-    const atividades = activityLogger.obterRecentes(20);
-    const naoLidas = atividades.filter(a => !lidas.includes(a.id)).length;
-    if (naoLidas > 0) { badge.textContent = naoLidas > 99 ? '99+' : String(naoLidas); badge.style.display = 'flex'; }
-    else { badge.style.display = 'none'; }
-  }
-
-  function renderizarNotif() {
-    const lidas = lerLidas();
-    const atividades = activityLogger.obterRecentes(20);
-    if (atividades.length === 0) {
-      lista.innerHTML = '<div class="notif-vazio"><i class="fas fa-bell"></i> Nenhuma notificação ainda.</div>';
-      return;
-    }
-    lista.innerHTML = atividades.map(a => `
-      <div class="notif-item ${lidas.includes(a.id) ? '' : 'ni-nao-lida'}" data-id="${a.id}">
-        <span class="ni-icone">${activityLogger.obterIcone(a.tipo)}</span>
-        <div class="ni-conteudo">
-          <div class="ni-titulo">${sanitizarHTML(a.titulo)}</div>
-          <div class="ni-detalhes">${sanitizarHTML(a.detalhes || '')}</div>
-          <div class="ni-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
-        </div>
-        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">✓</button>
-      </div>
-    `).join('');
-    lista.querySelectorAll('.ni-marcar').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.id;
-        const lidas2 = lerLidas();
-        if (!lidas2.includes(id)) { lidas2.push(id); salvarLidas(lidas2); }
-        renderizarNotif();
-        atualizarBadge();
-      });
-    });
-  }
-
-  btnNotif.addEventListener('click', (e) => {
-    e.stopPropagation();
-    panel.classList.toggle('visivel');
-    if (panel.classList.contains('visivel')) renderizarNotif();
-  });
-  document.addEventListener('click', (e) => {
-    if (!panel.contains(e.target) && e.target !== btnNotif && !btnNotif.contains(e.target)) panel.classList.remove('visivel');
-  });
-
-  document.getElementById('notifMarcarLidas')?.addEventListener('click', () => {
-    const atividades = activityLogger.obterRecentes(20);
-    const todosIds = atividades.map(a => a.id);
-    salvarLidas(todosIds);
-    renderizarNotif();
-    atualizarBadge();
-  });
-  document.getElementById('notifLimpar')?.addEventListener('click', () => {
-    activityLogger.limpar();
-    salvarLidas([]);
-    renderizarNotif();
-    atualizarBadge();
-  });
-
-  eventBus?.on('nova-atividade', () => { atualizarBadge(); });
-  atualizarBadge();
-})();
-
-// Global drag-and-drop overlay
-(function() {
-  let overlay = document.getElementById('globalDropOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'globalDropOverlay';
-    overlay.className = 'global-drop-overlay';
-    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon"><i class="fas fa-camera"></i></div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
-    document.body.appendChild(overlay);
-  }
-  let dropTimer = 0;
-  document.addEventListener('dragenter', (e) => {
-    if (!e.dataTransfer.types?.includes('Files')) return;
-    clearTimeout(dropTimer);
-    overlay.classList.add('gdo-visivel');
-  });
-  document.addEventListener('dragover', (e) => { if (e.dataTransfer.types?.includes('Files')) e.preventDefault(); });
-  document.addEventListener('dragleave', (e) => {
-    if (e.relatedTarget && overlay.contains(e.relatedTarget)) return;
-    clearTimeout(dropTimer);
-    dropTimer = setTimeout(() => overlay.classList.remove('gdo-visivel'), 100);
-  });
-  document.addEventListener('drop', (e) => {
-    e.preventDefault();
-    overlay.classList.remove('gdo-visivel');
-    const files = e.dataTransfer.files;
-    if (!files || files.length === 0) return;
-    const imagens = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (imagens.length === 0) { mostrarToast('<i class="fas fa-exclamation-triangle"></i> Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
-    if (imagens.length === 1) {
-      router?.navegar('catalogo');
-      setTimeout(() => eventBus.emitir('abrir-nova-obra'), 300);
-    } else {
-      router?.navegar('catalogo');
-      setTimeout(() => {
-        if (catalogoView && typeof catalogoView.abrirImportacaoLote === 'function') {
-          catalogoView.abrirImportacaoLote();
-        }
-      }, 400);
-    }
-  });
-})();
-
-const _observerOrig = MutationObserver;
-const _mutationObs = new _observerOrig(() => { observarImagens(); });
-_mutationObs.observe(document.getElementById('viewPrincipal'), { childList: true, subtree: true });
 
 // Hash listener for portal / galeria virtual
 (function() {
@@ -965,11 +465,6 @@ _mutationObs.observe(document.getElementById('viewPrincipal'), { childList: true
 })();
 
 // PWA — Service Worker + Install Prompt
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -983,6 +478,10 @@ window.instalarPWA = async function() {
   const result = await deferredPrompt.userChoice;
   if (result.outcome === 'accepted') { deferredPrompt = null; const btn = document.getElementById('btnInstalarPWA'); if (btn) btn.style.display = 'none'; }
 };
+
+// Image observer
+const _mutationObs = new MutationObserver(() => { observarImagens(); });
+_mutationObs.observe(document.getElementById('viewPrincipal'), { childList: true, subtree: true });
 
 // Exports for Jest tests
 if (typeof module !== 'undefined' && module.exports) {
@@ -1031,6 +530,7 @@ if (typeof module !== 'undefined' && module.exports) {
     sanitizarHTML,
     sanitizarURL,
     sanitizarRich,
+    debounce,
     gerarImagemPlaceholder,
     calcularObrasPorMes,
     gerarGraficoSVG,

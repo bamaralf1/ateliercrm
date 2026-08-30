@@ -102,12 +102,7 @@ export class PortalView extends BaseView {
       `;
     }
     const aceita = orc.status === 'aprovado' && orc.aceiteData;
-    if (!aceita) {
-      orc.status = 'aprovado';
-      orc.aceiteData = new Date().toISOString();
-      configStore().salvar();
-      activityLogger.registrar('criacao', 'Orçamento aprovado via QR de aceite', orc.nome, 'criacao');
-    }
+    const expirada = orc.validadeData && new Date(orc.validadeData) < new Date();
     const moeda = orc.moeda || 'BRL';
     const valor = (Number(orc.preco) || 0).toLocaleString('pt-BR', { style: 'currency', currency: moeda });
     const dims = [orc.largura, orc.altura, orc.profundidade].filter(Boolean).join('×');
@@ -116,10 +111,10 @@ export class PortalView extends BaseView {
       <div class="portal-wrapper">
         <div class="portal-card portal-aceite">
           <div class="portal-icone portal-aceite-icone"><i class="fas fa-check-circle"></i></div>
-          <h2>${aceita ? 'Proposta já aceita' : 'Proposta aceita!'}</h2>
+          <h2>${aceita ? 'Proposta já aceita' : (expirada ? 'Proposta expirada' : 'Confirme o aceite')}</h2>
           <p class="portal-aceite-sub">${aceita
             ? `Esta proposta já foi aprovada anteriormente em ${formatarData(orc.aceiteData)}.`
-            : 'Seu aceite foi registrado com sucesso. O artista foi notificado.'}</p>
+            : (expirada ? 'Esta proposta ultrapassou a data de validade. Solicite uma nova proposta ao artista.' : 'Revise os dados abaixo e confirme seu aceite. Esta ação será registrada.')}</p>
           <div class="portal-aceite-detalhes">
             <div class="portal-aceite-linha"><span>Proposta</span><strong>${sanitizarHTML(orc.nome || 'Obra sem título')}</strong></div>
             ${orc.numero ? `<div class="portal-aceite-linha"><span>Número</span><strong>${orc.numero}</strong></div>` : ''}
@@ -128,6 +123,7 @@ export class PortalView extends BaseView {
             <div class="portal-aceite-linha"><span>Valor</span><strong>${valor}</strong></div>
             ${orc.validadeData ? `<div class="portal-aceite-linha"><span>Validade</span><strong>${formatarData(orc.validadeData)}</strong></div>` : ''}
           </div>
+          ${!aceita && !expirada ? '<button class="btn-primario" id="btnConfirmarAceite">Confirmar aceite</button>' : ''}
           <p class="portal-footer-peq">via ${sanitizarHTML(artista)} · Atelier CRM</p>
         </div>
       </div>
@@ -189,5 +185,14 @@ export class PortalView extends BaseView {
 
   aposRenderizar() {
     this.removerListeners();
+    document.getElementById('btnConfirmarAceite')?.addEventListener('click', () => {
+      const orc = (configStore().precificadorOrcamentos || []).find(o => o.aceiteToken === this.token);
+      if (!orc || (orc.validadeData && new Date(orc.validadeData) < new Date())) return;
+      orc.status = 'aprovado';
+      orc.aceiteData = new Date().toISOString();
+      configStore().salvar();
+      activityLogger.registrar('criacao', 'Orçamento aprovado via aceite confirmado', orc.nome, 'criacao');
+      this.rerenderizar();
+    });
   }
 }

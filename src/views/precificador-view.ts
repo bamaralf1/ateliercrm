@@ -17,6 +17,8 @@ export class PrecificadorView extends BaseView {
     };
     this.fatoresComplexidade = [0, 0.7, 0.85, 1.0, 1.2, 1.5];
     this.modoOrcamentos = localStorage.getItem('atelier-crm-view-mode-orcamentos') || 'kanban';
+    this.tabAtiva = localStorage.getItem('atelier-crm-tab-precificador') || 'calcular';
+    this.kioskAtivo = false;
   }
 
   get config() { return configStore().precificador || {}; }
@@ -71,6 +73,14 @@ export class PrecificadorView extends BaseView {
       `<option value="${t}" ${this.calc.tecnica === t ? 'selected' : ''}>${t ? capitalizarTexto(t) : 'Técnica livre'}</option>`
     ).join('');
 
+    const tabMap = { calcular: 'Calcular', orcamentos: 'Orcamentos', regras: 'Regras', inteligencia: 'Inteligencia' };
+    const abaAtiva = this.tabAtiva in tabMap ? this.tabAtiva : 'calcular';
+    const visibilidade = (aba) => aba === abaAtiva ? '' : ' style="display:none"';
+    const tabBtn = (chave, rotulo, badge) => `
+      <button class="prec-tab${chave === abaAtiva ? ' ativo' : ''}" data-tab="${chave}" aria-selected="${chave === abaAtiva}">
+        ${rotulo}${badge ? ` <span class="badge">${badge}</span>` : ''}
+      </button>`;
+
     return `
       <div class="precificador" id="precificadorContainer">
         <div class="precificador-toolbar">
@@ -85,12 +95,21 @@ export class PrecificadorView extends BaseView {
           </div>
           <button class="btn-secundario" id="btnAbrirRegras"><i class="fas fa-clipboard"></i> Regras de Precificação</button>
           <button class="btn-secundario" id="btnAbrirTecnicas"><i class="fas fa-swatchbook"></i> Custos por Técnica</button>
+          <button class="btn-secundario" id="btnApresentarKiosk" title="Modo apresentação das propostas"><i class="fas fa-tv"></i> Apresentar</button>
           <button class="btn-primario" id="btnExportarRelatorio"><i class="fas fa-phone"></i> Relatório PDF</button>
         </div>
 
-        <div class="card">
-          <h3>🧮 Calculadora de Preço <span class="badge">Orçamento</span></h3>
-          <div class="calc-grid">
+        <div class="prec-tabs" id="precTabs" role="tablist">
+          ${tabBtn('calcular', '🧮 Calcular')}
+          ${tabBtn('orcamentos', '🗂️ Orçamentos', this.orcamentos.length)}
+          ${tabBtn('regras', '📋 Regras', this.regras.length)}
+          ${tabBtn('inteligencia', '🤖 Inteligência')}
+        </div>
+
+        <div class="prec-painel" id="precPainel${tabMap.calcular}"${visibilidade('calcular')}>
+          <div class="card">
+            <h3>🧮 Calculadora de Preço <span class="badge">Orçamento</span></h3>
+            <div class="calc-grid">
             <div class="campo-calc" style="grid-column:1/-1">
               <label>🖼️ Obra / peça <span class="texto-ajuda">(nome do orçamento)</span></label>
               <input type="text" id="calcNome" placeholder="Ex.: Pintura acrílica sobre tela — Série Horizonte" value="${this.calc.nome || ''}">
@@ -162,8 +181,6 @@ export class PrecificadorView extends BaseView {
 
           <div class="breakdown-grid" id="breakdownGrid">${this.renderBreakdown(this.calcularBreakdown(this.calc))}</div>
           <div id="regraAuto">${this.renderRegraAuto()}</div>
-          <div id="sugestaoInteligente">${this.renderSugestaoInteligente()}</div>
-          <div id="faixaNegociacao">${this.renderFaixaNegociacao()}</div>
 
           <div class="orcamento-acoes">
             <select id="selTemplateProposta" class="orc-status-select" aria-label="Template da proposta PDF" title="Template da proposta PDF">
@@ -177,28 +194,126 @@ export class PrecificadorView extends BaseView {
             <button class="btn-secundario" id="btnCriarEncomenda"><i class="fas fa-box-open"></i> Criar Encomenda</button>
           </div>
         </div>
-
-        ${this.renderOrcamentos()}
-
-        ${temObras ? this.renderBreakEven(obras) : ''}
-        ${temObras ? this.renderMLCard(obras, vendas) : ''}
-        ${temObras ? this.renderProjecao(obras) : ''}
-
-        <div class="card card-full">
-          <h3><i class="fas fa-chart-bar"></i> Análise do Portfólio</h3>
-          ${temObras ? this.renderAnalise(obras, vendas) : '<p style="color:var(--text-muted);font-size:0.85rem;">Adicione obras no Catálogo para ver análises.</p>'}
         </div>
 
-        <div class="card card-full">
-          <h3><i class="fas fa-bullseye"></i> Metas Financeiras</h3>
-          ${this.renderMetas(obras, vendas)}
+        <div class="prec-painel" id="precPainelOrcamentos"${visibilidade('orcamentos')}>
+          ${this.renderOrcamentos()}
+        </div>
+
+        <div class="prec-painel" id="precPainelRegras"${visibilidade('regras')}>
+          <div class="card card-full">
+            <h3>📋 Regras de Precificação</h3>
+            <p class="texto-ajuda" style="margin-top:-4px;margin-bottom:10px;">Regras automáticas: técnica + dimensão → preço sugerido. Use "qualquer" para técnica. Atalho: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> salva orçamento, <kbd>Enter</kbd> recalcula.</p>
+            ${this.renderRegrasPanel()}
+          </div>
+        </div>
+
+        <div class="prec-painel" id="precPainelInteligencia"${visibilidade('inteligencia')}>
+          <div class="card">
+            <h3>🤖 Inteligência de Mercado</h3>
+            <div id="sugestaoInteligente">${this.renderSugestaoInteligente()}</div>
+            <div id="faixaNegociacao">${this.renderFaixaNegociacao()}</div>
+          </div>
+
+          ${temObras ? this.renderBreakEven(obras) : ''}
+          ${temObras ? this.renderMLCard(obras, vendas) : ''}
+          ${temObras ? this.renderProjecao(obras) : ''}
+
+          <div class="card card-full">
+            <h3><i class="fas fa-chart-bar"></i> Análise do Portfólio</h3>
+            ${temObras ? this.renderAnalise(obras, vendas) : '<p style="color:var(--text-muted);font-size:0.85rem;">Adicione obras no Catálogo para ver análises.</p>'}
+          </div>
+
+          <div class="card card-full">
+            <h3><i class="fas fa-bullseye"></i> Metas Financeiras</h3>
+            ${this.renderMetas(obras, vendas)}
+          </div>
+        </div>
+
+        <div class="kiosk-overlay" id="kioskOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Apresentação da proposta">
+          <button class="kiosk-fechar" id="btnKioskFechar" title="Fechar (Esc)">✕</button>
+          <div class="kiosk-conteudo">
+            <div class="kiosk-header">${this.config.nomeArtista || 'Atelier'} <span class="kiosk-sep">·</span> Proposta</div>
+            <div class="kiosk-nome">${this.calc.nome || 'Orçamento sem nome'}</div>
+            <div class="kiosk-valor" id="kioskValor">${this.fmt(this.calcularPreco(this.calc))}</div>
+            <div class="kiosk-moeda">${this.moeda}${this.calc.tecnica ? ' · ' + capitalizarTexto(this.calc.tecnica) : ''}</div>
+            <div id="kioskBreakdown">${this.renderKioskBreakdown()}</div>
+            <div class="kiosk-acoes">
+              <button class="btn-primario" id="btnKioskSalvar"><i class="fas fa-save"></i> Salvar Orçamento</button>
+              <button class="btn-secundario" id="btnKioskPDF"><i class="fas fa-file-pdf"></i> Proposta PDF</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      ${this.renderModalRegras()}
       ${this.renderModalTaxas()}
       ${this.renderModalTecnicas()}
     `;
+  }
+
+  renderRegrasPanel() {
+    const regras = this.regras;
+    return `
+      <div class="regras-lista" id="regrasLista">
+        ${regras.length === 0 ? '<p style="color:var(--text-muted);text-align:center;">Nenhuma regra cadastrada.</p>' : ''}
+        ${regras.map((r, i) => `
+          <div class="regra-item" data-regra-idx="${i}">
+            <div class="regra-info">
+              <strong>${r.nome}</strong>
+              <span class="texto-ajuda">${r.tecnica || 'qualquer'} · ${r.larguraMin}–${r.larguraMax}×${r.alturaMin}–${r.alturaMax}cm · ×${r.multiplicador} · base ${this.fmt(r.precoBase)}</span>
+            </div>
+            <div class="regra-acoes">
+              <button class="btn-miniatura btn-aplicar-regra" data-idx="${i}">▶ Aplicar</button>
+              <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;" aria-label="Remover regra">✕</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <hr style="margin:12px 0;border-color:var(--border);">
+      <h4 style="margin:0 0 8px;font-size:0.85rem;">Nova Regra</h4>
+      <div class="regra-form">
+        <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input" aria-label="Nome da regra">
+        <select id="regraTecnica" class="regra-input" aria-label="Técnica">
+          <option value="">Qualquer técnica</option>
+          <option value="óleo">Óleo</option>
+          <option value="aquarela">Aquarela</option>
+          <option value="escultura">Escultura</option>
+          <option value="acrílica">Acrílica</option>
+          <option value="outra">Outra</option>
+        </select>
+        <div style="display:flex;gap:6px;grid-column:1/-1;">
+          <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1" aria-label="Largura mínima">
+          <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1" aria-label="Largura máxima">
+          <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1" aria-label="Altura mínima">
+          <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1" aria-label="Altura máxima">
+        </div>
+        <div style="display:flex;gap:6px;grid-column:1/-1;">
+          <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1" aria-label="Multiplicador">
+          <input type="number" id="regraBase" placeholder="Preço base" class="regra-input" value="0" style="flex:1" aria-label="Preço base">
+          <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1" aria-label="Complexidade">
+        </div>
+        <button class="btn-primario" id="btnAdicionarRegra" style="grid-column:1/-1;">+ Adicionar Regra</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn-secundario" id="btnAplicarRegrasTodas">▶ Aplicar todas as regras em obras sem preço</button>
+      </div>
+    `;
+  }
+
+  mudarAba(aba) {
+    const tabMap = { calcular: 'Calcular', orcamentos: 'Orcamentos', regras: 'Regras', inteligencia: 'Inteligencia' };
+    if (!tabMap[aba]) return;
+    this.tabAtiva = aba;
+    localStorage.setItem('atelier-crm-tab-precificador', aba);
+    document.querySelectorAll('#precTabs .prec-tab').forEach(t => {
+      const ativo = t.dataset.tab === aba;
+      t.classList.toggle('ativo', ativo);
+      t.setAttribute('aria-selected', String(ativo));
+    });
+    Object.entries(tabMap).forEach(([chave, id]) => {
+      const painel = document.getElementById('precPainel' + id);
+      if (painel) painel.style.display = chave === aba ? '' : 'none';
+    });
   }
 
   // --- Orçamentos Salvos ---
@@ -482,8 +597,8 @@ export class PrecificadorView extends BaseView {
     if (sugerido <= 0) return '';
     const pct = media > 0 ? ((sugerido - media) / media) * 100 : 0;
     const dispersao = media > 0 ? (max - min) / media : 1;
-    let confianca = Math.round(Math.max(10, Math.min(98, 100 - Math.abs(pct) * 1.5 - dispersao * 40 - Math.max(0, 5 - similares.length) * 7)));
-    let classe = 'sv-ok', seta = '✓', recomendacao, dirTexto;
+    const confianca = Math.round(Math.max(10, Math.min(98, 100 - Math.abs(pct) * 1.5 - dispersao * 40 - Math.max(0, 5 - similares.length) * 7)));
+    let classe, seta = '✓', recomendacao;
     if (Math.abs(pct) < 8) {
       classe = 'sv-ok';
       recomendacao = `Alinhado ao mercado da ${c.tecnica ? `técnica ${c.tecnica}` : 'sua área'}. Preço competitivo — pode negociar com segurança na faixa abaixo.`;
@@ -494,7 +609,6 @@ export class PrecificadorView extends BaseView {
       classe = 'sv-baixo'; seta = '↓';
       recomendacao = `Seu preço está ${Math.abs(pct).toFixed(0)}% abaixo da média do mercado${c.tecnica ? ` da ${c.tecnica}` : ''} (${this.fmt(Math.round(media))}). Há espaço para valorizar sua obra.`;
     }
-    dirTexto = pct >= 0 ? 'acima' : 'abaixo';
     return `
       <div class="sugestao-card">
         <div class="sugestao-header">
@@ -752,63 +866,6 @@ export class PrecificadorView extends BaseView {
         <span>Preço atual: <strong>${this.fmt(proj.ultimo)}</strong></span>
         <span>R²: <strong>${proj.r2.toFixed(3)}</strong> ${proj.r2 > 0.7 ? '(boa correlação)' : proj.r2 > 0.3 ? '(correlação moderada)' : '(baixa correlação)'}</span>
         <span>Baseado em regressão linear sobre histórico de preços</span>
-      </div>
-    `;
-  }
-
-  // --- Regras de Precificação ---
-  renderModalRegras() {
-    const regras = this.regras;
-    return `
-      <div class="widget-config-overlay" id="regrasOverlay" style="display:none">
-        <div class="widget-config-modal" style="max-width:800px;">
-          <h3><i class="fas fa-clipboard"></i> Regras de Precificação</h3>
-          <p class="texto-ajuda">Defina regras automáticas: técnica + dimensão → preço sugerido. Use "qualquer" para técnica.</p>
-          <div class="regras-lista" id="regrasLista">
-            ${regras.length === 0 ? '<p style="color:var(--text-muted);text-align:center;">Nenhuma regra cadastrada.</p>' : ''}
-            ${regras.map((r, i) => `
-              <div class="regra-item" data-regra-idx="${i}">
-                <div class="regra-info">
-                  <strong>${r.nome}</strong>
-                  <span class="texto-ajuda">${r.tecnica || 'qualquer'} · ${r.larguraMin}–${r.larguraMax}×${r.alturaMin}–${r.alturaMax}cm · ×${r.multiplicador} · base ${this.fmt(r.precoBase)}</span>
-                </div>
-                <div class="regra-acoes">
-                  <button class="btn-miniatura btn-aplicar-regra" data-idx="${i}">▶ Aplicar</button>
-                  <button class="btn-miniatura btn-remover-regra" data-idx="${i}" style="color:#dc2626;" aria-label="Remover regra">✕</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <hr style="margin:12px 0;border-color:var(--border);">
-          <h4 style="margin:0 0 8px;font-size:0.85rem;">Nova Regra</h4>
-          <div class="regra-form">
-            <input type="text" id="regraNome" placeholder="Nome da regra" class="regra-input" aria-label="Nome da regra">
-            <select id="regraTecnica" class="regra-input" aria-label="Técnica">
-              <option value="">Qualquer técnica</option>
-              <option value="óleo">Óleo</option>
-              <option value="aquarela">Aquarela</option>
-              <option value="escultura">Escultura</option>
-              <option value="acrílica">Acrílica</option>
-              <option value="outra">Outra</option>
-            </select>
-            <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraLargMin" placeholder="Larg. min (cm)" class="regra-input" style="flex:1" aria-label="Largura mínima">
-              <input type="number" id="regraLargMax" placeholder="Larg. max (cm)" class="regra-input" style="flex:1" aria-label="Largura máxima">
-              <input type="number" id="regraAltMin" placeholder="Alt. min (cm)" class="regra-input" style="flex:1" aria-label="Altura mínima">
-              <input type="number" id="regraAltMax" placeholder="Alt. max (cm)" class="regra-input" style="flex:1" aria-label="Altura máxima">
-            </div>
-            <div style="display:flex;gap:6px;grid-column:1/-1;">
-              <input type="number" id="regraMult" placeholder="Multiplicador (ex: 2.0)" class="regra-input" value="1.5" style="flex:1" aria-label="Multiplicador">
-              <input type="number" id="regraBase" placeholder="Preço base" class="regra-input" value="0" style="flex:1" aria-label="Preço base">
-              <input type="number" id="regraComplexidade" placeholder="Complexidade (1-5)" class="regra-input" value="3" min="1" max="5" style="flex:1" aria-label="Complexidade">
-            </div>
-            <button class="btn-primario" id="btnAdicionarRegra" style="grid-column:1/-1;">+ Adicionar Regra</button>
-          </div>
-          <div class="modal-acoes" style="margin-top:12px;">
-            <button class="btn-secundario" id="btnAplicarRegrasTodas">▶ Aplicar todas as regras em obras sem preço</button>
-            <button class="btn-secundario" id="btnFecharRegras">Fechar</button>
-          </div>
-        </div>
       </div>
     `;
   }
@@ -1208,12 +1265,7 @@ export class PrecificadorView extends BaseView {
     }
 
     // Regras
-    document.getElementById('btnAbrirRegras')?.addEventListener('click', () => {
-      document.getElementById('regrasOverlay').style.display = 'flex';
-    });
-    document.getElementById('btnFecharRegras')?.addEventListener('click', () => {
-      document.getElementById('regrasOverlay').style.display = 'none';
-    });
+    document.getElementById('btnAbrirRegras')?.addEventListener('click', () => this.mudarAba('regras'));
     document.getElementById('btnAdicionarRegra')?.addEventListener('click', () => this.adicionarRegra());
     document.getElementById('btnAplicarRegrasTodas')?.addEventListener('click', () => this.aplicarRegrasEmTodas());
 
@@ -1434,7 +1486,82 @@ export class PrecificadorView extends BaseView {
     // Exportar PDF
     document.getElementById('btnExportarRelatorio')?.addEventListener('click', () => this.exportarRelatorioPDF());
 
+    // Abas internas
+    document.getElementById('precTabs')?.addEventListener('click', (e) => {
+      const tab = e.target.closest('.prec-tab');
+      if (tab) this.mudarAba(tab.dataset.tab);
+    });
+
+    // Modo apresentação (kiosk)
+    document.getElementById('btnApresentarKiosk')?.addEventListener('click', () => this.abrirKiosk());
+    document.getElementById('btnKioskFechar')?.addEventListener('click', () => this.fecharKiosk());
+    document.getElementById('btnKioskSalvar')?.addEventListener('click', () => this.salvarOrcamento());
+    document.getElementById('btnKioskPDF')?.addEventListener('click', () => this.exportarPropostaPDF(null));
+
+    // Atalhos de teclado: Enter recalcula, Ctrl+Enter salva, Esc fecha kiosk
+    const precEl = document.getElementById('precificadorContainer');
+    if (precEl) {
+      const keyHandler = (e) => {
+        if (e.key !== 'Enter') return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'textarea' || tag === 'select') return;
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) this.salvarOrcamento();
+        else this.atualizarResultado();
+      };
+      precEl.addEventListener('keydown', keyHandler);
+      this._bindCache['precKeydown'] = { el: precEl, handler: keyHandler, type: 'keydown' };
+    }
+    const docEscHandler = (e) => {
+      if (this.kioskAtivo && e.key === 'Escape') {
+        e.preventDefault();
+        this.fecharKiosk();
+      }
+    };
+    document.addEventListener('keydown', docEscHandler);
+    this._bindCache['precKeydownDoc'] = { el: document, handler: docEscHandler, type: 'keydown' };
+
     this.atualizarResultado();
+  }
+
+  abrirKiosk() {
+    this.kioskAtivo = true;
+    const el = document.getElementById('kioskOverlay');
+    if (el) {
+      el.style.display = 'flex';
+      const elValor = document.getElementById('kioskValor');
+      const preco = this.calcularPreco(this.calc);
+      if (elValor) animarContador(elValor, preco, (v) => this.fmt(v));
+      const elBreak = document.getElementById('kioskBreakdown');
+      if (elBreak) elBreak.innerHTML = this.renderKioskBreakdown();
+    }
+  }
+
+  fecharKiosk() {
+    this.kioskAtivo = false;
+    const el = document.getElementById('kioskOverlay');
+    if (el) el.style.display = 'none';
+  }
+
+  renderKioskBreakdown() {
+    const bd = this.calcularBreakdown(this.calc);
+    const dims = [bd.largura, bd.altura, bd.profundidade].filter(Boolean).join('×');
+    const valorComplex = bd.custoTotal * bd.mult * (bd.fator - 1);
+    const valorExperiencia = bd.custoTotal * (bd.mult - 1);
+    const valorBonus = bd.bonus !== 1 ? bd.custoTotal * bd.mult * bd.fator * (bd.bonus - 1) : 0;
+    return `
+      <div class="kiosk-bd">
+        <div class="kiosk-bd-linha"><span>Materiais</span><strong>${this.fmt(bd.materiais)}</strong></div>
+        <div class="kiosk-bd-linha"><span>Mão de obra (${bd.horas}h × ${this.fmt(bd.valorHora)}/h)</span><strong>${this.fmt(bd.maoObra)}</strong></div>
+        <div class="kiosk-bd-linha kiosk-bd-sub"><span>Custo total</span><strong>${this.fmt(bd.custoTotal)}</strong></div>
+        ${dims ? `<div class="kiosk-bd-linha"><span>Dimensões (${dims}cm, ×${bd.bonus.toFixed(2)})</span><strong>${this.fmt(valorBonus)}</strong></div>` : ''}
+        <div class="kiosk-bd-linha"><span>Complexidade ×${bd.fator}</span><strong>${this.fmt(valorComplex)}</strong></div>
+        <div class="kiosk-bd-linha"><span>Experiência ×${bd.mult}</span><strong>${this.fmt(valorExperiencia)}</strong></div>
+        <div class="kiosk-bd-linha"><span>Lucro estimado</span><strong>${this.fmt(bd.lucro)}</strong></div>
+        ${bd.comissaoPct > 0 ? `<div class="kiosk-bd-linha"><span>Preço galeria (${bd.comissaoPct}% comissão)</span><strong>${this.fmt(bd.precoGaleria)}</strong></div>` : ''}
+        <div class="kiosk-bd-linha kiosk-bd-total"><span>Preço final</span><strong>${this.fmt(this.calcularPreco(this.calc))}</strong></div>
+      </div>
+    `;
   }
 
   aplicarCustosTecnica() {
@@ -1462,7 +1589,7 @@ export class PrecificadorView extends BaseView {
     const elConversoes = document.getElementById('conversoesMultiMoeda');
     const elBreakdown = document.getElementById('breakdownGrid');
     const elRegra = document.getElementById('regraAuto');
-    if (elValor) elValor.textContent = this.fmt(preco);
+    if (elValor) animarContador(elValor, preco, (v) => this.fmt(v));
     if (elDetalhe) elDetalhe.textContent = this.detalharCalculo(preco);
     if (elBreakdown) elBreakdown.innerHTML = this.renderBreakdown(this.calcularBreakdown(this.calc));
     if (elRegra) elRegra.innerHTML = this.renderRegraAuto();
@@ -1755,7 +1882,7 @@ export class PrecificadorView extends BaseView {
       if (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file')) {
         base = window.location.origin + window.location.pathname;
       }
-    } catch {}
+    } catch { /* execução fora de um contexto de navegador */ }
     return gerarQRCodeDataUrl(base + '#portal?token=' + token);
   }
 
