@@ -4626,6 +4626,81 @@
     color: #ffffff;
   }
 
+  /* ==========================================================================
+     ===== TOAST DISCRETO — compacto, pill, glass sutil =====
+     ========================================================================== */
+  .toast {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    bottom: auto;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: auto;
+    max-width: 320px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--toast-cor, var(--accent)) 28%, transparent);
+    overflow: hidden;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    background: color-mix(in srgb, var(--card) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toast-inner {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 14px;
+  }
+  .toast i {
+    width: auto;
+    height: auto;
+    font-size: 0.9rem;
+    background: none;
+    color: var(--toast-cor, var(--accent));
+    flex-shrink: 0;
+  }
+  .toast-progress {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--toast-cor, var(--accent)), transparent);
+    transform-origin: left;
+    animation: toastProgress 2.8s linear forwards;
+    opacity: 0.9;
+  }
+  .toast.erro {
+    --toast-cor: var(--danger);
+    color: var(--text);
+    border-left: 3px solid var(--danger);
+    background: color-mix(in srgb, var(--danger) 8%, var(--card));
+  }
+  .toast.sucesso {
+    --toast-cor: var(--ok);
+    color: var(--text);
+    border-left: 3px solid var(--ok);
+    background: color-mix(in srgb, var(--ok) 8%, var(--card));
+  }
+  .toast.aviso {
+    --toast-cor: var(--warn);
+    color: var(--text);
+    border-left: 3px solid var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, var(--card));
+  }
+  .toast.info {
+    --toast-cor: var(--info);
+    color: var(--text);
+    border-left: 3px solid var(--info);
+    background: color-mix(in srgb, var(--info) 8%, var(--card));
+  }
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <!-- ===== NOVO (Módulo Catálogo): biblioteca jsPDF para exportar a ficha técnica em PDF ===== -->
