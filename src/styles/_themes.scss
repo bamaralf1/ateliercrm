@@ -1,6 +1,8 @@
 // ═══════════════════════════════════════════════
 //  THEME DEFINITIONS
 //  Each [data-tema] overrides CSS custom properties
+//  Premium vars per theme: accent-strong/soft/bright,
+//  accent-glow, bg-grad-1/2, ambient, card-border, sidebar-vignette
 // ═══════════════════════════════════════════════
 
 :root {
@@ -8,10 +10,19 @@
   --text: #1a1a1a;
   --text-muted: #6b7280;
   --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --accent-bright: #60a5fa;
+  --accent-glow: rgba(37, 99, 235, 0.28);
   --accent-contrast: #ffffff;
   --card: #f8fafc;
-  --border: rgba(0,0,0,0.1);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --border: rgba(0, 0, 0, 0.1);
+  --bg-grad-1: #f8fafc;
+  --bg-grad-2: #eef2ff;
+  --ambient: rgba(37, 99, 235, 0.08);
   --sidebar-bg: #111827;
+  --sidebar-vignette: rgba(255, 255, 255, 0.04);
   --sidebar-text: #d1d5db;
   --sidebar-text-active: #ffffff;
   --font-principal: 'Inter', sans-serif;
@@ -19,50 +30,80 @@
   --font-serif: 'Crimson Text', serif;
   --radius: 10px;
   --radius-card: 12px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+/* 1. Clássico — Veludo & Pátina */
 [data-tema="classico"] {
   --bg: #f5f0e6;
   --text: #3d2b1f;
   --text-muted: #8a7563;
   --accent: #8b4513;
+  --accent-strong: #6d3510;
+  --accent-soft: rgba(139, 69, 19, 0.14);
+  --accent-bright: #c1783f;
+  --accent-glow: rgba(139, 69, 19, 0.28);
   --accent-contrast: #fff7ec;
   --card: #faf6f0;
-  --border: rgba(61,43,31,0.15);
+  --card-border: rgba(61, 43, 31, 0.16);
+  --border: rgba(61, 43, 31, 0.15);
+  --bg-grad-1: #f5f0e6;
+  --bg-grad-2: #eadbc5;
+  --ambient: rgba(139, 69, 19, 0.12);
   --sidebar-bg: #3d2b1f;
+  --sidebar-vignette: rgba(193, 120, 63, 0.14);
   --sidebar-text: #d9c7b0;
   --sidebar-text-active: #ffffff;
-  --font-principal: 'Georgia', serif;
-  --font-display: 'Georgia', serif;
+  --font-principal: 'Inter', sans-serif;
+  --font-display: 'Playfair Display', serif;
   --font-serif: 'Georgia', serif;
 }
 
+/* 2. Clean — Minimalista */
 [data-tema="clean"] {
   --bg: #ffffff;
-  --text: #1a1a1a;
-  --text-muted: #6b7280;
-  --accent: #2563eb;
+  --text: #222222;
+  --text-muted: #888888;
+  --accent: #1a1a1a;
+  --accent-strong: #000000;
+  --accent-soft: rgba(0, 0, 0, 0.08);
+  --accent-bright: #4b4b4b;
+  --accent-glow: rgba(0, 0, 0, 0.2);
   --accent-contrast: #ffffff;
-  --card: #f8fafc;
-  --border: rgba(0,0,0,0.08);
-  --sidebar-bg: #111827;
-  --sidebar-text: #d1d5db;
-  --sidebar-text-active: #ffffff;
+  --card: #f5f5f5;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --border: rgba(0, 0, 0, 0.06);
+  --bg-grad-1: #ffffff;
+  --bg-grad-2: #f3f3f3;
+  --ambient: rgba(0, 0, 0, 0.04);
+  --sidebar-bg: #ffffff;
+  --sidebar-vignette: rgba(0, 0, 0, 0.04);
+  --sidebar-text: #666666;
+  --sidebar-text-active: #000000;
   --font-principal: 'Inter', sans-serif;
   --font-display: 'Inter', sans-serif;
   --font-serif: 'Inter', sans-serif;
 }
 
+/* 3. Escuro — Meia-noite Neon */
 [data-tema="escuro"] {
   --bg: #0f0f0f;
   --text: #e5e5e5;
   --text-muted: #9ca3af;
   --accent: #00d4ff;
+  --accent-strong: #00b8e0;
+  --accent-soft: rgba(0, 212, 255, 0.14);
+  --accent-bright: #4ee4ff;
+  --accent-glow: rgba(0, 212, 255, 0.3);
   --accent-contrast: #001318;
   --card: #1a1a1a;
-  --border: rgba(255,255,255,0.1);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.1);
+  --bg-grad-1: #0f0f0f;
+  --bg-grad-2: #051418;
+  --ambient: rgba(0, 212, 255, 0.08);
   --sidebar-bg: #000000;
+  --sidebar-vignette: rgba(0, 212, 255, 0.12);
   --sidebar-text: #a3a3a3;
   --sidebar-text-active: #00d4ff;
   --font-principal: 'Inter', sans-serif;
@@ -70,15 +111,25 @@
   --font-serif: 'Inter', sans-serif;
 }
 
+/* 4. Galeria — Galeria Branca */
 [data-tema="galeria"] {
   --bg: #fafafa;
   --text: #111111;
   --text-muted: #6b6b6b;
   --accent: #000000;
+  --accent-strong: #000000;
+  --accent-soft: rgba(0, 0, 0, 0.08);
+  --accent-bright: #555555;
+  --accent-glow: rgba(0, 0, 0, 0.16);
   --accent-contrast: #ffffff;
   --card: #ffffff;
-  --border: rgba(0,0,0,0.12);
+  --card-border: rgba(0, 0, 0, 0.12);
+  --border: rgba(0, 0, 0, 0.12);
+  --bg-grad-1: #fafafa;
+  --bg-grad-2: #efefef;
+  --ambient: rgba(0, 0, 0, 0.03);
   --sidebar-bg: #fafafa;
+  --sidebar-vignette: rgba(0, 0, 0, 0.03);
   --sidebar-text: #444444;
   --sidebar-text-active: #000000;
   --font-principal: 'Playfair Display', serif;
@@ -86,18 +137,106 @@
   --font-serif: 'Crimson Text', serif;
 }
 
+/* 5. Boho — Terracota Artesanal */
 [data-tema="boho"] {
   --bg: #f7f3ee;
   --text: #4a3f35;
   --text-muted: #9a8a78;
   --accent: #c17f59;
+  --accent-strong: #b06a47;
+  --accent-soft: rgba(193, 127, 89, 0.16);
+  --accent-bright: #d99a72;
+  --accent-glow: rgba(193, 127, 89, 0.26);
   --accent-contrast: #fff9f4;
   --card: #fffbf7;
-  --border: rgba(74,63,53,0.15);
+  --card-border: rgba(74, 63, 53, 0.16);
+  --border: rgba(74, 63, 53, 0.15);
+  --bg-grad-1: #f7f3ee;
+  --bg-grad-2: #eadfd2;
+  --ambient: rgba(193, 127, 89, 0.12);
   --sidebar-bg: #4a3f35;
+  --sidebar-vignette: rgba(217, 154, 114, 0.14);
   --sidebar-text: #e3d4c4;
   --sidebar-text-active: #ffffff;
   --font-principal: 'Crimson Text', serif;
+  --font-display: 'Playfair Display', serif;
+  --font-serif: 'Crimson Text', serif;
+}
+
+/* 6. Dourado — Preto & Dourado */
+[data-tema="dourado"] {
+  --bg: #0d0d0d;
+  --text: #ede4d3;
+  --text-muted: #a89a7d;
+  --accent: #c9a227;
+  --accent-strong: #e8b923;
+  --accent-soft: rgba(201, 162, 39, 0.16);
+  --accent-bright: #eccc68;
+  --accent-glow: rgba(201, 162, 39, 0.32);
+  --accent-contrast: #1a1400;
+  --card: #14100a;
+  --card-border: rgba(201, 162, 39, 0.28);
+  --border: rgba(201, 162, 39, 0.25);
+  --bg-grad-1: #0d0d0d;
+  --bg-grad-2: #1a1400;
+  --ambient: rgba(201, 162, 39, 0.1);
+  --sidebar-bg: #050505;
+  --sidebar-vignette: rgba(201, 162, 39, 0.18);
+  --sidebar-text: #b8ac8f;
+  --sidebar-text-active: #ede4d3;
+  --font-principal: 'Inter', sans-serif;
+  --font-display: 'Playfair Display', serif;
+  --font-serif: 'Crimson Text', serif;
+}
+
+/* 7. Mármore & Bronze */
+[data-tema="marmore"] {
+  --bg: #f2ece6;
+  --text: #2b211b;
+  --text-muted: #8b7d72;
+  --accent: #a0522d;
+  --accent-strong: #8a4526;
+  --accent-soft: rgba(160, 82, 45, 0.14);
+  --accent-bright: #c47a52;
+  --accent-glow: rgba(160, 82, 45, 0.24);
+  --accent-contrast: #fff9f4;
+  --card: #faf6f1;
+  --card-border: rgba(43, 33, 27, 0.14);
+  --border: rgba(43, 33, 27, 0.12);
+  --bg-grad-1: #f2ece6;
+  --bg-grad-2: #e6dbd1;
+  --ambient: rgba(160, 82, 45, 0.1);
+  --sidebar-bg: #2b1f18;
+  --sidebar-vignette: rgba(196, 122, 82, 0.14);
+  --sidebar-text: #c9b8a8;
+  --sidebar-text-active: #e8d5c0;
+  --font-principal: 'Crimson Text', serif;
+  --font-display: 'Playfair Display', serif;
+  --font-serif: 'Crimson Text', serif;
+}
+
+/* 8. Esmeralda — Verde & Latão */
+[data-tema="esmeralda"] {
+  --bg: #0a120e;
+  --text: #d4e8d4;
+  --text-muted: #7a9a7a;
+  --accent: #00c853;
+  --accent-strong: #00a844;
+  --accent-soft: rgba(0, 200, 83, 0.16);
+  --accent-bright: #3ce87c;
+  --accent-glow: rgba(0, 200, 83, 0.3);
+  --accent-contrast: #001a08;
+  --card: #0f1a12;
+  --card-border: rgba(0, 200, 83, 0.24);
+  --border: rgba(0, 200, 83, 0.2);
+  --bg-grad-1: #0a120e;
+  --bg-grad-2: #071409;
+  --ambient: rgba(0, 200, 83, 0.1);
+  --sidebar-bg: #040a06;
+  --sidebar-vignette: rgba(60, 232, 124, 0.14);
+  --sidebar-text: #a0c0a0;
+  --sidebar-text-active: #00c853;
+  --font-principal: 'Inter', sans-serif;
   --font-display: 'Playfair Display', serif;
   --font-serif: 'Crimson Text', serif;
 }

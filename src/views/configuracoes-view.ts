@@ -79,7 +79,7 @@ export class ConfiguracoesView extends BaseView {
     ];
 
     const temas = [
-      { id: 'classico', label: 'Clássico', icone: '🎨', sidebar: '#111827', bg: '#fdfaf6', accent: '#2563eb', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
+      { id: 'classico', label: 'Clássico', icone: '🎨', sidebar: '#3d2b1f', bg: '#f5f0e6', accent: '#8b4513', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
       { id: 'escuro', label: 'Escuro', icone: '🌙', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
       { id: 'galeria', label: 'Galeria', icone: '🖼️', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
       { id: 'boho', label: 'Boho', icone: '🌿', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
