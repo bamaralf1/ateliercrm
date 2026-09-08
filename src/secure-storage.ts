@@ -28,9 +28,15 @@ export function salvarCredenciaisNaSessao(config: Record<string, unknown>): void
 }
 
 export function semCredenciais<T extends Record<string, any>>(dados: T): T {
-  const copia = structuredClone(dados);
-  if (!copia.config) return copia;
-  CAMPOS_SENSIVEIS.forEach(campo => { delete copia.config[campo]; });
+  // Copia rasa suficiente para persistência: apenas `config` é alterado
+  // (remoção de credenciais), e nada é mutado no objeto vivo. Evita
+  // structuredClone, que lança para Proxies/exóticos (alguns navegadores com
+  // extensões de devtools embrulham objetos expostos no window).
+  const copia = { ...dados } as T;
+  if (copia.config) {
+    copia.config = { ...copia.config };
+    CAMPOS_SENSIVEIS.forEach(campo => { delete copia.config[campo]; });
+  }
   return copia;
 }
 
