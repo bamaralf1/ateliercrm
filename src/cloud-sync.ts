@@ -95,7 +95,6 @@ export class CloudSync {
   get googleClientId() { return this.dataStore.dados.config.syncGoogleClientId || ''; }
 
   async autenticarGoogle() {
-    if (window.Freemium && !window.Freemium.recursoLiberado('sync_cloud')) { mostrarPaywall('Sync em Nuvem (Google Drive)'); return false; }
     const clientId = this.googleClientId;
     if (!clientId) { mostrarToast('Configure o Client ID do Google Drive nas Configurações.', 'aviso'); return false; }
     return new Promise((resolve) => {
@@ -264,7 +263,6 @@ export class CloudSync {
   }
 
   async testarWebDAV() {
-    if (window.Freemium && !window.Freemium.recursoLiberado('sync_cloud')) { mostrarPaywall('Sync em Nuvem (WebDAV)'); return false; }
     try {
       await this._reqWebDAV('', 'PROPFIND');
       return true;
@@ -272,7 +270,6 @@ export class CloudSync {
   }
 
   async backupWebDAV() {
-    if (window.Freemium && !window.Freemium.recursoLiberado('sync_cloud')) { mostrarPaywall('Sync em Nuvem (WebDAV)'); return false; }
     mostrarLoading('Enviando backup para WebDAV...');
     try {
       const conteudo = JSON.stringify(this.dataStore.dados);

@@ -34,13 +34,6 @@ interface ImageStore {
 }
 declare const imageStore: ImageStore;
 
-// Freemium (plano.ts)
-declare function mostrarPaywall(recurso?: string): void;
-declare function bannerUpgrade(): string;
-interface Window {
-  Freemium?: any;
-}
-
 // Biblioteca de códigos de barras / QR Code
 declare class QRCode {
   constructor(el: HTMLElement, opts: { text: string; width?: number; height?: number });

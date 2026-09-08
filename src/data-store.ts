@@ -69,11 +69,6 @@ export class DataStore {
         pin: '',
         autoLock: false,
         tourCompleted: false,
-        plano: {
-          tier: 'free',
-          ativo: false,
-          pagamentoUrl: 'https://checkout.stripe.com/pay/cs_test_seu_link_aqui'
-        }
       }
     };
   }
