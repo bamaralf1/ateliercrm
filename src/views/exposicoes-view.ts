@@ -14,7 +14,7 @@ export class ExposicoesView extends BaseView {
 
     const conteudo = exposicoes.length > 0
       ? (this.modo === 'lista' ? this.renderTabela(exposicoes) : this.renderCards(exposicoes))
-      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-images"></i></div><p>Nenhuma exposicao encontrada.</p></div></div>`;
+      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i data-lucide="images"></i></div><p>Nenhuma exposicao encontrada.</p></div></div>`;
 
     return `
       <div class="view-cabecalho">
@@ -56,8 +56,8 @@ export class ExposicoesView extends BaseView {
         <td>${formatarData(ex.data)}</td>
         <td><span class="tag-status ${ex.status === 'confirmada' ? 'exposicao' : ex.status === 'encerrada' ? 'vendida' : ''}" style="background:${ex.status === 'confirmada' ? '#16a34a20' : ex.status === 'encerrada' ? '#6b728020' : '#f59e0b20'};color:${ex.status === 'confirmada' ? '#16a34a' : ex.status === 'encerrada' ? '#6b7280' : '#f59e0b'};">${ex.status || 'planejada'}</span></td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposição"><i class="fas fa-pen"></i></button>
-          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposição" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposição"><i data-lucide="pen"></i></button>
+          <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposição" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
     `).join('');
@@ -86,8 +86,8 @@ export class ExposicoesView extends BaseView {
             <span class="exp-data">${formatarData(ex.data)}</span>
             <span class="tag-status ${ex.status === 'confirmada' ? 'exposicao' : ex.status === 'encerrada' ? 'vendida' : ''}" style="background:${ex.status === 'confirmada' ? '#16a34a20' : ex.status === 'encerrada' ? '#6b728020' : '#f59e0b20'};color:${ex.status === 'confirmada' ? '#16a34a' : ex.status === 'encerrada' ? '#6b7280' : '#f59e0b'};">${ex.status || 'planejada'}</span>
             <div class="exp-acoes">
-              <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposição"><i class="fas fa-pen"></i></button>
-              <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposição" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+              <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposição"><i data-lucide="pen"></i></button>
+              <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposição" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
             </div>
           </div>
         `).join('')}
@@ -108,7 +108,7 @@ export class ExposicoesView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} exposição${this.selecionados.size === 1 ? '' : 'ões'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportExp"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkExportExp"><i data-lucide="file-text"></i> Exportar</button>
           <button class="btn-secundario btn-danger" id="bulkExcluirExp">🗑 Excluir</button>
           <button class="btn-secundario" id="bulkCancelarExp">✕ Cancelar</button>
         </div>
@@ -146,7 +146,7 @@ export class ExposicoesView extends BaseView {
   abrirFormExposicao(existente) {
     const e = existente || {};
     abrirModal(`
-      <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : '✚ Nova'} Exposicao</h3>
+      <h3>${e.id ? '<i data-lucide="pen"></i> Editar' : '✚ Nova'} Exposicao</h3>
       <form id="formExposicao">
         <div class="campo-form"><label>Nome *</label><input type="text" id="expoNome" value="${sanitizarHTML(e.nome || '')}" required aria-label="Nome da exposição" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">

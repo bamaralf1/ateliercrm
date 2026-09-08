@@ -14,9 +14,9 @@ export function mostrarToast(mensagem, tipo) {
   const toast = document.getElementById('toast');
   const msgEl = document.getElementById('toastMsg');
   if (!toast || !msgEl) return;
-  const icones = { sucesso: 'fa-check-circle', erro: 'fa-times-circle', aviso: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-  const iconEl = toast.querySelector('i');
-  if (iconEl && tipo && icones[tipo]) { iconEl.className = 'fas ' + icones[tipo]; }
+  const icones = { sucesso: 'circle-check', erro: 'circle-x', aviso: 'triangle-alert', info: 'info' };
+  const iconEl = document.getElementById('toastIcon');
+  if (iconEl && tipo && icones[tipo]) { iconEl.setAttribute('data-lucide', icones[tipo]); }
   msgEl.textContent = mensagem;
   toast.className = 'toast' + (tipo && icones[tipo] ? ' ' + tipo : '');
   toast.classList.add('mostrar');

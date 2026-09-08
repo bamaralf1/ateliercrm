@@ -80,8 +80,8 @@ export class RedeView extends BaseView {
               <div class="pipe-cat">${this.catLabels[c.categoria] || c.categoria}</div>
               ${dias !== null ? `<div class="pipe-dias">${dias > 30 ? '⚠️ '+dias+' dias' : '✅ '+dias+' dias'}</div>` : ''}
               <div style="display:flex;gap:4px;margin-top:6px;">
-                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para esquerda">◀</button>
-                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para direita">▶</button>
+                <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para esquerda"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+                <button data-acao="pipeMovDir" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para direita"><i data-lucide="play" aria-hidden="true"></i></button>
               </div>
             </div>`;
           }).join('')}

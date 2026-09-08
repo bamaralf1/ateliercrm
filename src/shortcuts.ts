@@ -67,7 +67,7 @@ export function mostrarAtalhos() {
     }).join('');
     return `<div class="sc-categoria"><h4>${cat}</h4><div class="shortcuts-grid">${itens}</div></div>`;
   }).join('');
-  abrirModal(`<h3>⌨️ Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnPersonalizarAtalhos"><i class="fas fa-pen"></i> Personalizar</button><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
+  abrirModal(`<h3>⌨️ Atalhos de Teclado</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Use estes atalhos para navegar rapidamente pelo sistema.</p>${itensPorCategoria}<div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnPersonalizarAtalhos"><i data-lucide="pen"></i> Personalizar</button><button class="btn-secundario" id="btnCancelarModal">Fechar</button></div>`);
   document.getElementById('btnCancelarModal')?.addEventListener('click', fecharModal);
   document.getElementById('btnPersonalizarAtalhos')?.addEventListener('click', () => { fecharModal(); setTimeout(editarAtalhos, 300); });
 }
@@ -75,15 +75,15 @@ export function mostrarAtalhos() {
 export function editarAtalhos() {
   const items = atalhos.filter(a => a.chave).map(a => {
     const teclaAtual = (a.ctrl ? 'Ctrl+' : '') + a.key;
-    return `<div class="sc-edit-item"><span class="sc-edit-desc">${a.desc}</span><input class="sc-edit-input" data-chave="${a.chave}" value="${teclaAtual}" readonly><button class="btn-pequeno sc-edit-btn" data-chave="${a.chave}"><i class="fas fa-sync"></i></button></div>`;
+    return `<div class="sc-edit-item"><span class="sc-edit-desc">${a.desc}</span><input class="sc-edit-input" data-chave="${a.chave}" value="${teclaAtual}" readonly><button class="btn-pequeno sc-edit-btn" data-chave="${a.chave}"><i data-lucide="refresh-cw"></i></button></div>`;
   }).join('');
-  abrirModal(`<h3>⌨️ Personalizar Atalhos</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Clique no botão ao lado do atalho e pressione a nova combinação de teclas. Ctrl+Letra ou apenas uma tecla.</p><div class="sc-edit-lista">${items}</div><div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnResetarAtalhos"><i class="fas fa-undo"></i> Restaurar Padrões</button><button class="btn-primario" id="btnSalvarAtalhos"><i class="fas fa-save"></i> Salvar</button></div>`);
+  abrirModal(`<h3>⌨️ Personalizar Atalhos</h3><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">Clique no botão ao lado do atalho e pressione a nova combinação de teclas. Ctrl+Letra ou apenas uma tecla.</p><div class="sc-edit-lista">${items}</div><div class="modal-acoes" style="margin-top:16px;"><button class="btn-secundario" id="btnResetarAtalhos"><i data-lucide="undo-2"></i> Restaurar Padrões</button><button class="btn-primario" id="btnSalvarAtalhos"><i data-lucide="save"></i> Salvar</button></div>`);
 
   let capturando = null;
   document.querySelectorAll('.sc-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const chave = btn.dataset.chave;
-      if (capturando === chave) { capturando = null; btn.innerHTML = '<i class="fas fa-sync"></i>'; return; }
+      if (capturando === chave) { capturando = null; btn.innerHTML = '<i data-lucide="refresh-cw"></i>'; return; }
       capturando = chave;
       btn.innerHTML = '...';
       const input = document.querySelector(`.sc-edit-input[data-chave="${chave}"]`);
@@ -101,7 +101,7 @@ export function editarAtalhos() {
       input.value = ctrl ? 'Ctrl+' + e.key.toLowerCase() : e.key;
       input.dataset.novo = input.value;
     }
-    if (btn) btn.innerHTML = '<i class="fas fa-check" style="color:#22c55e"></i>';
+    if (btn) btn.innerHTML = '<i data-lucide="check" style="color:#22c55e"></i>';
     capturando = null;
   });
 

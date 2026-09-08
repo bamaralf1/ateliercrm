@@ -45,9 +45,9 @@ export class VendasView extends BaseView {
             </select>
           </td>
           <td class="acoes-linha-tabela">
-            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}"><i class="fas fa-file"></i> Recibo</button>
-            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}"><i class="fas fa-pencil-alt"></i> Proposta</button>
-            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda" aria-label="Cancelar venda">✕</button>
+            <button class="btn-icone-tabela" data-gerar-recibo="${v.id}"><i data-lucide="file-text"></i> Recibo</button>
+            <button class="btn-icone-tabela" data-gerar-proposta="${v.id}"><i data-lucide="pencil"></i> Proposta</button>
+            <button class="btn-icone-tabela" data-cancelar-venda="${v.id}" title="Cancelar venda" aria-label="Cancelar venda"><i data-lucide="x" aria-hidden="true"></i></button>
           </td>
         </tr>
       `;
@@ -63,7 +63,7 @@ export class VendasView extends BaseView {
       </div>
     ` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-dollar-sign"></i></div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i data-lucide="dollar-sign"></i></div><p>Nenhuma venda encontrada com os filtros atuais.</p></div>
       </div>
     `;
 
@@ -91,7 +91,7 @@ export class VendasView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} venda${this.selecionados.size === 1 ? '' : 's'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportVend"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkExportVend"><i data-lucide="file-text"></i> Exportar</button>
           <button class="btn-secundario btn-danger" id="bulkCancelarVend">✕ Cancelar</button>
         </div>
       </div>` : ''}

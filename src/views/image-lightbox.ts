@@ -107,10 +107,10 @@ export class ImageLightbox {
       <div class="lb-topbar">
         <span class="lb-counter">${this.currentIndex + 1} / ${this.images.length}</span>
         <div class="lb-top-actions">
-          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow" aria-label="Iniciar slideshow">▶</button>
+          <button class="lb-btn lb-ctrl-autoplay" title="Slideshow" aria-label="Iniciar slideshow"><i data-lucide="play" aria-hidden="true"></i></button>
           <button class="lb-btn lb-ctrl-download" title="Download" aria-label="Baixar imagem">⬇</button>
-          <button class="lb-btn lb-ctrl-share" title="Compartilhar" aria-label="Compartilhar"><i class="fas fa-link"></i></button>
-          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)" aria-label="Fechar">✕</button>
+          <button class="lb-btn lb-ctrl-share" title="Compartilhar" aria-label="Compartilhar"><i data-lucide="link"></i></button>
+          <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)" aria-label="Fechar"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
       </div>
       <div class="lb-main">
@@ -123,8 +123,8 @@ export class ImageLightbox {
           </div>
         </div>
       </div>
-      <button class="lb-nav lb-nav-prev" title="Anterior (←)" aria-label="Imagem anterior">◀</button>
-      <button class="lb-nav lb-nav-next" title="Próximo (→)" aria-label="Próxima imagem">▶</button>
+      <button class="lb-nav lb-nav-prev" title="Anterior (←)" aria-label="Imagem anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+      <button class="lb-nav lb-nav-next" title="Próximo (→)" aria-label="Próxima imagem"><i data-lucide="play" aria-hidden="true"></i></button>
       <div class="lb-thumbstrip">
         <div class="lb-thumb-track"></div>
       </div>
@@ -262,9 +262,9 @@ export class ImageLightbox {
     if (navigator.share) {
       navigator.share({ title: text, text }).catch(() => {});
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => this._toast('<i class="fas fa-link"></i> Info copiada!')).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => this._toast('<i data-lucide="link"></i> Info copiada!')).catch(() => {});
     } else {
-      this._toast('<i class="fas fa-clipboard"></i> ' + text);
+      this._toast('<i data-lucide="clipboard"></i> ' + text);
     }
   }
 

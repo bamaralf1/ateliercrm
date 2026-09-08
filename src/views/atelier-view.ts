@@ -170,7 +170,7 @@
         <div class="lc-qtd">${comprado ? '✔️' : `Qtd: ${qtdSugerida} ${m.unidade || 'un'}`}</div>
         ${m.precoUnitario ? `<div class="lc-preco">${formatarMoeda(Math.round((Number(m.precoUnitario) || 0) * qtdSugerida))}</div>` : ''}
         <div class="lc-acoes">
-          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">↩️</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado">✔</button>`}
+          ${comprado ? `<button data-acao="desmarcarComprado" data-id="${m.id}" aria-label="Desmarcar comprado">↩️</button>` : `<button data-acao="marcarComprado" data-id="${m.id}" aria-label="Marcar comprado"><i data-lucide="check" aria-hidden="true"></i></button>`}
           <button data-acao="removerLista" data-id="${m.id}" style="color:#dc2626;" aria-label="Remover da lista">🗑️</button>
         </div>
       </li>

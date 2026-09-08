@@ -1,12 +1,12 @@
 // Tour — Tour guiado para novos usuários
 
 const tourPassos = [
-  { alvo: '.sidebar', titulo: '<i class="fas fa-palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
+  { alvo: '.sidebar', titulo: '<i data-lucide="palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
   { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 8 temas.', pos: 'bottom' },
-  { alvo: '#btnBackup', titulo: '<i class="fas fa-save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
-  { alvo: '[data-rota="catalogo"]', titulo: '<i class="fas fa-images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
-  { alvo: '[data-rota="vendas"]', titulo: '<i class="fas fa-dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
-  { alvo: '[data-rota="diario"]', titulo: '<i class="fas fa-book-open"></i> Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
+  { alvo: '#btnBackup', titulo: '<i data-lucide="save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
+  { alvo: '[data-rota="catalogo"]', titulo: '<i data-lucide="images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
+  { alvo: '[data-rota="vendas"]', titulo: '<i data-lucide="dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
+  { alvo: '[data-rota="diario"]', titulo: '<i data-lucide="book-open"></i> Diário Criativo', desc: 'Registre seu processo diário.', pos: 'right' },
   { alvo: '[data-rota="configuracoes"]', titulo: '⚙️ Configurações', desc: 'Configure idioma, segurança e dados do artista.', pos: 'right' }
 ];
 
@@ -31,7 +31,7 @@ export function iniciarTour() {
     if (top < 10) top = 10;
     tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
     const isUltimo = passoAtual === tourPassos.length - 1;
-    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '<i class="fas fa-check"></i> Finalizar' : 'Próximo →'}</button></div>`;
+    tooltip.innerHTML = `<div class="tt-titulo">${passo.titulo}</div><div class="tt-desc">${passo.desc}</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">${passoAtual + 1} de ${tourPassos.length}</div><div class="tt-acoes"><button class="tt-btn-skip" id="tourSkip">Pular</button>${passoAtual > 0 ? '<button class="tt-btn-prev" id="tourPrev">← Anterior</button>' : ''}<button class="tt-btn-next" id="tourNext">${isUltimo ? '<i data-lucide="check"></i> Finalizar' : 'Próximo →'}</button></div>`;
     document.body.appendChild(tooltip);
     document.getElementById('tourNext')?.addEventListener('click', () => { if (isUltimo) finalizarTour(); else { passoAtual++; mostrarPasso(); } });
     document.getElementById('tourPrev')?.addEventListener('click', () => { passoAtual--; mostrarPasso(); });

@@ -23,7 +23,7 @@ export function iniciarNotificacoes() {
     const lidas = lerLidas();
     const atividades = activityLogger.obterRecentes(20);
     if (atividades.length === 0) {
-      lista.innerHTML = '<div class="notif-vazio"><i class="fas fa-bell"></i> Nenhuma notificação ainda.</div>';
+      lista.innerHTML = '<div class="notif-vazio"><i data-lucide="bell"></i> Nenhuma notificação ainda.</div>';
       return;
     }
     lista.innerHTML = atividades.map(a => `
@@ -34,7 +34,7 @@ export function iniciarNotificacoes() {
           <div class="ni-detalhes">${sanitizarHTML(a.detalhes || '')}</div>
           <div class="ni-tempo">${activityLogger.formatarTempo(new Date(a.timestamp))}</div>
         </div>
-        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida">✓</button>
+        <button class="ni-marcar" data-id="${a.id}" title="Marcar como lida"><i data-lucide="check" aria-hidden="true"></i></button>
       </div>
     `).join('');
     lista.querySelectorAll('.ni-marcar').forEach(btn => {

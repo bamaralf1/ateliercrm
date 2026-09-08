@@ -41,7 +41,7 @@ export class EncomendasView extends BaseView {
       ? (this.modo === 'lista' ? this.renderTabela(encomendas)
         : this.modo === 'grid' ? this.renderCards(encomendas)
         : this.renderKanban(encomendas))
-      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-box"></i></div><p>Nenhuma encomenda encontrada.</p></div></div>`;
+      : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i data-lucide="package"></i></div><p>Nenhuma encomenda encontrada.</p></div></div>`;
 
     return `
       <div class="view-cabecalho">
@@ -67,7 +67,7 @@ export class EncomendasView extends BaseView {
       <div class="filtros-linha">
         <input type="text" id="buscaEncomenda" placeholder="Buscar por cliente ou descricao..." value="${sanitizarHTML(this.busca)}" aria-label="Buscar encomendas" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
         ${this.modo === 'kanban' ? `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;white-space:nowrap;color:var(--text-muted);"><input type="checkbox" id="chkMostrarCanceladas" ${this.mostrarCanceladas ? 'checked' : ''}> Mostrar canceladas</label>` : `<select id="filtroStatusEncomenda" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">${statusOpts}</select>`}
-        <button class="btn-secundario" id="btnPortaisCliente"><i class="fas fa-link"></i> Links de Acesso</button>
+        <button class="btn-secundario" id="btnPortaisCliente"><i data-lucide="link"></i> Links de Acesso</button>
       </div>
       ${conteudo}
     `;
@@ -116,8 +116,8 @@ export class EncomendasView extends BaseView {
           </div>
         </div>
         <div class="kanban-card-acoes">
-          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar"><i class="fas fa-pen"></i></button>
-          <button class="kanban-mobile-menu-btn" data-id="${e.id}" title="Mover etapa" aria-label="Mover etapa"><i class="fas fa-ellipsis-v"></i></button>
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar"><i data-lucide="pen"></i></button>
+          <button class="kanban-mobile-menu-btn" data-id="${e.id}" title="Mover etapa" aria-label="Mover etapa"><i data-lucide="ellipsis-vertical"></i></button>
           <div class="kanban-mobile-dropdown" data-id="${e.id}">
             ${temAnterior ? `<button class="kanban-mover-btn" data-id="${e.id}" data-status="${STATUS_ENCOMENDA[stIdx - 1]}" data-direcao="anterior">↑ ${STATUS_MAP[STATUS_ENCOMENDA[stIdx - 1]]?.rotulo}</button>` : ''}
             ${temProximo ? `<button class="kanban-mover-btn" data-id="${e.id}" data-status="${STATUS_ENCOMENDA[stIdx + 1]}" data-direcao="proximo">↓ ${STATUS_MAP[STATUS_ENCOMENDA[stIdx + 1]]?.rotulo}</button>` : ''}
@@ -165,11 +165,11 @@ export class EncomendasView extends BaseView {
               </div>
               <span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span>
               <div class="enc-acoes">
-                <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Portal" aria-label="Gerar link do portal"><i class="fas fa-link"></i></button>
-                <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i class="fas fa-pen"></i></button>
-                <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Atualizar" aria-label="Adicionar atualização"><i class="fas fa-pencil-alt"></i></button>
-                <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Exportar" aria-label="Baixar portal HTML"><i class="fas fa-download"></i></button>
-                <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Portal" aria-label="Gerar link do portal"><i data-lucide="link"></i></button>
+                <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i data-lucide="pen"></i></button>
+                <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Atualizar" aria-label="Adicionar atualização"><i data-lucide="pencil"></i></button>
+                <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Exportar" aria-label="Baixar portal HTML"><i data-lucide="download"></i></button>
+                <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
               </div>
             </div>`;
         }).join('')}
@@ -212,11 +212,11 @@ export class EncomendasView extends BaseView {
         <td>${prazoHtml}</td>
         <td><span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span></td>
         <td>
-          <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Gerar link do portal" aria-label="Gerar link do portal"><i class="fas fa-link"></i></button>
-          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i class="fas fa-pen"></i></button>
-          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualização" aria-label="Adicionar atualização"><i class="fas fa-pencil-alt"></i></button>
-          <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Baixar portal HTML" aria-label="Baixar portal HTML"><i class="fas fa-download"></i></button>
-          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+          <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Gerar link do portal" aria-label="Gerar link do portal"><i data-lucide="link"></i></button>
+          <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i data-lucide="pen"></i></button>
+          <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualização" aria-label="Adicionar atualização"><i data-lucide="pencil"></i></button>
+          <button class="btn-miniatura btn-exportar-enc" data-id="${e.id}" title="Baixar portal HTML" aria-label="Baixar portal HTML"><i data-lucide="download"></i></button>
+          <button class="btn-miniatura btn-remover-enc" data-id="${e.id}" title="Excluir" aria-label="Excluir encomenda" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
     `;
@@ -227,7 +227,7 @@ export class EncomendasView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} encomenda${this.selecionados.size === 1 ? '' : 's'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportEnc"><i class="fas fa-file"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkExportEnc"><i data-lucide="file-text"></i> Exportar</button>
           <button class="btn-secundario btn-danger" id="bulkExcluirEnc">🗑 Excluir</button>
           <button class="btn-secundario" id="bulkCancelarEnc">✕ Cancelar</button>
         </div>
@@ -276,7 +276,7 @@ export class EncomendasView extends BaseView {
     const extraStatus = e.status && !STATUS_ENCOMENDA.includes(e.status)
       ? `<option value="${e.status}" selected>${e.status}</option>` : '';
     abrirModal(`
-      <h3>${isEdit ? '<i class="fas fa-pen"></i> Editar' : '<i class="fas fa-box"></i> Nova'} Encomenda</h3>
+      <h3>${isEdit ? '<i data-lucide="pen"></i> Editar' : '<i data-lucide="package"></i> Nova'} Encomenda</h3>
       <form id="formEncomenda">
         <div class="campo-form"><label>Cliente</label>
           <div style="display:flex;gap:6px;">
@@ -305,14 +305,14 @@ export class EncomendasView extends BaseView {
           <label>Fotos da obra/referências</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <input type="file" id="encImagens" accept="image/*" multiple aria-label="Fotos da obra" style="display:none">
-            <button type="button" class="btn-secundario" id="btnEncAddImagens" style="font-size:0.8rem;padding:6px 12px;"><i class="fas fa-camera"></i> Adicionar Fotos</button>
+            <button type="button" class="btn-secundario" id="btnEncAddImagens" style="font-size:0.8rem;padding:6px 12px;"><i data-lucide="camera"></i> Adicionar Fotos</button>
             <span id="encContagemImagens" style="font-size:0.8rem;color:var(--text-muted);">${(e.imagens || []).length > 0 ? `${e.imagens.length} foto(s)` : ''}</span>
           </div>
           <div id="encPreviewImagens" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
             ${(e.imagens && e.imagens.length > 0) ? e.imagens.map((img, i) => `
               <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
                 <img src="${img.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : img}" style="width:100%;height:100%;object-fit:cover;">
-                <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+                <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" aria-hidden="true"></i></button>
               </div>`).join('') : ''}
           </div>
         </div>
@@ -380,7 +380,7 @@ export class EncomendasView extends BaseView {
     container.innerHTML = this._encImagens.map((img, i) => `
       <div style="position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);">
         <img src="${img}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        <button type="button" class="btn-remover-foto-enc" data-idx="${i}" aria-label="Remover foto" style="position:absolute;top:1px;right:1px;width:18px;height:18px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" aria-hidden="true"></i></button>
       </div>`).join('');
     if (contagem) contagem.textContent = `${this._encImagens.length} foto(s)`;
   }
@@ -392,7 +392,7 @@ export class EncomendasView extends BaseView {
       `<option value="${s}" ${enc.status === s ? 'selected' : ''}>${this.rotuloStatus(s)}</option>`
     ).join('');
     abrirModal(`
-      <h3><i class="fas fa-pencil-alt"></i> Atualizar Status — ${sanitizarHTML(enc.descricao)}</h3>
+      <h3><i data-lucide="pencil"></i> Atualizar Status — ${sanitizarHTML(enc.descricao)}</h3>
       <form id="formAtualizacao">
         <div class="campo-form"><label>Novo Status</label>
           <select id="atuStatus" aria-label="Novo status" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">${statusOpts}</select>
@@ -401,7 +401,7 @@ export class EncomendasView extends BaseView {
           <textarea id="atuMensagem" aria-label="Mensagem para o cliente" placeholder="Ex: Iniciei a pintura, as cores estão secando..." style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:80px;background:var(--bg);color:var(--text);"></textarea>
         </div>
         <div class="campo-form" style="font-size:0.8rem;color:var(--text-muted);">
-          <i class="fas fa-lightbulb"></i> Esta atualização ficará visível no portal do cliente.
+          <i data-lucide="lightbulb"></i> Esta atualização ficará visível no portal do cliente.
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarAtu">Cancelar</button>
@@ -432,9 +432,9 @@ export class EncomendasView extends BaseView {
           </div>
           <div class="portal-item-acoes">
             <input type="text" readonly value="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.75rem;width:240px;background:var(--bg);color:var(--text);" onclick="this.select()">
-            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link" aria-label="Copiar link"><i class="fas fa-clipboard"></i></button>
-            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? 'Desativar' : 'Ativar'}" aria-label="${p.ativo ? 'Desativar portal' : 'Ativar portal'}">${p.ativo ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>'}</button>
-            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" aria-label="Remover portal" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+            <button class="btn-miniatura btn-copiar-link" data-link="${window.location.origin}${window.location.pathname}#portal?token=${p.token}" title="Copiar link" aria-label="Copiar link"><i data-lucide="clipboard"></i></button>
+            <button class="btn-miniatura btn-toggle-portal" data-id="${p.id}" title="${p.ativo ? 'Desativar' : 'Ativar'}" aria-label="${p.ativo ? 'Desativar portal' : 'Ativar portal'}">${p.ativo ? '<i data-lucide="lock-open"></i>' : '<i data-lucide="lock"></i>'}</button>
+            <button class="btn-miniatura btn-remover-portal" data-id="${p.id}" title="Remover" aria-label="Remover portal" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
           </div>
         </div>
       `;
@@ -444,7 +444,7 @@ export class EncomendasView extends BaseView {
     const clientesOpts = clientesComEncomenda.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
     abrirModal(`
-      <h3><i class="fas fa-link"></i> Links de Acesso do Cliente</h3>
+      <h3><i data-lucide="link"></i> Links de Acesso do Cliente</h3>
       <p class="texto-ajuda" style="margin-bottom:12px;">Gere links para que seus clientes acompanhem o status das encomendas.</p>
       <div class="portais-lista">${portaisHtml}</div>
       <hr style="margin:12px 0;border-color:var(--border);">
@@ -453,7 +453,7 @@ export class EncomendasView extends BaseView {
         <select id="selClientePortal" aria-label="Selecionar cliente" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
           ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
         </select>
-        <button class="btn-primario" id="btnGerarPortal"><i class="fas fa-link"></i> Gerar Link</button>
+        <button class="btn-primario" id="btnGerarPortal"><i data-lucide="link"></i> Gerar Link</button>
       </div>
       <hr style="margin:12px 0;border-color:var(--border);">
       <h4 style="font-size:0.85rem;margin:0 0 8px;">Página autônoma do portal</h4>
@@ -462,8 +462,8 @@ export class EncomendasView extends BaseView {
         <select id="selClientePortalExport" aria-label="Selecionar cliente para exportar" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg);color:var(--text);">
           ${clientesOpts || '<option value="">Nenhum cliente com encomenda</option>'}
         </select>
-        <button class="btn-primario" id="btnExportarPortal"><i class="fas fa-download"></i> Baixar HTML</button>
-        <button class="btn-secundario" id="btnCopiarInstrucoes"><i class="fas fa-copy"></i> Instruções</button>
+        <button class="btn-primario" id="btnExportarPortal"><i data-lucide="download"></i> Baixar HTML</button>
+        <button class="btn-secundario" id="btnCopiarInstrucoes"><i data-lucide="copy"></i> Instruções</button>
       </div>
       <div class="modal-acoes" style="margin-top:16px;">
         <button class="btn-secundario" id="btnFecharPortais">Fechar</button>

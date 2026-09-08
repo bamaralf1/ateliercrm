@@ -5,52 +5,60 @@
 
 /* ---------- Tokens de atmosfera e texto por tema ---------- */
 body[data-tema="classico"] {
-  --pv5-amb-1: rgba(193, 120, 63, 0.30);
-  --pv5-amb-2: rgba(139, 69, 19, 0.14);
-  --pv5-amb-3: rgba(240, 196, 120, 0.10);
+  --pv5-amb-1: rgba(193, 120, 63, 0.34);
+  --pv5-amb-2: rgba(139, 69, 19, 0.17);
+  --pv5-amb-3: rgba(240, 196, 120, 0.12);
+  --pv5-glow-c: #d9a05a;
   --pv5-h2-grad: linear-gradient(135deg, #5b3a24 0%, #8b5a33 55%, #c1783f 100%);
 }
 body[data-tema="clean"] {
-  --pv5-amb-1: rgba(0, 0, 0, 0.055);
-  --pv5-amb-2: rgba(37, 99, 235, 0.045);
+  --pv5-amb-1: rgba(0, 0, 0, 0.05);
+  --pv5-amb-2: rgba(0, 0, 0, 0.04);
   --pv5-amb-3: rgba(0, 0, 0, 0.03);
-  --pv5-h2-grad: linear-gradient(135deg, #161616 0%, #404040 70%);
+  --pv5-glow-c: #3f3f3f;
+  --pv5-h2-grad: linear-gradient(135deg, #161616 0%, #4d4d4d 75%);
 }
 body[data-tema="escuro"] {
-  --pv5-amb-1: rgba(0, 212, 255, 0.15);
-  --pv5-amb-2: rgba(99, 102, 241, 0.10);
-  --pv5-amb-3: rgba(236, 72, 153, 0.06);
-  --pv5-h2-grad: linear-gradient(135deg, #f4f4f5 0%, #4ee4ff 75%);
+  --pv5-amb-1: rgba(200, 163, 90, 0.17);
+  --pv5-amb-2: rgba(226, 194, 125, 0.10);
+  --pv5-amb-3: rgba(232, 185, 35, 0.06);
+  --pv5-glow-c: #e2c27d;
+  --pv5-h2-grad: linear-gradient(135deg, #f0ead9 0%, #e2c27d 78%);
 }
 body[data-tema="galeria"] {
   --pv5-amb-1: rgba(0, 0, 0, 0.05);
-  --pv5-amb-2: rgba(0, 0, 0, 0.045);
-  --pv5-amb-3: rgba(37, 99, 235, 0.04);
-  --pv5-h2-grad: linear-gradient(135deg, #111111 0%, #666666 80%);
+  --pv5-amb-2: rgba(0, 0, 0, 0.04);
+  --pv5-amb-3: rgba(0, 0, 0, 0.035);
+  --pv5-glow-c: #262626;
+  --pv5-h2-grad: linear-gradient(135deg, #141414 0%, #666666 80%);
 }
 body[data-tema="boho"] {
   --pv5-amb-1: rgba(217, 154, 114, 0.28);
   --pv5-amb-2: rgba(193, 127, 89, 0.15);
   --pv5-amb-3: rgba(242, 204, 150, 0.10);
+  --pv5-glow-c: #e8b384;
   --pv5-h2-grad: linear-gradient(135deg, #4a3f35 0%, #b06a47 70%, #d99a72 100%);
 }
 body[data-tema="dourado"] {
   --pv5-amb-1: rgba(232, 185, 35, 0.15);
   --pv5-amb-2: rgba(201, 162, 39, 0.10);
   --pv5-amb-3: rgba(236, 204, 104, 0.07);
+  --pv5-glow-c: #ffe08a;
   --pv5-h2-grad: linear-gradient(135deg, #f5ecd6 0%, #eccc68 75%);
 }
 body[data-tema="marmore"] {
   --pv5-amb-1: rgba(196, 122, 82, 0.22);
   --pv5-amb-2: rgba(160, 82, 45, 0.13);
   --pv5-amb-3: rgba(232, 214, 190, 0.12);
+  --pv5-glow-c: #cf9a6b;
   --pv5-h2-grad: linear-gradient(135deg, #2b211b 0%, #a0522d 60%, #c47a52 100%);
 }
 body[data-tema="esmeralda"] {
-  --pv5-amb-1: rgba(0, 200, 83, 0.15);
-  --pv5-amb-2: rgba(60, 232, 124, 0.09);
+  --pv5-amb-1: rgba(60, 174, 114, 0.16);
+  --pv5-amb-2: rgba(111, 217, 160, 0.09);
   --pv5-amb-3: rgba(0, 150, 255, 0.05);
-  --pv5-h2-grad: linear-gradient(135deg, #d4e8d4 0%, #3ce87c 75%);
+  --pv5-glow-c: #7fe0ab;
+  --pv5-h2-grad: linear-gradient(135deg, #e0e9dc 0%, #6fd9a0 75%);
 }
 
 /* ---------- Atmosfera de fundo (mudança de tom mais visível) ---------- */
@@ -234,4 +242,866 @@ body[data-high-contrast="true"] select:focus {
   body::before {
     transition: none;
   }
+}
+
+/* ==================================================================
+   V6 — Refino "Clássico-Moderno" (atelier de pintura)
+   Camada editorial: mantém a base, eleva acabamento em todas as telas.
+   ================================================================== */
+
+/* ---------- Anti-aliasing e cadência tipográfica ---------- */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.004em;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+.view-cabecalho h2 {
+  font-weight: 700;
+}
+
+/* Números/moeda com serifa de exibição (presença de galeria) */
+.kpi-valor,
+.preco-obra,
+.valor-destaque {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Cabeçalho de view com linha de separação sutil */
+.view-cabecalho {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 10%, transparent);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Formulários editoriais ---------- */
+.campo-form label {
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.campo-form input,
+.campo-form select,
+.campo-form textarea {
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--border) 80%, var(--card-border));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+/* ---------- Botões, modais e toasts ---------- */
+.btn-primario,
+.btn-gradient,
+.btn-secundario,
+.btn-ghost,
+.btn-perigo {
+  border-radius: 12px;
+}
+.modal-caixa {
+  border-radius: 18px;
+}
+.toast {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.header {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 13%, transparent);
+}
+
+/* ---------- Tabelas: zebra sutil e header mais firme ---------- */
+.tabela-wrapper thead th {
+  font-weight: 650;
+  font-size: 0.76rem;
+}
+.tabela-wrapper tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--accent) 2.2%, transparent);
+}
+
+/* ---------- Navegação lateral: presença de ateliê ---------- */
+.nav-item {
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.nav-item:hover {
+  transform: translateX(2px);
+}
+.sidebar-logo .rotulo {
+  font-family: var(--font-display, var(--font-principal));
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+/* ---------- Superfícies: hairline fino ---------- */
+.card,
+.painel,
+.catalogo-filtros,
+.tabela-wrapper {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-border) 55%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    0 14px 36px rgba(0, 0, 0, 0.045),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
+}
+body[data-tema="escuro"] .card,
+body[data-tema="escuro"] .painel,
+body[data-tema="escuro"] .catalogo-filtros,
+body[data-tema="escuro"] .tabela-wrapper,
+body[data-tema="dourado"] .card,
+body[data-tema="dourado"] .painel,
+body[data-tema="dourado"] .catalogo-filtros,
+body[data-tema="dourado"] .tabela-wrapper,
+body[data-tema="esmeralda"] .card,
+body[data-tema="esmeralda"] .painel,
+body[data-tema="esmeralda"] .catalogo-filtros,
+body[data-tema="esmeralda"] .tabela-wrapper {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-border) 65%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 6px 18px rgba(0, 0, 0, 0.3),
+    0 18px 48px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 5%, transparent);
+}
+
+/* KPI: borda lateraal mais elegante + rótulo fino */
+.kpi-card {
+  border-left: 2px solid var(--kpi-cor);
+}
+.kpi-valor {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Scrollbar afinada ---------- */
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 70%, var(--text-muted));
+}
+
+/* ---------- Breadcrumb editorial ---------- */
+.breadcrumb {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+.breadcrumb .atual {
+  color: var(--text);
+}
+
+/* ---------- Acessibilidade e movimento (V6) ---------- */
+body[data-high-contrast="true"] .campo-form label,
+body[data-high-contrast="true"] .breadcrumb {
+  text-transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .btn-primario,
+  .btn-gradient,
+  .btn-secundario,
+  .btn-ghost,
+  .btn-perigo {
+    transition: none;
+    transform: none;
+  }
+}/* ==================================================================
+   V7 — Profundidade & Ornamentos "Clássico-Moderno"
+   ================================================================== */
+
+/* Sheen sutil no topo das superficies + elevacao ao hover */
+.card, .painel, .catalogo-filtros, .kpi-card {
+  background-image: linear-gradient(180deg, color-mix(in srgb, #ffffff 7%, transparent), transparent 36%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+body[data-tema="escuro"] .card,
+body[data-tema="escuro"] .painel,
+body[data-tema="escuro"] .catalogo-filtros,
+body[data-tema="escuro"] .kpi-card,
+body[data-tema="dourado"] .card,
+body[data-tema="dourado"] .painel,
+body[data-tema="dourado"] .catalogo-filtros,
+body[data-tema="dourado"] .kpi-card,
+body[data-tema="esmeralda"] .card,
+body[data-tema="esmeralda"] .painel,
+body[data-tema="esmeralda"] .catalogo-filtros,
+body[data-tema="esmeralda"] .kpi-card {
+  background-image: linear-gradient(180deg, color-mix(in srgb, #ffffff 3.5%, transparent), transparent 30%);
+}
+.card:hover, .painel:hover, .catalogo-filtros:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.07),
+    0 24px 56px color-mix(in srgb, var(--accent) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
+  transform: translateY(-2px);
+}
+
+/* Ornamento superior do modal */
+.modal-caixa {
+  position: relative;
+}
+.modal-caixa::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.85;
+}
+
+/* Legenda em serifa italica (tom de atelie) */
+.view-cabecalho .subtitulo,
+.view-cabecalho p.subtitulo,
+.kpi-sub {
+  font-family: var(--font-serif, var(--font-display));
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* Cabecalhos de tabela em serifa de exibicao */
+.tabela-wrapper thead th {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+}
+
+/* Chips de status editoriais */
+.tag-status {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.65rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* Botoes: elevacao com brilho */
+.btn-gradient:hover,
+.btn-primario:hover {
+  box-shadow: 0 12px 34px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+/* Sidebar: hairline e indicador ativo */
+.sidebar {
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.nav-item.ativo {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.nav-item:hover:not(.ativo) {
+  box-shadow: none;
+}
+
+/* Botao de acao flutuante com anel de brilho */
+.fab-main {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--accent-contrast) 22%, transparent),
+    0 0 30px var(--accent-glow);
+}
+
+/* Titulos com sombra em temas escuros */
+body[data-tema="escuro"] .view-cabecalho h2,
+body[data-tema="dourado"] .view-cabecalho h2,
+body[data-tema="esmeralda"] .view-cabecalho h2 {
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.35));
+}
+
+/* Hover de linha de tabela com leve brilho */
+.tabela-wrapper tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent) 6%, transparent) !important;
+}
+
+/* ---- Acessibilidade e movimento (V7) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .painel:hover, .catalogo-filtros:hover,
+  .btn-gradient:hover, .btn-primario:hover {
+    transform: none;
+  }
+}
+/* ==================================================================
+   V8 — Upgrade Massivo de UI/UX (Premium)
+   ================================================================== */
+
+/* ---------- Escala tipografica maior (hierarquia editorial) ---------- */
+.view-cabecalho h2 {
+  font-size: clamp(1.6rem, 2.4vw, 2.05rem);
+}
+.view-cabecalho p.subtitulo {
+  font-size: 0.95rem;
+}
+.kpi-valor {
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+}
+.painel h3,
+.modal-caixa h3 {
+  font-size: 1.05rem;
+}
+
+/* ---------- Raio global mais suave ---------- */
+.campo-form input,
+.campo-form select,
+.campo-form textarea,
+.btn-primario,
+.btn-gradient,
+.btn-secundario,
+.btn-ghost,
+.btn-perigo,
+.toast,
+.tabela-wrapper {
+  border-radius: 14px;
+}
+.modal-caixa {
+  border-radius: 20px;
+}
+.nav-item {
+  border-radius: 14px;
+}
+
+/* ---------- Vidro mais profundo ---------- */
+.glass-premium,
+.header,
+.painel-filtros {
+  -webkit-backdrop-filter: blur(24px) saturate(1.45);
+  backdrop-filter: blur(24px) saturate(1.45);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.modal-overlay {
+  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  backdrop-filter: blur(12px) saturate(1.25);
+}
+
+/* ---------- Area principal mais alentada ---------- */
+.view {
+  padding: 32px 34px;
+}
+@media (max-width: 860px) {
+  .view {
+    padding: 16px;
+  }
+}
+
+/* ---------- Holofote central no ambiente ---------- */
+body::before {
+  background:
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(780px 620px at 52% 120%, var(--pv5-amb-3) 0%, transparent 56%),
+    radial-gradient(620px 340px at 50% 0%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 72%);
+}
+
+/* ---------- Moldura premium das obras no catalogo ---------- */
+.card-obra .imagem-obra {
+  filter: saturate(1.04) contrast(1.01);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #000000 6%, transparent);
+}
+.card-obra:hover {
+  box-shadow:
+    0 18px 42px -8px color-mix(in srgb, var(--accent) 32%, rgba(0, 0, 0, 0.35)),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.card-obra:hover::after {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 82%, transparent);
+}
+
+/* ---------- Empty states com aura ---------- */
+.estado-vazio .icone-vazio {
+  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--accent) 26%, transparent));
+}
+.estado-vazio p {
+  font-family: var(--font-serif, var(--font-display));
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Foco com anel duplo ---------- */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 0 0 6px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 12px 30px color-mix(in srgb, var(--accent) 14%, transparent),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- Press nos botoes ---------- */
+.btn-gradient:active,
+.btn-primario:active,
+.btn-secundario:active,
+.btn-ghost:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Transicoes unificadas e suaves ---------- */
+.btn,
+.btn-primario,
+.btn-secundario,
+.btn-ghost,
+.btn-gradient,
+.btn-perigo,
+.tab-btn,
+.nav-item {
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* ---------- Rolagem suave + placeholder ---------- */
+html {
+  scroll-behavior: smooth;
+}
+::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 78%, transparent);
+  opacity: 1;
+}
+
+/* ---------- Icones de KPI com gem ---------- */
+.kpi-icone {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--kpi-cor) 26%, transparent),
+    0 4px 14px color-mix(in srgb, var(--kpi-cor) 18%, transparent);
+}
+
+/* ---------- Selecao mais rica ---------- */
+::selection {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+/* ---------- Acessibilidade e movimento (V8) ---------- */
+body[data-high-contrast="true"] .view {
+  padding: 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .btn,
+  .btn-primario,
+  .btn-secundario,
+  .btn-ghost,
+  .btn-gradient,
+  .btn-perigo,
+  .tab-btn,
+  .nav-item {
+    transition: none;
+    transform: none;
+  }
+}
+/* ==================================================================
+   V9 — Alto Refinamento (movimento, numeralia, assinatura)
+   ================================================================== */
+
+/* ---------- Entrada de view: subida suave ---------- */
+@keyframes v9Rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v9Fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.view-cabecalho {
+  animation: v9Rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tabela-wrapper,
+.grid-cards,
+.catalogo-filtros,
+.painel-filtros,
+.estado-vazio {
+  animation: v9Rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.05s;
+}
+.grid-cards > * {
+  animation: v9Rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.grid-cards > *:nth-child(1) { animation-delay: 0.03s; }
+.grid-cards > *:nth-child(2) { animation-delay: 0.06s; }
+.grid-cards > *:nth-child(3) { animation-delay: 0.09s; }
+.grid-cards > *:nth-child(4) { animation-delay: 0.12s; }
+.grid-cards > *:nth-child(5) { animation-delay: 0.15s; }
+.grid-cards > *:nth-child(6) { animation-delay: 0.18s; }
+.modal-overlay {
+  animation: v9Fade 0.25s ease both;
+}
+
+/* ---------- Numerais tabulares (tabelas e preços) ---------- */
+.tabela-wrapper,
+.kpi-valor,
+.be-tabela {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------- Holofote com matiz secundário por tema ---------- */
+body::before {
+  background:
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(780px 620px at 52% 120%, var(--pv5-amb-3) 0%, transparent 56%),
+    radial-gradient(620px 340px at 50% 0%, color-mix(in srgb, var(--pv5-glow-c) 9%, transparent) 0%, transparent 72%);
+}
+
+/* ---------- Tipografia: compactar linha ---------- */
+.view-cabecalho h2 {
+  line-height: 1.15;
+}
+.painel h3,
+.modal-caixa h3 {
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Banda de tinta no header ---------- */
+.header {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card) 90%, var(--accent) 7%),
+    color-mix(in srgb, var(--card) 96%, var(--accent) 2%),
+    color-mix(in srgb, var(--card) 100%, var(--accent) 0%)
+  );
+}
+
+/* ---------- Botões do header em vidro ---------- */
+.btn-header {
+  background: color-mix(in srgb, var(--bg) 55%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 500;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- Rodapé da sidebar como chip ---------- */
+.sidebar-rodape {
+  margin: 12px 16px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 12%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  opacity: 0.75;
+}
+
+/* ---------- KPI: anel na cor própria ao hover ---------- */
+.kpi-card:hover {
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px color-mix(in srgb, var(--kpi-cor) 30%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--kpi-cor) 8%, transparent);
+}
+
+/* ---------- Ornamento no topo dos painéis ---------- */
+.painel {
+  position: relative;
+}
+.painel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: 58px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 20%, transparent));
+  opacity: 0.65;
+}
+
+/* ---------- Título de obra em serifa de exibição ---------- */
+.card-obra .titulo-obra {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Acessibilidade e movimento (V9) ---------- */
+body[data-high-contrast="true"] .header {
+  background-image: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-cabecalho,
+  .tabela-wrapper,
+  .grid-cards,
+  .grid-cards > *,
+  .catalogo-filtros,
+  .painel-filtros,
+  .estado-vazio,
+  .modal-overlay {
+    animation: none;
+  }
+}
+/* ==================================================================
+   V10 — Personalidade e leitura fina (font display EB Garamond)
+   ================================================================== */
+
+/* ---------- Marca do sidebar em serifa de exibição ---------- */
+.sidebar-logo .rotulo {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Título de exibição também em painéis e cards ---------- */
+.painel h3,
+.card h3,
+.modal-caixa h3 {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Rótulos de campos: micro-leitura editorial ---------- */
+.campo-form label,
+.config-campo label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Rodapé do modal com hairline ---------- */
+.modal-acoes {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 85%, var(--accent));
+}
+
+/* ---------- Breadcrumb de vitrine ---------- */
+.breadcrumb {
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Leitura de superfície dos painéis ---------- */
+.painel {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card-alt, #ffffff) 2.5%, transparent) 0%,
+    transparent 130px
+  );
+}
+
+/* ---------- Cabeçalho de tabela mais firme ---------- */
+thead th {
+  font-weight: 600;
+}
+
+/* ---------- Âncoras alcançáveis com header fixo ---------- */
+:target {
+  scroll-margin-top: 96px;
+}
+.conteudo {
+  scroll-padding-top: 96px;
+}
+
+/* ---------- Acessibilidade V10 ---------- */
+body[data-high-contrast="true"] .painel {
+  background-image: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-cabecalho,
+  .tabela-wrapper,
+  .grid-cards,
+  .grid-cards > *,
+  .catalogo-filtros,
+  .painel-filtros,
+  .estado-vazio,
+  .modal-overlay {
+    animation: none;
+  }
+}
+/* ==================================================================
+   V11 — Atmosfera visível + lavagem de tela inteira
+   ================================================================== */
+
+/* Corrige a atmosfera: o body tinha background opaco cobrindo o
+   pseudo z-index:-1, zerando os radiais. Tinta base vai no <html>
+   (canvas) e o body fica translúcido para o body::before render.
+   Elimina a "divisão" entre a banda de cor do topo e o resto branco. */
+body {
+  background: transparent;
+}
+
+/* Lavagem de tela inteira: glow do topo envolve o header, sem costura */
+body::before {
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--pv5-glow-c) 2.4%, transparent) 100%),
+    radial-gradient(130% 90% at 50% -12%, color-mix(in srgb, var(--pv5-glow-c) 10%, transparent) 0%, transparent 58%),
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(120% 90% at 50% 118%, color-mix(in srgb, var(--pv5-glow-c) 5.5%, transparent) 0%, transparent 58%),
+    radial-gradient(620px 340px at 50% 0%, color-mix(in srgb, var(--pv5-glow-c) 12%, transparent) 0%, transparent 72%);
+}
+
+/* ---------- Hairline de base no header ---------- */
+.header {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ---------- Tabela: fio sob o thead sticky ---------- */
+thead th {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+/* ---------- Acessibilidade V11 ---------- */
+body[data-high-contrast="true"] .header {
+  border-bottom: 1px solid var(--border);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-cabecalho,
+  .tabela-wrapper,
+  .grid-cards,
+  .grid-cards > *,
+  .catalogo-filtros,
+  .painel-filtros,
+  .estado-vazio,
+  .modal-overlay {
+    animation: none;
+  }
+}
+/* ==================================================================
+   V12 — Assinatura dourada, numeralia serif e textura
+   ================================================================== */
+
+/* ---------- Scrollbar temática interna (painéis roláveis) ---------- */
+.view::-webkit-scrollbar,
+.tabela-wrapper::-webkit-scrollbar,
+.modal-caixa::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.view::-webkit-scrollbar-track,
+.tabela-wrapper::-webkit-scrollbar-track,
+.modal-caixa::-webkit-scrollbar-track {
+  background: transparent;
+}
+.view::-webkit-scrollbar-thumb,
+.tabela-wrapper::-webkit-scrollbar-thumb,
+.modal-caixa::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 28%, transparent);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.view::-webkit-scrollbar-thumb:hover,
+.tabela-wrapper::-webkit-scrollbar-thumb:hover,
+.modal-caixa::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 46%, transparent);
+  background-clip: content-box;
+}
+.view::-webkit-scrollbar-corner,
+.tabela-wrapper::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ---------- KPI: algarismos de livro-caixa em serifa ---------- */
+.kpi-valor {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Preço da obra em numeral serif ---------- */
+.card-obra .preco-obra {
+  font-family: var(--font-display, var(--font-principal));
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Assinatura dourada na marca ---------- */
+.sidebar-logo .rotulo {
+  background: linear-gradient(
+    120deg,
+    var(--sidebar-text-active) 0%,
+    color-mix(in srgb, var(--pv5-glow-c) 55%, #ffffff) 45%,
+    var(--sidebar-text-active) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--sidebar-text-active);
+}
+
+/* ---------- Textura de grão mais presente ---------- */
+body::after {
+  opacity: 0.05;
+}
+
+/* ---------- Navegação: transição sedosa ---------- */
+.nav-item {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease;
+}
+
+/* ---------- Acessibilidade V12 ---------- */
+body[data-high-contrast="true"] .sidebar-logo .rotulo {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--sidebar-text-active);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-cabecalho,
+  .tabela-wrapper,
+  .grid-cards,
+  .grid-cards > *,
+  .catalogo-filtros,
+  .painel-filtros,
+  .estado-vazio,
+  .modal-overlay {
+    animation: none;
+  }
+}
+
+/* ---------- Ícones Lucide: dimensões e refino (V13) ---------- */
+svg[data-lucide] {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+.kpi-icone svg[data-lucide],
+.fi-icone svg[data-lucide],
+.icone-vazio svg[data-lucide] {
+  width: 1.1em;
+  height: 1.1em;
+}
+.btn-header svg[data-lucide],
+.btn-notif svg[data-lucide],
+.btn-miniatura svg[data-lucide] {
+  width: 0.95em;
+  height: 0.95em;
+}
+.stage-dot i[data-lucide],
+.timeline-dot i[data-lucide],
+.stage-dot svg[data-lucide],
+.timeline-dot svg[data-lucide] {
+  stroke-width: 2.5;
+}
+body[data-high-contrast="true"] svg[data-lucide] {
+  stroke-width: 2.25;
 }

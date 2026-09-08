@@ -10,7 +10,7 @@ export class ExportImportView extends BaseView {
     return `
       <div class="view-cabecalho">
         <div>
-          <h2><i class="fas fa-box"></i> Exportar / Importar Dados</h2>
+          <h2><i data-lucide="package"></i> Exportar / Importar Dados</h2>
           <p class="subtitulo">Backup completo, exportação seletiva e restauração</p>
         </div>
       </div>
@@ -36,14 +36,14 @@ export class ExportImportView extends BaseView {
     const totalRegistros = Object.values(contagens).reduce((a, b) => a + b, 0);
 
     const cards = colecoes.map(c => {
-      const rotulos = { obras: '<i class="fas fa-images"></i> Obras', clientes: '<i class="fas fa-user"></i> Clientes', vendas: '<i class="fas fa-dollar-sign"></i> Vendas', encomendas: '<i class="fas fa-box"></i> Encomendas', contatosProfissionais: '🤝 Contatos', interacoes: '💬 Interações', eventos: '🎪 Eventos', financas: '<i class="fas fa-chart-line"></i> Finanças' };
+      const rotulos = { obras: '<i data-lucide="images"></i> Obras', clientes: '<i data-lucide="user"></i> Clientes', vendas: '<i data-lucide="dollar-sign"></i> Vendas', encomendas: '<i data-lucide="package"></i> Encomendas', contatosProfissionais: '🤝 Contatos', interacoes: '💬 Interações', eventos: '🎪 Eventos', financas: '<i data-lucide="chart-line"></i> Finanças' };
       return `
         <div class="ei-colecao-card" data-colecao="${c}">
           <div class="eicc-header"><span class="eicc-icone">${rotulos[c] || c}</span><span class="eicc-nome">${c}</span></div>
           <div class="eicc-qtd">${contagens[c]} registros</div>
           <div class="eicc-acoes">
-            <button class="btn-miniatura ei-export-json" data-colecao="${c}" title="Exportar JSON"><i class="fas fa-clipboard"></i> JSON</button>
-            <button class="btn-miniatura ei-export-csv" data-colecao="${c}" title="Exportar CSV"><i class="fas fa-chart-bar"></i> CSV</button>
+            <button class="btn-miniatura ei-export-json" data-colecao="${c}" title="Exportar JSON"><i data-lucide="clipboard"></i> JSON</button>
+            <button class="btn-miniatura ei-export-csv" data-colecao="${c}" title="Exportar CSV"><i data-lucide="bar-chart-3"></i> CSV</button>
           </div>
         </div>
       `;
@@ -52,7 +52,7 @@ export class ExportImportView extends BaseView {
     return `
       <div class="ei-export-grid">
         <div class="ei-secao-destaque">
-          <div class="ei-destaque-icon"><i class="fas fa-save"></i></div>
+          <div class="ei-destaque-icon"><i data-lucide="save"></i></div>
           <div class="ei-destaque-info">
             <h3>Backup Completo</h3>
             <p>Exporta todos os dados do CRM em um único arquivo JSON.</p>
@@ -85,10 +85,10 @@ export class ExportImportView extends BaseView {
 
   renderPreview() {
     if (!this.previewData || !this.previewData.valido) {
-      return `<div class="ei-preview-box ei-preview-erro"><span><i class="fas fa-times"></i></span> Arquivo inválido: ${this.previewData?.erro || 'formato não reconhecido'}</div>`;
+      return `<div class="ei-preview-box ei-preview-erro"><span><i data-lucide="x"></i></span> Arquivo inválido: ${this.previewData?.erro || 'formato não reconhecido'}</div>`;
     }
     const linhas = this.previewData.colecoes.map(c =>
-      `<tr><td>${c.nome}</td><td>${c.quantidade}</td><td>${c.quantidade > 0 ? '<i class="fas fa-plus-circle"></i> Novos dados' : '—'}</td></tr>`
+      `<tr><td>${c.nome}</td><td>${c.quantidade}</td><td>${c.quantidade > 0 ? '<i data-lucide="circle-plus"></i> Novos dados' : '—'}</td></tr>`
     ).join('');
     const isCompleto = this.previewData.tipo === 'completo';
     return `
@@ -107,7 +107,7 @@ export class ExportImportView extends BaseView {
           <label class="ei-checkbox"><input type="radio" name="eiModo" value="mesclar"> Mesclar com dados existentes (mantém IDs duplicados)</label>
         </div>
         <div class="ei-import-acoes">
-          <button class="btn-primario" id="eiConfirmarImport"><i class="fas fa-check"></i> Confirmar Importação</button>
+          <button class="btn-primario" id="eiConfirmarImport"><i data-lucide="check"></i> Confirmar Importação</button>
           <button class="btn-secundario" id="eiCancelarImport">Cancelar</button>
         </div>
       </div>
@@ -202,7 +202,7 @@ export class ExportImportView extends BaseView {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     this.dataStore.salvarHistoricoExport(colecao, { tipo: 'csv', tamanho: csv.length });
-    mostrarToast(`<i class="fas fa-chart-bar"></i> CSV exportado: ${itens.length} registros`, 'sucesso');
+    mostrarToast(`<i data-lucide="bar-chart-3"></i> CSV exportado: ${itens.length} registros`, 'sucesso');
   }
 
   configurarImportar() {
@@ -255,14 +255,14 @@ export class ExportImportView extends BaseView {
       const modo = document.querySelector('input[name="eiModo"]:checked')?.value || 'substituir';
       const resultado = this.dataStore.importarBackup(jsonTexto);
       if (resultado.sucesso) {
-        mostrarToast(`<i class="fas fa-check"></i> Dados importados com sucesso (${resultado.tipo})`, 'sucesso');
+        mostrarToast(`<i data-lucide="check"></i> Dados importados com sucesso (${resultado.tipo})`, 'sucesso');
         this.previewData = null;
         this.arquivoCarregado = null;
         const container = document.getElementById('eiPreviewContainer');
         if (container) container.innerHTML = '';
         if (this.router) this.router.navegar(this.router.viewAtual);
       } else {
-        mostrarToast(`<i class="fas fa-times"></i> Erro na importação: ${resultado.erro}`, 'erro');
+        mostrarToast(`<i data-lucide="x"></i> Erro na importação: ${resultado.erro}`, 'erro');
       }
     });
     document.getElementById('eiCancelarImport')?.addEventListener('click', () => {

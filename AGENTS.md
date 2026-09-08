@@ -9,7 +9,7 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - **CSS: fonte única** `src/styles/style.scss` (partials `_tokens/_themes/_animations/_responsive/_premium-v5`) → `tools/sync-css.js` compila (sass, `style:'compressed'`) e **substitui o bloco `<style>` inline do `index.html`**. Editar só o scss + rodar `npm run styles` (ou `build`). `src/vite-entry.ts` NÃO importa mais scss
 - `npm run build`: `concat-source.js && sync-css.js && vite build` (Vite = servidor dev/build; CSS gerido pelo sync-css)
 - 26 arquivos em `src/`, 10 classes de view, 3 classes de serviço
-- CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, D3.js 7.8.5 (Three.js removido — ver Galeria 2D)
+- CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, D3.js 7.8.5 (Three.js removido — ver Galeria 2D); ícones: **Lucide vendorizado** em `public/lucide.min.js` (ver V13)
 - Dados: `localStorage` (5 MB), imagens comprimidas para 1200 px JPEG
 - Testes: Jest (jsdom), 12 suites, 123 testes (não roda neste ambiente — validar com `npm run build` + browser)
 
@@ -129,3 +129,25 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 ### Freemium removido — commit `b0cd888`
 - Removido plano gratuito/paywall: arquivos `src/plano.ts` e `src/views/planos-view.ts` deletados, strings freemium removidas (i18n), `window.Freemium` eliminado, `tools/concat-source.js` sem plano.ts/planos-view.ts.
 - Todos os recursos liberados: 16 itens na sidebar (sem "Planos"), Galeria e Precificador (4 abas) sem paywall, Configurações → Sync aberto, `window.Freemium` undefined, console zero erros.
+
+### Premium V6–V12 — refinamentos progressivos (_premium-v5.scss, base)
+- V6: `--elev-1/2/3` + `--ring-fina`/`--ring-fina-esc`; sombras em camadas com bevel interno; gradiente suave topo em cards (`::after`); `font-variant-numeric: tabular-nums` em valores/preços; scan de luz `.btn-primario::before`; estado-vazio com anel pontilhado girando.
+- V7: `.toast` com borda colorida por tipo (`--ok/--warn/--danger/--info`), `.toast i` centralizado; navbar ativo com `::before` barra lateral gradiente + glow; foco de inputs com glow triplo (ring-accent + sombra + inset); hover de linha `tr:hover td` background accent 6%.
+- V8: `.card/.painel/.kpi-card` com gradiente de superfície aditivo e transições suaves; hover com sombra accent + `translateY(-2px)`; modal `::before` topo com gradiente; subtítulos em serif itálico (`.view-cabecalho p.subtitulo`); `.tag-status` uppercase.
+- V9: animações de entrada — `v9Rise` (view header, tabelas, grids com stagger por nth-child) + `v9Fade` (modal); scrollbar custom em `.view/.tabela-wrapper/.modal-caixa`; `body::before` ganha 5º radial com `--pv5-glow-c` em topo/base.
+- V10: `--font-display` (Playfair) em KPI/preços/`kpi-valor`; logo sidebar com gradiente texto (`.sidebar-logo .rotulo` background-clip text); nav-item com `letter-spacing`; `kpi-icone` com ring + glow accent.
+- V11: background fixo — `body{background:transparent}`, `body::before` passa a ter gradiente linear + radiais (glow no topo/base); `html{background:var(--bg)}` com `scrollbar-color`; high-contrast desliga atmosfera/header-gradient; `:target`/`.conteudo` scroll-margin.
+- V12: `body::after` grão (SVG feTurbulence data-uri, `mix-blend-mode:overlay`, `opacity:.05`, `.035`→`.05`); source-altas `scroll-padding-top`; `h1..h4{text-wrap:balance}`; `::-webkit-scrollbar-thumb` com `border+background-clip:content-box`; `themed h2` drop-shadow para escuro/dourado/esmeralda.
+
+### Migração Font Awesome + emojis → Lucide (V13)
+- **Motivo**: usuário escolheu "ícones mais desenvolvidos/premium" — Font Awesome e emojis substituídos por Lucide (stroke, 1em, inline-block).
+- **Fornecimento**: cdnjs NÃO tem "lucide" → **vendorizado localmente** em `public/lucide.min.js` (UMD, ~433 kB, 2073 ícones, expõe `window.lucide.createIcons`), referenciado como `<script src="lucide.min.js">` (raiz do publicDir — NÃO `public/js/` que o `.gitignore` ignora via `js/`).
+- **Marcadores**: `<i data-lucide="nome" aria-hidden="true"></i>` são trocados por `<svg data-lucide>` em runtime pelo `lucide.createIcons()`. `src/icones.ts` define `LUCIDE`/`ICONES` (46 nomes: dashboard→bar-chart-3, financeiro→chart-line, rede→share-2, atelier→paintbrush, galeria→layout-grid) + `sincronizarIcones()` (guarda `i[data-lucide]` p/ anti-loop do MutationObserver) + `inicializarIconesLucide()` (observer com debounce 80ms) chamado no Init de `main.ts`; router injeta `<span class="icone">${rota.icone}</span>` (agora `<i data-lucide>`).
+- **Toast**: `src/utils.ts`/`main.ts` usam `#toastIcon` + setAttribute `data-lucide` (`sucesso:circle-check, erro:circle-x, aviso:triangle-alert, info:info`).
+- **Codemods** (one-shot, mantidos em tools/): `tools/fa-to-lucide.js` (329 trocas `fas fa-X`→`data-lucide` em 26 .ts + portal-cliente.html) e `tools/emoji-to-lucide.js` (PassA tags `>emoji<` em 10 arquivos, PassB `icone:'X'` em 13; dashboard 🖼️→image/gem, tema 🎨🌙🌿⚪👑👛💚→palette/moon/leaf/circle/crown/landmark/gem, ✨→sparkles).
+- **index.html**: logo🎨→palette, colapsar☰→menu, Backup💾→save, notif🔔→bell, limpar🗑️→trash-2, breadcrumb home/chevron-right, FABs (obra/venda/cliente/encomenda/contato/evento→image/dollar-sign/user/package/handshake/tent), FAB main+→plus, toast info; `<option>` de temas sem emoji (options não renderizam HTML); link CDN Font Awesome **removido**; `<script src="lucide.min.js">` antes do module.
+- **portal-cliente.html**: STAGES icon→clipboard/paintbrush/check/star/package; dinâmicos `data-lucide="${...}"`; `lucide.createIcons()` chamado após cada `render()`; corrigido bug pré-existente `s(data.artista)` → `function s = sanitizar` alias (ReferenceError `s is not defined` do HEAD).
+- **CSS V13** (fim do _premium-v5.scss): `svg[data-lucide]{display:inline-block;width:1em;height:1em;vertical-align:-0.125em;flex-shrink:0}`, overrides `.kpi-icone/.fi-icone/.icone-vazio` 1.1em, `.btn-header/.btn-notif/.btn-miniatura` 0.95em, `.stage-dot/.timeline-dot` stroke-width 2.5, high-contrast 2.25.
+- **Mantidos como emoji**: `<option>`/mapas de categoria (`catIcones`) e prosa sentimental (moods, bandeiras, status dots coloridos) — não renderizam HTML/SVG.
+- **⚠️ Regra dura**: NUNCA reescrever `index.html`/`portal-cliente.html` via PowerShell `Set-Content`/`Add-Content` (PS 5.1 lê sem BOM como ANSI/GBK → dupla codificação `Ações`→`AÃ§Ãµes` + BOM). Sempre Edit tool ou Node `fs.writeFileSync(...,'utf8')`; após `git checkout -- index.html` rodar `node tools/sync-css.js` (o `<style>` do HEAD fica desatualizado vs scss V5–V13).
+- **Verificação browser**: app 66 SVGs/0 pendentes, nav/logo/toast/kpi ok; portal-cliente 20 SVGs com encomenda real e console limpo.

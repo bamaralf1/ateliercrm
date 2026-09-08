@@ -31,6 +31,7 @@ export class ThemeEngine {
 
   aplicarTema(nomeTema) {
     document.body.setAttribute('data-tema', nomeTema);
+    document.documentElement.setAttribute('data-tema', nomeTema);
     this.temaAtual = nomeTema;
     this.dataStore.dados.config.tema = nomeTema;
     this.dataStore.salvar();

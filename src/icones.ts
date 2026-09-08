@@ -1,61 +1,93 @@
-// Mapeamento de ícones — Font Awesome via CDN (fas)
-export const ICONES = {
-  dashboard: '<i class="fas fa-chart-bar"></i>',
-  catalogo: '<i class="fas fa-images"></i>',
-  clientes: '<i class="fas fa-users"></i>',
-  vendas: '<i class="fas fa-shopping-cart"></i>',
-  certificados: '<i class="fas fa-certificate"></i>',
-  referencias: '<i class="fas fa-bookmark"></i>',
-  encomendas: '<i class="fas fa-truck"></i>',
-  exposicoes: '<i class="fas fa-calendar-alt"></i>',
-  galeria: '<i class="fas fa-cube"></i>',
-  precificador: '<i class="fas fa-gem"></i>',
-  atelier: '<i class="fas fa-tools"></i>',
-  diario: '<i class="fas fa-book"></i>',
-  rede: '<i class="fas fa-share-alt"></i>',
-  financeiro: '<i class="fas fa-chart-line"></i>',
-  configuracoes: '<i class="fas fa-cog"></i>',
-  exportar: '<i class="fas fa-file-export"></i>',
-  portal: '<i class="fas fa-external-link-alt"></i>',
+// Mapeamento de ícones — Lucide plano 24x24 via data-lucide (vendored em public/js/lucide.min.js)
+const LUCIDE: Record<string, string> = {
+  dashboard: 'bar-chart-3',
+  catalogo: 'images',
+  clientes: 'users',
+  vendas: 'shopping-cart',
+  certificados: 'award',
+  referencias: 'bookmark',
+  encomendas: 'truck',
+  exposicoes: 'calendar',
+  galeria: 'layout-grid',
+  precificador: 'gem',
+  atelier: 'paintbrush',
+  diario: 'book-open',
+  rede: 'share-2',
+  financeiro: 'chart-line',
+  configuracoes: 'settings',
+  exportar: 'file-output',
+  portal: 'external-link',
   // Ações comuns
-  novo: '<i class="fas fa-plus"></i>',
-  salvar: '<i class="fas fa-save"></i>',
-  editar: '<i class="fas fa-edit"></i>',
-  excluir: '<i class="fas fa-trash"></i>',
-  buscar: '<i class="fas fa-search"></i>',
-  filtro: '<i class="fas fa-filter"></i>',
-  voltar: '<i class="fas fa-arrow-left"></i>',
-  avancar: '<i class="fas fa-arrow-right"></i>',
-  fechar: '<i class="fas fa-times"></i>',
-  download: '<i class="fas fa-download"></i>',
-  upload: '<i class="fas fa-upload"></i>',
-  compartilhar: '<i class="fas fa-share"></i>',
-  imprimir: '<i class="fas fa-print"></i>',
-  pdf: '<i class="fas fa-file-pdf"></i>',
-  imagem: '<i class="fas fa-image"></i>',
-  link: '<i class="fas fa-link"></i>',
-  aviso: '<i class="fas fa-exclamation-triangle"></i>',
-  sucesso: '<i class="fas fa-check-circle"></i>',
-  erro: '<i class="fas fa-times-circle"></i>',
-  info: '<i class="fas fa-info-circle"></i>',
-  dinheiro: '<i class="fas fa-dollar-sign"></i>',
-  obra: '<i class="fas fa-palette"></i>',
-  tag: '<i class="fas fa-tag"></i>',
-  data: '<i class="fas fa-calendar"></i>',
-  usuario: '<i class="fas fa-user"></i>',
-  email: '<i class="fas fa-envelope"></i>',
-  telefone: '<i class="fas fa-phone"></i>',
-  local: '<i class="fas fa-map-marker-alt"></i>',
-  notificacao: '<i class="fas fa-bell"></i>',
-  config: '<i class="fas fa-cog"></i>',
-  backup: '<i class="fas fa-database"></i>',
-  marca: '<i class="fas fa-tag"></i>',
-  categoria: '<i class="fas fa-folder"></i>',
-  estoque: '<i class="fas fa-boxes"></i>',
-  compras: '<i class="fas fa-shopping-bag"></i>',
-  lista: '<i class="fas fa-list"></i>',
-  grafico: '<i class="fas fa-chart-pie"></i>',
-  mapa: '<i class="fas fa-map"></i>',
-  estrela: '<i class="fas fa-star"></i>',
-  coracao: '<i class="fas fa-heart"></i>',
+  novo: 'plus',
+  salvar: 'save',
+  editar: 'pencil',
+  excluir: 'trash-2',
+  buscar: 'search',
+  filtro: 'filter',
+  voltar: 'arrow-left',
+  avancar: 'arrow-right',
+  fechar: 'x',
+  download: 'download',
+  upload: 'upload',
+  compartilhar: 'share-2',
+  imprimir: 'printer',
+  pdf: 'file-text',
+  imagem: 'image',
+  link: 'link',
+  aviso: 'triangle-alert',
+  sucesso: 'circle-check',
+  erro: 'circle-x',
+  info: 'info',
+  dinheiro: 'dollar-sign',
+  obra: 'palette',
+  tag: 'tag',
+  data: 'calendar',
+  usuario: 'user',
+  email: 'mail',
+  telefone: 'phone',
+  local: 'map-pin',
+  notificacao: 'bell',
+  config: 'settings',
+  backup: 'database',
+  marca: 'tag',
+  categoria: 'folder',
+  estoque: 'package',
+  compras: 'shopping-bag',
+  lista: 'list',
+  grafico: 'pie-chart',
+  mapa: 'map',
+  estrela: 'star',
+  coracao: 'heart',
 };
+
+// Cada entrada vira um marcador <i data-lucide="..."> que o runtime do Lucide troca por <svg>.
+export const ICONES: Record<string, string> = Object.fromEntries(
+  Object.entries(LUCIDE).map(([chave, nome]) => [chave, `<i data-lucide="${nome}" aria-hidden="true"></i>`])
+);
+
+type LucideRuntime = { createIcons: () => void };
+function obterLucide(): LucideRuntime | null {
+  const w = window as unknown as { lucide?: LucideRuntime };
+  return w.lucide || null;
+}
+
+// Converte os marcadores <i data-lucide> presentes no DOM em SVG.
+// Guard `i[data-lucide]`: após a troca o svg mantém data-lucide, então só dispara se houver <i> real
+// (evita loop do MutationObserver).
+export function sincronizarIcones(): void {
+  const lucide = obterLucide();
+  if (lucide && lucide.createIcons && document.querySelector('i[data-lucide]')) {
+    try { lucide.createIcons(); } catch (e) { /* conteúdo dinâmico pode ainda estar incompleto */ }
+  }
+}
+
+// Sincroniza ícones injetados dinamicamente (views, modais, toasts).
+export function inicializarIconesLucide(): void {
+  sincronizarIcones();
+  if (typeof MutationObserver === 'undefined' || !document.body) return;
+  let timer = 0;
+  new MutationObserver(() => {
+    if (timer) return;
+    timer = window.setTimeout(() => { timer = 0; sincronizarIcones(); }, 80);
+  }).observe(document.body, { childList: true, subtree: true });
+}

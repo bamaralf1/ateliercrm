@@ -12,7 +12,7 @@ export class PortalView extends BaseView {
       return `
         <div class="portal-wrapper">
           <div class="portal-card portal-erro">
-            <div class="portal-icone"><i class="fas fa-lock"></i></div>
+            <div class="portal-icone"><i data-lucide="lock"></i></div>
             <h2>Link inválido</h2>
             <p>O link de acesso não é válido ou expirou. Entre em contato com o artista para obter um novo link.</p>
           </div>
@@ -29,7 +29,7 @@ export class PortalView extends BaseView {
       return `
         <div class="portal-wrapper">
           <div class="portal-card portal-erro">
-            <div class="portal-icone"><i class="fas fa-lock"></i></div>
+            <div class="portal-icone"><i data-lucide="lock"></i></div>
             <h2>Acesso não autorizado</h2>
             <p>Este link não está mais ativo ou é inválido. Solicite um novo link ao artista.</p>
           </div>
@@ -63,7 +63,7 @@ export class PortalView extends BaseView {
       <div class="portal-wrapper">
         <div class="portal-header">
           <div class="portal-header-info">
-            <h2><i class="fas fa-box"></i> ${titulo}</h2>
+            <h2><i data-lucide="package"></i> ${titulo}</h2>
             <p class="portal-sub">${portal.clienteNome} · via ${artista}</p>
           </div>
         </div>
@@ -94,7 +94,7 @@ export class PortalView extends BaseView {
       return `
         <div class="portal-wrapper">
           <div class="portal-card portal-erro">
-            <div class="portal-icone"><i class="fas fa-lock"></i></div>
+            <div class="portal-icone"><i data-lucide="lock"></i></div>
             <h2>Proposta não encontrada</h2>
             <p>Não encontramos esta proposta. O link pode estar incorreto ou a proposta foi excluída.</p>
           </div>
@@ -110,7 +110,7 @@ export class PortalView extends BaseView {
     return `
       <div class="portal-wrapper">
         <div class="portal-card portal-aceite">
-          <div class="portal-icone portal-aceite-icone"><i class="fas fa-check-circle"></i></div>
+          <div class="portal-icone portal-aceite-icone"><i data-lucide="circle-check"></i></div>
           <h2>${aceita ? 'Proposta já aceita' : (expirada ? 'Proposta expirada' : 'Confirme o aceite')}</h2>
           <p class="portal-aceite-sub">${aceita
             ? `Esta proposta já foi aprovada anteriormente em ${formatarData(orc.aceiteData)}.`
@@ -132,14 +132,14 @@ export class PortalView extends BaseView {
 
   renderEncomendaCard(enc) {
     const statusMap = {
-      'criado': { rotulo: 'Pedido Recebido', cor: '#3b82f6', icone: '<i class="fas fa-clipboard"></i>' },
-      'em_andamento': { rotulo: 'Em Andamento', cor: '#f59e0b', icone: '<i class="fas fa-palette"></i>' },
-      'aprovacao': { rotulo: 'Aguardando Aprovação', cor: '#8b5cf6', icone: '<i class="fas fa-check"></i>' },
-      'finalizado': { rotulo: 'Finalizado', cor: '#16a34a', icone: '✨' },
-      'entregue': { rotulo: 'Entregue', cor: '#065f46', icone: '<i class="fas fa-box"></i>' },
-      'cancelado': { rotulo: 'Cancelado', cor: '#dc2626', icone: '<i class="fas fa-times"></i>' }
+      'criado': { rotulo: 'Pedido Recebido', cor: '#3b82f6', icone: '<i data-lucide="clipboard"></i>' },
+      'em_andamento': { rotulo: 'Em Andamento', cor: '#f59e0b', icone: '<i data-lucide="palette"></i>' },
+      'aprovacao': { rotulo: 'Aguardando Aprovação', cor: '#8b5cf6', icone: '<i data-lucide="check"></i>' },
+      'finalizado': { rotulo: 'Finalizado', cor: '#16a34a', icone: '<i data-lucide="sparkles" aria-hidden="true"></i>' },
+      'entregue': { rotulo: 'Entregue', cor: '#065f46', icone: '<i data-lucide="package"></i>' },
+      'cancelado': { rotulo: 'Cancelado', cor: '#dc2626', icone: '<i data-lucide="x"></i>' }
     };
-    const st = statusMap[enc.status] || { rotulo: enc.status, cor: '#6b7280', icone: '<i class="fas fa-clipboard"></i>' };
+    const st = statusMap[enc.status] || { rotulo: enc.status, cor: '#6b7280', icone: '<i data-lucide="clipboard"></i>' };
     const diasRestantes = enc.prazo ? Math.ceil((new Date(enc.prazo) - new Date()) / 86400000) : null;
     const prazoLabel = diasRestantes !== null
       ? (diasRestantes > 0 ? `${diasRestantes} dia${diasRestantes > 1 ? 's' : ''} restante${diasRestantes > 1 ? 's' : ''}` : 'Prazo encerrado')
@@ -168,8 +168,8 @@ export class PortalView extends BaseView {
             </span>
           </div>
           <div class="portal-encomenda-meta">
-            <span><i class="fas fa-dollar-sign"></i> ${formatarMoeda(enc.valor || 0)}</span>
-            <span><i class="fas fa-calendar-alt"></i> ${prazoLabel}</span>
+            <span><i data-lucide="dollar-sign"></i> ${formatarMoeda(enc.valor || 0)}</span>
+            <span><i data-lucide="calendar"></i> ${prazoLabel}</span>
             ${enc.clienteEmail ? `<span>✉️ ${sanitizarHTML(enc.clienteEmail)}</span>` : ''}
           </div>
         </div>

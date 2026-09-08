@@ -19,11 +19,11 @@ export class FinanceiroView extends BaseView {
           <input type="checkbox" class="checkbox-item-fin" data-id="${t.id}" aria-label="Selecionar ${t.descricao || 'transação'}" ${this.selecionados.has(t.id) ? 'checked' : ''}>
         </td>
         <td>${sanitizarRich(t.descricao)}</td>
-        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '<i class="fas fa-dollar-sign"></i> Entrada' : '💸 Saida'}</span></td>
+        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '<i data-lucide="dollar-sign"></i> Entrada' : '💸 Saida'}</span></td>
         <td style="font-weight:600;color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '+' : '-'}${formatarMoeda(t.valor)}</td>
         <td>${formatarData(t.data)}</td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir" aria-label="Excluir transação"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-excluir-transacao="${t.id}" title="Excluir" aria-label="Excluir transação"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
     `).join('');
@@ -53,7 +53,7 @@ export class FinanceiroView extends BaseView {
         </table>
       </div>` : `
       <div class="tabela-wrapper" style="margin-top:16px;">
-        <div class="estado-vazio"><div class="icone-vazio"><i class="fas fa-chart-bar"></i></div><p>Nenhuma transacao encontrada.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i data-lucide="bar-chart-3"></i></div><p>Nenhuma transacao encontrada.</p></div>
       </div>
     `;
 
@@ -73,7 +73,7 @@ export class FinanceiroView extends BaseView {
       </div>
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}
       <div class="grid-cards">
-        <div class="card"><div class="rotulo-card" style="color:#16a34a;"><i class="fas fa-dollar-sign"></i> Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
+        <div class="card"><div class="rotulo-card" style="color:#16a34a;"><i data-lucide="dollar-sign"></i> Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
         <div class="card"><div class="rotulo-card" style="color:#dc2626;">💸 Saidas</div><div class="valor-card">${formatarMoeda(saidas)}</div></div>
         <div class="card"><div class="rotulo-card">🏦 Saldo</div><div class="valor-card" style="color:${saldo >= 0 ? '#16a34a' : '#dc2626'};">${formatarMoeda(saldo)}</div></div>
       </div>
@@ -111,8 +111,8 @@ export class FinanceiroView extends BaseView {
       <div class="bulk-actions-bar">
         <span class="bulk-info">${this.selecionados.size} transação${this.selecionados.size === 1 ? '' : 'ões'} selecionada${this.selecionados.size === 1 ? '' : 's'}</span>
         <div class="bulk-buttons">
-          <button class="btn-secundario" id="bulkExportFin"><i class="fas fa-file"></i> Exportar</button>
-          <button class="btn-secundario" id="bulkCategoriaFin"><i class="fas fa-tag"></i> Categoria</button>
+          <button class="btn-secundario" id="bulkExportFin"><i data-lucide="file-text"></i> Exportar</button>
+          <button class="btn-secundario" id="bulkCategoriaFin"><i data-lucide="tag"></i> Categoria</button>
           <button class="btn-secundario btn-danger" id="bulkExcluirFin">🗑 Excluir</button>
           <button class="btn-secundario" id="bulkCancelarFin">✕ Cancelar</button>
         </div>
@@ -177,13 +177,13 @@ export class FinanceiroView extends BaseView {
   abrirFormTransacao(existente) {
     const e = existente || {};
     abrirModal(`
-      <h3>${e.id ? '<i class="fas fa-pen"></i> Editar' : '✚ Nova'} Transacao</h3>
+      <h3>${e.id ? '<i data-lucide="pen"></i> Editar' : '✚ Nova'} Transacao</h3>
       <form id="formTransacao">
         <div class="campo-form"><label>Descricao *</label><input type="text" id="transDescricao" value="${sanitizarHTML(e.descricao || '')}" required aria-label="Descrição" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div><label>Tipo *</label>
             <select id="transTipo" aria-label="Tipo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
-              <option value="entrada" ${e.tipo === 'entrada' || !e.tipo ? 'selected' : ''}><i class="fas fa-dollar-sign"></i> Entrada</option>
+              <option value="entrada" ${e.tipo === 'entrada' || !e.tipo ? 'selected' : ''}><i data-lucide="dollar-sign"></i> Entrada</option>
               <option value="saida" ${e.tipo === 'saida' ? 'selected' : ''}>💸 Saida</option>
             </select>
           </div>

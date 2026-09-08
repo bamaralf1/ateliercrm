@@ -76,7 +76,7 @@ export class GaleriaVirtualView {
         <div class="barra-topo">
           <h2>🏛️ Galeria Virtual</h2>
           <div class="acoes-barra">
-            <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria"><i class="fas fa-link"></i> Compartilhar</button>
+            <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria"><i data-lucide="link"></i> Compartilhar</button>
             <button class="btn-bar ${this.tourAtivo ? 'ativo' : ''}" id="btnTourToggle" title="Iniciar tour guiado">🎧 Tour</button>
           </div>
         </div>
@@ -91,13 +91,13 @@ export class GaleriaVirtualView {
               </div>
             </div>
           </div>
-          <button class="gv-nav gv-nav-prev" id="gvPrev" title="Anterior (←)" aria-label="Obra anterior">◀</button>
-          <button class="gv-nav gv-nav-next" id="gvNext" title="Próxima (→)" aria-label="Próxima obra">▶</button>
+          <button class="gv-nav gv-nav-prev" id="gvPrev" title="Anterior (←)" aria-label="Obra anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+          <button class="gv-nav gv-nav-next" id="gvNext" title="Próxima (→)" aria-label="Próxima obra"><i data-lucide="play" aria-hidden="true"></i></button>
           <div class="gv-zoom-controles" id="gvZoomControles">
             <button class="gv-zoom-btn" id="gvZoomOut" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
             <span class="gv-zoom-indicador" id="gvZoomIndicador">${Math.round(this.zoomNivel * 100)}%</span>
             <button class="gv-zoom-btn" id="gvZoomIn" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
-            <button class="gv-zoom-btn" id="gvZoomReset" title="Resetar zoom" aria-label="Resetar zoom">⟲</button>
+            <button class="gv-zoom-btn" id="gvZoomReset" title="Resetar zoom" aria-label="Resetar zoom"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>
           </div>
           <div class="gv-hint">Scroll para zoom · Duplo clique para ampliar · ← → para navegar</div>
         </div>
@@ -108,9 +108,9 @@ export class GaleriaVirtualView {
           <span class="nav-indicador" id="navIndicador">${this.indiceAtual + 1} / ${this.obrasVisiveis.length} obras</span>
         </div>
         <div class="hud-tour ${this.tourAtivo ? 'visivel' : ''}" id="hudTour">
-          <button class="tour-btn" id="tourPrev" aria-label="Obra anterior">◀</button>
+          <button class="tour-btn" id="tourPrev" aria-label="Obra anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
           <button class="tour-btn ${this.tourAtivo ? 'ativo' : ''}" id="tourPlayPause" aria-label="Reproduzir ou pausar tour">${this.tourAtivo ? '⏸' : '▶'}</button>
-          <button class="tour-btn" id="tourNext" aria-label="Próxima obra">▶</button>
+          <button class="tour-btn" id="tourNext" aria-label="Próxima obra"><i data-lucide="play" aria-hidden="true"></i></button>
           <span class="tour-progresso" id="tourProgresso">${this.indiceAtual + 1} / ${this.obrasVisiveis.length}</span>
         </div>
       </div>`;
@@ -361,7 +361,7 @@ export class GaleriaVirtualView {
   compartilhar() {
     const hash = '#galeria=virtual&tour=obras-disponiveis';
     const url = window.location.origin + window.location.pathname + hash;
-    const msg = `Olá! <i class="fas fa-palette"></i> Convido você para um tour virtual pela minha galeria de obras:\n${url}\n\nAprecie a exposição!`;
+    const msg = `Olá! <i data-lucide="palette"></i> Convido você para um tour virtual pela minha galeria de obras:\n${url}\n\nAprecie a exposição!`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(msg).then(() => this._mostrarToastCompartilhar(url)).catch(() => this._fallbackCompartilhar(url, msg));
@@ -386,7 +386,7 @@ export class GaleriaVirtualView {
     const toast = document.createElement('div');
     toast.className = 'toast-compartilhar';
     toast.innerHTML = `
-      <span><i class="fas fa-check"></i> Link copiado!</span>
+      <span><i data-lucide="check"></i> Link copiado!</span>
       <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
       <button class="btn-toast" id="btnAbrirLinkCompartilhado">Abrir</button>`;
     document.body.appendChild(toast);

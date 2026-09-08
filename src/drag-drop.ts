@@ -6,7 +6,7 @@ export function iniciarDragDrop() {
     overlay = document.createElement('div');
     overlay.id = 'globalDropOverlay';
     overlay.className = 'global-drop-overlay';
-    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon"><i class="fas fa-camera"></i></div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
+    overlay.innerHTML = '<div class="gdo-content"><div class="gdo-icon"><i data-lucide="camera"></i></div><div class="gdo-text">Solte para adicionar imagens</div><div class="gdo-hint">JPG · PNG — Múltiplos arquivos</div></div>';
     document.body.appendChild(overlay);
   }
   let dropTimer = 0;
@@ -27,7 +27,7 @@ export function iniciarDragDrop() {
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
     const imagens = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (imagens.length === 0) { mostrarToast('<i class="fas fa-exclamation-triangle"></i> Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
+    if (imagens.length === 0) { mostrarToast('<i data-lucide="triangle-alert"></i> Apenas imagens (JPG/PNG) são suportadas.', 'erro'); return; }
     if (imagens.length === 1) {
       router?.navegar('catalogo');
       setTimeout(() => eventBus.emitir('abrir-nova-obra'), 300);

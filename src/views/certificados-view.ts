@@ -18,8 +18,8 @@ export class CertificadosView extends BaseView {
         <td>${c.edicaoTipo === 'limitada' ? `${c.edicaoAtual}/${c.edicaoTotal}` : 'Única'}</td>
         <td>${formatarData(c.dataEmissao || c.criadoEm)}</td>
         <td class="acoes-linha-tabela">
-          <button class="btn-icone-tabela" data-baixar-certificado="${c.id}"><i class="fas fa-file"></i> PDF</button>
-          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}" aria-label="Excluir certificado"><i class="fas fa-trash"></i></button>
+          <button class="btn-icone-tabela" data-baixar-certificado="${c.id}"><i data-lucide="file-text"></i> PDF</button>
+          <button class="btn-icone-tabela" data-excluir-certificado="${c.id}" aria-label="Excluir certificado"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
     `).join('');

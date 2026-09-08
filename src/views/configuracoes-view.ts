@@ -79,14 +79,14 @@ export class ConfiguracoesView extends BaseView {
     ];
 
     const temas = [
-      { id: 'classico', label: 'Clássico', icone: '🎨', sidebar: '#3d2b1f', bg: '#f5f0e6', accent: '#8b4513', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
-      { id: 'escuro', label: 'Escuro', icone: '🌙', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
-      { id: 'galeria', label: 'Galeria', icone: '🖼️', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
-      { id: 'boho', label: 'Boho', icone: '🌿', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
-      { id: 'clean', label: 'Clean', icone: '⚪', sidebar: '#ffffff', bg: '#ffffff', accent: '#1a1a1a', textBar: 'rgba(0,0,0,0.1)', contentBar: 'rgba(0,0,0,0.08)' },
-      { id: 'dourado', label: 'Dourado', icone: '👑', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
-      { id: 'marmore', label: 'Mármore', icone: '🏛️', sidebar: '#2b1f18', bg: '#f2ece6', accent: '#a0522d', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
-      { id: 'esmeralda', label: 'Esmeralda', icone: '💚', sidebar: '#040a06', bg: '#0a120e', accent: '#00c853', textBar: 'rgba(255,255,255,0.2)', contentBar: 'rgba(255,255,255,0.1)' },
+      { id: 'classico', label: 'Clássico', icone: '<i data-lucide="palette" aria-hidden="true"></i>', sidebar: '#3d2b1f', bg: '#f5f0e6', accent: '#8b4513', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
+      { id: 'escuro', label: 'Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
+      { id: 'galeria', label: 'Galeria', icone: '<i data-lucide="image" aria-hidden="true"></i>', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
+      { id: 'boho', label: 'Boho', icone: '<i data-lucide="leaf" aria-hidden="true"></i>', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
+      { id: 'clean', label: 'Clean', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#ffffff', bg: '#ffffff', accent: '#1a1a1a', textBar: 'rgba(0,0,0,0.1)', contentBar: 'rgba(0,0,0,0.08)' },
+      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
+      { id: 'marmore', label: 'Mármore', icone: '<i data-lucide="landmark" aria-hidden="true"></i>', sidebar: '#2b1f18', bg: '#f2ece6', accent: '#a0522d', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
+      { id: 'esmeralda', label: 'Esmeralda', icone: '<i data-lucide="gem" aria-hidden="true"></i>', sidebar: '#040a06', bg: '#0a120e', accent: '#00c853', textBar: 'rgba(255,255,255,0.2)', contentBar: 'rgba(255,255,255,0.1)' },
     ];
 
     return `
@@ -97,7 +97,7 @@ export class ConfiguracoesView extends BaseView {
         </div>
       </div>
       <div class="painel" style="max-width:560px">
-        <h3><i class="fas fa-user"></i> Perfil do Artista</h3>
+        <h3><i data-lucide="user"></i> Perfil do Artista</h3>
         <div class="campo-form">
           <label>Nome / Nome do Ateliê</label>
           <input type="text" id="cfgNome" aria-label="Nome do Ateliê" value="${sanitizarHTML(cfg.nome || '')}">
@@ -116,7 +116,7 @@ export class ConfiguracoesView extends BaseView {
         </div>
       </div>
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3><i class="fas fa-globe"></i> Idioma</h3>
+        <h3><i data-lucide="globe"></i> Idioma</h3>
         <div class="campo-form">
           <label>Idioma da interface</label>
           <select id="cfgIdioma" aria-label="Idioma da interface">${idiomas.map(i => `<option value="${i.v}" ${idiomaAtual === i.v ? 'selected' : ''}>${i.r}</option>`).join('')}</select>
@@ -125,7 +125,7 @@ export class ConfiguracoesView extends BaseView {
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>♿ Acessibilidade</h3>
         <div class="campo-form">
-          <label><input type="checkbox" id="cfgAltoContraste" aria-label="Alto contraste" ${altoContraste ? 'checked' : ''}> <i class="fas fa-lock"></i> Alto contraste</label>
+          <label><input type="checkbox" id="cfgAltoContraste" aria-label="Alto contraste" ${altoContraste ? 'checked' : ''}> <i data-lucide="lock"></i> Alto contraste</label>
         </div>
         <div class="campo-form">
           <label>Tamanho da fonte</label>
@@ -162,7 +162,7 @@ export class ConfiguracoesView extends BaseView {
       <div class="painel" style="max-width:560px;margin-top:16px;">
         <h3>🔐 Segurança</h3>
         <div class="campo-form">
-          <label>PIN de acesso (4 dígitos) ${pinAtivo ? '<i class="fas fa-lock"></i> Ativo' : '<i class="fas fa-times"></i> Desativado'}</label>
+          <label>PIN de acesso (4 dígitos) ${pinAtivo ? '<i data-lucide="lock"></i> Ativo' : '<i data-lucide="x"></i> Desativado'}</label>
           <div style="display:flex;gap:8px;">
             <input type="password" id="cfgPin" aria-label="PIN de acesso" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="****" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);letter-spacing:4px;">
             <button class="btn-secundario" id="btnSalvarPin" style="font-size:0.8rem;padding:6px 14px;">${pinAtivo ? 'Alterar' : 'Ativar'} PIN</button>
@@ -175,35 +175,35 @@ export class ConfiguracoesView extends BaseView {
       </div>
 
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3><i class="fas fa-keyboard"></i> Atalhos de Teclado</h3>
+        <h3><i data-lucide="keyboard"></i> Atalhos de Teclado</h3>
         <p class="texto-ajuda" style="margin-bottom:8px;">Personalize os atalhos para navegar mais rápido.</p>
-        <button class="btn-secundario" id="btnEditarAtalhos"><i class="fas fa-pen"></i> Personalizar Atalhos</button>
+        <button class="btn-secundario" id="btnEditarAtalhos"><i data-lucide="pen"></i> Personalizar Atalhos</button>
       </div>
 
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3><i class="fas fa-database"></i> Gerenciamento de Imagens</h3>
+        <h3><i data-lucide="database"></i> Gerenciamento de Imagens</h3>
         <p class="texto-ajuda" style="margin-bottom:8px;">Armazene imagens no IndexedDB (sem limite de 5MB do localStorage).</p>
-        <button class="btn-secundario" id="btnMigrarImagens"><i class="fas fa-arrow-up"></i> Migrar imagens para IndexedDB</button>
+        <button class="btn-secundario" id="btnMigrarImagens"><i data-lucide="arrow-up"></i> Migrar imagens para IndexedDB</button>
         <span id="migracaoStatus" style="margin-left:8px;font-size:0.8rem;color:var(--text-muted);"></span>
       </div>
 
       <!-- Sincronização -->
       <div class="painel" style="max-width:560px;margin-top:16px;">
-        <h3><i class="fas fa-cloud"></i> Sincronização na Nuvem</h3>
+        <h3><i data-lucide="cloud"></i> Sincronização na Nuvem</h3>
         <p class="texto-ajuda" style="margin-bottom:12px;">Último backup: ${ultimoBackup}</p>
 
         <div class="sync-tabs" style="display:flex;gap:4px;margin-bottom:12px;">
-          <button class="sync-tab ativo" data-sync-tab="indexeddb"><i class="fas fa-save"></i> Local (IDB)</button>
+          <button class="sync-tab ativo" data-sync-tab="indexeddb"><i data-lucide="save"></i> Local (IDB)</button>
           <button class="sync-tab" data-sync-tab="googledrive">☁️ Google Drive</button>
-          <button class="sync-tab" data-sync-tab="webdav"><i class="fas fa-folder"></i> WebDAV</button>
-          <button class="sync-tab" data-sync-tab="portal-remoto"><i class="fas fa-share-alt"></i> Portal remoto</button>
+          <button class="sync-tab" data-sync-tab="webdav"><i data-lucide="folder"></i> WebDAV</button>
+          <button class="sync-tab" data-sync-tab="portal-remoto"><i data-lucide="share-2"></i> Portal remoto</button>
         </div>
 
         <div class="sync-panel" id="syncPanelIndexedDB">
           <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">Snapshots salvos no navegador (IndexedDB — sem limite de espaço).</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-secundario" id="btnIDBSnapshot"><i class="fas fa-save"></i> Tirar Snapshot</button>
-            <button class="btn-secundario" id="btnIDBListar"><i class="fas fa-clipboard"></i> Listar Snapshots</button>
+            <button class="btn-secundario" id="btnIDBSnapshot"><i data-lucide="save"></i> Tirar Snapshot</button>
+            <button class="btn-secundario" id="btnIDBListar"><i data-lucide="clipboard"></i> Listar Snapshots</button>
           </div>
           <div id="idbSnapshotList" style="margin-top:8px;"></div>
         </div>
@@ -214,9 +214,9 @@ export class ConfiguracoesView extends BaseView {
             <input type="text" id="cfgGoogleClientId" aria-label="Google Drive Client ID" value="${sanitizarHTML(s.syncGoogleClientId || '')}" placeholder="123456789-xxxxx.apps.googleusercontent.com" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);">
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-            <button class="btn-secundario" id="btnGoogleAuth"><i class="fas fa-key"></i> Autenticar</button>
+            <button class="btn-secundario" id="btnGoogleAuth"><i data-lucide="key"></i> Autenticar</button>
             <button class="btn-secundario" id="btnGoogleBackup">☁️ Fazer Backup</button>
-            <button class="btn-secundario" id="btnGoogleListar"><i class="fas fa-clipboard"></i> Listar Backups</button>
+            <button class="btn-secundario" id="btnGoogleListar"><i data-lucide="clipboard"></i> Listar Backups</button>
           </div>
           <div id="googleBackupList" style="margin-top:8px;"></div>
         </div>
@@ -231,9 +231,9 @@ export class ConfiguracoesView extends BaseView {
             <div><label>Senha</label><input type="password" id="cfgWebDAVPass" aria-label="Senha" value="${sanitizarHTML(s.syncWebDAVPass || '')}" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;width:100%;background:var(--bg);color:var(--text);"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-            <button class="btn-secundario" id="btnWebDAVTest"><i class="fas fa-link"></i> Testar Conexão</button>
+            <button class="btn-secundario" id="btnWebDAVTest"><i data-lucide="link"></i> Testar Conexão</button>
             <button class="btn-secundario" id="btnWebDAVBackup">☁️ Fazer Backup</button>
-            <button class="btn-secundario" id="btnWebDAVListar"><i class="fas fa-clipboard"></i> Listar Backups</button>
+            <button class="btn-secundario" id="btnWebDAVListar"><i data-lucide="clipboard"></i> Listar Backups</button>
           </div>
           <div id="webdavBackupList" style="margin-top:8px;"></div>
         </div>
@@ -246,7 +246,7 @@ export class ConfiguracoesView extends BaseView {
         </div>
 
         <div class="campo-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-          <label><input type="checkbox" id="cfgAutoSync" aria-label="Backup automático no IndexedDB" ${s.syncAutoBackup ? 'checked' : ''}> <i class="fas fa-sync"></i> Backup automático no IndexedDB</label>
+          <label><input type="checkbox" id="cfgAutoSync" aria-label="Backup automático no IndexedDB" ${s.syncAutoBackup ? 'checked' : ''}> <i data-lucide="refresh-cw"></i> Backup automático no IndexedDB</label>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:0.75rem;color:var(--text-muted);">A cada</span>
             <select id="cfgSyncInterval" aria-label="Intervalo de backup" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
@@ -368,7 +368,7 @@ export class ConfiguracoesView extends BaseView {
     document.getElementById('btnWebDAVTest')?.addEventListener('click', async () => {
       this._salvar();
       const ok = await cloudSync.testarWebDAV();
-      mostrarToast(ok ? '<i class="fas fa-check"></i> Conexão WebDAV OK!' : '<i class="fas fa-times"></i> Falha na conexão WebDAV', ok ? 'sucesso' : 'erro');
+      mostrarToast(ok ? '<i data-lucide="check"></i> Conexão WebDAV OK!' : '<i data-lucide="x"></i> Falha na conexão WebDAV', ok ? 'sucesso' : 'erro');
     });
     document.getElementById('btnWebDAVBackup')?.addEventListener('click', () => cloudSync.backupWebDAV());
     document.getElementById('btnWebDAVListar')?.addEventListener('click', () => this._listarWebDAV());
@@ -409,7 +409,7 @@ export class ConfiguracoesView extends BaseView {
               <span style="font-size:0.7rem;color:var(--text-muted);">${new Date(s.timestamp).toLocaleString('pt-BR')}</span>
               <span>
                 <button class="btn-miniatura btn-restaurar-idb" data-id="${s.id}" title="Restaurar" aria-label="Restaurar">↩️</button>
-                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" aria-label="Excluir" style="color:#dc2626;"><i class="fas fa-trash"></i></button>
+                <button class="btn-miniatura btn-remover-idb" data-id="${s.id}" title="Excluir" aria-label="Excluir" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
               </span>
             </div>
           `).join('')}
