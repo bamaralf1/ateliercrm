@@ -4027,3 +4027,133 @@
     background: color-mix(in srgb, var(--info) 8%, var(--card));
   }
 
+  /* ==========================================================================
+     ===== PREMIUM V4 — micro-interações, brilho e acabamento fino =====
+     ========================================================================== */
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  body { font-variant-numeric: tabular-nums; }
+
+  /* --- Entrada suave das views (só opacity: seguro para elementos arrastáveis) --- */
+  @media (prefers-reduced-motion: no-preference) {
+    .view-cabecalho, .tabela-wrapper, .grid-cards, .estado-vazio, .catalogo-filtros, .painel-filtros { animation: v4FadeIn 0.28s ease both; }
+    .kpi-card { animation: v4FadeIn 0.34s ease both; }
+    .kpi-card:nth-child(2) { animation-delay: 0.04s; }
+    .kpi-card:nth-child(3) { animation-delay: 0.08s; }
+    .kpi-card:nth-child(4) { animation-delay: 0.12s; }
+    .kpi-card:nth-child(5) { animation-delay: 0.16s; }
+    .kpi-card:nth-child(6) { animation-delay: 0.20s; }
+    @keyframes v4FadeIn { from { opacity: 0; } to { opacity: 1; } }
+  }
+
+  /* --- KPI cards: chip de ícone com brilho próprio + valor em gradiente --- */
+  .kpi-card {
+    background-image: radial-gradient(150px 70px at 10% 0%, color-mix(in srgb, var(--kpi-cor) 12%, transparent), transparent 72%);
+  }
+  .kpi-icone {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--kpi-cor) 24%, var(--card)), color-mix(in srgb, var(--kpi-cor) 7%, var(--card)));
+    border: 1px solid color-mix(in srgb, var(--kpi-cor) 30%, transparent);
+    color: var(--kpi-cor);
+    text-shadow: 0 2px 10px color-mix(in srgb, var(--kpi-cor) 50%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--kpi-cor) 24%, transparent), inset 0 1px 0 rgba(255,255,255,0.18);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  }
+  .kpi-card:hover .kpi-icone {
+    transform: translateY(-2px) scale(1.07);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--kpi-cor) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.24);
+  }
+  .kpi-valor {
+    background: linear-gradient(135deg, var(--kpi-cor), color-mix(in srgb, var(--kpi-cor) 55%, var(--accent)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--kpi-cor);
+  }
+  .kpi-sparkline svg { filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--kpi-cor) 45%, transparent)); }
+
+  /* --- Botões: topo "aceso", sombra tingida pelo accent e pressão satisfatória --- */
+  .btn-primario {
+    background-image: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 42%), linear-gradient(0deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0) 42%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 4px 14px color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+  .btn-primario:hover {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), 0 8px 22px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .btn-primario:active {
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.28), 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .btn-secundario { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
+  .btn-secundario:hover {
+    background: color-mix(in srgb, var(--accent) 7%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 14%, transparent), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* --- Sidebar: glow no logo, micro-nudge do ícone, ativo com topo aceso --- */
+  .sidebar-logo .icone { filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--accent) 50%, transparent)); }
+  .nav-item .icone { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .nav-item:hover .icone { transform: scale(1.14) translateX(2px); }
+  .nav-item.ativo {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 4px 14px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .nav-separador { display: flex; align-items: center; gap: 8px; }
+  .nav-separador::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0)); }
+
+  /* --- Modal: friso de luz topo + blur mais profundo --- */
+  .modal-overlay { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .modal-caixa { box-shadow: 0 24px 80px rgba(0,0,0,0.26), inset 0 1px 0 rgba(255,255,255,0.08); }
+
+  /* --- Tabelas: barra accent na coluna da esquerda ao pairar --- */
+  .tabela-wrapper tbody td:first-child { border-left: 3px solid transparent; }
+  .tabela-wrapper tbody tr:hover td:first-child { border-left-color: var(--accent); }
+
+  /* --- Formulários: glow de foco mais presente --- */
+  input:focus, textarea:focus, select:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent), 0 6px 18px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  /* --- Estado vazio: ícone em chip gradiente com brilho --- */
+  .estado-vazio .icone-vazio {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 76px; height: 76px; border-radius: 24px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--card)), color-mix(in srgb, var(--accent) 5%, var(--card)));
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+    color: var(--accent);
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 20%, transparent), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+
+  /* --- Detalhes finos --- */
+  .card-obra .preco-obra { color: color-mix(in srgb, var(--accent) 82%, var(--text)); }
+  .badge-tag {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--card)), color-mix(in srgb, var(--accent) 7%, var(--card)));
+    border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+  .loading-spinner { box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .app-footer::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 40%, transparent), transparent);
+  }
+
+  /* --- Alto contraste: kills de gradiente/glow da camada V4 --- */
+  body[data-high-contrast="true"] .kpi-valor {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    -webkit-text-fill-color: currentColor;
+    color: #ffffff;
+  }
+  body[data-high-contrast="true"] .kpi-icone,
+  body[data-high-contrast="true"] .badge-tag,
+  body[data-high-contrast="true"] .estado-vazio .icone-vazio {
+    background: none;
+    box-shadow: none;
+    text-shadow: none;
+    border-color: #ffffff !important;
+    color: #ffffff;
+  }
+  body[data-high-contrast="true"] .kpi-card {
+    background-image: none;
+    border-left-color: #ffffff !important;
+  }
+  body[data-high-contrast="true"] .kpi-sparkline svg,
+  body[data-high-contrast="true"] .sidebar-logo .icone { filter: none; }
+
