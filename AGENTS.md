@@ -1,15 +1,17 @@
 # Atelier CRM — Resumo das alterações
 
 ## O que é
-CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, contatos profissionais, finanças, galeria 3D, precificador inteligente, diário criativo.
+CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, contatos profissionais, finanças, galeria virtual, precificador inteligente, diário criativo.
 
 ## Stack
-- Single HTML (zero dependências de build): 1 arquivo `index.html` + `translations.js`
+- Single HTML: 1 arquivo `index.html` + `translations.js` (dados locais, sem backend)
 - TypeScript → concatenado por `tools/concat-source.js` → compilado por `tsc` → `js/atelier-crm.js`
+- **CSS: fonte única** `src/styles/style.scss` (partials `_tokens/_themes/_animations/_responsive/_premium-v5`) → `tools/sync-css.js` compila (sass, `style:'compressed'`) e **substitui o bloco `<style>` inline do `index.html`**. Editar só o scss + rodar `npm run styles` (ou `build`). `src/vite-entry.ts` NÃO importa mais scss
+- `npm run build`: `concat-source.js && sync-css.js && vite build` (Vite = servidor dev/build; CSS gerido pelo sync-css)
 - 26 arquivos em `src/`, 10 classes de view, 3 classes de serviço
-- CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, Three.js r128, D3.js 7.8.5
+- CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, D3.js 7.8.5 (Three.js removido — ver Galeria 2D)
 - Dados: `localStorage` (5 MB), imagens comprimidas para 1200 px JPEG
-- Testes: Jest (jsdom), 12 suites, 123 testes
+- Testes: Jest (jsdom), 12 suites, 123 testes (não roda neste ambiente — validar com `npm run build` + browser)
 
 ## Hierarquia de classes
 - `BaseView` → todas as views: `render()` → HTML, `aposRenderizar()` → bind de eventos, `destruir()` → cleanup
@@ -105,3 +107,25 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - Tooltip com informações do contato, clique navega para timeline de interações
 - Hubs calculados após simulação estabilizar (2s)
 - **Perspectiva corrigida**: D3 force layout centraliza naturalmente no viewport — sem o efeito "visto de baixo" do SVG anterior
+
+### CSS consolidado em fonte única (tools/sync-css.js, tools/port-inline-only.js)
+- **Problema**: CSS duplicado em 2 fontes — `<style>` inline gigante no `index.html` (~4800 linhas) + `style.scss` injetado pelo Vite (precedência desordenada, divergência entre fontes).
+- **Solução**: `tools/sync-css.js` compila `src/styles/style.scss` (sass) e **substitui** todo o bloco `<style>` do `index.html` (~211 kB injetado). `tools/port-inline-only.js` (one-shot) portou 446 unidades que existiam só no inline (fonte: `git show HEAD:index.html`) para o scss, com união de declarações (scss vence conflito = comportamento "live" pré-consolidação).
+- Normalização obrigatória no port: seletores com aspas em atributos — `[data-tema="classico"]` (inline) vs `[data-tema=classico]` (sass) — sem isso o bloco de tema inteiro duplica e o valor antigo (ex.: fonte Georgia) vence o scss.
+- Regras inúteis descartadas no port: `@media (...)` com corpo sem `{` (blocos planos que o browser ignorava) e regras vazias (sass remove).
+- **Cascade do style.scss**: `@use` _tokens/_themes/_animations/_responsive (topo) → base → bloco portado `/* @port-inline ... */` → `@import '_premium-v5';` (FIM, p/ camada premium vencer). Dart Sass permite `@import` após regras (warning de deprecation; ok até Sass 3.0).
+
+### Premium V5 — design language global (_premium-v5.scss)
+- Camada mais externa do cascade (importada no fim do style.scss): **não altera layout** — refino visual puramente aditivo.
+- **Atmosfera por tema**: `body::before` (pseudo livre) com 3 radiais fixos + tokens `--pv5-amb-1/2/3` por tema (classico/clean/escuro/galeria/boho/dourado/marmore/esmeralda); `html` ganha `background: var(--bg)` + `scrollbar-color`.
+- **Títulos de view**: `.view-cabecalho h2` com gradiente de texto por tema (`--pv5-h2-grad`) + `font-family: var(--font-display)` + tracking negativo; `.subtitulo` com weighting/letterspacing.
+- **Vidro**: `backdrop-filter: blur(20px) saturate(1.35)` em `.glass-premium`/`.header`/`.painel-filtros`; `.modal-overlay` blur(10px) saturate(1.2).
+- **Tabelas**: `thead th` sticky + gradiente tridimensional (card↔accent) + hairline `th::after`; hover de linha com barra `inset 2px 0 var(--accent)`; `td` com borda suavizada; `.tabela-wrapper` radius 14px.
+- **Sombras premium**: card/painel/catalogo-filtros/tabela-wrapper com cadeia 1/4/14px + bevel interno top (variantes escuro/dourado/esmeralda mais profundas).
+- **Foco**: `:focus-visible` ring accent (outline 2px accent+white, offset 2px); inputs com glow triplo (ring accent-soft + sombra + inset); `::selection` tintado accent.
+- Botões: `.btn-gradient:hover` glow accent + bevel interno; `.btn-primario` com luz superior + profundidade inferior.
+- Acessibilidade: `body[data-high-contrast]` desliga a atmosfera (`body::before{display:none}`) e appliques; `@media (prefers-reduced-motion)` sem transições novas.
+
+### Freemium removido — commit `b0cd888`
+- Removido plano gratuito/paywall: arquivos `src/plano.ts` e `src/views/planos-view.ts` deletados, strings freemium removidas (i18n), `window.Freemium` eliminado, `tools/concat-source.js` sem plano.ts/planos-view.ts.
+- Todos os recursos liberados: 16 itens na sidebar (sem "Planos"), Galeria e Precificador (4 abas) sem paywall, Configurações → Sync aberto, `window.Freemium` undefined, console zero erros.

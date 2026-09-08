@@ -1,0 +1,237 @@
+/* ==========================================================================
+   PREMIUM V5 — design language de alto padrão (todos os temas e páginas)
+   Camada mais externa do cascade: sobrescreve/refina a base sem quebrar layout.
+   ========================================================================== */
+
+/* ---------- Tokens de atmosfera e texto por tema ---------- */
+body[data-tema="classico"] {
+  --pv5-amb-1: rgba(193, 120, 63, 0.30);
+  --pv5-amb-2: rgba(139, 69, 19, 0.14);
+  --pv5-amb-3: rgba(240, 196, 120, 0.10);
+  --pv5-h2-grad: linear-gradient(135deg, #5b3a24 0%, #8b5a33 55%, #c1783f 100%);
+}
+body[data-tema="clean"] {
+  --pv5-amb-1: rgba(0, 0, 0, 0.055);
+  --pv5-amb-2: rgba(37, 99, 235, 0.045);
+  --pv5-amb-3: rgba(0, 0, 0, 0.03);
+  --pv5-h2-grad: linear-gradient(135deg, #161616 0%, #404040 70%);
+}
+body[data-tema="escuro"] {
+  --pv5-amb-1: rgba(0, 212, 255, 0.15);
+  --pv5-amb-2: rgba(99, 102, 241, 0.10);
+  --pv5-amb-3: rgba(236, 72, 153, 0.06);
+  --pv5-h2-grad: linear-gradient(135deg, #f4f4f5 0%, #4ee4ff 75%);
+}
+body[data-tema="galeria"] {
+  --pv5-amb-1: rgba(0, 0, 0, 0.05);
+  --pv5-amb-2: rgba(0, 0, 0, 0.045);
+  --pv5-amb-3: rgba(37, 99, 235, 0.04);
+  --pv5-h2-grad: linear-gradient(135deg, #111111 0%, #666666 80%);
+}
+body[data-tema="boho"] {
+  --pv5-amb-1: rgba(217, 154, 114, 0.28);
+  --pv5-amb-2: rgba(193, 127, 89, 0.15);
+  --pv5-amb-3: rgba(242, 204, 150, 0.10);
+  --pv5-h2-grad: linear-gradient(135deg, #4a3f35 0%, #b06a47 70%, #d99a72 100%);
+}
+body[data-tema="dourado"] {
+  --pv5-amb-1: rgba(232, 185, 35, 0.15);
+  --pv5-amb-2: rgba(201, 162, 39, 0.10);
+  --pv5-amb-3: rgba(236, 204, 104, 0.07);
+  --pv5-h2-grad: linear-gradient(135deg, #f5ecd6 0%, #eccc68 75%);
+}
+body[data-tema="marmore"] {
+  --pv5-amb-1: rgba(196, 122, 82, 0.22);
+  --pv5-amb-2: rgba(160, 82, 45, 0.13);
+  --pv5-amb-3: rgba(232, 214, 190, 0.12);
+  --pv5-h2-grad: linear-gradient(135deg, #2b211b 0%, #a0522d 60%, #c47a52 100%);
+}
+body[data-tema="esmeralda"] {
+  --pv5-amb-1: rgba(0, 200, 83, 0.15);
+  --pv5-amb-2: rgba(60, 232, 124, 0.09);
+  --pv5-amb-3: rgba(0, 150, 255, 0.05);
+  --pv5-h2-grad: linear-gradient(135deg, #d4e8d4 0%, #3ce87c 75%);
+}
+
+/* ---------- Atmosfera de fundo (mudança de tom mais visível) ---------- */
+html {
+  background: var(--bg);
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 42%, transparent) transparent;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(780px 620px at 52% 120%, var(--pv5-amb-3) 0%, transparent 56%);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+/* ---------- Vidro e superfícies ---------- */
+.glass-premium,
+.header,
+.painel-filtros {
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  backdrop-filter: blur(20px) saturate(1.35);
+}
+.modal-overlay {
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+.card,
+.painel,
+.catalogo-filtros,
+.tabela-wrapper {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    0 14px 36px rgba(0, 0, 0, 0.045),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
+}
+body[data-tema="escuro"] .card,
+body[data-tema="escuro"] .painel,
+body[data-tema="escuro"] .catalogo-filtros,
+body[data-tema="escuro"] .tabela-wrapper,
+body[data-tema="dourado"] .card,
+body[data-tema="dourado"] .painel,
+body[data-tema="dourado"] .catalogo-filtros,
+body[data-tema="dourado"] .tabela-wrapper,
+body[data-tema="esmeralda"] .card,
+body[data-tema="esmeralda"] .painel,
+body[data-tema="esmeralda"] .catalogo-filtros,
+body[data-tema="esmeralda"] .tabela-wrapper {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 6px 18px rgba(0, 0, 0, 0.3),
+    0 18px 48px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 5%, transparent);
+}
+
+/* ---------- Tipografia de exibição ---------- */
+.view-cabecalho h2 {
+  font-family: var(--font-display, var(--font-principal));
+  background-image: var(--pv5-h2-grad, linear-gradient(135deg, var(--text) 55%, var(--text-muted)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.025em;
+}
+.view-cabecalho p.subtitulo {
+  letter-spacing: 0.03em;
+  font-weight: 500;
+}
+
+/* ---------- Orientação global: foco, seleção, scroll ---------- */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 68%, #ffffff 18%);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--border));
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- Botões ---------- */
+.btn-gradient:hover {
+  box-shadow:
+    0 10px 30px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.btn-primario {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0) 42%),
+    linear-gradient(135deg, var(--accent), var(--accent-strong));
+}
+.btn-ghost:hover {
+  transform: translateY(-1px);
+}
+
+/* ---------- Tabelas premium ---------- */
+.tabela-wrapper {
+  border-radius: 14px;
+  overflow: hidden;
+}
+.tabela-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card) 95%, var(--accent-bright) 7%),
+    color-mix(in srgb, var(--card) 90%, var(--accent) 3%)
+  );
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(6px);
+}
+.tabela-wrapper thead th::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
+}
+.tabela-wrapper tbody td {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+.tabela-wrapper tbody tr {
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tabela-wrapper tbody tr:hover {
+  box-shadow: inset 2px 0 0 var(--accent);
+  transform: none;
+}
+
+/* ---------- Detalhes de navegação e superfícies ---------- */
+.sidebar-logo .icone {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+.nav-item {
+  border-radius: 12px;
+}
+.modal-caixa {
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+}
+.painel h3,
+.card h3 {
+  font-family: var(--font-display, var(--font-principal));
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Acessibilidade ---------- */
+body[data-high-contrast="true"]::before {
+  display: none;
+}
+body[data-high-contrast="true"] ::selection {
+  background: #ffffff;
+  color: #000000;
+}
+body[data-high-contrast="true"] input:focus,
+body[data-high-contrast="true"] textarea:focus,
+body[data-high-contrast="true"] select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Movimento respeitoso ---------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    transition: none;
+  }
+}

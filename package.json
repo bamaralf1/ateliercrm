@@ -4,9 +4,10 @@
   "description": "**Gestão completa para artistas plásticos** — Um sistema CRM single-page (SPA) que roda 100% no navegador, sem necessidade de servidor. Seus dados ficam salvos localmente no `localStorage`.",
   "main": "sw.js",
   "scripts": {
-    "dev": "node tools/concat-source.js && vite",
-    "build": "node tools/concat-source.js && vite build",
+    "dev": "node tools/concat-source.js && node tools/sync-css.js && vite",
+    "build": "node tools/concat-source.js && node tools/sync-css.js && vite build",
     "bundle": "node tools/concat-source.js",
+    "styles": "node tools/sync-css.js",
     "preview": "vite preview",
     "pretest": "node tools/concat-source.js && tsc",
     "test": "jest",
