@@ -26,6 +26,7 @@ declare const IDB_IMG_PLACEHOLDER: string;
 interface ImageStore {
   salvar(base64: string): Promise<{ id: string; thumb: string; medium: string; full: string }>;
   carregar(referencia: string): Promise<string>;
+  carregarDataURL(referencia: string): Promise<string>;
   remover(referencia: string): Promise<void>;
   liberar(referencia: string): void;
   liberarTodas(): void;

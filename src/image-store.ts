@@ -101,6 +101,24 @@ async function loadRecord(referencia: string): Promise<string> {
   return url;
 }
 
+// Retorna a imagem IDB como data URL (base64) — útil para PDFs (jsPDF.addImage)
+async function loadDataURL(referencia: string): Promise<string> {
+  if (!referencia || !referencia.startsWith('idb:')) return referencia || '';
+  const parts = referencia.replace('idb:', '').split(':');
+  const id = parts[0];
+  const size = parts[1] || 'medium';
+  const db = await abrirDB();
+  const tx = db.transaction(STORE_NAME, 'readonly');
+  const record = await new Promise<ImagemRecord | undefined>((resolve, reject) => {
+    const req = tx.objectStore(STORE_NAME).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  if (!record) return '';
+  const data = record[size as keyof ImagemRecord] || record.medium || record.full || record.thumb || '';
+  return (data as string) || '';
+}
+
 // Libera blob URL de uma referência
 function freeOne(referencia: string): void {
   const url = blobCache.get(referencia);
@@ -164,4 +182,4 @@ async function migrateAll(obras: any[], encomendas?: any[]): Promise<number> {
 }
 
 // API global
-window.imageStore = { salvar: salvarRecord, carregar: loadRecord, remover: removeRecord, liberar: freeOne, liberarTodas: freeAll, migrar: migrateAll };
+window.imageStore = { salvar: salvarRecord, carregar: loadRecord, carregarDataURL: loadDataURL, remover: removeRecord, liberar: freeOne, liberarTodas: freeAll, migrar: migrateAll };

@@ -155,19 +155,25 @@ export class CertificadosView extends BaseView {
       </form>
     `);
 
-    let imagemSelecionada = '';
+    let promessaImagem: Promise<string> = Promise.resolve('');
 
     // Autopreenche os campos ao escolher uma obra existente
     document.getElementById('campoOrigemCertificado').addEventListener('change', (e) => {
       const obra = obras.find(o => o.id === e.target.value);
-      if (!obra) { imagemSelecionada = ''; return; }
+      if (!obra) { promessaImagem = Promise.resolve(''); return; }
       document.getElementById('campoTituloCert').value = obra.titulo;
       document.getElementById('campoTecnicaCert').value = obra.tecnica;
       document.getElementById('campoAnoCert').value = obra.ano || '';
       const dim = obra.dimensoes || {};
       const partes = [dim.altura, dim.largura, dim.profundidade].filter(v => v && Number(v) > 0);
       document.getElementById('campoDimensoesCert').value = partes.length ? `${partes.join(' x ')} cm` : '';
-      imagemSelecionada = obra.imagem || '';
+      const refImagem = obra.imagem || '';
+      if (refImagem.startsWith('idb:')) {
+        mostrarToast('Carregando imagem da obra...', 'info');
+        promessaImagem = imageStore.carregarDataURL(refImagem).catch(() => '');
+      } else {
+        promessaImagem = Promise.resolve(refImagem);
+      }
     });
 
     document.getElementById('campoEdicaoTipo').addEventListener('change', (e) => {
@@ -221,7 +227,7 @@ export class CertificadosView extends BaseView {
         edicaoTotal: edicaoTipo === 'limitada' ? Number(document.getElementById('campoEdicaoTotal').value) || 1 : null,
         local: document.getElementById('campoLocalCert').value.trim(),
         dataEmissao: document.getElementById('campoDataCert').value || new Date().toISOString().slice(0, 10),
-        imagem: imagemSelecionada
+        imagem: await promessaImagem
       };
 
       const assinaturaDataUrl = canvas.toDataURL('image/png');

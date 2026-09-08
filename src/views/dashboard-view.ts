@@ -418,9 +418,11 @@ export class DashboardView extends BaseView {
       <ul class="lista-obras-recentes stagger-in">
         ${recentes.map(o => {
           const imgSrc = o.imagemDestacada || (o.imagens && o.imagens[0]) || o.imagem || '';
+          const srcMostra = imgSrc.startsWith('idb:') ? IDB_IMG_PLACEHOLDER : imgSrc;
+          const attrIdb = imgSrc.startsWith('idb:') ? ` data-img-idb="${imgSrc}"` : '';
           return `
             <li class="item-obra-recente">
-              <div class="thumb-obra">${imgSrc ? `<img src="${imgSrc}" alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '<i class="fas fa-images"></i>'}</div>
+              <div class="thumb-obra">${imgSrc ? `<img src="${srcMostra}"${attrIdb} alt="${o.titulo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '<i class="fas fa-images"></i>'}</div>
               <div class="info-obra-recente">
                 <div class="nome">${o.titulo}</div>
                 <div class="meta">${o.tecnica || ''} · ${formatarData(o.dataCadastro || o.criadoEm)}</div>
@@ -464,6 +466,7 @@ export class DashboardView extends BaseView {
   aposRenderizar() {
     this.removerListeners();
     const container = document.getElementById('viewPrincipal');
+    resolverImagensIDB(container);
 
     document.getElementById('btnAtualizarDashboard')?.addEventListener('click', () => this.rerenderizar());
     document.getElementById('btnDownloadDashboard')?.addEventListener('click', () => {

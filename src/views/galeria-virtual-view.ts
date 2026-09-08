@@ -12,6 +12,27 @@ export class GaleriaVirtualView {
     this.zoomMax = 4;
     this._boundKeyDown = null;
     this._boundResize = null;
+    this._imgURLs = {};
+  }
+
+  _urlDaObra(obra) {
+    const ref = (obra && obra.imagem) || '';
+    return ref.startsWith('idb:') ? (this._imgURLs[ref] || IDB_IMG_PLACEHOLDER) : ref;
+  }
+
+  _resolverImagens() {
+    const refs = [...new Set(this.obrasVisiveis.map(o => (o && o.imagem) || '').filter(r => r.startsWith('idb:')))];
+    if (refs.length === 0) return;
+    refs.forEach(async (ref) => {
+      if (this._imgURLs[ref]) return;
+      try {
+        const url = await imageStore.carregar(ref);
+        if (url) this._imgURLs[ref] = url;
+      } catch (e) {
+        console.warn('Erro ao carregar imagem IDB:', e);
+      }
+      if (document.getElementById('gvImagem')) this._atualizarImagem();
+    });
   }
 
   carregarObras() {
@@ -37,7 +58,6 @@ export class GaleriaVirtualView {
         </div>`;
     }
     const obra = this.obrasVisiveis[this.indiceAtual];
-    const obraImg = obra.imagem || '';
     const titulo = obra.titulo || 'Sem título';
     const tecnica = obra.tecnica || '';
     const ano = obra.ano || '';
@@ -47,7 +67,7 @@ export class GaleriaVirtualView {
 
     const thumbs = this.obrasVisiveis.map((o, i) => `
       <div class="gv-thumb ${i === this.indiceAtual ? 'ativo' : ''}" data-indice="${i}" title="${o.titulo || ''}">
-        <img src="${o.imagem || ''}" alt="${o.titulo || ''}" loading="lazy">
+        <img src="${this._urlDaObra(o)}" alt="${o.titulo || ''}" loading="lazy">
       </div>
     `).join('');
 
@@ -63,7 +83,7 @@ export class GaleriaVirtualView {
         <div class="gv-slide-container" id="gvSlideContainer">
           <div class="gv-slide" id="gvSlide">
             <div class="gv-moldura" id="gvMoldura">
-              <img class="gv-imagem" id="gvImagem" src="${obraImg}" alt="${titulo}" draggable="false">
+              <img class="gv-imagem" id="gvImagem" src="${this._urlDaObra(obra)}" alt="${titulo}" draggable="false">
               <div class="gv-legenda">
                 <div class="gv-titulo">${titulo}</div>
                 ${meta ? `<div class="gv-meta">${meta}</div>` : ''}
@@ -103,6 +123,7 @@ export class GaleriaVirtualView {
     if (this.obrasVisiveis.length === 0) return;
 
     this._bindEventos();
+    this._resolverImagens();
     this._atualizarImagem();
   }
 
@@ -198,7 +219,7 @@ export class GaleriaVirtualView {
     if (imagem) {
       imagem.style.opacity = '0';
       setTimeout(() => {
-        imagem.src = obra.imagem || '';
+        imagem.src = this._urlDaObra(obra);
         imagem.alt = obra.titulo || 'Sem título';
         imagem.style.opacity = '1';
       }, 150);
@@ -217,8 +238,11 @@ export class GaleriaVirtualView {
     if (navIndicador) navIndicador.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length} obras`;
     if (tourProgresso) tourProgresso.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length}`;
 
-    document.querySelectorAll('.gv-thumb').forEach(el => {
+    document.querySelectorAll('.gv-thumb').forEach((el, i) => {
       el.classList.toggle('ativo', parseInt(el.dataset.indice) === this.indiceAtual);
+      const imgThumb = el.querySelector('img');
+      const oi = this.obrasVisiveis[i];
+      if (imgThumb && oi) imgThumb.src = this._urlDaObra(oi);
     });
     const thumbAtiva = document.querySelector('.gv-thumb.ativo');
     if (thumbAtiva) thumbAtiva.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -319,7 +343,7 @@ export class GaleriaVirtualView {
   abrirZoom(idx) {
     if (idx < 0 || idx >= this.obrasVisiveis.length) return;
     const images = this.obrasVisiveis.map(o => ({
-      src: o.imagem || '',
+      src: this._urlDaObra(o),
       title: o.titulo || 'Sem título',
       subtitle: [o.tecnica, o.ano].filter(Boolean).join(' · '),
       caption: o.descricao || '',
