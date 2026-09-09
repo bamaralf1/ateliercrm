@@ -10,6 +10,7 @@ export class DashboardView extends BaseView {
       { id: 'previsao', rotulo: 'Previsão de Faturamento', icone: '<i data-lucide="trending-up" aria-hidden="true"></i>', visivel: true },
       { id: 'notificacoes', rotulo: 'Notificações Inteligentes', icone: '<i data-lucide="bell"></i>', visivel: true },
       { id: 'metas', rotulo: 'Metas Financeiras', icone: '<i data-lucide="target"></i>', visivel: true },
+      { id: 'encomendas', rotulo: 'Encomendas & Saldos', icone: '<i data-lucide="package"></i>', visivel: true },
       { id: 'recentes', rotulo: 'Obras Recentes', icone: '<i data-lucide="images"></i>', visivel: true },
       { id: 'atividades', rotulo: 'Atividades', icone: '<i data-lucide="clipboard"></i>', visivel: true },
       { id: 'dica', rotulo: 'Dica do Dia', icone: '<i data-lucide="lightbulb"></i>', visivel: true }
@@ -77,11 +78,14 @@ export class DashboardView extends BaseView {
 
     const widgetsVisiveis = this.obterWidgetsOrdenados();
     const ordemIds = this.widgetOrdem || widgetsVisiveis;
+    const hora = hoje.getHours();
+    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    const nomeArtista = (configStore().nomeArtista || '').trim();
 
     return `
       <div class="view-cabecalho">
         <div>
-          <h2>Dashboard</h2>
+          <h2>${saudacao}${nomeArtista ? `, ${sanitizarHTML(nomeArtista.split(' ')[0])}` : ''} 👋</h2>
           <p class="subtitulo">Visão geral do seu ateliê · ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div class="dashboard-acoes">
@@ -150,6 +154,7 @@ export class DashboardView extends BaseView {
       case 'previsao': return this.renderWidgetPrevisao();
       case 'notificacoes': return this.renderWidgetNotificacoes();
       case 'metas': return this.renderWidgetMetas();
+      case 'encomendas': return this.renderWidgetEncomendas();
       case 'recentes': return this.renderWidgetRecentes();
       case 'atividades': return this.renderWidgetAtividades();
       case 'dica': return this.renderWidgetDica();
@@ -326,6 +331,16 @@ export class DashboardView extends BaseView {
       }
     });
 
+    const encomendas = this.dataStore.listar('encomendas') || [];
+    encomendas.forEach(e => {
+      if (!e.prazo || e.status === 'entregue' || e.status === 'cancelado') return;
+      const dias = Math.floor((hoje - new Date(e.prazo)) / 86400000);
+      if (dias >= 0) {
+        const pend = Math.max(0, (Number(e.valor) || 0) - (Number(e.sinal) || 0) - ((e.pagamentos || []).reduce((x, p) => x + (Number(p.valor) || 0), 0)));
+        notificacoes.push({ tipo: 'encomenda', gravidade: dias >= 14 ? 'alta' : 'media', icone: '<i data-lucide="package"></i>', mensagem: `Encomenda de "${e.clienteNome}" ${dias === 0 ? 'vence hoje' : 'atrasada há ' + dias + ' dia(s)'}${pend > 0 ? ' · ' + formatarMoeda(pend) + ' a receber' : ''}`, acao: 'Ver encomenda', rota: 'encomendas' });
+      }
+    });
+
     obras.forEach(o => {
       if (o.historicoPrecos && o.historicoPrecos.length > 1) {
         const ultimo = o.historicoPrecos[o.historicoPrecos.length - 1];
@@ -404,6 +419,65 @@ export class DashboardView extends BaseView {
           </div>
         </div>
       </div>
+    `;
+  }
+
+  /* ---- Widget: Encomendas & Saldos (V17) ---- */
+  renderWidgetEncomendas() {
+    const encomendas = this.dataStore.listar('encomendas') || [];
+    if (encomendas.length === 0) {
+      return '<div class="estado-vazio"><div class="icone-vazio"><i data-lucide="package"></i></div><p>Nenhuma encomenda cadastrada ainda.</p></div>';
+    }
+    const AVANCO = { recebido: 5, esboco: 20, em_producao: 40, ajustes_finais: 60, acabamento: 75, pronto_para_envio: 90, entregue: 100, cancelado: 0 };
+    const hoje = new Date();
+    const ativas = encomendas.filter(e => e.status !== 'entregue' && e.status !== 'cancelado');
+    const atrasadas = ativas.filter(e => e.prazo && new Date(e.prazo) < hoje);
+    const recebido = ativas.reduce((s, e) => s + (Number(e.sinal) || 0) + ((e.pagamentos || []).reduce((x, p) => x + (Number(p.valor) || 0), 0)), 0);
+    const aReceber = ativas.reduce((s, e) => s + Math.max(0, (Number(e.valor) || 0) - (Number(e.sinal) || 0) - ((e.pagamentos || []).reduce((x, p) => x + (Number(p.valor) || 0), 0))), 0);
+
+    const destacadas = [...ativas].sort((a, b) => {
+      const ta = a.prazo ? new Date(a.prazo).getTime() : Number.MAX_SAFE_INTEGER;
+      const tb = b.prazo ? new Date(b.prazo).getTime() : Number.MAX_SAFE_INTEGER;
+      return ta - tb;
+    }).slice(0, 4);
+
+    const lista = destacadas.map(e => {
+      const st = e.status;
+      const avanco = AVANCO[st] ?? 0;
+      const pend = Math.max(0, (Number(e.valor) || 0) - (Number(e.sinal) || 0) - ((e.pagamentos || []).reduce((x, p) => x + (Number(p.valor) || 0), 0)));
+      const corProgresso = { recebido:'#3b82f6', esboco:'#8b5cf6', em_producao:'#f59e0b', ajustes_finais:'#f97316', acabamento:'#ec4899', pronto_para_envio:'#14b8a6', entregue:'#065f46', cancelado:'#dc2626' }[st] || '#6b7280';
+      const atrasada = e.prazo && new Date(e.prazo) < hoje;
+      return `
+        <div class="enc-resumo-item ${atrasada ? 'enc-atrasada' : ''}" data-rota="encomendas" style="cursor:pointer;border:1px solid ${atrasada ? 'color-mix(in srgb, #dc2626 45%, transparent)' : 'var(--border)'};border-radius:10px;padding:8px 10px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:0.82rem;">
+            <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitizarHTML(e.clienteNome)}</strong>
+            <span style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">${e.prazo ? formatarData(e.prazo) : '—'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <div style="flex:1;height:5px;border-radius:999px;background:color-mix(in srgb, var(--border, rgba(128,128,128,0.25)) 70%, transparent);overflow:hidden;">
+              <div style="height:100%;width:${avanco}%;background:${corProgresso};border-radius:999px;transition:width .5s;"></div>
+            </div>
+            <span style="font-size:0.68rem;font-weight:700;color:${corProgresso};min-width:30px;text-align:right;">${avanco}%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-top:5px;color:var(--text-muted);">
+            <span>${formatarMoeda(e.valor || 0)}</span>
+            <span style="color:${pend > 0 ? '#dc2626' : '#16a34a'};font-weight:600;">${pend > 0 ? 'devendo ' + formatarMoeda(pend) : 'pago ✅'}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="enc-resumo-kpis" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo" style="font-size:0.68rem;">Em andamento</div><div class="kpi-valor" style="font-size:1.1rem;">${ativas.length}</div></div>
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo" style="font-size:0.68rem;">Atrasadas</div><div class="kpi-valor" style="font-size:1.1rem;color:${atrasadas.length ? '#dc2626' : 'var(--text)'};">${atrasadas.length}</div></div>
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo" style="font-size:0.68rem;">A receber</div><div class="kpi-valor" style="font-size:1.05rem;">${formatarMoeda(aReceber)}</div></div>
+      </div>
+      <div style="margin-bottom:8px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb, var(--accent) 8%, transparent);font-size:0.75rem;display:flex;justify-content:space-between;color:var(--text-muted);">
+        <span><i data-lucide="wallet"></i> Recebido em encomendas</span>
+        <strong style="color:var(--text);">${formatarMoeda(recebido)}</strong>
+      </div>
+      ${lista}
+      <p class="texto-ajuda" style="text-align:right;font-size:0.72rem;">Clique para gerenciar</p>
     `;
   }
 
@@ -487,6 +561,11 @@ export class DashboardView extends BaseView {
       const notifBtn = e.target.closest('.notificacao-acao');
       if (notifBtn && notifBtn.dataset.rota) {
         this.router.navegar(notifBtn.dataset.rota);
+        return;
+      }
+      const encItem = e.target.closest('.enc-resumo-item');
+      if (encItem && encItem.dataset.rota) {
+        this.router.navegar(encItem.dataset.rota);
         return;
       }
     });

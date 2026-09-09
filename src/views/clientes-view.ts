@@ -26,6 +26,28 @@ export class ClientesView extends BaseView {
       .sort((a, b) => new Date(b.data) - new Date(a.data));
   }
 
+  gastoDoCliente(clienteId) {
+    return vendaStore().items
+      .filter(v => v.clienteId === clienteId)
+      .reduce((s, v) => s + Number(v.precoFinal || 0), 0);
+  }
+
+  segCliente(c) {
+    const compras = c.aquisicoes || 0;
+    if (compras >= 3) return { rotulo: 'Colecionador', cor: '#c9a227', icone: '<i data-lucide="crown"></i>' };
+    if (compras >= 1) return { rotulo: 'Comprador', cor: '#0891b2', icone: '<i data-lucide="gem"></i>' };
+    const ultimo = c.ultimoContato || c.criadoEm;
+    if (ultimo && new Date(ultimo) && (Date.now() - new Date(ultimo)) > 180 * 86400000) return { rotulo: 'Inativo', cor: '#6b7280', icone: '<i data-lucide="moon"></i>' };
+    if (c.criadoEm && (Date.now() - new Date(c.criadoEm)) < 30 * 86400000) return { rotulo: 'Novo', cor: '#16a34a', icone: '<i data-lucide="sparkles"></i>' };
+    return { rotulo: 'Prospect', cor: '#8b5cf6', icone: '<i data-lucide="user-plus"></i>' };
+  }
+
+  avatarCor(nome) {
+    let h = 0;
+    for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) % 360;
+    return `hsl(${h}, 55%, 42%)`;
+  }
+
   render() {
     const clientes = this.clientesFiltrados();
     const conteudo = clientes.length
@@ -33,6 +55,21 @@ export class ClientesView extends BaseView {
       : `<div class="tabela-wrapper"><div class="estado-vazio"><div class="icone-vazio"><i data-lucide="user"></i></div><p>Nenhum cliente encontrado.</p></div></div>`;
 
     const totalCompras = clientes.reduce((s, c) => s + (c.aquisicoes || 0), 0);
+    const todos = clienteStore().items;
+    const ativos = todos.filter(c => {
+      const ref = c.ultimoContato || c.criadoEm;
+      return ref && (Date.now() - new Date(ref)) <= 180 * 86400000;
+    }).length;
+    const colecionadores = todos.filter(c => (c.aquisicoes || 0) >= 2).length;
+    const gastoTotal = todos.reduce((s, c) => s + this.gastoDoCliente(c.id), 0);
+    const gastoMedio = todos.length ? gastoTotal / todos.length : 0;
+    const kpis = `
+      <div class="kpi-grid cert-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="users"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Clientes</div><div class="kpi-valor">${todos.length}</div><div class="kpi-sub">${ativos} ativo${ativos === 1 ? '' : 's'} (90d)</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="crown"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Colecionadores</div><div class="kpi-valor">${colecionadores}</div><div class="kpi-sub">2+ aquisições</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="repeat"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Recompra</div><div class="kpi-valor">${totalCompras}</div><div class="kpi-sub">aquisições no total</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="chart-pie"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Gasto médio</div><div class="kpi-valor">${formatarMoeda(gastoMedio)}</div><div class="kpi-sub">total ${formatarMoeda(gastoTotal)}</div></div></div>
+      </div>`;
     return `
       <div class="view-cabecalho">
         <div>
@@ -51,6 +88,7 @@ export class ClientesView extends BaseView {
           <button class="btn-gradient" id="btnNovoCliente">✚ Novo Cliente</button>
         </div>
       </div>
+      ${kpis}
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}
       <div class="catalogo-filtros">
         <div class="campo-filtro busca">
@@ -81,10 +119,11 @@ export class ClientesView extends BaseView {
         <td onclick="event.stopPropagation()">
           <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
         </td>
-        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong></td>
+        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong> <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></td>
         <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${c.email || '-'}</td>
         <td>${c.telefone || '-'}</td>
         <td>${c.aquisicoes || 0}</td>
+        <td style="font-variant-numeric:tabular-nums;"><strong>${formatarMoeda(this.gastoDoCliente(c.id))}</strong></td>
         <td>${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('') || '-'}</td>
         <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
           <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i data-lucide="pen"></i></button>
@@ -96,7 +135,7 @@ export class ClientesView extends BaseView {
       <div class="tabela-wrapper">
         <table>
           <caption class="sr-only">Lista de clientes</caption>
-          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Aquisições</th><th>Tags</th><th></th></tr></thead>
+          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Aquisições</th><th>Gasto total</th><th>Tags</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
       </div>
@@ -111,13 +150,14 @@ export class ClientesView extends BaseView {
             <div class="checkbox-bulk">
               <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
             </div>
-            <div class="cc-avatar">${(c.nome || '?').charAt(0).toUpperCase()}</div>
+            <div class="cc-avatar" style="background:${this.avatarCor(c.nome || '?')};">${(c.nome || '?').charAt(0).toUpperCase()}</div>
             <div class="cc-info" data-abrir-ficha-cliente="${c.id}">
-              <div class="cc-nome">${c.nome}</div>
+              <div class="cc-nome">${c.nome} <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></div>
               <div class="cc-meta">${c.email || 'sem email'}</div>
             </div>
             <div class="cc-footer">
               <span class="cc-aquisicoes">${c.aquisicoes || 0} compra${(c.aquisicoes || 0) === 1 ? '' : 's'}</span>
+              <span class="cc-aquisicoes" style="font-variant-numeric:tabular-nums;">${formatarMoeda(this.gastoDoCliente(c.id))}</span>
               <div class="cc-tags">${(c.tags || []).slice(0, 2).map(t => `<span class="badge-tag">${t}</span>`).join('')}</div>
             </div>
             <div class="cc-acoes">
@@ -312,10 +352,18 @@ export class ClientesView extends BaseView {
     abrirModal(`
       <h3>${c.nome}</h3>
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">${c.email || 'sem e-mail'} · ${c.telefone || 'sem telefone'}</p>
-      <div style="margin-bottom:10px;">${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('') || ''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        ${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('')}
+        <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px;">
+        <div class="kpi-card"><div class="kpi-conteudo"><div class="kpi-rotulo">Total gasto</div><div class="kpi-valor" style="font-size:1rem;">${formatarMoeda(compras.reduce((s, v) => s + Number(v.precoFinal || 0), 0))}</div></div></div>
+        <div class="kpi-card"><div class="kpi-conteudo"><div class="kpi-rotulo">Compras</div><div class="kpi-valor" style="font-size:1rem;">${compras.length}</div></div></div>
+        <div class="kpi-card"><div class="kpi-conteudo"><div class="kpi-rotulo">Ticket médio</div><div class="kpi-valor" style="font-size:1rem;">${compras.length ? formatarMoeda(compras.reduce((s, v) => s + Number(v.precoFinal || 0), 0) / compras.length) : '-'}</div></div></div>
+      </div>
       ${c.endereco ? `<p style="font-size:0.82rem;margin-top:8px;"><strong>Endereço:</strong> ${c.endereco}</p>` : ''}
       ${c.notas ? `<p style="font-size:0.82rem;margin-top:6px;"><strong>Notas:</strong> ${c.notas}</p>` : ''}
-      <h3 style="margin-top:20px;font-size:0.95rem;">Histórico de compras</h3>
+      <h3 style="margin-top:16px;font-size:0.95rem;">Histórico de compras</h3>
       <ul class="timeline-cliente">${timelineHtml}</ul>
       <div class="modal-acoes">
         <button class="btn-secundario" id="btnFecharFichaCliente">Fechar</button>

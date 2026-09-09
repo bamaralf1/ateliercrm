@@ -1,4 +1,5 @@
 // ThemeEngine — Gerenciamento de temas visuais
+// Tema dourado é o principal: o app sempre abre nele primeiro.
 
 export function atualizarThemeColor() {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -7,14 +8,16 @@ export function atualizarThemeColor() {
   if (cor) meta.setAttribute('content', cor);
 }
 
+const TEMA_PRINCIPAL = 'dourado';
+
 export class ThemeEngine {
   constructor(dataStore) {
     this.dataStore = dataStore;
-    this.temaAtual = this.dataStore.dados.config.tema || 'classico';
+    this.temaAtual = this.dataStore.dados.config.tema || TEMA_PRINCIPAL;
   }
 
   inicializar() {
-    this.aplicarTema(this.temaAtual);
+    this.aplicarTema(TEMA_PRINCIPAL);
     const seletor = document.getElementById('seletorTema');
     if (seletor) {
       seletor.value = this.temaAtual;

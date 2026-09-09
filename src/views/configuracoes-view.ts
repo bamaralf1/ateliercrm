@@ -63,12 +63,16 @@ export class ConfiguracoesView extends BaseView {
     const cfg = configStore().artista || {};
     const textoGarantia = configStore().textoGarantia || '';
     const idiomaAtual = configStore().idioma || 'pt-BR';
-    const temaAtual = configStore().tema || 'classico';
+    const temaAtual = configStore().tema || 'dourado';
     const altoContraste = configStore().altoContraste || false;
     const tamanhoFonte = configStore().tamanhoFonte || 'medio';
     const pinAtivo = configStore().pin || '';
     const s = configStore();
     const ultimoBackup = s.syncLastBackup ? formatarData(s.syncLastBackup) : 'Nunca';
+    const nObras = (this.dataStore.listar('obras') || []).length;
+    const nCli = (this.dataStore.listar('clientes') || []).length;
+    const nVendas = (this.dataStore.listar('vendas') || []).length;
+    const nEnc = (this.dataStore.listar('encomendas') || []).length;
 
     const idiomas = [
       { v: 'pt-BR', r: '🇧🇷 Português (BR)' },
@@ -79,12 +83,12 @@ export class ConfiguracoesView extends BaseView {
     ];
 
     const temas = [
+      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
       { id: 'classico', label: 'Clássico', icone: '<i data-lucide="palette" aria-hidden="true"></i>', sidebar: '#3d2b1f', bg: '#f5f0e6', accent: '#8b4513', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
       { id: 'escuro', label: 'Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
       { id: 'galeria', label: 'Galeria', icone: '<i data-lucide="image" aria-hidden="true"></i>', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
       { id: 'boho', label: 'Boho', icone: '<i data-lucide="leaf" aria-hidden="true"></i>', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
       { id: 'clean', label: 'Clean', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#ffffff', bg: '#ffffff', accent: '#1a1a1a', textBar: 'rgba(0,0,0,0.1)', contentBar: 'rgba(0,0,0,0.08)' },
-      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
       { id: 'marmore', label: 'Mármore', icone: '<i data-lucide="landmark" aria-hidden="true"></i>', sidebar: '#2b1f18', bg: '#f2ece6', accent: '#a0522d', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
       { id: 'esmeralda', label: 'Esmeralda', icone: '<i data-lucide="gem" aria-hidden="true"></i>', sidebar: '#040a06', bg: '#0a120e', accent: '#00c853', textBar: 'rgba(255,255,255,0.2)', contentBar: 'rgba(255,255,255,0.1)' },
     ];
@@ -95,6 +99,12 @@ export class ConfiguracoesView extends BaseView {
           <h2>Configurações</h2>
           <p class="subtitulo">Dados do artista e preferências do sistema</p>
         </div>
+      </div>
+      <div class="kpi-grid cfg-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="image"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Obras</div><div class="kpi-valor">${nObras}</div><div class="kpi-sub">no catálogo</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="users"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Clientes</div><div class="kpi-valor">${nCli}</div><div class="kpi-sub">cadastrados</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="dollar-sign"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Vendas</div><div class="kpi-valor">${nVendas}</div><div class="kpi-sub">registradas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="package-open"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Encomendas</div><div class="kpi-valor">${nEnc}</div><div class="kpi-sub">em andamento</div></div></div>
       </div>
       <div class="painel" style="max-width:560px">
         <h3><i data-lucide="user"></i> Perfil do Artista</h3>
@@ -282,7 +292,7 @@ export class ConfiguracoesView extends BaseView {
     }
 
     // Theme card preview
-    this._temaSalvoPreview = configStore().tema || 'classico';
+    this._temaSalvoPreview = configStore().tema || 'dourado';
     document.querySelectorAll('.tema-card').forEach(card => {
       const temaId = card.dataset.tema;
       let blurTimer = null;

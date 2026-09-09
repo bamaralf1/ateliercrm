@@ -86,6 +86,10 @@ interface Venda {
   formaPagamento: string;
   status: string;
   criadoEm: string;
+  clienteNome?: string;
+  obraTitulo?: string;
+  comissaoPct?: number;
+  comissaoNome?: string;
 }
 
 interface Certificado {
@@ -103,6 +107,9 @@ interface Certificado {
   dataEmissao: string;
   imagem: string;
   criadoEm: string;
+  hashAutenticidade?: string;
+  reemissoes?: number;
+  ultimaReemissao?: string | null;
 }
 
 interface Referencia {
@@ -127,6 +134,8 @@ interface Encomenda {
   prazo: string;
   status: string;
   valor: number;
+  sinal: number;
+  pagamentos: { valor: number; data: string; forma: string; }[];
   atualizacoes: { data: string; status: string; mensagem: string; }[];
   imagens: string[];
   criadoEm: string;

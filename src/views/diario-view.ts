@@ -140,15 +140,29 @@ export class DiarioView extends BaseView {
       estatisticas: () => this.renderEstatisticas(),
       inspiracao: () => this.renderInspiracao()
     };
+    const entradas = this.entradas;
+    const agora = new Date();
+    const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+    const doMes = entradas.filter(e => (e.data || '').startsWith(mesAtual));
+    const horasMes = doMes.reduce((s, e) => s + (Number(e.horasTrabalhadas) || 0), 0);
+    const diasAtivos = new Set(doMes.map(e => e.data).filter(Boolean)).size;
+    const humores = entradas.filter(e => e.humor).map(e => e.humor);
+    const humorMedio = humores.length ? (humores.reduce((s, h) => s + Number(h), 0) / humores.length).toFixed(1) : '—';
     return `
       <div class="diario-header">
         <div>
           <h2><i data-lucide="clipboard"></i> Diário Criativo</h2>
-          <div class="diario-sub">Registro íntimo do seu processo artístico  ·  ${new Date().toLocaleDateString('pt-BR')}</div>
+          <div class="diario-sub">Registro íntimo do seu processo artístico  ·  ${agora.toLocaleDateString('pt-BR')}</div>
         </div>
         <div style="display:flex;gap:8px;">
           <button class="btn-primario" id="btnNovaEntrada" style="font-size:0.8rem;padding:6px 14px;"><i data-lucide="plus"></i> Nova Entrada</button>
         </div>
+      </div>
+      <div class="kpi-grid diario-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="clipboard"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Entradas</div><div class="kpi-valor">${entradas.length}</div><div class="kpi-sub">${doMes.length} neste mês</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="clock"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Horas no mês</div><div class="kpi-valor">${horasMes.toFixed(1)}h</div><div class="kpi-sub">${diasAtivos} dia(s) ativo(s)</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="calendar-check"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Dias ativos</div><div class="kpi-valor">${diasAtivos}</div><div class="kpi-sub">no mês</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="smile"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Humor médio</div><div class="kpi-valor">${humorMedio}</div><div class="kpi-sub">${this.humorEmojis[Math.round(Number(humorMedio))] || '😐'} ${this.humorLabels[Math.round(Number(humorMedio))] || ''}</div></div></div>
       </div>
       <div class="diario-tabs">
         ${tabs.map(t => `<button class="tab-btn ${t === this.tabAtiva ? 'ativo' : ''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}

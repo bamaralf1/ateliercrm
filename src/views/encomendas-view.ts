@@ -1,5 +1,10 @@
 const STATUS_ENCOMENDA = ['recebido','esboco','em_producao','ajustes_finais','acabamento','pronto_para_envio','entregue','cancelado'];
 
+const AVANCO_STATUS = {
+  recebido: 5, esboco: 20, em_producao: 40, ajustes_finais: 60,
+  acabamento: 75, pronto_para_envio: 90, entregue: 100, cancelado: 0
+};
+
 const STATUS_MAP = {
   recebido:{rotulo:'Recebido',cor:'#3b82f6'},
   esboco:{rotulo:'Esboço',cor:'#8b5cf6'},
@@ -21,6 +26,36 @@ export class EncomendasView extends BaseView {
     this.mostrarCanceladas = false;
   }
 
+  avancoStatus(s) { return AVANCO_STATUS[s] ?? 0; }
+
+  totalPago(e) {
+    const pagamentos = (e.pagamentos || []).reduce((s, p) => s + (Number(p.valor) || 0), 0);
+    return (Number(e.sinal) || 0) + pagamentos;
+  }
+
+  saldoPendente(e) {
+    return Math.max(0, (Number(e.valor) || 0) - this.totalPago(e));
+  }
+
+  emAtraso(e) {
+    if (!e.prazo || e.status === 'entregue' || e.status === 'cancelado') return false;
+    return new Date(e.prazo) < new Date(new Date().toDateString());
+  }
+
+  renderKpis(encomendas) {
+    const atrasadas = encomendas.filter(e => this.emAtraso(e)).length;
+    const saldoReceber = encomendas.filter(e => e.status !== 'cancelado').reduce((s, e) => s + this.saldoPendente(e), 0);
+    const recebido = encomendas.filter(e => e.status !== 'cancelado').reduce((s, e) => s + this.totalPago(e), 0);
+    return `
+      <div class="kpi-grid cert-kpis">
+        <div class="kpi-card"><div class="kpi-icone">📦</div><div class="kpi-conteudo"><div class="kpi-rotulo">Em andamento</div><div class="kpi-valor">${encomendas.filter(e => e.status !== 'entregue' && e.status !== 'cancelado').length}</div></div></div>
+        <div class="kpi-card" style="${atrasadas ? '--kpi-cor:#dc2626' : ''}"><div class="kpi-icone">⏰</div><div class="kpi-conteudo"><div class="kpi-rotulo">Atrasadas</div><div class="kpi-valor" style="${atrasadas ? 'color:#dc2626' : ''}">${atrasadas}</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone">💰</div><div class="kpi-conteudo"><div class="kpi-rotulo">Recebido</div><div class="kpi-valor">${formatarMoeda(recebido)}</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone">⏳</div><div class="kpi-conteudo"><div class="kpi-rotulo">A receber</div><div class="kpi-valor">${formatarMoeda(saldoReceber)}</div></div></div>
+      </div>
+    `;
+  }
+
   render() {
     const encomendas = this.filtrarEncomendas();
     const todas = this.dataStore.listar('encomendas') || [];
@@ -31,6 +66,7 @@ export class EncomendasView extends BaseView {
 
     const totalPendente = todas.filter(e => e.status !== 'entregue' && e.status !== 'cancelado').length;
     const totalPrevisto = todas.reduce((s, e) => s + (e.valor || 0), 0);
+    const totalAtrasadas = todas.filter(e => this.emAtraso(e)).length;
     const chipsStatus = STATUS_ENCOMENDA.map(st => {
       const qtd = todas.filter(e => e.status === st).length;
       const info = STATUS_MAP[st];
@@ -47,7 +83,7 @@ export class EncomendasView extends BaseView {
       <div class="view-cabecalho">
         <div>
           <h2>Encomendas</h2>
-          <p class="subtitulo">${todas.length} encomenda${todas.length === 1 ? '' : 's'} · ${totalPendente} pendente${totalPendente === 1 ? '' : 's'} · ${formatarMoeda(totalPrevisto)} previsto</p>
+          <p class="subtitulo">${todas.length} encomenda${todas.length === 1 ? '' : 's'} · ${totalPendente} pendente${totalPendente === 1 ? '' : 's'} · ${formatarMoeda(totalPrevisto)} previsto${totalAtrasadas ? ` · <span style="color:#dc2626;font-weight:600;">${totalAtrasadas} atrasada${totalAtrasadas === 1 ? '' : 's'}</span>` : ''}</p>
         </div>
         <div class="catalogo-acoes">
           <div class="selecao-bulk" style="${this.modo === 'kanban' ? 'display:none' : ''}">
@@ -62,6 +98,7 @@ export class EncomendasView extends BaseView {
           <button class="btn-gradient" id="btnNovaEncomenda">✚ Nova Encomenda</button>
         </div>
       </div>
+      ${this.renderKpis(encomendas.length ? encomendas : todas)}
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}
       ${chipsStatus ? `<div class="vendas-summary">${chipsStatus}</div>` : ''}
       <div class="filtros-linha">
@@ -99,23 +136,34 @@ export class EncomendasView extends BaseView {
   _kanbanCardHtml(e) {
     const info = STATUS_MAP[e.status] || { rotulo: e.status, cor: '#6b7280' };
     const dias = e.prazo ? Math.ceil((new Date(e.prazo) - new Date()) / 86400000) : null;
+    const avanco = this.avancoStatus(e.status);
+    const pendente = this.saldoPendente(e);
+    const atrasada = this.emAtraso(e);
     const prazoHtml = dias !== null
-      ? `<span style="font-size:0.72rem;${dias < 0 ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : 'color:var(--text-muted);'}">${formatarData(e.prazo)}${dias < 0 ? ' ⚠' : ''}</span>`
+      ? `<span style="font-size:0.72rem;${atrasada ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : 'color:var(--text-muted);'}">${formatarData(e.prazo)}${atrasada ? ' ⚠' : ''}</span>`
       : '';
+    const progressoHtml = `
+      <div class="enc-progresso">
+        <div class="enc-progresso-trilha"><div class="enc-progresso-barra" style="width:${avanco}%;background:${info.cor};"></div></div>
+        <span class="enc-progresso-pct" style="color:${info.cor};">${avanco}%</span>
+      </div>`;
     const stIdx = STATUS_ENCOMENDA.indexOf(e.status);
     const temAnterior = stIdx > 0 && STATUS_ENCOMENDA[stIdx - 1] !== 'cancelado';
     const temProximo = stIdx >= 0 && stIdx < STATUS_ENCOMENDA.length - 1;
     return `
-      <div class="kanban-card" draggable="true" data-id="${e.id}">
+      <div class="kanban-card ${atrasada ? 'enc-atrasada' : ''}" draggable="true" data-id="${e.id}">
         <div class="kanban-card-corpo">
-          <div class="kanban-card-nome"><strong>${sanitizarHTML(e.clienteNome) || '—'}</strong></div>
+          <div class="kanban-card-nome"><strong>${sanitizarHTML(e.clienteNome)}${atrasada ? ' <span class="enc-badge-atraso">atrasada</span>' : ''}</strong></div>
           <div class="kanban-card-desc">${sanitizarRich(e.descricao) || '—'}</div>
+          ${progressoHtml}
           <div class="kanban-card-meta">
             <span style="font-weight:600;">${formatarMoeda(e.valor || 0)}</span>
+            ${pendente > 0 ? `<span style="color:var(--text-muted);font-size:0.72rem;">devendo ${formatarMoeda(pendente)}</span>` : '<span style="color:#16a34a;font-size:0.72rem;">pago</span>'}
             ${prazoHtml}
           </div>
         </div>
         <div class="kanban-card-acoes">
+          <button class="btn-miniatura btn-pagar-enc" data-id="${e.id}" title="Registrar pagamento" aria-label="Registrar pagamento"><i data-lucide="credit-card"></i></button>
           <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar"><i data-lucide="pen"></i></button>
           <button class="kanban-mobile-menu-btn" data-id="${e.id}" title="Mover etapa" aria-label="Mover etapa"><i data-lucide="ellipsis-vertical"></i></button>
           <div class="kanban-mobile-dropdown" data-id="${e.id}">
@@ -146,25 +194,37 @@ export class EncomendasView extends BaseView {
         ${encomendas.map(e => {
           const st = STATUS_MAP[e.status] || { rotulo: e.status, cor: '#6b7280' };
           const dias = e.prazo ? Math.ceil((new Date(e.prazo) - new Date()) / 86400000) : null;
+          const atrasada = this.emAtraso(e);
+          const avanco = this.avancoStatus(e.status);
+          const pendente = this.saldoPendente(e);
           const prazoCard = dias !== null
-            ? `<span style="${dias < 0 ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : ''}">${formatarData(e.prazo)}${dias < 0 ? ' (atrasado)' : ` (${dias}d)`}</span>`
+            ? `<span style="${atrasada ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : ''}">${formatarData(e.prazo)}${atrasada ? ' (atrasado)' : ` (${dias}d)`}</span>`
             : '—';
           return `
-            <div class="card-encomenda ${this.selecionados.has(e.id) ? 'selecionada' : ''}">
+            <div class="card-encomenda ${this.selecionados.has(e.id) ? 'selecionada' : ''} ${atrasada ? 'enc-atrasada' : ''}">
               <div class="checkbox-bulk">
                 <input type="checkbox" class="checkbox-item-enc" data-id="${e.id}" aria-label="Selecionar ${e.clienteNome || 'encomenda'}" ${this.selecionados.has(e.id) ? 'checked' : ''}>
               </div>
               <div class="enc-header">
                 <strong>${sanitizarHTML(e.clienteNome) || '—'}</strong>
-                ${e.clienteEmail ? `<span class="enc-email">${sanitizarHTML(e.clienteEmail)}</span>` : ''}
+                <span class="tag-status" style="background:${st.cor}20;color:${st.cor};font-size:0.68rem;">${st.rotulo}</span>
               </div>
               <div class="enc-descricao">${sanitizarRich(e.descricao) || '—'}</div>
+              <div class="enc-progresso">
+                <div class="enc-progresso-trilha"><div class="enc-progresso-barra" style="width:${avanco}%;background:${st.cor};"></div></div>
+                <span class="enc-progresso-pct" style="color:${st.cor};">${avanco}%</span>
+              </div>
               <div class="enc-valor-prazo">
                 <span class="enc-valor">${formatarMoeda(e.valor || 0)}</span>
                 <span class="enc-prazo">${prazoCard}</span>
               </div>
-              <span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span>
+              <div class="enc-pagamento">
+                ${pendente > 0
+                  ? `<span style="color:var(--text-muted);font-size:0.75rem;">Pago ${formatarMoeda(this.totalPago(e))} · devendo <strong style="color:#dc2626;">${formatarMoeda(pendente)}</strong></span>`
+                  : `<span style="color:#16a34a;font-size:0.75rem;font-weight:600;">✅ Pago ${formatarMoeda(this.totalPago(e))}</span>`}
+              </div>
               <div class="enc-acoes">
+                <button class="btn-miniatura btn-pagar-enc" data-id="${e.id}" title="Registrar pagamento" aria-label="Registrar pagamento"><i data-lucide="credit-card"></i></button>
                 <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Portal" aria-label="Gerar link do portal"><i data-lucide="link"></i></button>
                 <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i data-lucide="pen"></i></button>
                 <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Atualizar" aria-label="Adicionar atualização"><i data-lucide="pencil"></i></button>
@@ -198,20 +258,33 @@ export class EncomendasView extends BaseView {
   renderLinha(e) {
     const st = STATUS_MAP[e.status] || { rotulo: e.status, cor: '#6b7280' };
     const dias = e.prazo ? Math.ceil((new Date(e.prazo) - new Date()) / 86400000) : null;
+    const atrasada = this.emAtraso(e);
+    const avanco = this.avancoStatus(e.status);
+    const pendente = this.saldoPendente(e);
     const prazoHtml = dias !== null
-      ? `<span style="${dias < 0 ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : ''}">${formatarData(e.prazo)}${dias < 0 ? ' (atrasado)' : ` (${dias}d)`}</span>`
+      ? `<span style="${atrasada ? 'color:#dc2626;font-weight:600;' : dias <= 15 ? 'color:#f59e0b;' : ''}">${formatarData(e.prazo)}${atrasada ? ' (atrasado)' : ` (${dias}d)`}</span>`
       : '—';
     return `
-      <tr class="${this.selecionados.has(e.id) ? 'linha-selecionada' : ''}">
+      <tr class="${this.selecionados.has(e.id) ? 'linha-selecionada' : ''} ${atrasada ? 'linha-atrasada' : ''}">
         <td onclick="event.stopPropagation()">
           <input type="checkbox" class="checkbox-item-enc" data-id="${e.id}" aria-label="Selecionar ${e.clienteNome || 'encomenda'}" ${this.selecionados.has(e.id) ? 'checked' : ''}>
         </td>
-        <td><strong>${sanitizarHTML(e.clienteNome) || '—'}</strong>${e.clienteEmail ? `<br><span style="font-size:0.75rem;color:var(--text-muted);">${sanitizarHTML(e.clienteEmail)}</span>` : ''}</td>
+        <td><strong>${sanitizarHTML(e.clienteNome) || '—'}</strong>${atrasada ? ' <span class="enc-badge-atraso">atrasada</span>' : ''}<br><span style="font-size:0.75rem;color:var(--text-muted);">${sanitizarHTML(e.clienteEmail || '')}</span></td>
         <td>${sanitizarRich(e.descricao) || '—'}</td>
         <td>${formatarMoeda(e.valor || 0)}</td>
+        <td>
+          <div class="enc-progresso enc-progresso-fino">
+            <div class="enc-progresso-trilha"><div class="enc-progresso-barra" style="width:${avanco}%;background:${st.cor};"></div></div>
+            <span class="enc-progresso-pct" style="color:${st.cor};font-size:0.68rem;">${avanco}%</span>
+          </div>
+          ${pendente > 0
+            ? `<span style="font-size:0.7rem;color:var(--text-muted);">devendo <strong style="color:#dc2626;">${formatarMoeda(pendente)}</strong></span>`
+            : `<span style="font-size:0.7rem;color:#16a34a;font-weight:600;">pago ${formatarMoeda(this.totalPago(e))}</span>`}
+        </td>
         <td>${prazoHtml}</td>
         <td><span class="tag-status ${this.classeStatus(e.status)}" style="background:${st.cor}20;color:${st.cor};">${st.rotulo}</span></td>
         <td>
+          <button class="btn-miniatura btn-pagar-enc" data-id="${e.id}" title="Registrar pagamento" aria-label="Registrar pagamento"><i data-lucide="credit-card"></i></button>
           <button class="btn-miniatura btn-portal-enc" data-id="${e.id}" title="Gerar link do portal" aria-label="Gerar link do portal"><i data-lucide="link"></i></button>
           <button class="btn-miniatura btn-editar-enc" data-id="${e.id}" title="Editar" aria-label="Editar encomenda"><i data-lucide="pen"></i></button>
           <button class="btn-miniatura btn-atualizar-enc" data-id="${e.id}" title="Adicionar atualização" aria-label="Adicionar atualização"><i data-lucide="pencil"></i></button>
@@ -292,8 +365,9 @@ export class EncomendasView extends BaseView {
           <div><label>Telefone</label><input type="text" id="encClienteTel" value="${sanitizarHTML(e.clienteTelefone || '')}" aria-label="Telefone" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
         <div class="campo-form"><label>Descrição</label><textarea id="encDescricao" aria-label="Descrição" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;min-height:60px;background:var(--bg);color:var(--text);">${sanitizarHTML(e.descricao || '')}</textarea></div>
-        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div><label>Valor (R$)</label><input type="number" id="encValor" value="${e.valor || 0}" min="0" step="0.01" aria-label="Valor" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Sinal (R$)</label><input type="number" id="encSinal" value="${e.sinal || 0}" min="0" step="0.01" aria-label="Sinal" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
           <div><label>Prazo</label><input type="date" id="encPrazo" value="${e.prazo ? new Date(e.prazo).toISOString().slice(0, 10) : ''}" aria-label="Prazo" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
         </div>
         <div class="campo-form"><label>Status</label>
@@ -416,6 +490,72 @@ export class EncomendasView extends BaseView {
     });
   }
 
+  abrirModalPagamento(encId) {
+    const enc = this.dataStore.buscarPorId('encomendas', encId);
+    if (!enc) { mostrarToast('Encomenda não encontrada.', 'aviso'); return; }
+    const total = Number(enc.valor) || 0;
+    const pago = this.totalPago(enc);
+    const pendente = Math.max(0, total - pago);
+    const pagamentos = (enc.pagamentos || []).map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:0.8rem;">
+        <span>${formatarMoeda(p.valor)} · ${formatarData(p.data)} · ${sanitizarHTML(p.forma || '—')}</span>
+        <button type="button" class="btn-remover-pagamento" data-idx="${enc.pagamentos?.indexOf(p)}" style="background:none;border:none;color:#dc2626;cursor:pointer;" aria-label="Remover pagamento"><i data-lucide="trash-2"></i></button>
+      </div>`).join('');
+    abrirModal(`
+      <h3><i data-lucide="credit-card"></i> Pagamentos — ${sanitizarHTML(enc.clienteNome)}</h3>
+      <div class="cert-kpis" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo">Total</div><div class="kpi-valor" style="font-size:1rem;">${formatarMoeda(total)}</div></div>
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo">Pago</div><div class="kpi-valor" style="font-size:1rem;color:#16a34a;">${formatarMoeda(pago)}</div></div>
+        <div class="kpi-card" style="padding:8px;"><div class="kpi-rotulo">Devendo</div><div class="kpi-valor" style="font-size:1rem;color:${pendente > 0 ? '#dc2626' : 'var(--text)'};">${formatarMoeda(pendente)}</div></div>
+      </div>
+      ${pagamentos ? `<div style="margin-bottom:12px;">${pagamentos}</div>` : '<p class="texto-ajuda" style="margin-bottom:12px;">Nenhum pagamento registrado ainda.</p>'}
+      <form id="formPagamentoEncomenda">
+        <div class="campo-form" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div><label>Valor (R$)</label><input type="number" id="pagValor" value="${pendente > 0 ? pendente : ''}" min="0" step="0.01" aria-label="Valor do pagamento" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Data</label><input type="date" id="pagData" value="${new Date().toISOString().slice(0, 10)}" aria-label="Data do pagamento" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);"></div>
+          <div><label>Forma</label><select id="pagForma" aria-label="Forma de pagamento" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;width:100%;background:var(--bg);color:var(--text);">
+            <option>Pix</option><option>Cartão</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option>
+          </select></div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarPag">Cancelar</button>
+          <button type="submit" class="btn-primario"><i data-lucide="credit-card"></i> Registrar Pagamento</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('btnCancelarPag')?.addEventListener('click', fecharModal);
+    document.querySelector('.modal-caixa')?.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.btn-remover-pagamento');
+      if (!btn) return;
+      const i = Number(btn.dataset.idx);
+      const atuais = (enc.pagamentos || []).slice();
+      if (i >= 0 && i < atuais.length) {
+        atuais.splice(i, 1);
+        this.dataStore.atualizar('encomendas', enc.id, { pagamentos: atuais });
+        fecharModal();
+        this.abrirModalPagamento(enc.id);
+        this.rerenderizar();
+      }
+    });
+    document.getElementById('formPagamentoEncomenda')?.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const valor = Number(document.getElementById('pagValor')?.value) || 0;
+      const data = document.getElementById('pagData')?.value || new Date().toISOString().slice(0, 10);
+      const forma = document.getElementById('pagForma')?.value || 'Outro';
+      if (valor <= 0) { mostrarToast('Informe um valor válido.', 'aviso'); return; }
+      const atuais = (enc.pagamentos || []).slice();
+      atuais.push({ valor, data, forma });
+      const atualizacoes = (enc.atualizacoes || []).slice();
+      if (this.totalPago({ ...enc, pagamentos: atuais, sinal: enc.sinal || 0 }) >= (Number(enc.valor) || 0)) {
+        atualizacoes.push({ data: new Date().toISOString(), status: enc.status, mensagem: 'Pagamento integral recebido. ✅' });
+      }
+      this.dataStore.atualizar('encomendas', enc.id, { pagamentos: atuais, atualizacoes });
+      mostrarToast(`Pagamento de ${formatarMoeda(valor)} registrado!`, 'sucesso');
+      fecharModal();
+      this.rerenderizar();
+    });
+  }
+
   abrirModalPortais() {
     const portais = this.dataStore.listar('portais') || [];
     const clientes = clienteStore().items;
@@ -499,6 +639,7 @@ export class EncomendasView extends BaseView {
       clienteTelefone: document.getElementById('encClienteTel')?.value?.trim() || '',
       descricao: document.getElementById('encDescricao')?.value?.trim() || '',
       valor: Number(document.getElementById('encValor')?.value) || 0,
+      sinal: Number(document.getElementById('encSinal')?.value) || 0,
       prazo: document.getElementById('encPrazo')?.value || '',
       status: document.getElementById('encStatus')?.value || 'recebido'
     };
@@ -518,11 +659,13 @@ export class EncomendasView extends BaseView {
     if (encExistente && encExistente.id) {
       const atual = this.dataStore.buscarPorId('encomendas', encExistente.id);
       dados.atualizacoes = atual?.atualizacoes || [];
+      dados.pagamentos = atual?.pagamentos || [];
       this.dataStore.atualizar('encomendas', encExistente.id, dados);
       mostrarToast('Encomenda atualizada!', 'sucesso');
       activityLogger.registrar('atualizacao', 'Encomenda atualizada', dados.clienteNome, 'atualizacao');
     } else {
       dados.atualizacoes = [{ data: new Date().toISOString(), status: 'recebido', mensagem: 'Pedido registrado.' }];
+      dados.pagamentos = [];
       this.dataStore.adicionar('encomendas', dados);
       mostrarToast('Encomenda criada!', 'sucesso');
       activityLogger.registrar('criacao', 'Nova encomenda', dados.clienteNome, 'criacao');
@@ -724,6 +867,9 @@ export class EncomendasView extends BaseView {
     document.getElementById('bulkExcluirEnc')?.addEventListener('click', () => this.bulkAcao('excluir'));
     document.getElementById('bulkCancelarEnc')?.addEventListener('click', () => { this.selecionados.clear(); this.rerenderizar(); });
 
+    document.querySelectorAll('.btn-pagar-enc').forEach(btn => {
+      btn.addEventListener('click', () => this.abrirModalPagamento(btn.dataset.id));
+    });
     document.querySelectorAll('.btn-portal-enc').forEach(btn => {
       btn.addEventListener('click', () => {
         const enc = this.dataStore.buscarPorId('encomendas', btn.dataset.id);

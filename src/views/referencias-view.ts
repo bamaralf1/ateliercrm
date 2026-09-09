@@ -28,10 +28,14 @@ export class ReferenciasView extends BaseView {
   }
 
   render() {
+    const allRefs = this.dataStore.listar('referencias');
     const refs = this.referenciasFiltradas();
     const tags = this.tagsDisponiveis();
     const categorias = this.categoriasDisponiveis();
     const obras = obraStore().items;
+    const nImg = allRefs.filter(r => r.tipo === 'imagem').length;
+    const nLink = allRefs.filter(r => r.tipo === 'link').length;
+    const nNota = allRefs.filter(r => r.tipo !== 'imagem' && r.tipo !== 'link').length;
 
     const cardsHtml = refs.length ? `
       <div class="grid-referencias" id="gridReferencias">
@@ -53,6 +57,13 @@ export class ReferenciasView extends BaseView {
           <button class="btn-secundario" id="btnApresentarReferencias">📺 Apresentar</button>
           <button class="btn-primario" id="btnNovaReferencia"><i data-lucide="plus"></i> Nova Referência</button>
         </div>
+      </div>
+
+      <div class="kpi-grid ref-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="shapes"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Referências</div><div class="kpi-valor">${allRefs.length}</div><div class="kpi-sub">${categorias.length} categoria(s)</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="images"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Imagens</div><div class="kpi-valor">${nImg}</div><div class="kpi-sub">moodboard visual</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="link"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Links</div><div class="kpi-valor">${nLink}</div><div class="kpi-sub">referências externas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="pencil"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Notas</div><div class="kpi-valor">${nNota}</div><div class="kpi-sub">ideias e anotações</div></div></div>
       </div>
 
       <div class="catalogo-filtros">

@@ -11,6 +11,13 @@ export class ExposicoesView extends BaseView {
     const todas = this.dataStore.listar('exposicoes') || [];
 
     const ativas = todas.filter(e => e.status !== 'encerrada').length;
+    const encerradas = todas.filter(e => e.status === 'encerrada').length;
+    const agora = new Date();
+    const proximas = todas.filter(e => {
+      if (e.status === 'encerrada' || !e.data) return false;
+      const d = new Date(e.data + (e.data.length === 10 ? 'T00:00:00' : ''));
+      return d >= agora && (d - agora) <= 30 * 86400000;
+    }).length;
 
     const conteudo = exposicoes.length > 0
       ? (this.modo === 'lista' ? this.renderTabela(exposicoes) : this.renderCards(exposicoes))
@@ -34,6 +41,12 @@ export class ExposicoesView extends BaseView {
           <button class="btn-gradient" id="btnNovaExposicao">✚ Nova Exposicao</button>
         </div>
       </div>
+      <div class="kpi-grid expo-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="calendar"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Exposições</div><div class="kpi-valor">${todas.length}</div><div class="kpi-sub">no histórico</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="calendar-check"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Ativas</div><div class="kpi-valor">${ativas}</div><div class="kpi-sub">planejada/confirmada</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="hourglass"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Próximas (30d)</div><div class="kpi-valor">${proximas}</div><div class="kpi-sub">aguardando data</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="flag"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Encerradas</div><div class="kpi-valor">${encerradas}</div><div class="kpi-sub">concluídas</div></div></div>
+      </div>
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}
       <div class="catalogo-filtros">
         <div class="campo-filtro busca">
@@ -46,7 +59,9 @@ export class ExposicoesView extends BaseView {
   }
 
   renderTabela(exposicoes) {
-    const linhas = exposicoes.map(ex => `
+    const linhas = exposicoes.map(ex => {
+      const dias = this.diasAte(ex.data);
+      return `
       <tr class="${this.selecionados.has(ex.id) ? 'linha-selecionada' : ''}">
         <td onclick="event.stopPropagation()">
           <input type="checkbox" class="checkbox-item-exp" data-id="${ex.id}" aria-label="Selecionar ${ex.nome || 'exposição'}" ${this.selecionados.has(ex.id) ? 'checked' : ''}>
@@ -54,21 +69,32 @@ export class ExposicoesView extends BaseView {
         <td><strong>${sanitizarHTML(ex.nome) || '-'}</strong></td>
         <td>${sanitizarHTML(ex.local) || '-'}</td>
         <td>${formatarData(ex.data)}</td>
+        <td>${dias === null ? '<span style="color:var(--text-muted);font-size:0.8rem;">—</span>' : (dias < 0 ? `<span style="color:var(--text-muted);font-size:0.8rem;">há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>` : (dias === 0 ? '<span style="color:#f59e0b;font-weight:700;">hoje!</span>' : `<span style="color:${dias <= 30 ? '#c9a227' : 'var(--text)'};font-size:0.85rem;">em ${dias} dia${dias === 1 ? '' : 's'}</span>`))}</td>
         <td><span class="tag-status ${ex.status === 'confirmada' ? 'exposicao' : ex.status === 'encerrada' ? 'vendida' : ''}" style="background:${ex.status === 'confirmada' ? '#16a34a20' : ex.status === 'encerrada' ? '#6b728020' : '#f59e0b20'};color:${ex.status === 'confirmada' ? '#16a34a' : ex.status === 'encerrada' ? '#6b7280' : '#f59e0b'};">${ex.status || 'planejada'}</span></td>
         <td class="acoes-linha-tabela">
           <button class="btn-icone-tabela" data-editar-expo="${ex.id}" title="Editar" aria-label="Editar exposição"><i data-lucide="pen"></i></button>
           <button class="btn-icone-tabela" data-excluir-expo="${ex.id}" title="Excluir" aria-label="Excluir exposição" style="color:#dc2626;"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
     return `
       <div class="tabela-wrapper">
         <table>
           <caption class="sr-only">Lista de exposições</caption>
-          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>Local</th><th>Data</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th style="width:36px;"></th><th>Nome</th><th>Local</th><th>Data</th><th>Faltam</th><th>Status</th><th></th></tr></thead>
           <tbody>${linhas}</tbody>
         </table>
       </div>`;
+  }
+
+  diasAte(data) {
+    if (!data) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const d = new Date(data + (data.length === 10 ? 'T00:00:00' : ''));
+    if (isNaN(d.getTime())) return null;
+    return Math.round((d - hoje) / 86400000);
   }
 
   renderCards(exposicoes) {

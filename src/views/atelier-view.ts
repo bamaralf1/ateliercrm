@@ -23,9 +23,22 @@
       fornecedores: () => this.renderFornecedores(),
       custo: () => this.renderCustoObra()
     };
+    const materiais = this.materiais;
+    const alertas = materiais.filter(m => { const q = Number(m.quantidade) || 0; const min = Number(m.quantidadeMinima) || 0; return min > 0 && q <= min; }).length;
+    const valorEstoque = materiais.reduce((s, m) => s + (Number(m.quantidade) || 0) * (Number(m.precoUnitario) || 0), 0);
+    const gastoConsumo = this.consumos.reduce((s, c) => {
+      const m = materiais.find(x => x.id === c.materialId);
+      return s + (m && m.precoUnitario ? Number(c.quantidade) * Number(m.precoUnitario) : 0);
+    }, 0);
 
     return `
       <div>
+        <div class="kpi-grid atelier-kpis stagger-in">
+          <div class="kpi-card"><div class="kpi-icone">📦</div><div class="kpi-conteudo"><div class="kpi-rotulo">Itens em estoque</div><div class="kpi-valor">${materiais.length}</div><div class="kpi-sub">${materiais.filter(m => Number(m.quantidade) > 0).length} com saldo</div></div></div>
+          <div class="kpi-card" style="${alertas ? '--kpi-cor:#dc2626' : ''}"><div class="kpi-icone">⚠️</div><div class="kpi-conteudo"><div class="kpi-rotulo">Alertas</div><div class="kpi-valor" style="${alertas ? 'color:#dc2626' : ''}">${alertas}</div><div class="kpi-sub">abaixo do mínimo</div></div></div>
+          <div class="kpi-card"><div class="kpi-icone">💰</div><div class="kpi-conteudo"><div class="kpi-rotulo">Valor do estoque</div><div class="kpi-valor">${formatarMoeda(Math.round(valorEstoque))}</div><div class="kpi-sub">qtd × custo unit.</div></div></div>
+          <div class="kpi-card"><div class="kpi-icone">📉</div><div class="kpi-conteudo"><div class="kpi-rotulo">Gasto em consumo</div><div class="kpi-valor">${formatarMoeda(Math.round(gastoConsumo))}</div><div class="kpi-sub">${this.consumos.length} registro(s)</div></div></div>
+        </div>
         <div class="atelier-tabs">
           ${tabs.map(t => `<button class="tab-btn ${t === this.tabAtiva ? 'ativo' : ''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}
         </div>
@@ -56,12 +69,15 @@
     `;
   }
 
-  renderCardMaterial(m) {
+renderCardMaterial(m) {
     const qtd = Number(m.quantidade) || 0;
     const min = Number(m.quantidadeMinima) || 0;
     const nivel = qtd <= 0 ? 'baixo' : (min > 0 && qtd <= min ? 'baixo' : (min > 0 && qtd <= min * 2 ? 'medio' : 'ok'));
     const badgeLabel = nivel === 'baixo' ? '⚠️ Repor' : (nivel === 'medio' ? '⚠️ Atenção' : '✅ OK');
     const categoria = m.categoria || 'outros';
+    const meta = min > 0 ? min * 2 : 0;
+    const pct = meta > 0 ? Math.min(100, Math.round(qtd / meta * 100)) : (qtd > 0 ? 100 : 0);
+    const valorItem = (Number(m.quantidade) || 0) * (Number(m.precoUnitario) || 0);
 
     return `
       <div class="mat-card">
@@ -77,10 +93,15 @@
             <span class="mat-badge ${nivel}">${badgeLabel}</span>
           </div>
         </div>
+        <div class="mat-bar">
+          <div class="mat-bar-fill ${nivel}" style="width:${pct}%;"></div>
+        </div>
+        <div class="mat-bar-label">${min > 0 ? `${pct}% do ideal (mín. ${min} ${m.unidade || 'un'})` : 'sem mínimo definido'}</div>
         <div class="mat-detalhes">
           ${m.marca ? `<span>🏷️ ${m.marca}</span>` : ''}
           ${m.local ? `<span>📍 ${m.local}</span>` : ''}
           ${m.precoUnitario ? `<span>💰 R$ ${Number(m.precoUnitario).toFixed(2)}/${m.unidade || 'un'}</span>` : ''}
+          ${m.precoUnitario ? `<span>💵 <strong>${formatarMoeda(Math.round(valorItem))}</strong> no item</span>` : ''}
           ${m.dataAquisicao ? `<span>📅 ${m.dataAquisicao}</span>` : ''}
           ${m.validade ? `<span>⏳ Val: ${m.validade}</span>` : ''}
         </div>
@@ -264,6 +285,10 @@
         <div class="custo-obra-card">
           <div class="co-valor ${margemClass}">${margem > 0 ? margem.toFixed(1) + '%' : '—'}</div>
           ${margem > 0 ? `<div class="co-label">📊 Margem de lucro ${margem >= 60 ? '✔' : (margem >= 30 ? '⚠️' : '🔽')}</div>` : '<div class="co-label">Sem venda definida</div>'}
+        </div>
+        <div class="custo-obra-card">
+          <div class="co-valor ${precoVenda > 0 ? 'lucro-alta' : ''}">${precoVenda > 0 ? formatarMoeda(Math.round(precoVenda - custoTotal)) : '—'}</div>
+          <div class="co-label">💵 Lucro potencial</div>
         </div>
       </div>
       ${rows.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum material registrado como consumido nesta obra.</p>' : `

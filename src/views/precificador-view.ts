@@ -108,6 +108,7 @@ export class PrecificadorView extends BaseView {
 
         <div class="prec-painel" id="precPainel${tabMap.calcular}"${visibilidade('calcular')}>
           <div class="card">
+            <div class="taxas-chips" id="taxasChips">${this.renderTaxasChips()}</div>
             <h3>🧮 Calculadora de Preço <span class="badge">Orçamento</span></h3>
             <div class="calc-grid">
             <div class="campo-calc" style="grid-column:1/-1">
@@ -518,6 +519,16 @@ export class PrecificadorView extends BaseView {
     const b = this.calcularBreakdown(this.calc);
     const formula = `${this.fmt(b.materiais)} + (${b.horas}h × ${this.fmt(b.valorHora)}) = ${this.fmt(b.custoTotal)}`;
     return `${formula} × ${b.mult} × ${b.fator}${b.bonus !== 1 ? ` × ${b.bonus.toFixed(2)} (área)` : ''} = ${this.fmt(preco)}`;
+  }
+
+  renderTaxasChips() {
+    const tx = this.taxas || {};
+    const chips = ['USD', 'EUR', 'GBP'].map(m => {
+      const taxa = tx[m];
+      if (!taxa) return '';
+      return `<span class="taxa-chip">1 ${m} = ${this.fmt(taxa, 'BRL')}</span>`;
+    }).filter(Boolean).join('');
+    return chips ? `<div class="texto-ajuda">Taxas de câmbio: ${chips} <button class="btn-miniatura" id="btnTaxasChipsEditar" title="Editar taxas"><i data-lucide="settings"></i></button></div>` : '';
   }
 
   renderBreakdown(b) {
@@ -1204,6 +1215,9 @@ export class PrecificadorView extends BaseView {
     }
 
     document.getElementById('btnEditarTaxas')?.addEventListener('click', () => {
+      document.getElementById('taxasOverlay').style.display = 'flex';
+    });
+    document.getElementById('btnTaxasChipsEditar')?.addEventListener('click', () => {
       document.getElementById('taxasOverlay').style.display = 'flex';
     });
     document.getElementById('btnFecharTaxas')?.addEventListener('click', () => {

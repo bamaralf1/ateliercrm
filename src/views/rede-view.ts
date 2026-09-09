@@ -19,7 +19,22 @@ export class RedeView extends BaseView {
     const tabs = ['contatos', 'pipeline', 'interacoes', 'eventos', 'mapa'];
     const tabLabels = { contatos: '📋 Contatos', pipeline: '🔞 Pipeline', interacoes: '📹 Interacoes', eventos: '🎪 Eventos', mapa: '🔺️ Mapa de Influencia' };
     const content = { contatos: () => this.renderContatos(), pipeline: () => this.renderPipeline(), interacoes: () => this.renderInteracoes(), eventos: () => this.renderEventos(), mapa: () => this.renderMapa() };
-    return `<div><div class="rede-tabs">${tabs.map(t => `<button class="tab-btn ${t === this.tabAtiva ? 'ativo' : ''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}</div><div id="redeContent">${content[this.tabAtiva]()}</div></div>`;
+    const hoje = new Date();
+    const nCont = this.contatos.length;
+    const nInter = this.interacoes.length;
+    const nEvt = this.eventos.length;
+    const nPend = this.contatos.filter(c => {
+      if (!c.ultimoContato) return false;
+      return (hoje - new Date(c.ultimoContato)) / 86400000 > 30;
+    }).length;
+    return `<div>
+      <div class="kpi-grid rede-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="users"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Contatos</div><div class="kpi-valor">${nCont}</div><div class="kpi-sub">na rede</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="messages-square"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Interações</div><div class="kpi-valor">${nInter}</div><div class="kpi-sub">registradas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="tent"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Eventos</div><div class="kpi-valor">${nEvt}</div><div class="kpi-sub">na agenda</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="bell-ring"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Follow-ups</div><div class="kpi-valor" style="color:${nPend > 0 ? '#c9a227' : '#16a34a'};">${nPend}</div><div class="kpi-sub">sem contato >30d</div></div></div>
+      </div>
+      <div class="rede-tabs">${tabs.map(t => `<button class="tab-btn ${t === this.tabAtiva ? 'ativo' : ''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}</div><div id="redeContent">${content[this.tabAtiva]()}</div></div>`;
   }
 
   // --- CONTATOS ---

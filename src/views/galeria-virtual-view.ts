@@ -64,6 +64,10 @@ export class GaleriaVirtualView {
     const preco = obra.preco ? formatarMoeda(obra.preco) : '';
     const descricao = obra.descricao || '';
     const meta = [tecnica, ano].filter(Boolean).join(' · ');
+    const valorGaleria = this.obrasVisiveis.reduce((s, o) => s + (Number(o.preco) || 0), 0);
+    const statusObra = (obra.status || '').toLowerCase().replace('é', 'e').replace('í', 'i');
+    const statusPill = statusObra.includes('disponiv') ? '<span class="gv-status gv-status-dispo">Disponível</span>' : (statusObra.includes('exposica') ? '<span class="gv-status gv-status-expo">Em exposição</span>' : '');
+    const stats = `<div class="gv-stats"><span><i data-lucide="layout-grid"></i> ${this.obrasVisiveis.length} obra${this.obrasVisiveis.length === 1 ? '' : 's'}</span><span class="gv-stats-dot">•</span><span><i data-lucide="dollar-sign"></i> ${formatarMoeda(Math.round(valorGaleria))} em exposição</span></div>`;
 
     const thumbs = this.obrasVisiveis.map((o, i) => `
       <div class="gv-thumb ${i === this.indiceAtual ? 'ativo' : ''}" data-indice="${i}" title="${o.titulo || ''}">
@@ -74,7 +78,10 @@ export class GaleriaVirtualView {
     return `
       <div class="galeria-virtual gv-2d" id="galeriaContainer">
         <div class="barra-topo">
-          <h2>🏛️ Galeria Virtual</h2>
+          <div>
+            <h2>🏛️ Galeria Virtual</h2>
+            ${stats}
+          </div>
           <div class="acoes-barra">
             <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria"><i data-lucide="link"></i> Compartilhar</button>
             <button class="btn-bar ${this.tourAtivo ? 'ativo' : ''}" id="btnTourToggle" title="Iniciar tour guiado">🎧 Tour</button>
@@ -87,7 +94,7 @@ export class GaleriaVirtualView {
               <div class="gv-legenda">
                 <div class="gv-titulo">${titulo}</div>
                 ${meta ? `<div class="gv-meta">${meta}</div>` : ''}
-                ${preco ? `<div class="gv-preco">${preco}</div>` : ''}
+                <div class="gv-preco-linha">${preco ? `<span class="gv-preco">${preco}</span>` : ''}${statusPill}</div>
               </div>
             </div>
           </div>
@@ -234,6 +241,15 @@ export class GaleriaVirtualView {
       const preco = obra.preco ? formatarMoeda(obra.preco) : '';
       precoEl.textContent = preco;
       precoEl.style.display = preco ? '' : 'none';
+    }
+    const statusEl = document.querySelector('.gv-status');
+    if (statusEl) {
+      const st = (obra.status || '').toLowerCase().replace('é', 'e').replace('í', 'i');
+      const dispo = st.includes('disponiv');
+      const expo = st.includes('exposica');
+      statusEl.textContent = expo ? 'Em exposição' : 'Disponível';
+      statusEl.className = 'gv-status ' + (expo ? 'gv-status-expo' : 'gv-status-dispo');
+      statusEl.style.display = (dispo || expo) ? '' : 'none';
     }
     if (navIndicador) navIndicador.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length} obras`;
     if (tourProgresso) tourProgresso.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length}`;

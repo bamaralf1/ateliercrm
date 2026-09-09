@@ -12,6 +12,10 @@ export class FinanceiroView extends BaseView {
     const entradas = todas.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor || 0), 0);
     const saidas = todas.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor || 0), 0);
     const saldo = entradas - saidas;
+    const mesAtual = new Date().toISOString().slice(0, 7);
+    const entradasMes = todas.filter(t => t.tipo === 'entrada' && (t.data || '').startsWith(mesAtual)).reduce((s, t) => s + Number(t.valor || 0), 0);
+    const saidasMes = todas.filter(t => t.tipo === 'saida' && (t.data || '').startsWith(mesAtual)).reduce((s, t) => s + Number(t.valor || 0), 0);
+    const resultadoMes = entradasMes - saidasMes;
 
     const linhas = transacoes.map(t => `
       <tr class="${this.selecionados.has(t.id) ? 'linha-selecionada' : ''}">
@@ -19,7 +23,7 @@ export class FinanceiroView extends BaseView {
           <input type="checkbox" class="checkbox-item-fin" data-id="${t.id}" aria-label="Selecionar ${t.descricao || 'transação'}" ${this.selecionados.has(t.id) ? 'checked' : ''}>
         </td>
         <td>${sanitizarRich(t.descricao)}</td>
-        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '<i data-lucide="dollar-sign"></i> Entrada' : '💸 Saida'}</span></td>
+        <td><span class="tag-status ${t.tipo === 'entrada' ? 'vendida' : ''}" style="background:${t.tipo === 'entrada' ? '#16a34a20' : '#dc262620'};color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '<i data-lucide="dollar-sign"></i> Entrada' : '<i data-lucide="trending-down"></i> Saída'}</span></td>
         <td style="font-weight:600;color:${t.tipo === 'entrada' ? '#16a34a' : '#dc2626'};">${t.tipo === 'entrada' ? '+' : '-'}${formatarMoeda(t.valor)}</td>
         <td>${formatarData(t.data)}</td>
         <td class="acoes-linha-tabela">
@@ -72,10 +76,11 @@ export class FinanceiroView extends BaseView {
         </div>
       </div>
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}
-      <div class="grid-cards">
-        <div class="card"><div class="rotulo-card" style="color:#16a34a;"><i data-lucide="dollar-sign"></i> Entradas</div><div class="valor-card">${formatarMoeda(entradas)}</div></div>
-        <div class="card"><div class="rotulo-card" style="color:#dc2626;">💸 Saidas</div><div class="valor-card">${formatarMoeda(saidas)}</div></div>
-        <div class="card"><div class="rotulo-card">🏦 Saldo</div><div class="valor-card" style="color:${saldo >= 0 ? '#16a34a' : '#dc2626'};">${formatarMoeda(saldo)}</div></div>
+      <div class="kpi-grid fin-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="dollar-sign"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Entradas</div><div class="kpi-valor" style="color:#16a34a;">${formatarMoeda(entradas)}</div><div class="kpi-sub">total histórico</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="trending-down"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Saídas</div><div class="kpi-valor" style="color:#dc2626;">${formatarMoeda(saidas)}</div><div class="kpi-sub">custos e despesas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="landmark"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Saldo</div><div class="kpi-valor" style="color:${saldo >= 0 ? '#16a34a' : '#dc2626'};">${formatarMoeda(saldo)}</div><div class="kpi-sub">entradas − saídas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="calendar-days"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Mês atual</div><div class="kpi-valor" style="color:${resultadoMes >= 0 ? '#16a34a' : '#dc2626'};">${formatarMoeda(resultadoMes)}</div><div class="kpi-sub">${formatarMoeda(entradasMes)} in · ${formatarMoeda(saidasMes)} out</div></div></div>
       </div>
       ${categorias.length ? `<div class="card" style="margin-top:12px;padding:12px 16px;"><h4 style="margin:0 0 6px;font-size:0.82rem;">Categorias</h4>${catsHtml}</div>` : ''}
       <div class="catalogo-filtros" style="margin-top:12px;">

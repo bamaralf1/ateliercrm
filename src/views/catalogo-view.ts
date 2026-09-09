@@ -46,6 +46,11 @@ export class CatalogoView extends BaseView {
   render() {
     const obras = this.obrasFiltradas();
     const anos = this.anosDisponiveis();
+    const todasObras = obraStore().items;
+    const valorAcervo = todasObras.reduce((s, o) => s + (Number(o.preco) || 0), 0);
+    const nDisponiveis = todasObras.filter(o => (o.status || 'disponível').toLowerCase() === 'disponível' || classeStatus(o.status) === 'disponível').length;
+    const nVendidas = todasObras.filter(o => (o.status || '').toLowerCase() === 'vendida' || classeStatus(o.status) === 'vendida').length;
+    const nFavoritas = todasObras.filter(o => o.favorita).length;
 
     const conteudoLista = this._skeletonAtivo && this.modo === 'grid'
       ? this.renderSkeletonGrid()
@@ -73,6 +78,13 @@ export class CatalogoView extends BaseView {
             <button id="btnModoLista" class="${this.modo === 'lista' ? 'ativo' : ''}" title="Visualização em lista">☰ Lista</button>
           </div>
         </div>
+      </div>
+
+      <div class="kpi-grid catalogo-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="image"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Acervo</div><div class="kpi-valor">${todasObras.length}</div><div class="kpi-sub">obras cadastradas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="gem"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Valor do acervo</div><div class="kpi-valor">${formatarMoeda(valorAcervo)}</div><div class="kpi-sub">soma dos preços</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="circle-check"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Disponíveis</div><div class="kpi-valor" style="color:#16a34a;">${nDisponiveis}</div><div class="kpi-sub">no ateliê</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="star"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Favoritas</div><div class="kpi-valor" style="color:#c9a227;">${nFavoritas}</div><div class="kpi-sub">· ${nVendidas} vendida${nVendidas === 1 ? '' : 's'}</div></div></div>
       </div>
 
       ${this.selecionados.size > 0 ? this.renderBarraBulk() : ''}

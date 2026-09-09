@@ -51,7 +51,7 @@ export class DataStore {
       portais: [],
       config: {
         artista: { nome: 'Meu Ateliê', email: '', telefone: '', assinatura: '' },
-        tema: 'classico',
+        tema: 'dourado',
         contadorRecibos: {},
         contadorPropostas: {},
         contadorCertificados: {},

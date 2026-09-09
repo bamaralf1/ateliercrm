@@ -29,6 +29,8 @@ export class VendasView extends BaseView {
     const linhas = vendas.map(v => {
       const obra = obras.find(o => o.id === v.obraId);
       const cliente = clientes.find(c => c.id === v.clienteId);
+      const comissaoPct = Number(v.comissaoPct) || 0;
+      const liquido = comissaoPct > 0 ? Number(v.precoFinal) * (1 - comissaoPct / 100) : null;
       return `
         <tr class="${this.selecionados.has(v.id) ? 'linha-selecionada' : ''}">
           <td onclick="event.stopPropagation()">
@@ -36,7 +38,10 @@ export class VendasView extends BaseView {
           </td>
           <td>${obra ? obra.titulo : (v.obraTitulo ? v.obraTitulo : '<span style="color:var(--text-muted)">Obra removida</span>')}</td>
           <td>${cliente ? cliente.nome : (v.clienteNome ? v.clienteNome : '-')}</td>
-          <td>${formatarMoeda(v.precoFinal)}</td>
+          <td>
+            <div style="font-weight:600;font-variant-numeric:tabular-nums;">${formatarMoeda(v.precoFinal)}</div>
+            ${liquido !== null ? `<div style="font-size:0.7rem;color:var(--text-muted);">líquido ${formatarMoeda(liquido)}${v.comissaoNome ? ' · ' + sanitizarHTML(v.comissaoNome) : ''}</div>` : ''}
+          </td>
           <td>${formatarData(v.data)}</td>
           <td>${capitalizarTexto(v.formaPagamento)}</td>
           <td>
@@ -72,10 +77,27 @@ export class VendasView extends BaseView {
     vendas.forEach(v => { const k = rotuloStatusVenda(v.status); statusCount[k] = (statusCount[k] || 0) + 1; });
     const statusSummary = Object.entries(statusCount).map(([k, v]) => `<span class="chip-filtro" style="font-size:0.72rem;padding:2px 8px;cursor:default;">${k}: ${v}</span>`).join(' ');
 
+    // KPIs premium (V17)
+    const hoje = new Date();
+    const mes = hoje.getMonth(); const ano = hoje.getFullYear();
+    const vendasMes = vendaStore().items.filter(v => { const d = new Date(v.data || v.dataVenda || v.criadoEm); return d.getMonth() === mes && d.getFullYear() === ano; });
+    const receitaMes = vendasMes.reduce((s, v) => s + Number(v.precoFinal || 0), 0);
+    const aReceber = vendaStore().items.filter(v => v.status === 'negociação' || v.status === 'aprovada').reduce((s, v) => s + Number(v.precoFinal || 0), 0);
+    const ticketMedio = totalVendas > 0 ? totalVendas / Math.max(1, vendas.length) : 0;
+    const liquidoTotal = totalVendas - vendaStore().items.reduce((s, v) => s + (Number(v.precoFinal || 0) * (Number(v.comissaoPct) || 0) / 100), 0);
+
+    const kpis = `
+      <div class="kpi-grid cert-kpis stagger-in">
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="bar-chart-3"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Faturamento no mês</div><div class="kpi-valor">${formatarMoeda(receitaMes)}</div><div class="kpi-sub">${vendasMes.length} venda${vendasMes.length === 1 ? '' : 's'}</div></div></div>
+        <div class="kpi-card" style="--kpi-cor:${aReceber > 0 ? '#d97706' : '#16a34a'}"><div class="kpi-icone"><i data-lucide="clock"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">A receber</div><div class="kpi-valor">${formatarMoeda(aReceber)}</div><div class="kpi-sub">negociação + aprovada</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="receipt"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Ticket médio</div><div class="kpi-valor">${formatarMoeda(ticketMedio)}</div><div class="kpi-sub">${vendas.length} venda${vendas.length === 1 ? '' : 's'} no filtro</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="piggy-bank"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Líquido (sem comissões)</div><div class="kpi-valor">${formatarMoeda(liquidoTotal)}</div><div class="kpi-sub">comissões: ${formatarMoeda(totalVendas - liquidoTotal)}</div></div></div>
+      </div>`;
+
     return `
       <div class="view-cabecalho">
         <div>
-          <h2>Vendas</h2>
+          <h2><i data-lucide="handshake"></i> Vendas</h2>
           <p class="subtitulo">${vendas.length} venda${vendas.length === 1 ? '' : 's'} · ${formatarMoeda(totalVendas)} em negócios</p>
         </div>
         <div class="catalogo-acoes">
@@ -86,6 +108,7 @@ export class VendasView extends BaseView {
           <button class="btn-gradient" id="btnNovaVenda">✚ Nova Venda</button>
         </div>
       </div>
+      ${kpis}
       ${vendas.length > 0 ? `<div class="vendas-summary">${statusSummary}</div>` : ''}
       ${this.selecionados.size > 0 ? `
       <div class="bulk-actions-bar">
@@ -276,6 +299,17 @@ export class VendasView extends BaseView {
             </select>
           </div>
         </div>
+        <div class="form-linha">
+          <div class="campo-form">
+            <label>Comissão de galeria/agente (%)</label>
+            <input type="number" id="campoComissaoPct" min="0" max="90" step="1" value="0" aria-label="Comissão de galeria em percentual">
+          </div>
+          <div class="campo-form">
+            <label>Galeria/Agente</label>
+            <input type="text" id="campoComissaoNome" placeholder="Galeria X, Agente..." aria-label="Nome da galeria ou agente">
+          </div>
+        </div>
+        <div id="resumoComissao" class="comissao-resumo" style="font-size:0.8rem;color:var(--text-muted);"></div>
         <div class="modal-acoes">
           <button type="button" class="btn-secundario" id="btnCancelarVenda">Cancelar</button>
           <button type="submit" class="btn-primario">Confirmar Venda</button>
@@ -289,7 +323,24 @@ export class VendasView extends BaseView {
     document.getElementById('campoObraVenda').addEventListener('change', (e) => {
       const opt = e.target.selectedOptions[0];
       if (opt && opt.dataset.preco) document.getElementById('campoPrecoVenda').value = opt.dataset.preco;
+      atualizarResumoComissao();
     });
+    document.getElementById('campoPrecoVenda').addEventListener('input', atualizarResumoComissao);
+    document.getElementById('campoComissaoPct').addEventListener('input', atualizarResumoComissao);
+
+    function atualizarResumoComissao() {
+      const preco = Number(document.getElementById('campoPrecoVenda')?.value) || 0;
+      const pct = Math.min(90, Math.max(0, Number(document.getElementById('campoComissaoPct')?.value) || 0));
+      const resumo = document.getElementById('resumoComissao');
+      if (!resumo) return;
+      if (pct > 0 && preco > 0) {
+        const comissao = preco * pct / 100;
+        resumo.innerHTML = `<i data-lucide="piggy-bank"></i> Comissão: ${formatarMoeda(comissao)} · Seu líquido: <strong style="color:var(--accent);">${formatarMoeda(preco - comissao)}</strong>`;
+      } else {
+        resumo.innerHTML = '';
+      }
+      if (window.inicializarIconesLucide) window.inicializarIconesLucide();
+    }
 
     // Exibe o cadastro rápido de cliente quando "+ Cadastrar novo cliente" é escolhido
     document.getElementById('campoClienteVenda').addEventListener('change', (e) => {
@@ -325,7 +376,9 @@ export class VendasView extends BaseView {
         precoFinal: Number(preco),
         data: document.getElementById('campoDataVenda').value || new Date().toISOString().slice(0, 10),
         formaPagamento: document.getElementById('campoFormaPagamento').value,
-        status: document.getElementById('campoStatusVenda').value
+        status: document.getElementById('campoStatusVenda').value,
+        comissaoPct: Number(document.getElementById('campoComissaoPct')?.value) || 0,
+        comissaoNome: (document.getElementById('campoComissaoNome')?.value || '').trim()
       };
       vendaStore().adicionar(dadosVenda);
 
