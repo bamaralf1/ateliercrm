@@ -2627,10 +2627,10 @@
   .miniatura-imagem.destacada { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
   .miniatura-imagem img { width: 100%; height: 100%; object-fit: cover; }
   .miniaturas-acoes { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 2px; padding: 4px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); justify-content: center; }
-  .btn-miniatura { background: rgba(255,255,255,0.9); border: none; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
-  .btn-miniatura:hover { background: white; transform: scale(1.1); }
+  .btn-miniatura { background: color-mix(in srgb, var(--text) 7%, var(--card)); color: var(--text); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
+  .btn-miniatura:hover:not(.ativo) { background: color-mix(in srgb, var(--text) 12%, var(--card)); transform: scale(1.1); }
   .btn-miniatura.ativo { background: var(--accent); color: var(--accent-contrast); }
-  .btn-mover-esq, .btn-mover-dir { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 0.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+  .btn-mover-esq, .btn-mover-dir { position: absolute; top: 50%; transform: translateY(-50%); background: color-mix(in srgb, var(--text) 8%, var(--card)); color: var(--text); border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 0.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
   .miniatura-imagem:hover .btn-mover-esq, .miniatura-imagem:hover .btn-mover-dir { opacity: 1; }
   .btn-mover-esq { left: 2px; } .btn-mover-dir { right: 2px; }
   .texto-ajuda { font-size: 0.8rem; color: var(--text-muted); margin: 4px 0; }
@@ -3951,11 +3951,11 @@
     box-shadow: 0 10px 22px color-mix(in srgb, var(--kpi-cor) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.24);
   }
   .kpi-valor {
-    background: linear-gradient(135deg, var(--kpi-cor), color-mix(in srgb, var(--kpi-cor) 55%, var(--accent)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: var(--kpi-cor);
+    color: var(--kpi-cor, var(--text));
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    -webkit-text-fill-color: currentColor;
   }
   .kpi-sparkline svg { filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--kpi-cor) 45%, transparent)); }
 
