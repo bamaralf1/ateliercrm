@@ -227,13 +227,29 @@ export function rotuloStatusVenda(status) {
 
 export function gerarQRCodeDataUrl(texto) {
   const tamanho = 200;
-  if (typeof QRCode !== 'undefined') {
-    const div = document.createElement('div');
-    const qr = new QRCode(div, { text: texto, width: tamanho, height: tamanho, correctLevel: QRCode.CorrectLevel.H });
-    const canvas = div.querySelector('canvas');
-    const dataUrl = canvas ? canvas.toDataURL() : '';
-    qr.clear(); div.remove();
-    return dataUrl;
+  if (typeof qrcode === 'function') {
+    try {
+      const qr = qrcode(0, 'H');
+      qr.addData(texto, 'Byte');
+      qr.make();
+      const modulos = qr.getModuleCount();
+      const fator = Math.floor(tamanho / modulos) || 1;
+      const canvas = document.createElement('canvas');
+      canvas.width = modulos * fator;
+      canvas.height = modulos * fator;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#000000';
+      for (let x = 0; x < modulos; x++) {
+        for (let y = 0; y < modulos; y++) {
+          if (qr.isDark(x, y)) ctx.fillRect(x * fator, y * fator, fator, fator);
+        }
+      }
+      return canvas.toDataURL('image/png');
+    } catch (erro) {
+      console.warn('QR Code falhou, usando placeholder:', erro);
+    }
   }
   const canvas = document.createElement('canvas');
   canvas.width = tamanho;

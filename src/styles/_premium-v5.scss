@@ -1020,6 +1020,11 @@ body[data-high-contrast="true"] .header {
   font-family: var(--font-display, var(--font-principal));
   font-weight: 600;
   letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.kpi-conteudo {
+  min-width: 0;
 }
 
 /* ---------- Preço da obra em numeral serif ---------- */

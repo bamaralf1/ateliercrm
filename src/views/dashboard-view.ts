@@ -206,7 +206,7 @@ export class DashboardView extends BaseView {
     }
     if (pontos.every(p => p === 0)) return '';
     const max = Math.max(...pontos, 1);
-    const w = 80, h = 30;
+    const w = 56, h = 30;
     const pts = pontos.map((p, i) => `${(i / (pontos.length - 1)) * w},${h - (p / max) * h}`).join(' ');
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="var(--kpi-cor)" stroke-width="2" points="${pts}"/></svg>`;
   }

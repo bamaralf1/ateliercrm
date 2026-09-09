@@ -1319,13 +1319,9 @@ export class CatalogoView extends BaseView {
     }
   }
 
-  gerarQRCodeObra(obra) {
+  async gerarQRCodeObra(obra) {
     const container = document.getElementById('fichaQRCode');
     if (!container) return;
-    if (typeof QRCode === 'undefined') {
-      container.innerHTML = '<p class="texto-ajuda">QR Code indisponível.</p>';
-      return;
-    }
     try {
       const dados = JSON.stringify({
         titulo: obra.titulo,
@@ -1334,10 +1330,8 @@ export class CatalogoView extends BaseView {
         preco: obra.preco,
         dimensoes: this.formatarDimensoes(obra.dimensoes)
       });
-      container.innerHTML = '';
-      const qrDiv = document.createElement('div');
-      container.appendChild(qrDiv);
-      new QRCode(qrDiv, { text: dados, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      const dataUrl = await gerarQRCodeDataUrl(dados);
+      container.innerHTML = `<img src="${dataUrl}" alt="QR Code da obra" width="120" height="120" style="image-rendering:pixelated;">`;
     } catch (e) {
       container.innerHTML = '<p class="texto-ajuda">Erro ao gerar QR Code.</p>';
     }
