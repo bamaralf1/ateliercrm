@@ -1105,3 +1105,221 @@ svg[data-lucide] {
 body[data-high-contrast="true"] svg[data-lucide] {
   stroke-width: 2.25;
 }
+
+/* ---------- Contraste do texto no hover de botões (V14) ---------- */
+/* Halo universal: var(--bg) é o fundo do app — em tema claro halo creme, em tema
+   escuro halo escuro. Como o fundo dos botões é o --accent (tom oposto ao --bg),
+   o halo recorta as letras e aumenta a legibilidade em TODOS os temas. */
+.btn-primario,
+.btn-gradient {
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease,
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease;
+}
+.btn-primario:hover,
+.btn-gradient:hover {
+  color: var(--accent-contrast);
+  font-weight: 600;
+  text-shadow:
+    0 0 7px color-mix(in srgb, var(--bg) 92%, transparent),
+    0 0 3px color-mix(in srgb, var(--bg) 70%, transparent),
+    0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+/* Família de contorno (hover ganha fundo accent-soft): puxa o texto para o accent */
+.btn-secundario:hover,
+.btn-ghost:hover {
+  color: color-mix(in srgb, var(--accent) 70%, var(--text));
+  font-weight: 600;
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--bg) 80%, transparent),
+    0 0 3px color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+/* Botões de header/ferramentas e filtros: texto assume o accent no hover */
+.btn-header:hover,
+.btn-notif:hover,
+.btn-miniatura:hover,
+.tab-btn:hover,
+.chip-filtro:hover {
+  color: var(--accent);
+  font-weight: 600;
+  text-shadow: 0 0 6px color-mix(in srgb, var(--bg) 75%, transparent);
+}
+
+/* Ícones acompanham o texto e engordam o traço no hover */
+.btn-primario:hover svg[data-lucide],
+.btn-gradient:hover svg[data-lucide],
+.btn-secundario:hover svg[data-lucide],
+.btn-ghost:hover svg[data-lucide],
+.btn-header:hover svg[data-lucide],
+.btn-miniatura:hover svg[data-lucide],
+.tab-btn:hover svg[data-lucide],
+.chip-filtro:hover svg[data-lucide] {
+  stroke-width: 2.3;
+}
+
+/* Alto contraste: nunca mistura — cor pura, sem text-shadow; pula a transição
+   (o fade de text-shadow mantém o halo animado mesmo com o override) */
+body[data-high-contrast="true"] .btn-primario,
+body[data-high-contrast="true"] .btn-primario:hover,
+body[data-high-contrast="true"] .btn-gradient,
+body[data-high-contrast="true"] .btn-gradient:hover {
+  color: var(--accent-contrast);
+  text-shadow: none;
+  transition: none;
+}
+body[data-high-contrast="true"] .btn-secundario,
+body[data-high-contrast="true"] .btn-secundario:hover,
+body[data-high-contrast="true"] .btn-ghost,
+body[data-high-contrast="true"] .btn-ghost:hover {
+  color: var(--accent);
+  text-shadow: none;
+  transition: none;
+}
+
+/* ==================================================================
+   V15 — Atmosfera cinematográfica
+   Brilho que respira e segue o cursor, vinheta, modal com desfoque.
+   ================================================================== */
+
+/* ---------- Brilho que segue o cursor (vars setadas por main.ts) ---------- */
+body {
+  --glow-x: 50%;
+  --glow-y: 0%;
+}
+.select-isolado,
+.campo-form,
+.gvp-2d,
+.lb-view,
+.dashboard-widgets,
+.diario-toolbar {
+  position: relative;
+}
+
+/* ---------- Vinheta de cinema + glow do cursor sobre o grão ---------- */
+body::before {
+  background:
+    radial-gradient(560px 420px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, var(--pv5-glow-c) 9%, transparent) 0%,
+      transparent 70%),
+    linear-gradient(180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--pv5-glow-c) 2.4%, transparent) 100%),
+    radial-gradient(130% 90% at 50% -12%, color-mix(in srgb, var(--pv5-glow-c) 10%, transparent) 0%, transparent 58%),
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(120% 90% at 50% 118%, color-mix(in srgb, var(--pv5-glow-c) 5.5%, transparent) 0%, transparent 58%),
+    radial-gradient(620px 340px at 50% 0%, color-mix(in srgb, var(--pv5-glow-c) 12%, transparent) 0%, transparent 72%),
+    radial-gradient(140% 120% at 50% 45%, transparent 62%, color-mix(in srgb, var(--bg) 20%, rgba(0, 0, 0, 0.28)) 100%);
+  animation: v15Respirar 11s ease-in-out infinite;
+}
+body[data-tema="escuro"]::before,
+body[data-tema="dourado"]::before,
+body[data-tema="esmeralda"]::before {
+  background:
+    radial-gradient(560px 420px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, var(--pv5-glow-c) 14%, transparent) 0%,
+      transparent 70%),
+    linear-gradient(180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--pv5-glow-c) 3%, transparent) 100%),
+    radial-gradient(130% 90% at 50% -12%, color-mix(in srgb, var(--pv5-glow-c) 12%, transparent) 0%, transparent 58%),
+    radial-gradient(var(--pv5-amb-2), transparent 62%) 0 0 / 100% 100%,
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 58%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 54%),
+    radial-gradient(120% 90% at 50% 118%, color-mix(in srgb, var(--pv5-glow-c) 7%, transparent) 0%, transparent 58%),
+    radial-gradient(620px 340px at 50% 0%, color-mix(in srgb, var(--pv5-glow-c) 15%, transparent) 0%, transparent 72%),
+    radial-gradient(140% 120% at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.38) 100%);
+  animation: v15Respirar 11s ease-in-out infinite;
+}
+@keyframes v15Respirar {
+  0%, 100% { opacity: 0.92; }
+  50% { opacity: 1; }
+}
+
+/* ---------- Grão vivo: flicker de projeção ---------- */
+body::after {
+  animation: v15GrainZigue 0.9s steps(2) infinite;
+}
+@keyframes v15GrainZigue {
+  0% { opacity: 0.035; }
+  50% { opacity: 0.06; }
+  100% { opacity: 0.045; }
+}
+
+/* ---------- Sheen de luz ao passar nos botões principais ---------- */
+.btn-gradient::before,
+.btn-primario::before {
+  transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  mix-blend-mode: screen;
+}
+.btn-gradient:hover::before,
+.btn-primario:hover::before {
+  left: 100%;
+}
+
+/* ---------- Falha de luz no topo dos cards (foco para o cursor) ---------- */
+.card:hover::after,
+.painel:hover::after,
+.catalogo-filtros:hover::after {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pv5-glow-c) 34%, transparent);
+}
+
+/* ---------- Modal com desfoque cinematográfico ---------- */
+.modal-overlay.aberto {
+  animation: v15Fade 0.25s ease both;
+}
+.modal-overlay.aberto .modal-caixa {
+  animation: v15Modal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top center;
+}
+@keyframes v15Fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes v15Modal {
+  from { opacity: 0; transform: scale(0.96) translateY(18px); filter: blur(6px); }
+  to { opacity: 1; transform: scale(1); filter: none; }
+}
+
+/* ---------- Glow pulsante no FAB principal ---------- */
+.fab-main {
+  animation: v15FabGlow 3.2s ease-in-out infinite;
+}
+@keyframes v15FabGlow {
+  0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 30px var(--accent-glow); }
+  50% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 52px color-mix(in srgb, var(--accent) 55%, var(--accent-glow)); }
+}
+
+/* ---------- KPI com brilho sutil que respira ---------- */
+.kpi-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-3px);
+}
+
+/* ---------- Acessibilidade e movimento (V15) ---------- */
+body[data-high-contrast="true"]::before {
+  animation: none;
+  display: none;
+}
+body[data-high-contrast="true"]::after {
+  animation: none;
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .fab-main {
+    animation: none;
+  }
+  .modal-overlay.aberto,
+  .modal-overlay.aberto .modal-caixa {
+    animation: none;
+  }
+}

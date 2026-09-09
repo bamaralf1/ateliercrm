@@ -404,6 +404,23 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 
 if (window.innerWidth <= 860) { document.getElementById('sidebar').classList.add('colapsada'); }
 
+// Atmosfera cinematográfica (V15): brilho que segue o cursor
+function iniciarAtmosferaCinematografica(): void {
+  const body = document.body;
+  const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const toqueFino = window.matchMedia('(pointer: fine)').matches;
+  if (reduzido || !toqueFino) return;
+  let raf: number | null = null;
+  const setar = (x: number, y: number) => {
+    body.style.setProperty('--glow-x', (x / window.innerWidth) * 100 + '%');
+    body.style.setProperty('--glow-y', (y / window.innerHeight) * 100 + '%');
+    raf = null;
+  };
+  window.addEventListener('pointermove', (e) => {
+    if (raf === null) { raf = requestAnimationFrame(() => setar(e.clientX, e.clientY)); }
+  }, { passive: true });
+}
+
 // Override mostrarToast com suporte a tipos
 window.mostrarToast = function(mensagem, tipo = 'info') {
   const toast = document.getElementById('toast');
@@ -451,6 +468,7 @@ iniciarFab();
 iniciarObserverConfetti();
 iniciarNotificacoes();
 iniciarDragDrop();
+iniciarAtmosferaCinematografica();
 if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => iniciarTour(), 1000); }
 
 // Hash listener for portal / galeria virtual
