@@ -1840,7 +1840,8 @@ tr.linha-atrasada td {
   backdrop-filter: blur(14px) saturate(1.25);
 }
 .modal-caixa {
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   box-shadow:
     0 30px 90px color-mix(in srgb, var(--accent) 12%, rgba(0,0,0,0.34)),
     0 0 0 1px color-mix(in srgb, var(--card-border) 60%, transparent);
@@ -2113,3 +2114,168 @@ body[data-high-contrast="true"] ::selection { color: #ffffff; background: var(--
 body[data-high-contrast="true"] .card:hover,
 body[data-high-contrast="true"] .painel:hover,
 body[data-high-contrast="true"] .kpi-card:hover { box-shadow: none; }
+
+/* ==========================================================================
+   BOTÕES PREMIUM V21 — passada aditiva no fim do cascade
+   Botões (primário/secundário/ghost/perigo/miniatura/tabela) e rodapé de
+   modal ganham a mesma linguagem dos cards premium: bevel topo, gradiente
+   de superfície, hairline accent e profundidade no hover. Não altera layout
+   (mesmas dimensões); só superfície/luz/hover.
+   ========================================================================== */
+
+/* --- Família sólida: primário e gradient (Criar/Salvar/Confirmar/Exportar) --- */
+.btn-primario,
+.btn-gradient {
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000000 14%, transparent),
+    0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.btn-primario:hover,
+.btn-gradient:hover {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 30%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000000 12%, transparent),
+    0 8px 26px color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+/* --- Família de contorno: secundário (Cancelar/Fechar/Exportar) --- */
+.btn-secundario {
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #ffffff 7%, transparent), transparent 55%),
+    color-mix(in srgb, var(--text) 3%, transparent);
+  border-color: color-mix(in srgb, var(--border) 80%, var(--accent));
+}
+.btn-secundario:hover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent) 4%, transparent)),
+    color-mix(in srgb, var(--accent) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent),
+    0 4px 14px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* --- Ghost (ações leves, chips, ordenação) --- */
+.btn-ghost {
+  border-radius: 12px;
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* --- Perigo (Excluir) com tom da casa --- */
+.btn-danger,
+.btn-perigo {
+  border-radius: 12px;
+  color: color-mix(in srgb, #ef4444 88%, var(--text) 12%);
+  border-color: color-mix(in srgb, #ef4444 30%, var(--border));
+}
+.btn-danger:hover,
+.btn-perigo:hover {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, color-mix(in srgb, #ef4444 88%, #ffffff 12%), #dc2626);
+  border-color: #dc2626;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 5px 16px rgba(220, 38, 38, 0.32);
+}
+
+/* --- Miniaturas (Editar/Remover/Pagar/Portal) --- */
+.btn-miniatura {
+  border-radius: 9px;
+  border-color: color-mix(in srgb, var(--border) 75%, var(--accent));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #ffffff 6%, transparent), transparent 60%),
+    color-mix(in srgb, var(--text) 6%, var(--card));
+}
+.btn-miniatura:hover:not(.ativo) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 16%, transparent),
+    0 4px 12px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.btn-miniatura.ativo {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 88%, var(--v19-hi, var(--accent-bright))),
+    var(--accent-strong));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* --- Botões de ícone de tabela (Editar/Excluir por linha) --- */
+.btn-icone-tabela {
+  border-radius: 10px;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text-muted) 90%, var(--text));
+}
+.btn-icone-tabela:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 4%, transparent));
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent),
+    0 4px 12px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* --- Mini-botões que usam text raw (snapshots/JSON/CSV) --- */
+.btn-miniatura.ei-export-json,
+.btn-miniatura.ei-export-csv {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* --- Rodapé de modal: hairline com luz da casa + alinhamento de altura --- */
+.modal-acoes .btn-primario,
+.modal-acoes .btn-secundario,
+.modal-acoes .btn-ghost,
+.modal-acoes .btn-danger {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.modal-acoes .btn-secundario,
+.modal-acoes .btn-ghost {
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+/* --- Botões de confirmação em avisos (confirmarAcao) --- */
+.modal-caixa .btn-secundario[data-perigo],
+.modal-caixa .btn-perigo {
+  min-width: 96px;
+}
+
+/* --- Focus ring premium para toda a família de botões --- */
+.btn-primario:focus-visible,
+.btn-gradient:focus-visible,
+.btn-secundario:focus-visible,
+.btn-ghost:focus-visible,
+.btn-danger:focus-visible,
+.btn-miniatura:focus-visible,
+.btn-icone-tabela:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, #ffffff);
+  outline-offset: 2px;
+}
+
+/* --- Guards V21 --- */
+@media (prefers-reduced-motion: reduce) {
+  .btn-primario, .btn-gradient, .btn-secundario, .btn-ghost,
+  .btn-danger, .btn-miniatura, .btn-icone-tabela { transition: none; }
+}
+body[data-high-contrast="true"] .btn-secundario,
+body[data-high-contrast="true"] .btn-ghost,
+body[data-high-contrast="true"] .btn-miniatura,
+body[data-high-contrast="true"] .btn-icone-tabela {
+  background: none;
+  box-shadow: none;
+}
+body[data-high-contrast="true"] .btn-danger:hover,
+body[data-high-contrast="true"] .btn-perigo:hover { color: #ffffff; }
