@@ -17,7 +17,7 @@ describe('Router', () => {
   });
 
   test('rotas possui todas as chaves esperadas', () => {
-    const esperadas = ['dashboard', 'portal', 'catalogo', 'clientes', 'vendas', 'certificados',
+    const esperadas = ['dashboard', 'portal', 'verificar', 'catalogo', 'clientes', 'vendas', 'certificados',
       'referencias', 'encomendas', 'exportar', 'exposicoes', 'galeriaVirtual', 'precificador',
       'atelier', 'diario', 'rede', 'financeiro', 'configuracoes'];
     expect(Object.keys(router.rotas).sort()).toEqual(esperadas.sort());

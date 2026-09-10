@@ -102,7 +102,10 @@ export class PortalView extends BaseView {
       `;
     }
     const aceita = orc.status === 'aprovado' && orc.aceiteData;
-    const expirada = orc.validadeData && new Date(orc.validadeData) < new Date();
+    const validadeReal = orc.validadeData
+      ? new Date(orc.validadeData)
+      : (orc.aceiteCriadoEm ? new Date(new Date(orc.aceiteCriadoEm).getTime() + 30 * 86400000) : null);
+    const expirada = !!validadeReal && validadeReal < new Date();
     const moeda = orc.moeda || 'BRL';
     const valor = (Number(orc.preco) || 0).toLocaleString('pt-BR', { style: 'currency', currency: moeda });
     const dims = [orc.largura, orc.altura, orc.profundidade].filter(Boolean).join('×');
@@ -187,7 +190,9 @@ export class PortalView extends BaseView {
     this.removerListeners();
     document.getElementById('btnConfirmarAceite')?.addEventListener('click', () => {
       const orc = (configStore().precificadorOrcamentos || []).find(o => o.aceiteToken === this.token);
-      if (!orc || (orc.validadeData && new Date(orc.validadeData) < new Date())) return;
+      if (!orc) return;
+      const vd = orc.validadeData ? new Date(orc.validadeData) : (orc.aceiteCriadoEm ? new Date(new Date(orc.aceiteCriadoEm).getTime() + 30 * 86400000) : null);
+      if (vd && vd < new Date()) return;
       orc.status = 'aprovado';
       orc.aceiteData = new Date().toISOString();
       configStore().salvar();

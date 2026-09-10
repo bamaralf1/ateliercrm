@@ -13,10 +13,13 @@ export class Router {
     this.dataStore = dataStore;
     this.viewAtual = 'dashboard';
     this.container = document.getElementById('viewPrincipal');
+    this._instancias = {};
+    this._inicializado = false;
 
     this.rotas = {
       dashboard:    { rotulo: 'Dashboard',    icone: ICONES.dashboard, render: () => dashboardView.render(), aposRender: () => dashboardView.aposRenderizar() },
       portal:       { rotulo: 'Portal',       icone: ICONES.portal, render: () => portalView.render(), aposRender: () => portalView.aposRenderizar(), oculta: true },
+      verificar:    { rotulo: 'Verificação',  icone: ICONES.certificados, render: () => certificadosView.renderVerificar(), aposRender: () => certificadosView.aposRenderizarVerificar(), oculta: true },
       catalogo:     { rotulo: 'Catálogo',     icone: ICONES.catalogo, render: () => catalogoView.render(), aposRender: () => catalogoView.aposRenderizar() },
       clientes:     { rotulo: 'Clientes',     icone: ICONES.clientes, render: () => clientesView.render(), aposRender: () => clientesView.aposRenderizar() },
       vendas:       { rotulo: 'Vendas',       icone: ICONES.vendas, render: () => vendasView.render(), aposRender: () => vendasView.aposRenderizar() },
@@ -63,8 +66,16 @@ export class Router {
     });
   }
 
+  registrarInstancia(chave, view) {
+    this._instancias[chave] = view;
+  }
+
   navegar(chave) {
     if (!this.rotas[chave]) return;
+    const instanciaAnterior = this._instancias[this.viewAtual];
+    if (instanciaAnterior && this.viewAtual !== chave && typeof instanciaAnterior.destruir === 'function') {
+      try { instanciaAnterior.destruir(); } catch (e) { console.warn('Erro ao destruir view anterior:', e); }
+    }
     this.viewAtual = chave;
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('ativo', item.dataset.rota === chave);
@@ -83,6 +94,17 @@ export class Router {
     if (bc) bc.textContent = this.rotas[chave].rotulo;
     if (window.innerWidth <= 860) { document.getElementById('sidebar').classList.add('colapsada'); }
     this.container.scrollTop = 0;
+    if (this._inicializado) this._sincronizarHash(chave);
+    this._inicializado = true;
+  }
+
+  _sincronizarHash(chave) {
+    const rotaAberta = !this.rotas[chave].oculta;
+    const hashAtual = window.location.hash || '';
+    const temParams = hashAtual.includes('=') || hashAtual.includes('?');
+    if (rotaAberta && !temParams) {
+      try { history.pushState(null, '', '#' + chave); } catch (e) { /* ignora falha de history */ }
+    }
   }
 
   inicializar() {

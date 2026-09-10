@@ -1664,6 +1664,8 @@ let classe, seta = '✓', recomendacao, dirTexto = 'do mercado';
   _persistirOrcamento(orc) {
     if (!orc.numero) {
       orc.numero = this._gerarNumeroProposta();
+    }
+    if (!orc.validadeData) {
       const vd = new Date(Date.now() + 30 * 86400000);
       orc.validadeData = vd.toISOString().slice(0, 10);
     }
@@ -1679,6 +1681,7 @@ let classe, seta = '✓', recomendacao, dirTexto = 'do mercado';
   _garantirAceiteToken(orc) {
     if (orc.aceiteToken) return orc.aceiteToken;
     orc.aceiteToken = 'aceite_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    orc.aceiteCriadoEm = new Date().toISOString();
     configStore().salvar();
     return orc.aceiteToken;
   }

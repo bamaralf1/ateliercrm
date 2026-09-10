@@ -13,6 +13,8 @@ function hashStringParaCertificado(entrada) {
 export class CertificadosView extends BaseView {
   constructor(dataStore, router) {
     super(dataStore, router);
+    this._resultadoVerificacao = null;
+    this._hashJaVerificado = '';
   }
 
   certificadosOrdenados() {
@@ -154,6 +156,115 @@ export class CertificadosView extends BaseView {
     const cert = this.dataStore.buscarPorId('certificados', id);
     if (!cert) return;
     this.abrirModalVerificacao(cert);
+  }
+
+  // ===== Verificação por código (colecionador escaneia o QR ou digita o código) =====
+  obterCodigoDoHash() {
+    try {
+      const h = window.location.hash.replace(/^#/, '');
+      if (!h.startsWith('verificar')) return '';
+      const resto = h.slice('verificar'.length);
+      if (resto.startsWith('=')) return decodeURIComponent(resto.slice(1));
+      if (resto.startsWith('?')) return new URLSearchParams(resto.slice(1)).get('codigo') || '';
+      return '';
+    } catch { return ''; }
+  }
+
+  normalizarCodigo(codigo) {
+    return String(codigo || '').trim().toUpperCase().replace(/ATR-?/g, '').replace(/[^A-F0-9]/g, '');
+  }
+
+  verificarCodigo(codigo) {
+    const alvo = this.normalizarCodigo(codigo);
+    if (!alvo) return null;
+    const achado = this.dataStore.listar('certificados').find(c => {
+      const hash = (c.hashAutenticidade || this.calcularHashAutenticidade(c)).toUpperCase();
+      return this.normalizarCodigo(hash) === alvo;
+    });
+    if (!achado) return { encontrado: false };
+    const hashRegistrado = (achado.hashAutenticidade || this.calcularHashAutenticidade(achado)).toUpperCase();
+    const hashRecalculado = this.calcularHashAutenticidade(achado).toUpperCase();
+    return { encontrado: true, cert: achado, hash: hashRegistrado, hashRecalculado };
+  }
+
+  _htmlResultadoVerificacao(resultado) {
+    if (!resultado || !resultado.encontrado || !resultado.cert) {
+      return `
+        <div class="cert-verificacao invalida">
+          <div class="cert-verif-status"><i data-lucide="shield-alert"></i> Nenhum certificado encontrado</div>
+          <p>O código informado não corresponde a nenhum certificado registrado neste app. Confira o código impresso no PDF (formato ATR-XXXXXXXX).</p>
+        </div>`;
+    }
+    const cert = resultado.cert;
+    const valido = resultado.hash === resultado.hashRecalculado;
+    return `
+      <div class="cert-verificacao ${valido ? 'ok' : 'invalida'}">
+        <div class="cert-verif-status"><i data-lucide="${valido ? 'shield-check' : 'shield-alert'}"></i> ${valido ? 'Certificado íntegro' : 'Dados alterados'}</div>
+        <p>${valido
+          ? 'O código confere com os dados registrados neste ateliê. As informações abaixo batem com o documento emitido.'
+          : 'O código foi encontrado, mas os dados registrados divergem do documento. A autenticidade precisa de revisão.'}</p>
+        <div class="cert-verif-linha"><strong>Obra:</strong> ${sanitizarHTML(cert.tituloObra) || '-'}</div>
+        <div class="cert-verif-linha"><strong>Nº de série:</strong> ${sanitizarHTML(cert.numeroSerie) || '-'}</div>
+        <div class="cert-verif-linha"><strong>Técnica:</strong> ${sanitizarHTML(cert.tecnica) || '-'} ${cert.edicaoTipo === 'limitada' ? `(${cert.edicaoAtual}/${cert.edicaoTotal})` : '(única)'}</div>
+        <div class="cert-verif-linha"><strong>Código:</strong> <code>${this._formatarHash(resultado.hash)}</code></div>
+        <div class="cert-verif-linha"><strong>Emitido em:</strong> ${formatarData(cert.dataEmissao || cert.criadoEm)}${(cert.reemissoes || 0) > 0 ? ` · reemitido ${cert.reemissoes}x` : ' · original'}</div>
+      </div>`;
+  }
+
+  renderVerificar() {
+    const codigo = this.obterCodigoDoHash();
+    const alvo = this.normalizarCodigo(codigo);
+    let resultado = this._resultadoVerificacao;
+    if (alvo && this._hashJaVerificado !== alvo) {
+      resultado = this.verificarCodigo(alvo);
+      this._resultadoVerificacao = resultado;
+      this._hashJaVerificado = alvo;
+    }
+    return `
+      <div class="view-cabecalho">
+        <div>
+          <h2>Verificação de autenticidade</h2>
+          <p class="subtitulo">Confirme o código impresso no certificado (ex.: ATR-9F3C2A81) ou escaneie o QR com o app aberto</p>
+        </div>
+      </div>
+      <div class="card" style="max-width:640px;">
+        <div class="cert-verif-form" style="display:flex;gap:8px;margin-bottom:12px;">
+          <label for="txtCodigoVerificacao" class="sr-only">Código de verificação</label>
+          <input type="text" id="txtCodigoVerificacao" placeholder="Digite ou cole o código (ATR-XXXXXXXX)" value="${sanitizarHTML(codigo)}" autocomplete="off" style="flex:1;"${resultado ? ' disabled' : ''}>
+          <button class="btn-primario" id="btnVerificarCodigo"><i data-lucide="shield-check"></i> Verificar</button>
+        </div>
+        <div id="verifResultado">${resultado ? this._htmlResultadoVerificacao(resultado) : ''}</div>
+      </div>
+    `;
+  }
+
+  aposRenderizarVerificar() {
+    this.removerListeners();
+    const container = document.getElementById('viewPrincipal');
+    const reRender = () => {
+      container.innerHTML = this.renderVerificar();
+      this.aposRenderizarVerificar();
+    };
+    const processar = () => {
+      const input = document.getElementById('txtCodigoVerificacao');
+      const alvo = this.normalizarCodigo(input ? input.value : '');
+      if (!alvo) { mostrarToast('Informe um código de verificação.', 'aviso'); return; }
+      this._resultadoVerificacao = this.verificarCodigo(alvo);
+      this._hashJaVerificado = alvo;
+      reRender();
+    };
+    const btn = document.getElementById('btnVerificarCodigo');
+    if (btn) {
+      btn.addEventListener('click', processar);
+      this._bindCache['btnVerificarCodigo'] = { el: btn, handler: processar, type: 'click' };
+    }
+    const input = document.getElementById('txtCodigoVerificacao');
+    if (input) {
+      const onEnter = (e) => { if (e.key === 'Enter') processar(); };
+      input.addEventListener('keydown', onEnter);
+      this._bindCache['txtCodigoVerificacao'] = { el: input, handler: onEnter, type: 'keydown' };
+    }
+    if (window.inicializarIconesLucide) window.inicializarIconesLucide();
   }
 
   // Numeração sequencial por ano: ART-2026-001, ART-2026-002...
@@ -648,7 +759,7 @@ export class CertificadosView extends BaseView {
     doc.text(localData, centroEsquerda, yBase + 40, { align: 'center' });
 
     const hash = cert.hashAutenticidade || this.calcularHashAutenticidade(cert);
-    const textoQR = `Obra: ${cert.tituloObra} | Artista: ${nomeArtista} | Autenticada em: ${formatarData(cert.dataEmissao)} | Verificação: ${this._formatarHash(hash)}`;
+    const textoQR = `${window.location.origin + window.location.pathname}#verificar=${hash}`;
     const qrDataUrl = await gerarQRCodeDataUrl(textoQR);
     if (qrDataUrl) {
       try {

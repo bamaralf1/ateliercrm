@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self'">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#c9a227">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Atelier CRM">
-<title>Sargent - Gestão para Artistas Plásticos</title>
+<title>Atelier CRM - Gestão para Artistas Plásticos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@
     </ul>
 
     <div class="sidebar-rodape">
-      <button id="btnInstalarPWA" style="display:none;background:none;border:1px solid var(--border);color:var(--sidebar-text);padding:6px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;margin-bottom:8px;width:100%;gap:6px;" onclick="window.instalarPWA()"><i data-lucide="download" aria-hidden="true"></i> Instalar App</button>
+      <button id="btnInstalarPWA" style="display:none;background:none;border:1px solid var(--border);color:var(--sidebar-text);padding:6px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;margin-bottom:8px;width:100%;gap:6px;"><i data-lucide="download" aria-hidden="true"></i> Instalar App</button>
       Atelier CRM v1.0<br>Dados salvos localmente
     </div>
   </aside>
@@ -148,8 +148,6 @@
 <footer class="app-footer">
   <div class="footer-version">Atelier CRM v1.0</div>
   <div class="footer-links">
-    <a href="https://github.com/anomalyco/opencode" target="_blank" rel="noopener">Atualizações</a>
-    <span>·</span>
     <span>Feito por artistas, para artistas 🎨</span>
     <span>·</span>
     <span>Todos os direitos reservados</span>

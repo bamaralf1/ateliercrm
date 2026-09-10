@@ -369,6 +369,26 @@ const configuracoesView = new ConfiguracoesView(dataStore, router);
 const exportImportView = new ExportImportView(dataStore, router);
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
+// Router: registry de instâncias para limpeza (destruir) entre navegações
+router.registrarInstancia('dashboard', dashboardView);
+router.registrarInstancia('catalogo', catalogoView);
+router.registrarInstancia('clientes', clientesView);
+router.registrarInstancia('vendas', vendasView);
+router.registrarInstancia('certificados', certificadosView);
+router.registrarInstancia('referencias', referenciasView);
+router.registrarInstancia('galeriaVirtual', galeriaVirtualView);
+router.registrarInstancia('precificador', precificadorView);
+router.registrarInstancia('atelier', atelierView);
+router.registrarInstancia('diario', diarioView);
+router.registrarInstancia('rede', redeView);
+router.registrarInstancia('portal', portalView);
+router.registrarInstancia('verificar', certificadosView);
+router.registrarInstancia('encomendas', encomendasView);
+router.registrarInstancia('exposicoes', exposicoesView);
+router.registrarInstancia('financeiro', financeiroView);
+router.registrarInstancia('configuracoes', configuracoesView);
+router.registrarInstancia('exportar', exportImportView);
+
 // Event listeners
 document.getElementById('viewPrincipal').addEventListener('click', (e) => {
   const botaoModal = e.target.closest('[data-abrir-modal]');
@@ -471,18 +491,22 @@ iniciarDragDrop();
 iniciarAtmosferaCinematografica();
 if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => iniciarTour(), 1000); }
 
-// Hash listener for portal / galeria virtual
-(function() {
-  const hash = window.location.hash;
-  if (hash && hash.startsWith('#portal')) {
-    setTimeout(() => router.navegar('portal'), 200);
-  } else if (hash && hash.includes('galeria=virtual')) {
-    setTimeout(() => {
-      router.navegar('galeriaVirtual');
-      if (hash.includes('tour=obras-disponiveis') && galeriaVirtualView) { setTimeout(() => galeriaVirtualView.iniciarTour(), 800); }
-    }, 300);
+// Hash listener — rotas profundas: #portal, #verificar, #galeria=virtual e rota direta
+const aplicarHashRota = () => {
+  const hash = window.location.hash || '';
+  if (!hash || hash === '#') return;
+  if (hash.startsWith('#portal')) { router.navegar('portal'); return; }
+  if (hash.startsWith('#verificar')) { router.navegar('verificar'); return; }
+  if (hash.includes('galeria=virtual')) {
+    if (router.viewAtual !== 'galeriaVirtual') router.navegar('galeriaVirtual');
+    if (hash.includes('tour=obras-disponiveis') && galeriaVirtualView) { setTimeout(() => galeriaVirtualView.iniciarTour(), 800); }
+    return;
   }
-})();
+  const rota = hash.replace(/^#/, '').split(/[?&=]/)[0];
+  if (rota && router.rotas[rota] && !router.rotas[rota].oculta) router.navegar(rota);
+};
+window.addEventListener('hashchange', aplicarHashRota, { passive: true });
+setTimeout(aplicarHashRota, 0);
 
 // PWA — Service Worker + Install Prompt
 let deferredPrompt = null;
@@ -498,6 +522,7 @@ window.instalarPWA = async function() {
   const result = await deferredPrompt.userChoice;
   if (result.outcome === 'accepted') { deferredPrompt = null; const btn = document.getElementById('btnInstalarPWA'); if (btn) btn.style.display = 'none'; }
 };
+document.getElementById('btnInstalarPWA')?.addEventListener('click', () => window.instalarPWA());
 
 // Image observer
 const _mutationObs = new MutationObserver(() => { observarImagens(); });

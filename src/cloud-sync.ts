@@ -1,4 +1,5 @@
 // CloudSync — IndexedDB + Google Drive + WebDAV
+import { semCredenciais } from './secure-storage';
 
 export class CloudSync {
   constructor(dataStore) {
@@ -32,7 +33,7 @@ export class CloudSync {
     const tx = db.transaction('snapshots', 'readwrite');
     const store = tx.objectStore('snapshots');
     const snapshot = {
-      dados: JSON.parse(JSON.stringify(this.dataStore.dados)),
+      dados: JSON.parse(JSON.stringify(semCredenciais(this.dataStore.dados))),
       timestamp: new Date().toISOString(),
       label: label || 'Backup ' + new Date().toLocaleString('pt-BR')
     };
@@ -163,7 +164,7 @@ export class CloudSync {
     mostrarLoading('Enviando backup para Google Drive...');
     try {
       const folderId = await this._garantirPastaGoogle();
-      const conteudo = JSON.stringify(this.dataStore.dados);
+      const conteudo = JSON.stringify(semCredenciais(this.dataStore.dados));
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const nome = `atelier-crm-backup-${timestamp}.json`;
 
@@ -228,7 +229,7 @@ export class CloudSync {
       if (!res.ok) throw new Error('Erro HTTP ' + res.status);
       const dados = await res.json();
       if (dados && dados.obras) {
-        this.dataStore.dados = dados;
+        this.dataStore.dados = semCredenciais(dados);
         this.dataStore.salvar();
         esconderLoading();
         mostrarToast('Backup restaurado do Google Drive!', 'sucesso');
@@ -272,7 +273,7 @@ export class CloudSync {
   async backupWebDAV() {
     mostrarLoading('Enviando backup para WebDAV...');
     try {
-      const conteudo = JSON.stringify(this.dataStore.dados);
+      const conteudo = JSON.stringify(semCredenciais(this.dataStore.dados));
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const nome = `atelier-crm-backup-${timestamp}.json`;
       await this._reqWebDAV(nome, 'PUT', conteudo);
@@ -315,7 +316,7 @@ export class CloudSync {
       const res = await this._reqWebDAV(nomeArquivo, 'GET');
       const dados = await res.json();
       if (dados && dados.obras) {
-        this.dataStore.dados = dados;
+        this.dataStore.dados = semCredenciais(dados);
         this.dataStore.salvar();
         esconderLoading();
         mostrarToast('Backup restaurado do WebDAV!', 'sucesso');
