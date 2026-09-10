@@ -21,6 +21,18 @@ document.body.innerHTML = `
 global.requestAnimationFrame = (cb) => setTimeout(cb, 0);
 global.navigator = { platform: 'Win32' };
 
+// Mock matchMedia (jsdom não implementa)
+global.matchMedia = (query) => ({
+  matches: false,
+  media: query,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  addListener: () => {},
+  removeListener: () => {},
+  onchange: null,
+  dispatchEvent: () => false,
+});
+
 // Stub translations
 global.AtelierCRMTranslations = { locale: 'pt-BR' };
 
@@ -30,34 +42,112 @@ global.print = () => {};
 // Mock scrollIntoView for jsdom
 Element.prototype.scrollIntoView = () => {};
 
-// Mock IndexedDB for jsdom
-const IDBStore = {};
+// Polyfill TextEncoder/TextDecoder (jsdom não expõe; usado por hashPin/CloudSync)
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// crypto: jsdom expõe getter read-only sem subtle → força webcrypto do Node
+try {
+  Object.defineProperty(global, 'crypto', { value: require('crypto').webcrypto, configurable: true, writable: true });
+} catch (e) {}
+if (typeof global.crypto.randomUUID !== 'function') {
+  global.crypto.randomUUID = () => 'id-' + Math.random().toString(36).slice(2);
+}
+
+// URL.createObjectURL/revokeObjectURL (jsdom não implementa)
+global.URL = global.URL || {};
+if (typeof global.URL.createObjectURL !== 'function') {
+  global.URL.createObjectURL = () => 'blob:mock-url-' + Math.random().toString(36).slice(2);
+  global.URL.revokeObjectURL = () => {};
+}
+
+// Stub Image: dispara onload imediatamente (jsdom não carrega recursos)
+class FakeImage {
+  constructor() { this.width = 100; this.height = 100; this.onload = null; this.onerror = null; this._src = ''; }
+  set src(v) { this._src = v; if (typeof this.onload === 'function') setTimeout(() => this.onload(), 0); }
+  get src() { return this._src; }
+}
+global.Image = FakeImage;
+
+// Stub canvas 2D (sem pacote canvas, jsdom não renderiza)
+if (typeof global.HTMLCanvasElement !== 'undefined') {
+  global.HTMLCanvasElement.prototype.getContext = () => ({
+    imageSmoothingEnabled: false,
+    imageSmoothingQuality: 'low',
+    drawImage() {},
+  });
+  global.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/jpeg;base64,QUJD';
+}
+
+// Mock IndexedDB funcional para jsdom
 class IDBRequest {
-  constructor(result) { this.result = result; this.onsuccess = null; this.onerror = null; }
+  constructor() { this.result = null; this.onsuccess = null; this.onerror = null; }
 }
 class IDBObjectStore {
-  constructor(name) { this._name = name; this._data = {}; }
-  get(key) { const req = new IDBRequest(this._data[key]); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
-  put(record) { this._data[record.id] = record; const req = new IDBRequest(); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
-  delete(key) { delete this._data[key]; const req = new IDBRequest(); setTimeout(() => req.onsuccess && req.onsuccess(), 0); return req; }
+  constructor(data) { this._data = data; this._txDone = null; }
+  put(record, key) {
+    const k = key || record.id;
+    this._data.set(k, record);
+    const req = new IDBRequest();
+    req.result = k;
+    setTimeout(() => { if (req.onsuccess) req.onsuccess(); if (this._txDone) this._txDone(); }, 0);
+    return req;
+  }
+  get(key) {
+    const store = this;
+    const req = new IDBRequest();
+    req.result = this._data.get(key);
+    setTimeout(() => { if (req.onsuccess) req.onsuccess(); if (store._txDone) store._txDone(); }, 0);
+    return req;
+  }
+  delete(key) {
+    const store = this;
+    this._data.delete(key);
+    const req = new IDBRequest();
+    setTimeout(() => { if (req.onsuccess) req.onsuccess(); if (store._txDone) store._txDone(); }, 0);
+    return req;
+  }
 }
 class IDBTransaction {
-  constructor(stores, mode) { this._stores = stores; this.oncomplete = null; this.onerror = null; this.objectStore = (name) => this._storeObj || (this._storeObj = new IDBObjectStore(name)); }
+  constructor(name, storeMap) {
+    this._name = name;
+    this._storeMap = storeMap;
+    this._store = null;
+    this.oncomplete = null;
+    this.onerror = null;
+  }
+  objectStore() {
+    if (!this._store) {
+      this._store = new IDBObjectStore(this._storeMap);
+      this._store._txDone = () => { if (this.oncomplete) this.oncomplete(); };
+    }
+    return this._store;
+  }
 }
 class IDBOpenDBRequest {
   constructor() { this.result = null; this.onupgradeneeded = null; this.onsuccess = null; this.onerror = null; }
 }
-let _idbStores = {};
+const _idbDbs = new Map();
 global.indexedDB = {
-  open: (name, version) => {
+  open: (name) => {
     const req = new IDBOpenDBRequest();
-    if (!_idbStores[name]) _idbStores[name] = {};
+    let storeMaps = _idbDbs.get(name);
+    if (!storeMaps) { storeMaps = {}; _idbDbs.set(name, storeMaps); }
+    const db = {
+      objectStoreNames: { contains: (n) => Boolean(storeMaps[n]) },
+      createObjectStore: (n, opts) => {
+        const s = new Map();
+        s._keyPath = opts && opts.keyPath;
+        storeMaps[n] = s;
+        return s;
+      },
+      transaction: (n) => new IDBTransaction(n, storeMaps[n] || (storeMaps[n] = new Map())),
+    };
     setTimeout(() => {
-      const tx = new IDBTransaction();
-      tx._storeObj = { _data: _idbStores[name] };
-      if (req.onupgradeneeded) req.onupgradeneeded({ target: { result: { objectStoreNames: { contains: () => false }, objectStore: (n) => tx._storeObj } } });
-      req.result = { objectStore: (n) => tx._storeObj };
-      if (req.onsuccess) req.onsuccess();
+      req.result = db;
+      if (req.onupgradeneeded) req.onupgradeneeded({ target: { result: db } });
+      if (req.onsuccess) req.onsuccess({ target: { result: db } });
     }, 0);
     return req;
   }

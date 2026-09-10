@@ -11,7 +11,7 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - 26 arquivos em `src/`, 10 classes de view, 3 classes de serviço
 - CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, D3.js 7.8.5 (Three.js removido — ver Galeria 2D); ícones: **Lucide vendorizado** em `public/lucide.min.js` (ver V13)
 - Dados: `localStorage` (5 MB), imagens comprimidas para 1200 px JPEG
-- Testes: Jest (jsdom), 12 suites, 123 testes (não roda neste ambiente — validar com `npm run build` + browser)
+- Testes: Jest (jsdom), 14 suites, 199 testes, todos passando. `npm test` (pretest: `concat-source.js && tsc`). Requisito no Windows: `node_modules/unrs-resolver/index.js` precisa do fallback JS (o binding nativo exige VCRUNTIME140.dll ausente) — patch manual: sobrescrever as functions `sync`/`async`/etc. com `JsFallbackResolver` via `require.resolve`; **não persiste após `npm install`/`npm ci`**. `jest.setup.js` fornece mock IDB funcional (put/get/delete disparando `oncomplete`), polyfills TextEncoder/Decoder, `crypto` forçado para `require('crypto').webcrypto` (jsdom sem `subtle`), stubs Image/canvas/URL.createObjectURL. Padrões: testes de CloudSync precisam `delete global.indexedDB`; tema padrão é `dourado` (não `classico`); `_salvarPin` hasheia o PIN (SHA-256) e os helpers `hashPin`/`verificarPin`/`isPinHashed` são exportados por `main.ts`. Validar também com `npm run build` + browser
 
 ## Hierarquia de classes
 - `BaseView` → todas as views: `render()` → HTML, `aposRenderizar()` → bind de eventos, `destruir()` → cleanup
@@ -206,3 +206,15 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - **Guards**: `prefers-reduced-motion` desliga transitions/animações novas; `[data-high-contrast]` zera os fundos especiais e a sombra do modal.
 - Vale nota: todas as `::after/::before` de card já eram usadas (base style.scss ~360 sheen, ~4568 gradiente topo), então a passada é **aditiva** — override de propriedades específicas no `_premium-v5.scss` (importado por último), sem novo layout.
 - Validado dev+prod (CDP): 8 temas retornam as 8 variáveis V19 corretas no `getComputedStyle`; sidebar/header/btn-gradient/hairline populados em todos; 0 mojibake no CSS injetado; console limpo; build OK.
+
+### Suite Jest verde no Windows (V20) — commits e suítes destravadas
+- **Objetivo**: destravar `npm test` no Windows (binding `@unrs/resolver-binding-win32-x64-msvc` do `unrs-resolver` exigia `VCRUNTIME140.dll` ausente) e corrigir suítes que falhavam. Resultado: **14/14 suítes, 199/199 testes**.
+- **Patch executável**: `node_modules/unrs-resolver/index.js` sobrescrito para usar `JsFallbackResolver` (via `require.resolve`) no lugar do binding nativo — `sync`/`async`/`cloneWithOptions`/`clearCache`/etc. **NÃO persiste após `npm install`/`npm ci`** (re-patch manual).
+- **`jest.setup.js` reescrito**: mock **IDB funcional** (`indexedDB.open` → `onupgradeneeded`/`onsuccess`; `createObjectStore`; transactions com `put`/`get`/`delete` disparando `req.onsuccess` **e** `tx.oncomplete` — ponto crítico p/ `image-store`); polyfills `TextEncoder`/`TextDecoder` (de `node:util`); `crypto` forçado via `Object.defineProperty` para `require('crypto').webcrypto` (jsdom expõe `crypto` read-only sem `subtle`); stubs `URL.createObjectURL`/`revokeObjectURL`, `Image` (fake que dispara `onload`), canvas `getContext('2d')`/`toDataURL`.
+- **Padrões registrados**:
+  - Testes de CloudSync precisam `delete global.indexedDB` (`beforeAll`) — esperam rejeição sem IDB; o mock global quebrava isso.
+  - Tema padrão é `dourado` desde V17 (commit `0aac69b`), `TEMA_PRINCIPAL='dourado'` — testes antigos esperavam `classico`.
+  - `_salvarPin` **hasheia** o PIN (SHA-256, `hashPin` em secure-storage) — testes não podem esperar PIN em texto puro; usar `verificarPin`/`isPinHashed`.
+- **Bug de export corrigido**: `main.ts` sobrescreve `module.exports` (último arquivo do concat) e **não** expunha `hashPin`/`verificarPin`/`isPinHashed` → adicionados ao objeto em `src/main.ts:508`. Sem isso `hashPin is not a function` nos testes de configurações.
+- **Testes atualizados**: `configuracoes-view` (PIN hasheado + async await + `verificarPin`), `image-store` (`migrar` deduplica strings base64 iguais via Set — os 3 campos iguais → count 1; teste agora usa strings distintas), `themeengine` (`classico`→`dourado`), `portal-cloud-sync-lightbox` (`delete global.indexedDB`).
+- **Comando local**: `npx jest --config jest.config.js` (ou `npm test`). Se worker crashar: `--no-collectCoverage --runInBand` (jest.config tem `collectCoverage: true`).

@@ -71,6 +71,9 @@ describe('PortalView', () => {
 describe('CloudSync', () => {
   let ds, sync;
 
+  beforeAll(() => { delete global.indexedDB; });
+  afterAll(() => { });
+
   beforeEach(() => {
     localStorage.clear();
     ds = new DataStore();

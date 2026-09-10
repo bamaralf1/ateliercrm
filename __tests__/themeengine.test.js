@@ -10,14 +10,14 @@ describe('ThemeEngine', () => {
       <div id="viewPrincipal"></div>
       <div id="toast"></div>
       <div id="modalOverlay" class=""><div id="modalCaixa"></div></div>
-      <select id="seletorTema"><option value="classico">Clássico</option><option value="escuro">Escuro</option></select>
+      <select id="seletorTema"><option value="classico">Clássico</option><option value="dourado">Dourado</option><option value="escuro">Escuro</option></select>
     `;
     ds = new DataStore();
     engine = new ThemeEngine(ds);
   });
 
   test('construtor carrega tema padrão', () => {
-    expect(engine.temaAtual).toBe('classico');
+    expect(engine.temaAtual).toBe('dourado');
   });
 
   test('aplicarTema muda atributo data-tema no body', () => {
@@ -33,9 +33,9 @@ describe('ThemeEngine', () => {
 
   test('inicializar aplica tema e configura seletor', () => {
     engine.inicializar();
-    expect(document.body.getAttribute('data-tema')).toBe('classico');
+    expect(document.body.getAttribute('data-tema')).toBe('dourado');
     const seletor = document.getElementById('seletorTema');
-    expect(seletor.value).toBe('classico');
+    expect(seletor.value).toBe('dourado');
   });
 
   test('inicializar aplica configurações de contraste e fonte', () => {

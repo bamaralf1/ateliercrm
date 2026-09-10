@@ -1,4 +1,4 @@
-const { ConfiguracoesView, DataStore, useConfigStore } = require('../js/atelier-crm.js');
+const { ConfiguracoesView, DataStore, useConfigStore, verificarPin, isPinHashed } = require('../js/atelier-crm.js');
 
 describe('ConfiguracoesView', () => {
   let ds, view;
@@ -37,19 +37,21 @@ describe('ConfiguracoesView', () => {
     expect(useConfigStore().artista.email).toBe('maria@arte.com');
   });
 
-  test('_salvarPin valida PIN de 4 dígitos', () => {
+  test('_salvarPin valida PIN de 4 dígitos', async () => {
     document.getElementById('viewPrincipal').innerHTML = view.render();
     view.aposRenderizar();
     document.getElementById('cfgPin').value = '1234';
-    view._salvarPin();
-    expect(useConfigStore().pin).toBe('1234');
+    await view._salvarPin();
+    const pinSalvo = useConfigStore().pin;
+    expect(isPinHashed(pinSalvo)).toBe(true);
+    expect(await verificarPin('1234', pinSalvo)).toBe(true);
   });
 
-  test('_salvarPin rejeita PIN inválido', () => {
+  test('_salvarPin rejeita PIN inválido', async () => {
     document.getElementById('viewPrincipal').innerHTML = view.render();
     view.aposRenderizar();
     document.getElementById('cfgPin').value = '12';
-    view._salvarPin();
+    await view._salvarPin();
     expect(useConfigStore().pin).toBeFalsy();
   });
 

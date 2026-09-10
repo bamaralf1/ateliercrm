@@ -3,7 +3,6 @@ const { DataStore } = require('../js/atelier-crm.js');
 
 beforeEach(() => {
   localStorage.clear();
-  window.imageStore = undefined;
 });
 
 describe('ImageStore', () => {
@@ -51,9 +50,10 @@ describe('ImageStore', () => {
 
   test('migrar converte imagens base64 de obras para idb:', async () => {
     require('../js/atelier-crm.js');
-    const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const png = (s) => `data:image/png;base64,${s}`;
+    const tinyPng = png('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
     const obras = [
-      { imagem: tinyPng, imagens: [tinyPng], imagemDestacada: tinyPng },
+      { imagem: tinyPng, imagens: [png('SEgundoIgual')], imagemDestacada: png('TerceiroIgual') },
       { imagem: 'idb:existente:full', imagens: [], imagemDestacada: '' }
     ];
     const count = await window.imageStore.migrar(obras);
