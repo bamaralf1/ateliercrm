@@ -342,7 +342,7 @@ export class EncomendasView extends BaseView {
     const clientes = clienteStore().items;
     this._encImagens = e.imagens ? [...e.imagens] : [];
     this._encImagensRef = [];
-    const optsClientes = clientes.map(c => `<option value="${c.id}" ${c.nome === e.clienteNome ? 'selected' : ''}>${c.nome} (${c.email || ''})</option>`).join('');
+    const optsClientes = clientes.map(c => `<option value="${c.id}" ${c.nome === e.clienteNome ? 'selected' : ''}>${sanitizarHTML(c.nome)} (${sanitizarHTML(c.email || '')})</option>`).join('');
     const statusOpts = STATUS_ENCOMENDA.map(s =>
       `<option value="${s}" ${e.status === s ? 'selected' : ''}>${this.rotuloStatus(s)}</option>`
     ).join('');
@@ -408,25 +408,38 @@ export class EncomendasView extends BaseView {
 
     const inputFotos = document.getElementById('encImagens');
     document.getElementById('btnEncAddImagens')?.addEventListener('click', () => inputFotos?.click());
-    inputFotos?.addEventListener('change', (ev) => {
+    inputFotos?.addEventListener('change', async (ev) => {
       const files = Array.from(ev.target.files).filter(f => f.type.startsWith('image/'));
-      files.forEach(f => {
-        const reader = new FileReader();
-        reader.onload = async (ev2) => {
-          const base64 = ev2.target.result;
-          try {
-            const ref = await imageStore.salvar(base64);
-            const url = await imageStore.carregar(ref.medium);
-            this._encImagens.push(url);
-            this._encImagensRef.push(ref.medium);
-          } catch {
-            this._encImagens.push(base64);
-            this._encImagensRef.push('');
-          }
-          this._renderEncPreview();
-        };
-        reader.readAsDataURL(f);
-      });
+      const baseDeIdx = this._encImagens.length;
+      for (let i = 0; i < files.length; i++) {
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev2) => resolve(ev2.target.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(files[i]);
+        });
+        const idx = baseDeIdx + i;
+        if (!base64) continue;
+        this._encImagens[idx] = null;
+        this._encImagensRef[idx] = '';
+        try {
+          const ref = await imageStore.salvar(base64);
+          const url = await imageStore.carregar(ref.medium);
+          this._encImagens[idx] = url;
+          this._encImagensRef[idx] = ref.medium;
+        } catch {
+          this._encImagens[idx] = base64;
+        }
+      }
+      const finais = [];
+      const finaisRef = [];
+      for (let i = 0; i < this._encImagens.length; i++) {
+        const v = this._encImagens[i];
+        if (v !== null && v !== undefined && v !== '') { finais.push(v); finaisRef.push(this._encImagensRef[i]); }
+      }
+      this._encImagens = finais;
+      this._encImagensRef = finaisRef;
+      this._renderEncPreview();
       ev.target.value = '';
     });
 
@@ -581,7 +594,7 @@ export class EncomendasView extends BaseView {
     }).join('') : '<p style="color:var(--text-muted);text-align:center;padding:12px;">Nenhum link de acesso gerado ainda.</p>';
 
     const clientesComEncomenda = clientes.filter(c => encomendas.some(e => e.clienteNome === c.nome));
-    const clientesOpts = clientesComEncomenda.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    const clientesOpts = clientesComEncomenda.map(c => `<option value="${c.id}">${sanitizarHTML(c.nome)}</option>`).join('');
 
     abrirModal(`
       <h3><i data-lucide="link"></i> Links de Acesso do Cliente</h3>
@@ -854,14 +867,16 @@ export class EncomendasView extends BaseView {
       });
     }
 
-    container.addEventListener('change', (e) => {
+    const changeHandler = (e) => {
       if (e.target.classList.contains('checkbox-item-enc')) {
         const id = e.target.dataset.id;
         if (e.target.checked) { this.selecionados.add(id); }
         else { this.selecionados.delete(id); }
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('change', changeHandler);
+    this._bindCache['changeEncomendas'] = { el: container, handler: changeHandler, type: 'change' };
 
     document.getElementById('bulkExportEnc')?.addEventListener('click', () => this.bulkAcao('exportar'));
     document.getElementById('bulkExcluirEnc')?.addEventListener('click', () => this.bulkAcao('excluir'));

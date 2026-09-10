@@ -121,6 +121,8 @@ export class DiarioView extends BaseView {
       'Desafio da cor complementar: cada dia um par de complementares.',
       'Semana de arte colaborativa: convide outro artista para trocar telas.'
     ];
+
+    this._carregarExtrasDiario();
   }
 
   // --- Getters ---
@@ -378,10 +380,10 @@ export class DiarioView extends BaseView {
         <div class="proc-timeline">
           ${etapas.sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)).map((et, i) => `
             <div class="proc-step">
-              <div class="ps-titulo">${i + 1}. ${et.titulo || 'Etapa'}</div>
+              <div class="ps-titulo">${i + 1}. ${sanitizarHTML(et.titulo || 'Etapa')}</div>
               <div class="ps-data"><i data-lucide="calendar"></i> ${et.data ? new Date(et.data).toLocaleDateString('pt-BR') : '—'}</div>
-              <div class="ps-desc">${et.descricao || ''}</div>
-              ${et.notasTecnicas ? `<div class="ps-notas"><i data-lucide="pencil"></i> ${et.notasTecnicas}</div>` : ''}
+              <div class="ps-desc">${sanitizarHTML(et.descricao || '')}</div>
+              ${et.notasTecnicas ? `<div class="ps-notas"><i data-lucide="pencil"></i> ${sanitizarHTML(et.notasTecnicas)}</div>` : ''}
               ${et.foto ? `<div class="ps-foto"><img src="${et.foto}" onclick="window.open('${et.foto}')"></div>` : ''}
               ${et.videoLink ? `<div class="ps-video">📉 <a href="${et.videoLink}" target="_blank">Ver vídeo time-lapse</a></div>` : ''}
               <div class="diario-acoes">
@@ -570,6 +572,86 @@ export class DiarioView extends BaseView {
     `;
   }
 
+  // ======================= INSPIRAÇÃO — FORMULÁRIOS =======================
+  abrirFormCitacao() {
+    const fechar = () => { const fs = document.querySelector('[data-fechar-citacao]'); if (fs) this._fecharModalDiario(); };
+    abrirModal(`
+      <h3><i data-lucide="quote"></i> Nova citação</h3>
+      <form id="formCitacaoDiario">
+        <div class="campo-form">
+          <label>Citação *</label>
+          <textarea id="citTexto" required aria-label="Texto da citação" style="width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);"></textarea>
+        </div>
+        <div class="campo-form">
+          <label>Autor</label>
+          <input type="text" id="citAutor" aria-label="Autor da citação" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarCitacao">Cancelar</button>
+          <button type="submit" class="btn-primario">Adicionar</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('btnCancelarCitacao').addEventListener('click', () => { const el = document.querySelector('.modal-overlay'); if (el) el.remove(); });
+    document.getElementById('formCitacaoDiario').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const texto = document.getElementById('citTexto').value.trim();
+      const autor = document.getElementById('citAutor').value.trim();
+      if (!texto) return;
+      this.citacoes.unshift({ texto: texto, autor: autor || 'Desconhecido' });
+      this._persistirExtrasDiario();
+      const el = document.querySelector('.modal-overlay'); if (el) el.remove();
+      this.rerenderizar();
+      mostrarToast('Citação adicionada!', 'sucesso');
+    });
+  }
+
+  abrirFormPrompt() {
+    abrirModal(`
+      <h3><i data-lucide="lightbulb"></i> Novo prompt criativo</h3>
+      <form id="formPromptDiario">
+        <div class="campo-form">
+          <label>Prompt *</label>
+          <textarea id="promptTexto" required aria-label="Texto do prompt" style="width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);"></textarea>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn-secundario" id="btnCancelarPrompt">Cancelar</button>
+          <button type="submit" class="btn-primario">Adicionar</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('btnCancelarPrompt').addEventListener('click', () => { const el = document.querySelector('.modal-overlay'); if (el) el.remove(); });
+    document.getElementById('formPromptDiario').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const texto = document.getElementById('promptTexto').value.trim();
+      if (!texto) return;
+      this.promptsDiarios.unshift(texto);
+      this._persistirExtrasDiario();
+      const el = document.querySelector('.modal-overlay'); if (el) el.remove();
+      this.rerenderizar();
+      mostrarToast('Prompt adicionado!', 'sucesso');
+    });
+  }
+
+  _persistirExtrasDiario() {
+    try {
+      localStorage.setItem('atelier-diario-extras', JSON.stringify({
+        citacoes: this.citacoes.slice(0, 3),
+        prompts: this.promptsDiarios.slice(0, 3)
+      }));
+    } catch (e) { /* dados locais */ }
+  }
+
+  _carregarExtrasDiario() {
+    try {
+      const raw = localStorage.getItem('atelier-diario-extras');
+      if (!raw) return;
+      const extras = JSON.parse(raw);
+      if (Array.isArray(extras.citacoes) && extras.citacoes.length) this.citacoes = extras.citacoes.concat(this.citacoes);
+      if (Array.isArray(extras.prompts) && extras.prompts.length) this.promptsDiarios = extras.prompts.concat(this.promptsDiarios);
+    } catch (e) { /* dados corrompidos: ignora */ }
+  }
+
   // ======================= EVENT BINDING =======================
   aposRenderizar() {
     this.removerListeners();
@@ -613,8 +695,8 @@ export class DiarioView extends BaseView {
 
     document.getElementById('btnNovaEtapa')?.addEventListener('click', () => this.abrirFormEtapa());
     document.getElementById('btnExportarProcessoPDF')?.addEventListener('click', () => this.exportarProcessoPDF());
-    document.getElementById('btnNovaCitacao')?.addEventListener('click', () => this.rerenderizar());
-    document.getElementById('btnNovoPrompt')?.addEventListener('click', () => this.rerenderizar());
+    document.getElementById('btnNovaCitacao')?.addEventListener('click', () => this.abrirFormCitacao());
+    document.getElementById('btnNovoPrompt')?.addEventListener('click', () => this.abrirFormPrompt());
 
     // Progress bar dot clicks — abre form pré-preenchido
     const procProgresso = document.querySelector('.proc-progresso');

@@ -85,7 +85,7 @@ export class ReferenciasView extends BaseView {
           <label>Obra vinculada</label>
           <select id="filtroRefObra">
             <option value="">Todas</option>
-            ${obras.map(o => `<option value="${o.id}" ${this.filtros.obra === o.id ? 'selected' : ''}>${o.titulo}</option>`).join('')}
+            ${obras.map(o => `<option value="${o.id}" ${this.filtros.obra === o.id ? 'selected' : ''}>${sanitizarHTML(o.titulo)}</option>`).join('')}
           </select>
         </div>
         <button class="btn-secundario" id="btnLimparFiltrosRef">Limpar filtros</button>
@@ -252,7 +252,7 @@ export class ReferenciasView extends BaseView {
             <label>Obra vinculada</label>
             <select id="campoObraVinculadaRef" aria-label="Obra vinculada">
               <option value="">Nenhuma</option>
-              ${obras.map(o => `<option value="${o.id}">${o.titulo}</option>`).join('')}
+              ${obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo)}</option>`).join('')}
             </select>
           </div>
         </div>

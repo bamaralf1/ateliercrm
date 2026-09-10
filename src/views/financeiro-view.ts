@@ -272,14 +272,16 @@ export class FinanceiroView extends BaseView {
       });
     }
 
-    container.addEventListener('change', (e) => {
+    const changeHandler = (e) => {
       if (e.target.classList.contains('checkbox-item-fin')) {
         const id = e.target.dataset.id;
         if (e.target.checked) { this.selecionados.add(id); }
         else { this.selecionados.delete(id); }
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('change', changeHandler);
+    this._bindCache['changeFinanceiro'] = { el: container, handler: changeHandler, type: 'change' };
 
     document.getElementById('bulkExportFin')?.addEventListener('click', () => this.bulkAcao('exportar'));
     document.getElementById('bulkCategoriaFin')?.addEventListener('click', () => this.bulkAcao('categoria'));

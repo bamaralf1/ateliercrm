@@ -13,6 +13,8 @@ export class GaleriaVirtualView {
     this._boundKeyDown = null;
     this._boundResize = null;
     this._imgURLs = {};
+    this._fadeTimer = null;
+    this._fadeToken = 0;
   }
 
   _urlDaObra(obra) {
@@ -20,10 +22,10 @@ export class GaleriaVirtualView {
     return ref.startsWith('idb:') ? (this._imgURLs[ref] || IDB_IMG_PLACEHOLDER) : ref;
   }
 
-  _resolverImagens() {
+  async _resolverImagens() {
     const refs = [...new Set(this.obrasVisiveis.map(o => (o && o.imagem) || '').filter(r => r.startsWith('idb:')))];
     if (refs.length === 0) return;
-    refs.forEach(async (ref) => {
+    await Promise.all(refs.map(async (ref) => {
       if (this._imgURLs[ref]) return;
       try {
         const url = await imageStore.carregar(ref);
@@ -31,8 +33,8 @@ export class GaleriaVirtualView {
       } catch (e) {
         console.warn('Erro ao carregar imagem IDB:', e);
       }
-      if (document.getElementById('gvImagem')) this._atualizarImagem();
-    });
+    }));
+    if (document.getElementById('gvImagem')) this._atualizarImagem();
   }
 
   carregarObras() {
@@ -50,7 +52,7 @@ export class GaleriaVirtualView {
       return `
         <div class="galeria-virtual" style="display:flex;align-items:center;justify-content:center;background:var(--bg);min-height:400px;">
           <div style="text-align:center;color:var(--text-muted);">
-            <div style="font-size:3rem;margin-bottom:12px;">🏛️</div>
+            <div class="icone-vazio" style="margin-bottom:12px;"><i data-lucide="landmark" aria-hidden="true"></i></div>
             <h3 style="margin:0 0 8px;color:var(--text);">Galeria Virtual</h3>
             <p style="margin:0;font-size:0.9rem;">Adicione obras com imagem no Catálogo para vê-las aqui.</p>
             <button class="btn-primario" style="margin-top:16px;" data-acao="irCatalogo">Ir para Catálogo</button>
@@ -70,8 +72,9 @@ export class GaleriaVirtualView {
     const stats = `<div class="gv-stats"><span><i data-lucide="layout-grid"></i> ${this.obrasVisiveis.length} obra${this.obrasVisiveis.length === 1 ? '' : 's'}</span><span class="gv-stats-dot">•</span><span><i data-lucide="dollar-sign"></i> ${formatarMoeda(Math.round(valorGaleria))} em exposição</span></div>`;
 
     const thumbs = this.obrasVisiveis.map((o, i) => `
-      <div class="gv-thumb ${i === this.indiceAtual ? 'ativo' : ''}" data-indice="${i}" title="${o.titulo || ''}">
-        <img src="${this._urlDaObra(o)}" alt="${o.titulo || ''}" loading="lazy">
+      <div class="gv-thumb ${i === this.indiceAtual ? 'ativo' : ''}" data-indice="${i}">
+        <img src="${this._urlDaObra(o)}" alt="${sanitizarHTML(o.titulo || '')}" loading="lazy">
+        <span class="gv-thumb-tooltip">${i + 1} · ${sanitizarHTML(o.titulo || 'Sem título')}${o.preco ? '<br>' + formatarMoeda(o.preco) : ''}</span>
       </div>
     `).join('');
 
@@ -79,31 +82,31 @@ export class GaleriaVirtualView {
       <div class="galeria-virtual gv-2d" id="galeriaContainer">
         <div class="barra-topo">
           <div>
-            <h2>🏛️ Galeria Virtual</h2>
+            <h2><i data-lucide="landmark" aria-hidden="true"></i> Galeria Virtual</h2>
             ${stats}
           </div>
           <div class="acoes-barra">
             <button class="btn-bar" id="btnCompartilhar" title="Compartilhar galeria"><i data-lucide="link"></i> Compartilhar</button>
-            <button class="btn-bar ${this.tourAtivo ? 'ativo' : ''}" id="btnTourToggle" title="Iniciar tour guiado">🎧 Tour</button>
+            <button class="btn-bar ${this.tourAtivo ? 'ativo' : ''}" id="btnTourToggle" title="Iniciar tour guiado"><i data-lucide="headphones" aria-hidden="true"></i> Tour</button>
           </div>
         </div>
-        <div class="gv-slide-container" id="gvSlideContainer">
+<div class="gv-slide-container" id="gvSlideContainer">
           <div class="gv-slide" id="gvSlide">
             <div class="gv-moldura" id="gvMoldura">
-              <img class="gv-imagem" id="gvImagem" src="${this._urlDaObra(obra)}" alt="${titulo}" draggable="false">
+              <img class="gv-imagem" id="gvImagem" src="${this._urlDaObra(obra)}" alt="${sanitizarHTML(titulo)}" draggable="false">
               <div class="gv-legenda">
-                <div class="gv-titulo">${titulo}</div>
-                ${meta ? `<div class="gv-meta">${meta}</div>` : ''}
+                <div class="gv-titulo">${sanitizarHTML(titulo)}</div>
+                ${meta ? `<div class="gv-meta">${sanitizarHTML(meta)}</div>` : ''}
                 <div class="gv-preco-linha">${preco ? `<span class="gv-preco">${preco}</span>` : ''}${statusPill}</div>
               </div>
             </div>
           </div>
           <button class="gv-nav gv-nav-prev" id="gvPrev" title="Anterior (←)" aria-label="Obra anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-          <button class="gv-nav gv-nav-next" id="gvNext" title="Próxima (→)" aria-label="Próxima obra"><i data-lucide="play" aria-hidden="true"></i></button>
+          <button class="gv-nav gv-nav-next" id="gvNext" title="Próxima (→)" aria-label="Próxima obra"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
           <div class="gv-zoom-controles" id="gvZoomControles">
-            <button class="gv-zoom-btn" id="gvZoomOut" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
+            <button class="gv-zoom-btn" id="gvZoomOut" title="Diminuir zoom" aria-label="Diminuir zoom"><i data-lucide="minus" aria-hidden="true"></i></button>
             <span class="gv-zoom-indicador" id="gvZoomIndicador">${Math.round(this.zoomNivel * 100)}%</span>
-            <button class="gv-zoom-btn" id="gvZoomIn" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+            <button class="gv-zoom-btn" id="gvZoomIn" title="Aumentar zoom" aria-label="Aumentar zoom"><i data-lucide="plus" aria-hidden="true"></i></button>
             <button class="gv-zoom-btn" id="gvZoomReset" title="Resetar zoom" aria-label="Resetar zoom"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>
           </div>
           <div class="gv-hint">Scroll para zoom · Duplo clique para ampliar · ← → para navegar</div>
@@ -114,10 +117,13 @@ export class GaleriaVirtualView {
         <div class="hud-navegacao" id="hudNavegacao">
           <span class="nav-indicador" id="navIndicador">${this.indiceAtual + 1} / ${this.obrasVisiveis.length} obras</span>
         </div>
+        <div class="tour-progresso-inline">
+          <div class="gv-progresso-tour"><div class="gv-progresso-barra" id="gvProgressoBarra" style="width:${Math.round(((this.indiceAtual + 1) / this.obrasVisiveis.length) * 100)}%"></div></div>
+        </div>
         <div class="hud-tour ${this.tourAtivo ? 'visivel' : ''}" id="hudTour">
           <button class="tour-btn" id="tourPrev" aria-label="Obra anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-          <button class="tour-btn ${this.tourAtivo ? 'ativo' : ''}" id="tourPlayPause" aria-label="Reproduzir ou pausar tour">${this.tourAtivo ? '⏸' : '▶'}</button>
-          <button class="tour-btn" id="tourNext" aria-label="Próxima obra"><i data-lucide="play" aria-hidden="true"></i></button>
+          <button class="tour-btn ${this.tourAtivo ? 'ativo' : ''}" id="tourPlayPause" aria-label="Reproduzir ou pausar tour"><i data-lucide="${this.tourAtivo ? 'pause' : 'play'}" aria-hidden="true"></i></button>
+          <button class="tour-btn" id="tourNext" aria-label="Próxima obra"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
           <span class="tour-progresso" id="tourProgresso">${this.indiceAtual + 1} / ${this.obrasVisiveis.length}</span>
         </div>
       </div>`;
@@ -187,10 +193,10 @@ export class GaleriaVirtualView {
       else this._aplicarZoom(2.5);
     });
 
-    // Clique na imagem abre lightbox premium
+    // Clique na imagem: com zoom aplicado, primeiro clica reseta o zoom
     slideContainer?.addEventListener('click', (e) => {
       if (e.target.closest('.gv-nav') || e.target.closest('.gv-zoom-controles')) return;
-      if (this.zoomNivel > 1) return;
+      if (this.zoomNivel > 1) { this._aplicarZoom(1); return; }
       this.abrirZoom(this.indiceAtual);
     });
 
@@ -224,8 +230,11 @@ export class GaleriaVirtualView {
     const tourProgresso = document.getElementById('tourProgresso');
 
     if (imagem) {
+      const token = ++this._fadeToken;
       imagem.style.opacity = '0';
-      setTimeout(() => {
+      window.clearTimeout(this._fadeTimer);
+      this._fadeTimer = window.setTimeout(() => {
+        if (token !== this._fadeToken) return;
         imagem.src = this._urlDaObra(obra);
         imagem.alt = obra.titulo || 'Sem título';
         imagem.style.opacity = '1';
@@ -253,6 +262,8 @@ export class GaleriaVirtualView {
     }
     if (navIndicador) navIndicador.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length} obras`;
     if (tourProgresso) tourProgresso.textContent = `${this.indiceAtual + 1} / ${this.obrasVisiveis.length}`;
+    const barraProgresso = document.getElementById('gvProgressoBarra');
+    if (barraProgresso) barraProgresso.style.width = `${Math.round(((this.indiceAtual + 1) / this.obrasVisiveis.length) * 100)}%`;
 
     document.querySelectorAll('.gv-thumb').forEach((el, i) => {
       el.classList.toggle('ativo', parseInt(el.dataset.indice) === this.indiceAtual);
@@ -350,9 +361,24 @@ export class GaleriaVirtualView {
 
   _atualizarBotaoTour() {
     const btn = document.getElementById('btnTourToggle');
-    if (btn && btn.classList) { btn.classList.toggle('ativo', this.tourAtivo); btn.textContent = this.tourAtivo ? '⏹ Tour' : '🎧 Tour'; }
+    if (btn && btn.classList) {
+      btn.classList.toggle('ativo', this.tourAtivo);
+      let icone = btn.querySelector('i[data-lucide]');
+      if (!icone) {
+        icone = document.createElement('i');
+        icone.setAttribute('data-lucide', this.tourAtivo ? 'square' : 'headphones');
+        btn.prepend(icone);
+      } else {
+        icone.setAttribute('data-lucide', this.tourAtivo ? 'square' : 'headphones');
+      }
+    }
     const pp = document.getElementById('tourPlayPause');
-    if (pp && pp.classList) { pp.classList.toggle('ativo', this.tourAtivo); pp.textContent = this.tourAtivo ? '⏸' : '▶'; }
+    if (pp) {
+      pp.classList.toggle('ativo', this.tourAtivo);
+      const i = pp.querySelector('i[data-lucide]');
+      if (i) i.setAttribute('data-lucide', this.tourAtivo ? 'pause' : 'play');
+    }
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons({ nameAttr: 'data-lucide' });
   }
 
   // --- Zoom (via Lightbox Premium) ---
@@ -418,5 +444,7 @@ export class GaleriaVirtualView {
     this.pararTour();
     this.fecharZoom();
     this._limparEventos();
+    if (this._fadeTimer) { window.clearTimeout(this._fadeTimer); this._fadeTimer = null; }
+    this._fadeToken++;
   }
 }

@@ -36,8 +36,8 @@ export class VendasView extends BaseView {
           <td onclick="event.stopPropagation()">
             <input type="checkbox" class="checkbox-item-vend" aria-label="Selecionar venda" data-id="${v.id}" ${this.selecionados.has(v.id) ? 'checked' : ''}>
           </td>
-          <td>${obra ? obra.titulo : (v.obraTitulo ? v.obraTitulo : '<span style="color:var(--text-muted)">Obra removida</span>')}</td>
-          <td>${cliente ? cliente.nome : (v.clienteNome ? v.clienteNome : '-')}</td>
+          <td>${obra ? sanitizarHTML(obra.titulo) : (v.obraTitulo ? sanitizarHTML(v.obraTitulo) : '<span style="color:var(--text-muted)">Obra removida</span>')}</td>
+          <td>${cliente ? sanitizarHTML(cliente.nome) : (v.clienteNome ? sanitizarHTML(v.clienteNome) : '-')}</td>
           <td>
             <div style="font-weight:600;font-variant-numeric:tabular-nums;">${formatarMoeda(v.precoFinal)}</div>
             ${liquido !== null ? `<div style="font-size:0.7rem;color:var(--text-muted);">líquido ${formatarMoeda(liquido)}${v.comissaoNome ? ' · ' + sanitizarHTML(v.comissaoNome) : ''}</div>` : ''}
@@ -123,7 +123,7 @@ export class VendasView extends BaseView {
           <label>Cliente</label>
           <select id="filtroVendaCliente" aria-label="Cliente">
             <option value="">Todos</option>
-            ${clientes.map(c => `<option value="${c.id}" ${this.filtros.cliente === c.id ? 'selected' : ''}>${c.nome}</option>`).join('')}
+            ${clientes.map(c => `<option value="${c.id}" ${this.filtros.cliente === c.id ? 'selected' : ''}>${sanitizarHTML(c.nome)}</option>`).join('')}
           </select>
         </div>
         <div class="campo-filtro">
@@ -259,7 +259,7 @@ export class VendasView extends BaseView {
           <label>Cliente *</label>
           <select id="campoClienteVenda" required aria-label="Cliente">
             <option value="">Selecione...</option>
-            ${clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+            ${clientes.map(c => `<option value="${c.id}">${sanitizarHTML(c.nome)}</option>`).join('')}
             <option value="__novo__">+ Cadastrar novo cliente</option>
           </select>
         </div>
@@ -428,7 +428,7 @@ export class VendasView extends BaseView {
       const cliente = clientes.find(c => c.id === v.clienteId);
       return `
         <li class="item-escolha-venda">
-          <span>${obra ? obra.titulo : (v.obraTitulo ? v.obraTitulo : '-')} — ${cliente ? cliente.nome : (v.clienteNome ? v.clienteNome : '-')} (${formatarMoeda(v.precoFinal)})</span>
+          <span>${obra ? sanitizarHTML(obra.titulo) : (v.obraTitulo ? sanitizarHTML(v.obraTitulo) : '-')} — ${cliente ? sanitizarHTML(cliente.nome) : (v.clienteNome ? sanitizarHTML(v.clienteNome) : '-')} (${formatarMoeda(v.precoFinal)})</span>
           <button class="btn-secundario" data-escolher-venda="${v.id}">Gerar Recibo</button>
         </li>
       `;

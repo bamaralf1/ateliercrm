@@ -117,16 +117,16 @@ export class ClientesView extends BaseView {
     const linhas = clientes.map(c => `
       <tr class="${this.selecionados.has(c.id) ? 'linha-selecionada' : ''}">
         <td onclick="event.stopPropagation()">
-          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
+          <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${sanitizarHTML(c.nome)}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
         </td>
-        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${c.nome}</strong> <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></td>
-        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${c.email || '-'}</td>
-        <td>${c.telefone || '-'}</td>
+        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;"><strong>${sanitizarHTML(c.nome)}</strong> <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></td>
+        <td data-abrir-ficha-cliente="${c.id}" style="cursor:pointer;">${sanitizarHTML(c.email) || '-'}</td>
+        <td>${sanitizarHTML(c.telefone) || '-'}</td>
         <td>${c.aquisicoes || 0}</td>
         <td style="font-variant-numeric:tabular-nums;"><strong>${formatarMoeda(this.gastoDoCliente(c.id))}</strong></td>
-        <td>${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('') || '-'}</td>
+        <td>${(c.tags || []).map(t => `<span class="badge-tag">${sanitizarHTML(t)}</span>`).join('') || '-'}</td>
         <td class="acoes-linha-tabela" onclick="event.stopPropagation()">
-          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i data-lucide="pen"></i></button>
+          <button class="btn-icone-tabela" data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${sanitizarHTML(c.nome)}"><i data-lucide="pen"></i></button>
           <button class="btn-icone-tabela" data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i data-lucide="trash-2"></i></button>
         </td>
       </tr>
@@ -148,21 +148,21 @@ export class ClientesView extends BaseView {
         ${clientes.map(c => `
           <div class="card-cliente ${this.selecionados.has(c.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${c.nome}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item-cli" data-id="${c.id}" aria-label="Selecionar ${sanitizarHTML(c.nome)}" ${this.selecionados.has(c.id) ? 'checked' : ''}>
             </div>
-            <div class="cc-avatar" style="background:${this.avatarCor(c.nome || '?')};">${(c.nome || '?').charAt(0).toUpperCase()}</div>
+            <div class="cc-avatar" style="background:${this.avatarCor(c.nome || '?')};">${sanitizarHTML((c.nome || '?').charAt(0).toUpperCase())}</div>
             <div class="cc-info" data-abrir-ficha-cliente="${c.id}">
-              <div class="cc-nome">${c.nome} <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></div>
-              <div class="cc-meta">${c.email || 'sem email'}</div>
+              <div class="cc-nome">${sanitizarHTML(c.nome)} <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span></div>
+              <div class="cc-meta">${sanitizarHTML(c.email) || 'sem email'}</div>
             </div>
             <div class="cc-footer">
               <span class="cc-aquisicoes">${c.aquisicoes || 0} compra${(c.aquisicoes || 0) === 1 ? '' : 's'}</span>
               <span class="cc-aquisicoes" style="font-variant-numeric:tabular-nums;">${formatarMoeda(this.gastoDoCliente(c.id))}</span>
-              <div class="cc-tags">${(c.tags || []).slice(0, 2).map(t => `<span class="badge-tag">${t}</span>`).join('')}</div>
+              <div class="cc-tags">${(c.tags || []).slice(0, 2).map(t => `<span class="badge-tag">${sanitizarHTML(t)}</span>`).join('')}</div>
             </div>
             <div class="cc-acoes">
-              <button data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${c.nome}"><i data-lucide="pen"></i></button>
-              <button data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${c.nome}"><i data-lucide="trash-2"></i></button>
+              <button data-editar-cliente="${c.id}" title="Editar" aria-label="Editar ${sanitizarHTML(c.nome)}"><i data-lucide="pen"></i></button>
+              <button data-excluir-cliente="${c.id}" title="Excluir" aria-label="Excluir ${sanitizarHTML(c.nome)}"><i data-lucide="trash-2"></i></button>
             </div>
           </div>
         `).join('')}
@@ -191,14 +191,16 @@ export class ClientesView extends BaseView {
       });
     }
 
-    container.addEventListener('change', (e) => {
+    const changeHandler = (e) => {
       if (e.target.classList.contains('checkbox-item-cli')) {
         const id = e.target.dataset.id;
         if (e.target.checked) { this.selecionados.add(id); }
         else { this.selecionados.delete(id); }
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('change', changeHandler);
+    this._bindCache['changeClientes'] = { el: container, handler: changeHandler, type: 'change' };
 
     document.getElementById('bulkExportCli')?.addEventListener('click', () => this.bulkAcao('exportar'));
     document.getElementById('bulkExcluirCli')?.addEventListener('click', () => this.bulkAcao('excluir'));
@@ -342,7 +344,7 @@ export class ClientesView extends BaseView {
         <li class="timeline-item">
           <div class="timeline-data">${formatarData(v.data)}</div>
           <div class="timeline-conteudo">
-            <strong>${obra ? obra.titulo : 'Obra removida'}</strong>
+            <strong>${obra ? sanitizarHTML(obra.titulo) : 'Obra removida'}</strong>
             ${formatarMoeda(v.precoFinal)} · <span class="tag-status ${classeStatusVenda(v.status)}">${rotuloStatusVenda(v.status)}</span>
           </div>
         </li>
@@ -350,10 +352,10 @@ export class ClientesView extends BaseView {
     }).join('') : '<p style="font-size:0.85rem;color:var(--text-muted);">Nenhuma compra registrada ainda.</p>';
 
     abrirModal(`
-      <h3>${c.nome}</h3>
-      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">${c.email || 'sem e-mail'} · ${c.telefone || 'sem telefone'}</p>
+      <h3>${sanitizarHTML(c.nome)}</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">${sanitizarHTML(c.email) || 'sem e-mail'} · ${sanitizarHTML(c.telefone) || 'sem telefone'}</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-        ${(c.tags || []).map(t => `<span class="badge-tag">${t}</span>`).join('')}
+        ${(c.tags || []).map(t => `<span class="badge-tag">${sanitizarHTML(t)}</span>`).join('')}
         <span class="badge-seg" style="background:${this.segCliente(c).cor}22;color:${this.segCliente(c).cor};">${this.segCliente(c).icone} ${this.segCliente(c).rotulo}</span>
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px;">
@@ -361,8 +363,8 @@ export class ClientesView extends BaseView {
         <div class="kpi-card"><div class="kpi-conteudo"><div class="kpi-rotulo">Compras</div><div class="kpi-valor" style="font-size:1rem;">${compras.length}</div></div></div>
         <div class="kpi-card"><div class="kpi-conteudo"><div class="kpi-rotulo">Ticket médio</div><div class="kpi-valor" style="font-size:1rem;">${compras.length ? formatarMoeda(compras.reduce((s, v) => s + Number(v.precoFinal || 0), 0) / compras.length) : '-'}</div></div></div>
       </div>
-      ${c.endereco ? `<p style="font-size:0.82rem;margin-top:8px;"><strong>Endereço:</strong> ${c.endereco}</p>` : ''}
-      ${c.notas ? `<p style="font-size:0.82rem;margin-top:6px;"><strong>Notas:</strong> ${c.notas}</p>` : ''}
+      ${c.endereco ? `<p style="font-size:0.82rem;margin-top:8px;"><strong>Endereço:</strong> ${sanitizarHTML(c.endereco)}</p>` : ''}
+      ${c.notas ? `<p style="font-size:0.82rem;margin-top:6px;"><strong>Notas:</strong> ${sanitizarHTML(c.notas)}</p>` : ''}
       <h3 style="margin-top:16px;font-size:0.95rem;">Histórico de compras</h3>
       <ul class="timeline-cliente">${timelineHtml}</ul>
       <div class="modal-acoes">

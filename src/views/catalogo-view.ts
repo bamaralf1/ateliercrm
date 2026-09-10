@@ -48,8 +48,8 @@ export class CatalogoView extends BaseView {
     const anos = this.anosDisponiveis();
     const todasObras = obraStore().items;
     const valorAcervo = todasObras.reduce((s, o) => s + (Number(o.preco) || 0), 0);
-    const nDisponiveis = todasObras.filter(o => (o.status || 'disponível').toLowerCase() === 'disponível' || classeStatus(o.status) === 'disponível').length;
-    const nVendidas = todasObras.filter(o => (o.status || '').toLowerCase() === 'vendida' || classeStatus(o.status) === 'vendida').length;
+    const nDisponiveis = todasObras.filter(o => (o.status || 'disponível').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'disponivel').length;
+    const nVendidas = todasObras.filter(o => (o.status || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'vendida').length;
     const nFavoritas = todasObras.filter(o => o.favorita).length;
 
     const conteudoLista = this._skeletonAtivo && this.modo === 'grid'
@@ -235,25 +235,25 @@ export class CatalogoView extends BaseView {
         ${obras.map(o => `
           <div class="card-obra ${o.favorita ? 'favorita' : ''} ${this.selecionados.has(o.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || 'obra'}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${sanitizarHTML(o.titulo || 'obra')}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i data-lucide="star"></i></div>' : ''}
             <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
-              <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
+              <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${sanitizarHTML(o.titulo)}" loading="lazy"${this.imgDataIdb(o)}>
               ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
-              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${o.titulo}"><i data-lucide="play" aria-hidden="true"></i></button>
+              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${sanitizarHTML(o.titulo)}"><i data-lucide="play" aria-hidden="true"></i></button>
             </div>
             <div class="corpo-card-obra" data-abrir-ficha="${o.id}">
-              <div class="titulo-obra">${o.titulo}</div>
-              <div class="meta-obra">${capitalizarTexto(o.tecnica)} · ${this.formatarDimensoes(o.dimensoes)}</div>
+              <div class="titulo-obra">${sanitizarHTML(o.titulo)}</div>
+              <div class="meta-obra">${sanitizarHTML(capitalizarTexto(o.tecnica))} · ${this.formatarDimensoes(o.dimensoes)}</div>
               <div class="rodape-card-obra">
                 <span class="preco-obra">${formatarMoeda(o.preco)}</span>
                 <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
               </div>
             </div>
             <div class="acoes-card-obra">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${o.titulo}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${o.titulo} à comparação"><i data-lucide="bar-chart-3"></i></button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${sanitizarHTML(o.titulo)}">${o.favorita ? '★' : '☆'}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${sanitizarHTML(o.titulo)} à comparação"><i data-lucide="bar-chart-3"></i></button>
               <button data-editar-obra="${o.id}">✎ Editar</button>
               <button class="btn-excluir-obra" data-excluir-obra="${o.id}">🗑 Excluir</button>
             </div>
@@ -269,21 +269,21 @@ export class CatalogoView extends BaseView {
         ${obras.map(o => `
           <div class="linha-obra-lista ${o.favorita ? 'favorita' : ''} ${this.selecionados.has(o.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk-lista">
-              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${o.titulo || 'obra'}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
+              <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${sanitizarHTML(o.titulo || 'obra')}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<span class="icone-favorita-lista"><i data-lucide="star"></i></span>' : ''}
-            <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${o.titulo}" loading="lazy"${this.imgDataIdb(o)}>
+            <img class="thumb-lista lazy-img idb-placeholder" data-abrir-ficha="${o.id}" src="${this.obterImagem(o)}" alt="${sanitizarHTML(o.titulo)}" loading="lazy"${this.imgDataIdb(o)}>
             <div class="info-lista" data-abrir-ficha="${o.id}">
-              <div class="titulo-obra">${o.titulo}</div>
-              <div class="meta-obra">${capitalizarTexto(o.tecnica)} · ${this.formatarDimensoes(o.dimensoes)} · ${o.ano || '-'}</div>
+              <div class="titulo-obra">${sanitizarHTML(o.titulo)}</div>
+              <div class="meta-obra">${sanitizarHTML(capitalizarTexto(o.tecnica))} · ${this.formatarDimensoes(o.dimensoes)} · ${o.ano || '-'}</div>
             </div>
             <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
             <span class="preco-lista">${formatarMoeda(o.preco)}</span>
             <div class="acoes-lista">
-              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${o.titulo}">${o.favorita ? '★' : '☆'}</button>
-              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${o.titulo} à comparação"><i data-lucide="bar-chart-3"></i></button>
+              <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${sanitizarHTML(o.titulo)}">${o.favorita ? '★' : '☆'}</button>
+              <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${sanitizarHTML(o.titulo)} à comparação"><i data-lucide="bar-chart-3"></i></button>
               <button data-editar-obra="${o.id}" aria-label="Editar obra"><i data-lucide="pencil" aria-hidden="true"></i></button>
-              <button data-excluir-obra="${o.id}" aria-label="Excluir ${o.titulo}">🗑</button>
+              <button data-excluir-obra="${o.id}" aria-label="Excluir ${sanitizarHTML(o.titulo)}">🗑</button>
             </div>
           </div>
         `).join('')}
@@ -342,7 +342,7 @@ export class CatalogoView extends BaseView {
     });
 
     // Keyboard shortcuts for bulk selection
-    container.addEventListener('keydown', (e) => {
+    const tecladoHandler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
         e.preventDefault();
         this.obrasFiltradas().forEach(o => this.selecionados.add(o.id));
@@ -353,27 +353,12 @@ export class CatalogoView extends BaseView {
         this.selecionados.clear();
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('keydown', tecladoHandler);
+    this._bindCache['tecladoCatalogo'] = { el: container, handler: tecladoHandler, type: 'keydown' };
 
-    // Shift+click range selection
+    // Shift+click range selection (mesclado no delegHandler cacheado p/ evitar leak)
     let ultimoClickIdx = -1;
-    container.addEventListener('click', (e) => {
-      const cb = e.target.closest('.checkbox-item');
-      if (cb && e.shiftKey) {
-        e.preventDefault();
-        const obrasRange = this.obrasFiltradas();
-        const atualIdx = obrasRange.findIndex(o => o.id === cb.dataset.id);
-        if (ultimoClickIdx >= 0 && atualIdx >= 0) {
-          const [inicio, fim] = ultimoClickIdx <= atualIdx ? [ultimoClickIdx, atualIdx] : [atualIdx, ultimoClickIdx];
-          for (let i = inicio; i <= fim; i++) { this.selecionados.add(obrasRange[i].id); }
-          this.rerenderizar();
-        }
-        ultimoClickIdx = atualIdx;
-      } else if (cb) {
-        const obrasRange = this.obrasFiltradas();
-        ultimoClickIdx = obrasRange.findIndex(o => o.id === cb.dataset.id);
-      }
-    });
 
     const btnComparar = document.getElementById('btnComparar');
     if (btnComparar) btnComparar.addEventListener('click', () => this.abrirComparacao(Array.from(this.selecionados)));
@@ -391,7 +376,7 @@ export class CatalogoView extends BaseView {
       });
     }
 
-    container.addEventListener('change', (e) => {
+    const selecaoHandler = (e) => {
       if (e.target.classList.contains('checkbox-item')) {
         const id = e.target.dataset.id;
         if (e.target.checked) {
@@ -401,7 +386,9 @@ export class CatalogoView extends BaseView {
         }
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('change', selecaoHandler);
+    this._bindCache['selecaoCatalogo'] = { el: container, handler: selecaoHandler, type: 'change' };
 
     document.getElementById('bulkMarcarFavorita')?.addEventListener('click', () => this.bulkAcao('favoritar'));
     document.getElementById('bulkDesmarcarFavorita')?.addEventListener('click', () => this.bulkAcao('desfavoritar'));
@@ -432,6 +419,23 @@ export class CatalogoView extends BaseView {
     if (fab) fab.addEventListener('click', () => this.abrirFormulario());
 
     const delegHandler = (e) => {
+      const alvoCheckbox = e.target.closest('.checkbox-item');
+      if (alvoCheckbox && e.shiftKey) {
+        e.preventDefault();
+        const obrasRange = this.obrasFiltradas();
+        const atualIdx = obrasRange.findIndex(o => o.id === alvoCheckbox.dataset.id);
+        if (ultimoClickIdx >= 0 && atualIdx >= 0) {
+          const [inicio, fim] = ultimoClickIdx <= atualIdx ? [ultimoClickIdx, atualIdx] : [atualIdx, ultimoClickIdx];
+          for (let i = inicio; i <= fim; i++) { this.selecionados.add(obrasRange[i].id); }
+          this.rerenderizar();
+        }
+        ultimoClickIdx = atualIdx;
+        return;
+      }
+      if (alvoCheckbox) {
+        const obrasRange = this.obrasFiltradas();
+        ultimoClickIdx = obrasRange.findIndex(o => o.id === alvoCheckbox.dataset.id);
+      }
       const alvoImg = e.target.closest('.imagem-card-wrapper img, .thumb-lista');
       const alvoFicha = e.target.closest('[data-abrir-ficha]');
       const alvoEditar = e.target.closest('[data-editar-obra]');
@@ -1263,18 +1267,18 @@ export class CatalogoView extends BaseView {
           ` : ''}
         </div>
         <div class="ficha-info">
-          <div class="titulo-ficha">${o.titulo}</div>
-          <div class="serie-ficha">${o.serie ? 'Série: ' + o.serie : '&nbsp;'}</div>
+          <div class="titulo-ficha">${sanitizarHTML(o.titulo)}</div>
+          <div class="serie-ficha">${o.serie ? 'Série: ' + sanitizarHTML(o.serie) : '&nbsp;'}</div>
           <table class="tabela-ficha">
             <caption class="sr-only">Ficha técnica da obra</caption>
-            <tr><td>Técnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
+            <tr><td>Técnica</td><td>${sanitizarHTML(capitalizarTexto(o.tecnica))}</td></tr>
             <tr><td>Dimensões</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
             <tr><td>Ano</td><td>${o.ano || '-'}</td></tr>
             <tr><td>Status</td><td><span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span></td></tr>
             <tr><td>Preço</td><td>${formatarMoeda(o.preco)}</td></tr>
             <tr><td>Cadastrada em</td><td>${formatarData(o.dataCadastro || o.criadoEm)}</td></tr>
           </table>
-          ${o.descricao ? `<div class="descricao-ficha">${o.descricao}</div>` : ''}
+          ${o.descricao ? `<div class="descricao-ficha">${sanitizarHTML(o.descricao)}</div>` : ''}
           <div class="ficha-qrcode" id="fichaQRCode"></div>
           <div class="acoes-ficha">
             <button class="btn-secundario" id="btnEditarFicha">✎ Editar</button>
@@ -1386,18 +1390,18 @@ export class CatalogoView extends BaseView {
       return `
       <div class="comparacao-coluna">
         <div class="comparacao-imagem">
-          <img src="${imgSrc}" alt="${o.titulo}" class="idb-placeholder"${imgIdb}>
+          <img src="${imgSrc}" alt="${sanitizarHTML(o.titulo)}" class="idb-placeholder"${imgIdb}>
         </div>
-        <h3 class="comparacao-titulo">${o.titulo}</h3>
-        ${o.serie ? `<p class="comparacao-serie">${o.serie}</p>` : ''}
+        <h3 class="comparacao-titulo">${sanitizarHTML(o.titulo)}</h3>
+        ${o.serie ? `<p class="comparacao-serie">${sanitizarHTML(o.serie)}</p>` : ''}
         <table class="comparacao-tabela">
           <caption class="sr-only">Informações da obra</caption>
-          <tr><td>Técnica</td><td>${capitalizarTexto(o.tecnica)}</td></tr>
+          <tr><td>Técnica</td><td>${sanitizarHTML(capitalizarTexto(o.tecnica))}</td></tr>
           <tr><td>Dimensões</td><td>${this.formatarDimensoes(o.dimensoes)}</td></tr>
           <tr><td>Ano</td><td>${o.ano || '-'}</td></tr>
           <tr><td>Status</td><td><span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span></td></tr>
           <tr><td>Preço</td><td>${formatarMoeda(o.preco)}</td></tr>
-          <tr><td>Série</td><td>${o.serie || '-'}</td></tr>
+          <tr><td>Série</td><td>${sanitizarHTML(o.serie) || '-'}</td></tr>
         </table>
       </div>
     `}).join('');

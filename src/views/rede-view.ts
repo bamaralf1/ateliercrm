@@ -63,16 +63,16 @@ export class RedeView extends BaseView {
     return `
       <div class="cont-card" style="border-left-color:var(--accent)">
         ${c.vip ? '<span class="cont-vip">👑 VIP</span>' : ''}
-        <div class="cont-nome">${this.catIcones[cat] || '📋'} ${c.nome || ''}</div>
+        <div class="cont-nome">${this.catIcones[cat] || '📋'} ${sanitizarHTML(c.nome || '')}</div>
         <span class="cont-cat-tag ${cat}">${this.catLabels[cat] || cat}</span>
         ${c.nivelRelacionamento ? `<span class="cont-estrelas" style="margin-left:6px;">${'★'.repeat(Math.min(5,Number(c.nivelRelacionamento))) }${'☆'.repeat(Math.max(0,5-Number(c.nivelRelacionamento)))}</span>` : ''}
-        <div class="cont-inst">${c.instituicao || ''}${c.cargo ? ' · '+c.cargo : ''}</div>
-        <div class="cont-contato">${c.contato || ''}${c.email ? ' · '+c.email : ''}${c.redes ? '<br>🖐 '+c.redes : ''}</div>
-        ${c.comoConheceu ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🤝 ${c.comoConheceu}</div>` : ''}
-        ${c.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${c.notas}</div>` : ''}
-        ${c.estagio ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${this.estagios[c.estagio] || c.estagio}</div>` : ''}
+        <div class="cont-inst">${sanitizarHTML(c.instituicao || '')}${c.cargo ? ' · '+sanitizarHTML(c.cargo) : ''}</div>
+        <div class="cont-contato">${sanitizarHTML(c.contato || '')}${c.email ? ' · '+sanitizarHTML(c.email) : ''}${c.redes ? '<br>🖐 '+sanitizarHTML(c.redes) : ''}</div>
+        ${c.comoConheceu ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🤝 ${sanitizarHTML(c.comoConheceu)}</div>` : ''}
+        ${c.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${sanitizarHTML(c.notas)}</div>` : ''}
+        ${c.estagio ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${this.estagios[c.estagio] || sanitizarHTML(c.estagio)}</div>` : ''}
         ${alerta ? `<div class="cont-alerta ${alerta}">${alertaMsg}</div>` : ''}
-        ${c.proximoPasso ? `<div class="cont-passos">🎯 ${c.proximoPasso}</div>` : ''}
+        ${c.proximoPasso ? `<div class="cont-passos">🎯 ${sanitizarHTML(c.proximoPasso)}</div>` : ''}
         <div class="cont-acoes"><button data-acao="editarContato" data-id="${c.id}">✏️ Editar</button><button data-acao="interagirContato" data-id="${c.id}">💬 Interagir</button><button data-acao="excluirContato" data-id="${c.id}" style="color:#dc2626;" aria-label="Excluir contato">🗑️</button></div>
       </div>`;
   }
@@ -91,8 +91,8 @@ export class RedeView extends BaseView {
           ${(contPorEstagio[e] || []).map(c => {
             const dias = c.ultimoContato ? Math.floor((hoje - new Date(c.ultimoContato)) / 86400000) : null;
             return `<div class="pipe-card" data-id="${c.id}">
-              <div class="pipe-nome">${this.catIcones[c.categoria] || '📋'} ${c.nome}</div>
-              <div class="pipe-cat">${this.catLabels[c.categoria] || c.categoria}</div>
+              <div class="pipe-nome">${this.catIcones[c.categoria] || '📋'} ${sanitizarHTML(c.nome)}</div>
+              <div class="pipe-cat">${this.catLabels[c.categoria] || sanitizarHTML(c.categoria)}</div>
               ${dias !== null ? `<div class="pipe-dias">${dias > 30 ? '⚠️ '+dias+' dias' : '✅ '+dias+' dias'}</div>` : ''}
               <div style="display:flex;gap:4px;margin-top:6px;">
                 <button data-acao="pipeMovEsq" data-id="${c.id}" style="font-size:0.7rem;padding:2px 6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;" aria-label="Mover para esquerda"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
@@ -124,7 +124,7 @@ export class RedeView extends BaseView {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
         <select class="sel-interacao-contato" id="selInteracaoContato">
           <option value="">— Todos os contatos —</option>
-          ${contatos.map(c => `<option value="${c.id}" ${selValue === c.id ? 'selected' : ''}>${this.catIcones[c.categoria] || '📋'} ${c.nome}</option>`).join('')}
+          ${contatos.map(c => `<option value="${c.id}" ${selValue === c.id ? 'selected' : ''}>${this.catIcones[c.categoria] || '📋'} ${sanitizarHTML(c.nome)}</option>`).join('')}
         </select>
         <button class="btn-primario" id="btnNovaInteracao" style="font-size:0.8rem;padding:6px 14px;">✨ Nova Interacao</button>
       </div>
@@ -136,14 +136,14 @@ export class RedeView extends BaseView {
     const inter = this.interacoes.filter(i => i.contatoId === contatoId).sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
     if (!c) return '<p style="color:var(--text-muted);">Contato nao encontrado.</p>';
     return `
-      <div style="margin-bottom:12px;font-size:0.9rem;font-weight:600;color:var(--text);">${this.catIcones[c.categoria] || '📋'} ${c.nome} — ${inter.length} interacao(oes)</div>
+      <div style="margin-bottom:12px;font-size:0.9rem;font-weight:600;color:var(--text);">${this.catIcones[c.categoria] || '📋'} ${sanitizarHTML(c.nome)} — ${inter.length} interacao(oes)</div>
       ${inter.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhuma interacao registrada.</p>' : `
       <div class="timeline">${inter.map(i => `
         <div class="tl-item">
-          <div class="tl-tipo">${this.tiposInteracao[i.tipo] || i.tipo} · ${i.data || ''}</div>
-          <div class="tl-resumo">${i.resumo || ''}</div>
-          ${i.sentimento ? `<span class="tl-sentimento ${i.sentimento}">${i.sentimento === 'positivo' ? '😊' : (i.sentimento === 'neutro' ? '😐' : '😟')} ${i.sentimento}</span>` : ''}
-          ${i.followUp ? `<span style="font-size:0.7rem;color:#92400e;margin-left:6px;">🔝 Follow-up: ${i.followUpNotas || 'pendente'}</span>` : ''}
+          <div class="tl-tipo">${sanitizarHTML(this.tiposInteracao[i.tipo] || i.tipo)} · ${i.data || ''}</div>
+          <div class="tl-resumo">${sanitizarHTML(i.resumo || '')}</div>
+          ${i.sentimento ? `<span class="tl-sentimento ${i.sentimento}">${i.sentimento === 'positivo' ? '😊' : (i.sentimento === 'neutro' ? '😐' : '😟')} ${sanitizarHTML(i.sentimento)}</span>` : ''}
+          ${i.followUp ? `<span style="font-size:0.7rem;color:#92400e;margin-left:6px;">🔝 Follow-up: ${sanitizarHTML(i.followUpNotas || 'pendente')}</span>` : ''}
           <div class="tl-data">${i.anexos && i.anexos.length > 0 ? '📎 '+i.anexos.length+' anexo(s)' : ''}</div>
         </div>`).join('')}</div>`}`;
   }
@@ -162,14 +162,14 @@ export class RedeView extends BaseView {
       <div class="evt-grid">${eventos.length === 0 ? '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhum evento cadastrado.</p>' : ''}${eventos.map(e => {
         const obras = (e.obrasEnviadas || []).map(oId => { const o = obraStore().items.find(o => o.id === oId); return o ? o.titulo : null; }).filter(Boolean);
         return `<div class="evt-card">
-          <span class="evt-tipo-tag ${e.tipo || 'mostra'}">${tiposEvento[e.tipo] || e.tipo}</span>
-          <div class="evt-nome" style="margin-top:4px;">${e.nome}</div>
-          <div class="evt-status ${e.status || 'pesquisando'}">${eventosStatus[e.status] || e.status}</div>
-          <div class="evt-info">${e.dataEvento ? '📅 '+e.dataEvento : ''}${e.dataInscricao ? ' · Inscricao: '+e.dataInscricao : ''}${e.investimento ? '<br>💰 R$ '+Number(e.investimento).toFixed(2) : ''}${e.retorno && Number(e.retorno) > 0 ? ' · Retorno: R$ '+Number(e.retorno).toFixed(2) : ''}</div>
-          ${e.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${e.notas}</div>` : ''}
-          ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🖼️ Obras: ${obras.join(', ')}</div>` : ''}
-          ${e.documentacao && e.documentacao.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📞 Docs: ${e.documentacao.join(', ')}</div>` : ''}
-          ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">🏆 ${e.resultado}</div>` : ''}
+          <span class="evt-tipo-tag ${e.tipo || 'mostra'}">${tiposEvento[e.tipo] || sanitizarHTML(e.tipo)}</span>
+          <div class="evt-nome" style="margin-top:4px;">${sanitizarHTML(e.nome)}</div>
+          <div class="evt-status ${e.status || 'pesquisando'}">${eventosStatus[e.status] || sanitizarHTML(e.status)}</div>
+          <div class="evt-info">${e.dataEvento ? '📅 '+sanitizarHTML(e.dataEvento) : ''}${e.dataInscricao ? ' · Inscricao: '+sanitizarHTML(e.dataInscricao) : ''}${e.investimento ? '<br>💰 R$ '+Number(e.investimento).toFixed(2) : ''}${e.retorno && Number(e.retorno) > 0 ? ' · Retorno: R$ '+Number(e.retorno).toFixed(2) : ''}</div>
+          ${e.notas ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📝 ${sanitizarHTML(e.notas)}</div>` : ''}
+          ${obras.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">🖼️ Obras: ${obras.map(t => sanitizarHTML(t)).join(', ')}</div>` : ''}
+          ${e.documentacao && e.documentacao.length > 0 ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">📞 Docs: ${e.documentacao.map(d => sanitizarHTML(d)).join(', ')}</div>` : ''}
+          ${e.resultado ? `<div style="font-size:0.8rem;color:var(--text);margin-top:6px;">🏆 ${sanitizarHTML(e.resultado)}</div>` : ''}
           <div class="evt-acoes"><button data-acao="editarEvento" data-id="${e.id}">✏️ Editar</button><button data-acao="excluirEvento" data-id="${e.id}" style="color:#dc2626;" aria-label="Excluir evento">🗑️</button></div>
         </div>`;
       }).join('')}</div>`;
@@ -449,7 +449,7 @@ export class RedeView extends BaseView {
     const tipoOpts = Object.entries(this.tiposInteracao).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
 
     abrirModal(`<h3>✨ Nova Interacao</h3>
-      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato" aria-label="Contato">${contatos.map(c => `<option value="${c.id}" ${c.id === selId ? 'selected' : ''}>${this.catIcones[c.categoria]||'📋'} ${c.nome}</option>`).join('')}</select></div>
+      <form id="formModal"><div class="campo-form"><label>Contato</label><select id="fIntContato" aria-label="Contato">${contatos.map(c => `<option value="${c.id}" ${c.id === selId ? 'selected' : ''}>${this.catIcones[c.categoria]||'📋'} ${sanitizarHTML(c.nome)}</option>`).join('')}</select></div>
       <div class="campo-form"><label>Tipo</label><select id="fIntTipo" aria-label="Tipo">${tipoOpts}</select></div>
       <div class="campo-form"><label>Data</label><input type="date" id="fIntData" aria-label="Data" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="campo-form"><label>Resumo</label><textarea id="fIntResumo" aria-label="Resumo" placeholder="Descreva a interacao..."></textarea></div>
@@ -475,7 +475,7 @@ export class RedeView extends BaseView {
     const statusOpts = ['pesquisando','inscrito','selecionado','participando','finalizado'].map(s => `<option value="${s}" ${e && e.status === s ? 'selected' : ''}>${s}</option>`).join('');
     const tipoOpts = ['bienal','feira','mostra','edital','premio'].map(t => `<option value="${t}" ${e && e.tipo === t ? 'selected' : ''}>${t}</option>`).join('');
     const obras = this.obras || obraStore().items;
-    const obraOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem titulo'}</option>`).join('');
+    const obraOpts = obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem titulo')}</option>`).join('');
 
     abrirModal(`<h3>${e ? '✏️ Editar' : '✨ Novo'} Evento</h3>
       <form id="formModal"><div class="modal-form-grid">

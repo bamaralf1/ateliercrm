@@ -28,10 +28,12 @@ export class ImageLightbox {
     this._onTouchEnd = null;
     this._onWheel = null;
     this.overlay = null;
+    this._preloaded = {};
   }
 
   open(images, index = 0) {
     if (!images || images.length === 0) return;
+    if (this.isOpen) this.close();
     this.images = images;
     this.currentIndex = Math.max(0, Math.min(index, images.length - 1));
     this.scale = 1;
@@ -51,6 +53,7 @@ export class ImageLightbox {
     this._unbindEvents();
     if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
     this.overlay = null;
+    this._preloaded = {};
     document.body.style.overflow = '';
   }
 
@@ -108,8 +111,9 @@ export class ImageLightbox {
         <span class="lb-counter">${this.currentIndex + 1} / ${this.images.length}</span>
         <div class="lb-top-actions">
           <button class="lb-btn lb-ctrl-autoplay" title="Slideshow" aria-label="Iniciar slideshow"><i data-lucide="play" aria-hidden="true"></i></button>
-          <button class="lb-btn lb-ctrl-download" title="Download" aria-label="Baixar imagem">⬇</button>
+          <button class="lb-btn lb-ctrl-download" title="Download" aria-label="Baixar imagem"><i data-lucide="download" aria-hidden="true"></i></button>
           <button class="lb-btn lb-ctrl-share" title="Compartilhar" aria-label="Compartilhar"><i data-lucide="link"></i></button>
+          <button class="lb-btn lb-ctrl-info" title="Informações" aria-label="Informações da obra"><i data-lucide="info" aria-hidden="true"></i></button>
           <button class="lb-btn lb-ctrl-close" title="Fechar (ESC)" aria-label="Fechar"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
       </div>
@@ -122,9 +126,15 @@ export class ImageLightbox {
             <div class="lb-caption-sub"></div>
           </div>
         </div>
+        <div class="lb-painel-info" id="lbPainelInfo">
+          <div class="lb-info-title"></div>
+          <div class="lb-info-sub"></div>
+          <div class="lb-info-price"></div>
+          <div class="lb-info-desc"></div>
+        </div>
       </div>
       <button class="lb-nav lb-nav-prev" title="Anterior (←)" aria-label="Imagem anterior"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-      <button class="lb-nav lb-nav-next" title="Próximo (→)" aria-label="Próxima imagem"><i data-lucide="play" aria-hidden="true"></i></button>
+      <button class="lb-nav lb-nav-next" title="Próximo (→)" aria-label="Próxima imagem"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
       <div class="lb-thumbstrip">
         <div class="lb-thumb-track"></div>
       </div>
@@ -139,12 +149,16 @@ export class ImageLightbox {
     overlay.querySelector('.lb-ctrl-autoplay')?.addEventListener('click', () => this.toggleAutoPlay());
     overlay.querySelector('.lb-ctrl-download')?.addEventListener('click', () => this._download());
     overlay.querySelector('.lb-ctrl-share')?.addEventListener('click', () => this._share());
+    const infoBtn = overlay.querySelector('.lb-ctrl-info');
+    if (infoBtn) infoBtn.addEventListener('click', () => overlay.classList.toggle('lb-info-aberto'));
+    overlay.querySelector('.lb-painel-info')?.addEventListener('click', () => overlay.classList.remove('lb-info-aberto'));
 
     this._renderThumbs();
     overlay.querySelector('.lb-main')?.addEventListener('dblclick', (e) => {
       if (this.scale > 1) this.resetZoom();
       else this._setScale(2.5);
     });
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons({ nameAttr: 'data-lucide' });
   }
 
   _renderThumbs() {
@@ -194,6 +208,9 @@ export class ImageLightbox {
 
     loader.style.display = 'block';
     imgEl.style.opacity = '0';
+    imgEl.classList.remove('lb-img-entra');
+    void imgEl.offsetWidth;
+    imgEl.classList.add('lb-img-entra');
 
     const tempImg = new Image();
     tempImg.onload = () => {
@@ -216,6 +233,32 @@ export class ImageLightbox {
     captionTitle.textContent = parts.join(' · ') || '';
     if (img.price) captionSub.textContent = img.price;
     else captionSub.textContent = img.caption || '';
+
+    const painel = this.overlay.querySelector('.lb-painel-info');
+    if (painel) {
+      painel.querySelector('.lb-info-title').textContent = img.title || '';
+      painel.querySelector('.lb-info-sub').textContent = img.subtitle || '';
+      painel.querySelector('.lb-info-price').textContent = img.price || '';
+      painel.querySelector('.lb-info-desc').textContent = img.caption || '';
+    }
+
+    this._preloadAdjacentes();
+  }
+
+  // Pré-carrega o predecessor e o sucessor para navegação instantânea
+  _preloadAdjacentes() {
+    const total = this.images.length;
+    if (total <= 1) return;
+    [this.currentIndex - 1, this.currentIndex + 1].forEach(idx => {
+      const alvo = (idx + total) % total;
+      if (alvo === this.currentIndex) return;
+      const src = this.images[alvo].src;
+      if (!this._preloaded) this._preloaded = {};
+      if (this._preloaded[src]) return;
+      this._preloaded[src] = true;
+      const t = new Image();
+      t.src = src;
+    });
   }
 
   _applyTransform() {
@@ -262,17 +305,28 @@ export class ImageLightbox {
     if (navigator.share) {
       navigator.share({ title: text, text }).catch(() => {});
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => this._toast('<i data-lucide="link"></i> Info copiada!')).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => this._toast('Info copiada!', 'link')).catch(() => {});
     } else {
-      this._toast('<i data-lucide="clipboard"></i> ' + text);
+      this._toast(text, 'clipboard');
     }
   }
 
-  _toast(msg) {
+  _toast(msg, icone) {
     const t = document.createElement('div');
     t.className = 'lb-toast';
-    t.textContent = msg;
+    if (icone) {
+      const icon = document.createElement('i');
+      icon.className = 'lb-toast-icone';
+      icon.setAttribute('data-lucide', icone);
+      t.appendChild(icon);
+      const span = document.createElement('span');
+      span.textContent = msg;
+      t.appendChild(span);
+    } else {
+      t.textContent = msg;
+    }
     document.body.appendChild(t);
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons({ nameAttr: 'data-lucide' });
     setTimeout(() => { if (t.parentNode) t.remove(); }, 2000);
   }
 

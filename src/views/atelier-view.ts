@@ -245,7 +245,7 @@ renderCardMaterial(m) {
       <div style="margin-bottom:12px;">
         <select id="selCustoObra" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--bg);color:var(--text);width:100%;max-width:400px;">
           <option value="">— Selecione uma obra —</option>
-          ${obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'} ${o.preco ? '— '+formatarMoeda(o.preco) : ''}</option>`).join('')}
+          ${obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem título')} ${o.preco ? '— '+formatarMoeda(o.preco) : ''}</option>`).join('')}
         </select>
       </div>
       <div id="custoObraDetalhe">
@@ -444,7 +444,7 @@ renderCardMaterial(m) {
     const mat = this.dataStore.buscarPorId('materiais', id);
     if (!mat) return;
     const obras = this.obras;
-    const opcoes = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
+    const opcoes = obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem título')}</option>`).join('');
 
     abrirModal(`
       <h3>📉 Consumir: ${mat.nome}</h3>
@@ -485,7 +485,7 @@ renderCardMaterial(m) {
     const materiais = this.materiais;
     const obras = this.obras;
     const matOpts = materiais.map(m => `<option value="${m.id}">${this.catIcones[m.categoria] || '📦'} ${m.nome} (${m.quantidade} ${m.unidade || 'un'})</option>`).join('');
-    const obrOpts = obras.map(o => `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`).join('');
+    const obrOpts = obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem título')}</option>`).join('');
 
     abrirModal(`
       <h3>📋 Registrar Consumo</h3>

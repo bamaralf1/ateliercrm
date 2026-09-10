@@ -27,9 +27,9 @@ export class CertificadosView extends BaseView {
       const hash = c.hashAutenticidade || this.calcularHashAutenticidade(c);
       return `
       <tr>
-        <td><strong>${c.tituloObra || '-'}</strong><div class="cert-subtitulo">${c.numeroSerie}</div></td>
-        <td>${c.numeroSerie}</td>
-        <td>${c.edicaoTipo === 'limitada' ? `${c.edicaoAtual}/${c.edicaoTotal}` : 'Única'}</td>
+        <td><strong>${sanitizarHTML(c.tituloObra) || '-'}</strong><div class="cert-subtitulo">${c.edicaoTipo === 'limitada' ? `<i data-lucide="layers" aria-hidden="true"></i> Edição limitada` : ''}</div></td>
+        <td><span class="cert-numero-serie">${sanitizarHTML(c.numeroSerie)}</span></td>
+        <td>${c.edicaoTipo === 'limitada' ? `<span class="cert-edicao">${c.edicaoAtual}/${c.edicaoTotal}</span>` : 'Única'}</td>
         <td>${formatarData(c.dataEmissao || c.criadoEm)}<div class="cert-subtitulo"><i data-lucide="badge-check"></i> ${this._formatarHash(hash)}</div></td>
         <td>${(c.reemissoes || 0) > 0 ? `<span class="cert-reexpedicao">${c.reemissoes}× reemitido</span>` : '<span class="cert-reexpedicao cert-reexpedicao-nova">original</span>'}</td>
         <td class="acoes-linha-tabela">
@@ -43,9 +43,9 @@ export class CertificadosView extends BaseView {
 
     const kpis = certificados.length > 0 ? `
       <div class="kpi-grid cert-kpis">
-        <div class="kpi-card"><div class="kpi-icone">📜</div><div class="kpi-conteudo"><div class="kpi-rotulo">Certificados</div><div class="kpi-valor">${certificados.length}</div></div></div>
-        <div class="kpi-card"><div class="kpi-icone">🖼️</div><div class="kpi-conteudo"><div class="kpi-rotulo">Obras cobertas</div><div class="kpi-valor">${new Set(certificados.map(c => c.obraId || c.tituloObra)).size}</div></div></div>
-        <div class="kpi-card"><div class="kpi-icone">🛡️</div><div class="kpi-conteudo"><div class="kpi-rotulo">Não reemitidos</div><div class="kpi-valor">${certificados.filter(c => !(c.reemissoes || 0)).length}</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="badge-check"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Certificados</div><div class="kpi-valor">${certificados.length}</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="image"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Obras cobertas</div><div class="kpi-valor">${new Set(certificados.map(c => c.obraId || c.tituloObra)).size}</div></div></div>
+        <div class="kpi-card"><div class="kpi-icone"><i data-lucide="shield"></i></div><div class="kpi-conteudo"><div class="kpi-rotulo">Não reemitidos</div><div class="kpi-valor">${certificados.filter(c => !(c.reemissoes || 0)).length}</div></div></div>
       </div>
     ` : '';
 
@@ -58,7 +58,7 @@ export class CertificadosView extends BaseView {
       </div>
     ` : `
       <div class="tabela-wrapper">
-        <div class="estado-vazio"><div class="icone-vazio">📜</div><p>Nenhum certificado emitido ainda.</p><p class="estado-vazio-sub">Emita o primeiro ou gere vários de uma vez.</p></div>
+        <div class="estado-vazio"><div class="icone-vazio"><i data-lucide="badge-check"></i></div><p>Nenhum certificado emitido ainda.</p><p class="estado-vazio-sub">Emita o primeiro ou gere vários de uma vez.</p></div>
       </div>
     `;
 
@@ -69,8 +69,8 @@ export class CertificadosView extends BaseView {
           <p class="subtitulo">${certificados.length} certificado${certificados.length === 1 ? '' : 's'} emitido${certificados.length === 1 ? '' : 's'} · assinados digitalmente com hash de verificação</p>
         </div>
         <div class="dashboard-acoes">
-          <button class="btn-secundario" id="btnNovaFicha">📜 Emissão em lote</button>
-          <button class="btn-gradient" id="btnNovoCertificado">🔏 Novo Certificado</button>
+          <button class="btn-secundario" id="btnNovaFicha"><i data-lucide="layers"></i> Emissão em lote</button>
+          <button class="btn-gradient" id="btnNovoCertificado"><i data-lucide="file-signature"></i> Novo Certificado</button>
         </div>
       </div>
       ${kpis}
@@ -140,10 +140,10 @@ export class CertificadosView extends BaseView {
       <div class="cert-verificacao ${valido ? 'ok' : 'invalida'}">
         <div class="cert-verif-status"><i data-lucide="${valido ? 'shield-check' : 'shield-alert'}"></i> ${valido ? 'Certificado íntegro' : 'Dados alterados'}</div>
         <p>O hash do certificado foi recalculado com os dados registrados${valido ? ' e conferido com o emitido' : ', e houve divergência com o registro'}. Qualquer alteração em obra, edição ou data quebra a verificação.</p>
-        <div class="cert-verif-linha"><strong>Obra:</strong> ${cert.tituloObra || '-'}</div>
-        <div class="cert-verif-linha"><strong>Nº de série:</strong> ${cert.numeroSerie || '-'}</div>
+        <div class="cert-verif-linha"><strong>Obra:</strong> ${sanitizarHTML(cert.tituloObra) || '-'}</div>
+        <div class="cert-verif-linha"><strong>Nº de série:</strong> ${sanitizarHTML(cert.numeroSerie) || '-'}</div>
         <div class="cert-verif-linha"><strong>Código:</strong> <code>${this._formatarHash(hash)}</code></div>
-        <div class="cert-verif-linha"><strong>Emitido em:</strong> ${formatarData(cert.dataEmissao || cert.criadoEm)} (${cert.reemissoes || 0} reemissõe${(cert.reemissoes || 0) === 1 ? '' : 's'})</div>
+        <div class="cert-verif-linha"><strong>Emitido em:</strong> ${formatarData(cert.dataEmissao || cert.criadoEm)}${cert.ultimaReemissao ? ` <span class="cert-verif-reemisao">· reemitido em ${formatarData(cert.ultimaReemissao)}</span>` : ''} (${cert.reemissoes || 0} reemissão${(cert.reemissoes || 0) === 1 ? '' : 'ões'})</div>
         <p class="cert-verif-ajuda">O mesmo código está impresso no PDF ao lado do QR. Quem receber o documento pode confirmar aqui no app.</p>
       </div>
     `);
@@ -190,7 +190,7 @@ export class CertificadosView extends BaseView {
       <label style="display:flex;gap:8px;align-items:center;font-size:0.85rem;margin-bottom:8px;cursor:pointer;">
         <input type="checkbox" id="certLoteSelecionarTodos" checked> Selecionar todas
       </label>
-      <div class="cert-lote-lista" style="max-height:300px;overflow-y:auto;">
+      <div class="cert-lote-lista" id="certLoteLista" style="max-height:300px;overflow-y:auto;">
         ${obras.map((o) => {
           const img = imagens.get(o.id) || '';
           return `
@@ -218,7 +218,8 @@ export class CertificadosView extends BaseView {
     document.getElementById('certLoteSelecionarTodos').addEventListener('change', (e) => {
       document.querySelectorAll('.cert-lote-check').forEach(c => { c.checked = e.target.checked; });
     });
-    document.addEventListener('change', (ev) => {
+    const lista = document.getElementById('certLoteLista');
+    lista.addEventListener('change', (ev) => {
       if (ev.target.classList.contains('cert-lote-check')) {
         const total = document.querySelectorAll('.cert-lote-check').length;
         const marcados = document.querySelectorAll('.cert-lote-check:checked').length;
@@ -235,7 +236,7 @@ export class CertificadosView extends BaseView {
       const assinaturaDataUrl = configStore().artista?.assinatura || '';
       const gerados = await this._emitirEmLote(selecionadas, assinaturaDataUrl);
       fecharModal();
-      if (gerados.length === 0) { mostrarToast('Nenhum sinal rescindido — verifique o cadastro das obras.', 'erro'); return; }
+      if (gerados.length === 0) { mostrarToast('Nenhum certificado gerado — verifique o cadastro das obras.', 'erro'); return; }
       mostrarToast(`Gerando PDF com ${gerados.length} certificado${gerados.length === 1 ? '' : 's'}...`, 'info');
       await this._gerarPdfLote(gerados, assinaturaDataUrl);
       this.rerenderizar();
@@ -287,7 +288,7 @@ export class CertificadosView extends BaseView {
           <label>Origem dos dados</label>
           <select id="campoOrigemCertificado" aria-label="Origem dos dados">
             <option value="">— Preencher manualmente —</option>
-            ${obras.map(o => `<option value="${o.id}">${o.titulo}</option>`).join('')}
+            ${obras.map(o => `<option value="${o.id}">${sanitizarHTML(o.titulo)}</option>`).join('')}
           </select>
         </div>
         <div class="campo-form">
@@ -388,13 +389,23 @@ export class CertificadosView extends BaseView {
     const finalizar = () => { desenhando = false; };
     canvas.addEventListener('mousedown', iniciar);
     canvas.addEventListener('mousemove', desenhar);
-    window.addEventListener('mouseup', finalizar);
+    canvas.addEventListener('mouseup', finalizar);
+    canvas.addEventListener('mouseleave', finalizar);
     canvas.addEventListener('touchstart', iniciar, { passive: false });
     canvas.addEventListener('touchmove', desenhar, { passive: false });
     canvas.addEventListener('touchend', finalizar);
     document.getElementById('btnLimparAssinaturaCert').addEventListener('click', () => ctx.clearRect(0, 0, canvas.width, canvas.height));
 
-    document.getElementById('btnCancelarCertificado').addEventListener('click', fecharModal);
+    const limparAssinatura = () => {
+      canvas.removeEventListener('mousedown', iniciar);
+      canvas.removeEventListener('mousemove', desenhar);
+      canvas.removeEventListener('mouseup', finalizar);
+      canvas.removeEventListener('mouseleave', finalizar);
+      canvas.removeEventListener('touchstart', iniciar);
+      canvas.removeEventListener('touchmove', desenhar);
+      canvas.removeEventListener('touchend', finalizar);
+    };
+    document.getElementById('btnCancelarCertificado').addEventListener('click', () => { limparAssinatura(); fecharModal(); });
 
     document.getElementById('formCertificado').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -444,30 +455,35 @@ export class CertificadosView extends BaseView {
     const assinaturaSalva = configStore().artista?.assinatura || '';
     mostrarToast('Gerando PDF...', 'info');
     try {
-      cert.reemissoes = (cert.reemissoes || 0) + 1;
-      cert.ultimaReemissao = new Date().toISOString();
-      this.dataStore.salvar();
-      await this.gerarPdfCertificado(cert, assinaturaSalva);
+      const ok = await this.gerarPdfCertificado(cert, assinaturaSalva);
+      if (ok) {
+        cert.reemissoes = (cert.reemissoes || 0) + 1;
+        cert.ultimaReemissao = new Date().toISOString();
+        this.dataStore.salvar();
+        this.rerenderizar();
+      }
     } catch (erro) {
-      cert.reemissoes = Math.max(0, (cert.reemissoes || 1) - 1);
-      this.dataStore.salvar();
+      console.error('Reemissão falhou:', erro);
       mostrarToast('Erro ao gerar o certificado. Tente novamente.', 'erro');
     }
   }
 
   // Monta o PDF do certificado com jsPDF puro: moldura dourada premium,
   // faixa decorativa, foto, texto padrão, edição, assinatura, QR e hash.
+  // Retorna boolean: true apenas se o PDF foi gerado e salvo com sucesso.
   async gerarPdfCertificado(cert, assinaturaDataUrl) {
-    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).', 'erro'); return; }
+    if (!window.jspdf) { mostrarToast('Biblioteca de PDF indisponível (verifique sua conexão com a internet).', 'erro'); return false; }
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
       await this._desenharPaginaCertificado(doc, cert, assinaturaDataUrl);
       doc.save(`certificado-${cert.numeroSerie.toLowerCase()}.pdf`);
       mostrarToast('Certificado gerado com sucesso!', 'sucesso');
+      return true;
     } catch (erro) {
       console.error('Falha ao gerar certificado PDF:', erro);
       mostrarToast('Erro ao gerar o certificado. Tente novamente.', 'erro');
+      return false;
     }
   }
 
@@ -476,9 +492,6 @@ export class CertificadosView extends BaseView {
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-      certs.forEach((cert, i) => {
-        if (i > 0) doc.addPage();
-      });
       for (let i = 0; i < certs.length; i++) {
         if (i > 0) doc.addPage();
         await this._desenharPaginaCertificado(doc, certs[i], assinaturaDataUrl);
@@ -502,6 +515,15 @@ export class CertificadosView extends BaseView {
     const ORO_CLARO = [223, 190, 112];
     const ORO_FUNDO = [250, 245, 230];
     const TINTA = [43, 37, 25];
+
+    // Iniciais do artista para o selo de integridade
+    const iniciais = (nomeArtista || 'A')
+      .trim().split(/\s+/)
+      .filter(p => /^[A-Za-zÀ-ú]/.test(p))
+      .map(p => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'A';
 
     // Fundo levemente quente (papel premium)
     doc.setFillColor(252, 250, 244);
@@ -574,14 +596,23 @@ export class CertificadosView extends BaseView {
     doc.setFont('times', 'bold');
     doc.setFontSize(15);
     doc.setTextColor(TINTA[0], TINTA[1], TINTA[2]);
-    doc.text(cert.tituloObra || 'Obra sem título', w / 2, y, { align: 'center' });
-    y += 7;
+    const linhasTitulo = doc.splitTextToSize(cert.tituloObra || 'Obra sem título', w - 66);
+    doc.text(linhasTitulo, w / 2, y, { align: 'center' });
+    y += linhasTitulo.length * 6.2 + 7;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(90, 80, 60);
     doc.text(`${capitalizarTexto(cert.tecnica)} · ${cert.dimensoesTexto || '-'} · ${cert.ano || '-'}`, w / 2, y, { align: 'center' });
-    y += 11;
+    y += 9;
+
+    // Linha de autenticação (data + local + código legível)
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8.8);
+    doc.setTextColor(120, 105, 70);
+    const autenticadoEm = `Autenticado em ${formatarData(cert.dataEmissao)}${cert.local ? ` · ${cert.local}` : ''}`;
+    doc.text(autenticadoEm, w / 2, y, { align: 'center' });
+    y += 8;
 
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(10.5);
@@ -590,6 +621,9 @@ export class CertificadosView extends BaseView {
     const linhasTexto = doc.splitTextToSize(textoPadrao, w - 66);
     doc.text(linhasTexto, w / 2, y, { align: 'center' });
     y += linhasTexto.length * 5.5 + 8;
+
+    // Proteção de overflow: nunca deixar o bloco de assinatura colar no rodapé
+    if (y > h - 58) y = h - 58;
 
     // Assinatura (esquerda) e QR Code de validação + hash (direita)
     const yBase = y;
@@ -637,12 +671,12 @@ export class CertificadosView extends BaseView {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.5);
     doc.setTextColor(255, 255, 255);
-    doc.text('AC', 27, h - 17.3, { align: 'center' });
+    doc.text(iniciais, 27, h - 17.3, { align: 'center' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(110, 95, 65);
     doc.text(`Certificado autenticado digitalmente · cod. ${this._formatarHash(hash)}`, w / 2 + 8, h - 16, { align: 'center' });
     doc.setTextColor(150, 135, 100);
-    doc.text(`Emitido em ${new Date().toLocaleDateString('pt-BR')} · Atelier CRM`, w / 2 + 8, h - 11, { align: 'center' });
+    doc.text(`Emitido em ${new Date().toLocaleDateString('pt-BR')} · ${nomeArtista}`, w / 2 + 8, h - 11, { align: 'center' });
   }
 }

@@ -252,14 +252,16 @@ export class ExposicoesView extends BaseView {
       });
     }
 
-    container.addEventListener('change', (e) => {
+    const changeHandler = (e) => {
       if (e.target.classList.contains('checkbox-item-exp')) {
         const id = e.target.dataset.id;
         if (e.target.checked) { this.selecionados.add(id); }
         else { this.selecionados.delete(id); }
         this.rerenderizar();
       }
-    });
+    };
+    container.addEventListener('change', changeHandler);
+    this._bindCache['changeExposicoes'] = { el: container, handler: changeHandler, type: 'change' };
 
     document.getElementById('bulkExportExp')?.addEventListener('click', () => this.bulkAcao('exportar'));
     document.getElementById('bulkExcluirExp')?.addEventListener('click', () => this.bulkAcao('excluir'));

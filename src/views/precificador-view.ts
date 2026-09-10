@@ -65,7 +65,7 @@ export class PrecificadorView extends BaseView {
     this.calc.comissaoGaleria = Number(this.calc.comissaoGaleria) || 0;
 
     const opcoesClientes = clientes.map(c =>
-      `<option value="${c.id}" ${this.calc.clienteId === c.id ? 'selected' : ''}>${c.nome}${c.email ? ' — ' + c.email : ''}</option>`
+      `<option value="${c.id}" ${this.calc.clienteId === c.id ? 'selected' : ''}>${sanitizarHTML(c.nome)}${c.email ? ' — ' + sanitizarHTML(c.email) : ''}</option>`
     ).join('');
 
     const tecnicas = ['', 'óleo', 'acrílica', 'aquarela', 'guache', 'têmpera', 'desenho', 'gravura', 'escultura', 'cerâmica', 'têxtil', 'outra'];
@@ -235,7 +235,7 @@ export class PrecificadorView extends BaseView {
           <button class="kiosk-fechar" id="btnKioskFechar" title="Fechar (Esc)"><i data-lucide="x" aria-hidden="true"></i></button>
           <div class="kiosk-conteudo">
             <div class="kiosk-header">${this.config.nomeArtista || 'Atelier'} <span class="kiosk-sep">·</span> Proposta</div>
-            <div class="kiosk-nome">${this.calc.nome || 'Orçamento sem nome'}</div>
+            <div class="kiosk-nome">${sanitizarHTML(this.calc.nome || 'Orçamento sem nome')}</div>
             <div class="kiosk-valor" id="kioskValor">${this.fmt(this.calcularPreco(this.calc))}</div>
             <div class="kiosk-moeda">${this.moeda}${this.calc.tecnica ? ' · ' + capitalizarTexto(this.calc.tecnica) : ''}</div>
             <div id="kioskBreakdown">${this.renderKioskBreakdown()}</div>
@@ -434,8 +434,8 @@ export class PrecificadorView extends BaseView {
       <div class="kanban-card" draggable="true" data-id="${o.id}" data-status="${o.status || 'rascunho'}">
         <div class="kanban-card-corpo">
           ${o.numero ? `<div class="orc-kb-numero"><span>${o.numero}</span>${convertido}</div>` : ''}
-          <div class="kanban-card-nome"><strong>${o.nome || 'Orçamento sem nome'}</strong></div>
-          <div class="kanban-card-desc">${o.clienteNome || 'Cliente avulso'}${o.tecnica ? ' · ' + capitalizarTexto(o.tecnica) : ''}</div>
+          <div class="kanban-card-nome"><strong>${sanitizarHTML(o.nome || 'Orçamento sem nome')}</strong></div>
+          <div class="kanban-card-desc">${sanitizarHTML(o.clienteNome || 'Cliente avulso')}${o.tecnica ? ' · ' + sanitizarHTML(capitalizarTexto(o.tecnica)) : ''}</div>
           <div class="kanban-card-meta">
             <span style="font-weight:700;">${this.fmt(o.preco, o.moeda || this.moeda)}</span>
             ${dims ? `<span class="orc-kb-dims">${dims}cm</span>` : ''}
@@ -465,8 +465,8 @@ export class PrecificadorView extends BaseView {
           return `
           <div class="orcamento-item" data-id="${o.id}">
             <div class="orc-ident">
-              <div class="orc-nome">${o.nome || 'Orçamento sem nome'} <span class="orc-status st-${o.status || 'rascunho'}">${statusRotulos[o.status] || 'Rascunho'}</span>${o.convertidoEm ? ' <span class="orc-convertido">✓ Vendido</span>' : ''}</div>
-              <div class="orc-meta">${o.numero ? o.numero + ' · ' : ''}${o.clienteNome || 'Cliente avulso'}${o.tecnica ? ' · ' + capitalizarTexto(o.tecnica) : ''}${dims ? ' · ' + dims + 'cm' : ''} · ${formatarData(o.data || o.criadoEm)}${o.validadeData ? ' · válido até ' + formatarData(o.validadeData) : ''}</div>
+              <div class="orc-nome">${sanitizarHTML(o.nome || 'Orçamento sem nome')} <span class="orc-status st-${o.status || 'rascunho'}">${statusRotulos[o.status] || 'Rascunho'}</span>${o.convertidoEm ? ' <span class="orc-convertido">✓ Vendido</span>' : ''}</div>
+              <div class="orc-meta">${o.numero ? sanitizarHTML(o.numero) + ' · ' : ''}${sanitizarHTML(o.clienteNome || 'Cliente avulso')}${o.tecnica ? ' · ' + sanitizarHTML(capitalizarTexto(o.tecnica)) : ''}${dims ? ' · ' + dims + 'cm' : ''} · ${formatarData(o.data || o.criadoEm)}${o.validadeData ? ' · válido até ' + formatarData(o.validadeData) : ''}</div>
             </div>
             <div class="orc-preco">${this.fmt(o.preco, o.moeda || this.moeda)}</div>
             <div class="orc-acoes">
@@ -609,15 +609,16 @@ export class PrecificadorView extends BaseView {
     const pct = media > 0 ? ((sugerido - media) / media) * 100 : 0;
     const dispersao = media > 0 ? (max - min) / media : 1;
     const confianca = Math.round(Math.max(10, Math.min(98, 100 - Math.abs(pct) * 1.5 - dispersao * 40 - Math.max(0, 5 - similares.length) * 7)));
-    let classe, seta = '✓', recomendacao;
+let classe, seta = '✓', recomendacao, dirTexto = 'do mercado';
     if (Math.abs(pct) < 8) {
       classe = 'sv-ok';
+      dirTexto = 'da média';
       recomendacao = `Alinhado ao mercado da ${c.tecnica ? `técnica ${c.tecnica}` : 'sua área'}. Preço competitivo — pode negociar com segurança na faixa abaixo.`;
     } else if (pct > 0) {
-      classe = 'sv-alto'; seta = '↑';
+      classe = 'sv-alto'; seta = '↑'; dirTexto = 'acima';
       recomendacao = `Seu preço está ${Math.abs(pct).toFixed(0)}% acima da média do mercado${c.tecnica ? ` da ${c.tecnica}` : ''} (${this.fmt(Math.round(media))}). Justifique com curadoria, histórico ou série exclusiva — ou considere ajustar.`;
     } else {
-      classe = 'sv-baixo'; seta = '↓';
+      classe = 'sv-baixo'; seta = '↓'; dirTexto = 'abaixo';
       recomendacao = `Seu preço está ${Math.abs(pct).toFixed(0)}% abaixo da média do mercado${c.tecnica ? ` da ${c.tecnica}` : ''} (${this.fmt(Math.round(media))}). Há espaço para valorizar sua obra.`;
     }
     return `
@@ -793,7 +794,7 @@ export class PrecificadorView extends BaseView {
     if (comHistorico.length === 0) return '';
 
     const selOpts = comHistorico.map(o =>
-      `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`
+      `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem título')}</option>`
     ).join('');
 
     const obra = comHistorico[0];
@@ -967,7 +968,7 @@ export class PrecificadorView extends BaseView {
     const vendaObra = vendas.filter(v => String(v.obraId) === obra.id || v.obraTitulo === obra.titulo);
 
     const selOpts = comHistorico.map(o =>
-      `<option value="${o.id}">${o.titulo || 'Sem título'}</option>`
+      `<option value="${o.id}">${sanitizarHTML(o.titulo || 'Sem título')}</option>`
     ).join('');
 
     return `
