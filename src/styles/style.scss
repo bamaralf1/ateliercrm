@@ -184,7 +184,7 @@
   }
   .sidebar.colapsada .sidebar-rodape { opacity: 0; }
 
-  /* ---------- CONTEÃšDO PRINCIPAL ---------- */
+  /* ---------- CONTEÚDO PRINCIPAL ---------- */
   .conteudo {
     flex: 1;
     display: flex;
@@ -312,7 +312,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
 
-  /* ---------- ÃREA DE VIEW ---------- */
+  /* ---------- ÁREA DE VIEW ---------- */
   .view {
     flex: 1;
     padding: 28px;
@@ -429,7 +429,7 @@
     gap: 8px;
   }
 
-  /* ---------- PAINÃ‰IS ---------- */
+  /* ---------- PAINÉIS ---------- */
   .grid-painel {
     display: grid;
     grid-template-columns: 1.4fr 1fr;
@@ -461,7 +461,7 @@
     font-weight: 700;
   }
 
-  /* ---------- GRÃFICO SVG ---------- */
+  /* ---------- GRÁFICO SVG ---------- */
   .grafico-container {
     width: 100%;
     overflow-x: auto;
@@ -499,7 +499,7 @@
     font-family: var(--font-principal);
   }
 
-  /* ---------- TÃ©cnicas container ---------- */
+  /* ---------- Técnicas container ---------- */
   .tecnicas-container {
     display: flex;
     flex-direction: column;
@@ -584,7 +584,7 @@
   .tag-status.vendida { background: rgba(239,68,68,0.15); color: #dc2626; }
   .tag-status.reservada { background: rgba(234,179,8,0.15); color: #ca8a04; }
 
-  /* ---------- ATALHOS RÃPIDOS ---------- */
+  /* ---------- ATALHOS RÁPIDOS ---------- */
   .atalhos-rapidos {
     display: flex;
     gap: 12px;
@@ -812,13 +812,13 @@
   }
 
   /* ==========================================================================
-     ===== INÃCIO CSS NOVO (MÃ“DULO CATÃLOGO) =====
+     ===== INÍCIO CSS NOVO (MÓDULO CATÁLOGO) =====
      ========================================================================== */
 
-  /* Badge extra de status "em exposiÃ§Ã£o" (complementa .tag-status jÃ¡ existente) */
+  /* Badge extra de status "em exposição" (complementa .tag-status já existente) */
   .tag-status.exposicao { background: rgba(37,99,235,0.15); color: #2563eb; }
 
-  /* ---------- CabeÃ§alho do catÃ¡logo: toggle grid/lista ---------- */
+  /* ---------- Cabeçalho do catálogo: toggle grid/lista ---------- */
   .toggle-visualizacao {
     display: flex;
     border: 1px solid var(--border);
@@ -886,7 +886,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 18px;
-    margin-bottom: 90px; /* espaÃ§o para o botÃ£o flutuante nÃ£o sobrepor o Ãºltimo card */
+    margin-bottom: 90px; /* espaço para o botão flutuante não sobrepor o último card */
   }
 
   .card-obra {
@@ -969,7 +969,7 @@
   .card-obra .acoes-card-obra button:hover { border-color: var(--accent); color: var(--accent); }
   .card-obra .acoes-card-obra button.btn-excluir-obra:hover { border-color: #dc2626; color: #dc2626; }
 
-  /* ---------- VisualizaÃ§Ã£o em lista ---------- */
+  /* ---------- Visualização em lista ---------- */
   .lista-obras-wrapper {
     background: var(--card);
     border: 1px solid var(--border);
@@ -1011,7 +1011,7 @@
   }
   .linha-obra-lista .acoes-lista button:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ---------- BotÃ£o flutuante "Nova Obra" ---------- */
+  /* ---------- Botão flutuante "Nova Obra" ---------- */
   .fab-nova-obra {
     position: fixed;
     bottom: 28px;
@@ -1067,7 +1067,7 @@
     .fab-item .fi-atalho { display: none; }
   }
 
-  /* ---------- FormulÃ¡rio de obra: preview de imagem ---------- */
+  /* ---------- Formulário de obra: preview de imagem ---------- */
   .preview-imagem-form {
     width: 100%;
     max-height: 190px;
@@ -1081,7 +1081,7 @@
   }
   .campo-form .texto-ajuda { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
 
-  /* ---------- Ficha tÃ©cnica (modal de visualizaÃ§Ã£o detalhada) ---------- */
+  /* ---------- Ficha técnica (modal de visualização detalhada) ---------- */
   .ficha-tecnica-obra { text-align: center; }
   .ficha-tecnica-obra .imagem-ficha {
     width: 100%;
@@ -1109,7 +1109,7 @@
   }
   .acoes-ficha { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-  /* ---------- Filtros rÃ¡pidos e salvos ---------- */
+  /* ---------- Filtros rápidos e salvos ---------- */
   .filtros-rapidos {
     display: flex;
     gap: 8px;
@@ -1169,7 +1169,7 @@
     transform: translateY(-2px);
   }
   .chip-filtro-salvo::after {
-    content: 'Ã—';
+    content: '×';
     position: absolute;
     top: -6px;
     right: -6px;
@@ -1212,7 +1212,7 @@
     margin-right: 8px;
   }
 
-  /* ---------- Catalogo aÃ§Ãµes ---------- */
+  /* ---------- Catalogo ações ---------- */
   .catalogo-acoes {
     display: flex;
     align-items: center;
@@ -1334,7 +1334,7 @@
   }
 
   /* ==========================================================================
-     ===== INÃCIO CSS NOVO (MÃ“DULOS CLIENTES, VENDAS E GERADOR DE PDF) =====
+     ===== INÍCIO CSS NOVO (MÓDULOS CLIENTES, VENDAS E GERADOR DE PDF) =====
      ========================================================================== */
 
   /* ---------- Badges de tags (Clientes) ---------- */
@@ -1390,7 +1390,7 @@
   .tag-status.paga { background: rgba(34,197,94,0.15); color: #16a34a; }
   .tag-status.entregue { background: rgba(139,69,19,0.18); color: #8b4513; }
 
-  /* ---------- BotÃµes de aÃ§Ã£o compactos em linhas de tabela ---------- */
+  /* ---------- Botões de ação compactos em linhas de tabela ---------- */
   .btn-icone-tabela {
     padding: 6px 10px;
     border-radius: 6px;
@@ -1403,7 +1403,7 @@
   .btn-icone-tabela:hover { border-color: var(--accent); color: var(--accent); }
   .acoes-linha-tabela { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  /* ---------- Ãrea de assinatura (canvas) ---------- */
+  /* ---------- Área de assinatura (canvas) ---------- */
   .area-assinatura {
     border: 1px dashed var(--border);
     border-radius: 8px;
@@ -1420,7 +1420,7 @@
     margin-top: 6px;
   }
 
-  /* ---------- Modal de escolha rÃ¡pida de venda (atalho Gerar Recibo) ---------- */
+  /* ---------- Modal de escolha rápida de venda (atalho Gerar Recibo) ---------- */
   .lista-escolha-venda { list-style: none; }
   .item-escolha-venda {
     display: flex;
@@ -1437,13 +1437,13 @@
     .timeline-item .timeline-data { min-width: 62px; font-size: 0.68rem; }
   }
 
-  /* ===== FIM CSS NOVO (MÃ“DULOS CLIENTES, VENDAS E GERADOR DE PDF) ===== */
+  /* ===== FIM CSS NOVO (MÓDULOS CLIENTES, VENDAS E GERADOR DE PDF) ===== */
 
   /* ==========================================================================
-     ===== INÃCIO CSS NOVO (MÃ“DULOS CERTIFICADOS E REFERÃŠNCIAS) =====
+     ===== INÍCIO CSS NOVO (MÓDULOS CERTIFICADOS E REFERÊNCIAS) =====
      ========================================================================== */
 
-  /* ---------- Certificados: preview central + histÃ³rico ---------- */
+  /* ---------- Certificados: preview central + histórico ---------- */
   .preview-certificado {
     text-align: center;
     background: var(--card);
@@ -1457,7 +1457,7 @@
   .grupo-botoes-toggle button { flex: 1; padding: 8px; background: var(--card); border: none; color: var(--text-muted); font-size: 0.82rem; }
   .grupo-botoes-toggle button.ativo { background: var(--accent); color: var(--accent-contrast); }
 
-  /* ---------- Board de ReferÃªncias: grid masonry (CSS columns) ---------- */
+  /* ---------- Board de Referências: grid masonry (CSS columns) ---------- */
   .barra-acoes-referencias { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 
   .grid-referencias {
@@ -1501,7 +1501,7 @@
   .card-referencia .acoes-referencia { display: flex; gap: 6px; padding: 8px 14px 12px; }
   .card-referencia .icone-tipo-referencia { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
 
-  /* ---------- Modo apresentaÃ§Ã£o (tela cheia) ---------- */
+  /* ---------- Modo apresentação (tela cheia) ---------- */
   .overlay-apresentacao {
     position: fixed;
     inset: 0;
@@ -1569,7 +1569,7 @@
   .gv-meta { font-size: 0.78rem; color: #6b7280; margin-top: 2px; }
   .gv-preco { font-size: 0.9rem; font-weight: 700; color: #8b5cf6; margin-top: 4px; }
 
-  /* NavegaÃ§Ã£o */
+  /* Navegação */
   .gv-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08); color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.25s; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.12); }
   .gv-nav:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.08); }
   .gv-nav-prev { left: 16px; }
@@ -1592,7 +1592,7 @@
   .gv-thumb.ativo { opacity: 1; border-color: var(--accent); transform: scale(1.08); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
   .gv-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-  /* HUD NavegaÃ§Ã£o */
+  /* HUD Navegação */
   .hud-navegacao { position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
   .hud-navegacao .nav-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
   .hud-navegacao .nav-btn:hover { background: rgba(255,255,255,0.25); }
@@ -1733,7 +1733,7 @@
   .estrelas-input .estrela.preenchida { color: #f59e0b; }
   .estrelas-input .estrela:hover { color: #fbbf24; }
 
-  /* SVG grÃ¡ficos */
+  /* SVG gráficos */
   .svg-chart { width: 100%; height: 160px; overflow: visible; }
   .svg-chart .chart-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
   .svg-chart .chart-area { fill: url(#gradArea); opacity: 0.2; }
@@ -1750,7 +1750,7 @@
   .histograma .barra .barra-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.55rem; color: var(--text-muted); white-space: nowrap; }
   .histograma .barra .barra-count { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--text); font-weight: 600; }
 
-  /* AnÃ¡lise cards */
+  /* Análise cards */
   .analise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
   .analise-card { background: var(--bg); border-radius: 8px; padding: 14px; border: 1px solid var(--border); }
   .analise-card .analise-valor { font-size: 1.3rem; font-weight: 700; color: var(--text); }
@@ -1785,7 +1785,7 @@
   .meta-edit input { width: 100px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; background: var(--bg); color: var(--text); }
   .meta-edit button { padding: 4px 12px; font-size: 0.8rem; }
 
-  /* Tabela de mÃ©dias por tÃ©cnica */
+  /* Tabela de médias por técnica */
   .tabela-media { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
   .tabela-media th, .tabela-media td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
   .tabela-media th { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
@@ -1801,7 +1801,7 @@
   .precificador-toolbar .moeda-selector select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; background: var(--bg); color: var(--text); }
   .precificador-toolbar button { font-size: 0.8rem; padding: 6px 14px; }
 
-  /* ConversÃµes multi-moeda */
+  /* Conversões multi-moeda */
   .conversoes-multi { display: flex; justify-content: center; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
   .conversoes-multi .conv-moeda { font-size: 0.8rem; color: var(--accent-contrast); opacity: 0.85; background: rgba(255,255,255,0.15); padding: 2px 10px; border-radius: 10px; }
 
@@ -1823,7 +1823,7 @@
   .be-tag.be-media { background: #f59e0b; }
   .be-tag.be-baixa { background: #dc2626; }
 
-  /* ML PrecisÃ£o */
+  /* ML Precisão */
   .ml-precisao-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 8px; }
   .ml-precisao-card { text-align: center; padding: 16px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); }
   .ml-precisao-card.ml-bom { border-color: #16a34a; }
@@ -1833,7 +1833,7 @@
   .ml-precisao-card .ml-rotulo { font-size: 0.75rem; color: var(--text-muted); }
   .ml-precisao-card .ml-sub { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
 
-  /* ProjeÃ§Ã£o */
+  /* Projeção */
   .projecao-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .projecao-card { text-align: center; padding: 16px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); }
   .projecao-card .proj-numero { font-size: 1.3rem; font-weight: 700; color: var(--text); }
@@ -1890,7 +1890,7 @@
   .portal-footer { text-align: center; margin-top: 24px; font-size: 0.8rem; color: var(--text-muted); }
   .portal-footer-peq { font-size: 0.7rem; margin-top: 4px; opacity: 0.7; }
 
-  /* Portais (gestÃ£o) */
+  /* Portais (gestão) */
   .portais-lista { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
   .portais-lista .portal-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); border-radius: 6px; border: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
   .portais-lista .portal-item-info { display: flex; flex-direction: column; gap: 2px; }
@@ -1914,7 +1914,7 @@
   @media (max-width: 480px) {
     .analise-grid { grid-template-columns: 1fr; }
   }
-  /* ===== ATELIER â€” ESTOQUE E MATERIAIS ===== */
+  /* ===== ATELIER — ESTOQUE E MATERIAIS ===== */
   .atelier-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
   .atelier-tabs .tab-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); border-radius: 8px 8px 0 0; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; border-bottom: 2px solid transparent; }
   .atelier-tabs .tab-btn:hover { color: var(--text); background: var(--bg); }
@@ -2085,7 +2085,7 @@
   .evt-card .evt-acoes { display: flex; gap: 6px; margin-top: 10px; }
   .evt-card .evt-acoes button { font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
 
-  /* Mapa de influÃªncia */
+  /* Mapa de influência */
   .mapa-container { position: relative; width: 100%; height: 420px; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
   .mapa-container svg { width: 100%; height: 100%; }
   .mapa-container .mapa-legenda { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -2100,9 +2100,9 @@
     .rede-tabs .tab-btn { font-size: 0.75rem; padding: 6px 10px; }
   }
   /* ==========================================================================
-     CSS â€” MÃ“DULO DIÃRIO E CRONOGRAMA CRIATIVO (/diario)
-     EstÃ©tica bullet journal digital: linhas pautadas, tipografia Ã­ntima,
-     cores suaves e marcaÃ§Ãµes manuais
+     CSS — MÓDULO DIÁRIO E CRONOGRAMA CRIATIVO (/diario)
+     Estética bullet journal digital: linhas pautadas, tipografia íntima,
+     cores suaves e marcações manuais
      ========================================================================== */
 
   .diario-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
@@ -2134,7 +2134,7 @@
   .diario-card .dc-fotos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
   .diario-card .dc-fotos img { width: 60px; height: 60px; border-radius: 4px; object-fit: cover; cursor: pointer; border: 1px solid var(--border); }
 
-  /* ---- CALENDÃRIO ---- */
+  /* ---- CALENDÁRIO ---- */
   .cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
   .cal-toolbar .cal-nav { display: flex; gap: 6px; align-items: center; }
   .cal-toolbar .cal-nav button { background: var(--card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text); }
@@ -2184,7 +2184,7 @@
   .proc-step .ps-foto img { max-width: 200px; max-height: 120px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; }
   .proc-step .ps-video a { font-size: 0.75rem; color: var(--accent); }
 
-  /* ---- ESTATÃSTICAS ---- */
+  /* ---- ESTATÍSTICAS ---- */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
   .stats-card { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .stats-card h4 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
@@ -2199,19 +2199,19 @@
   .stats-svg .stats-label { font-size: 8px; fill: var(--text-muted); text-anchor: middle; }
   .stats-svg .stats-value { font-size: 7px; fill: var(--text); text-anchor: middle; font-weight: 600; }
 
-  /* ---- INSPIRAÃ‡ÃƒO ---- */
+  /* ---- INSPIRAÇÃO ---- */
   .inspiracao-card { background: linear-gradient(135deg, var(--card) 0%, rgba(139,69,19,0.04) 100%); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; text-align: center; }
   .inspiracao-card .ic-citacao { font-size: 1.8rem; font-family: 'Crimson Text', 'Georgia', serif; font-style: italic; line-height: 1.5; color: var(--text); max-width: 500px; margin: 0 auto; }
   .inspiracao-card .ic-autor { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
   .inspiracao-card .ic-prompt { margin-top: 14px; font-size: 0.85rem; background: rgba(99,102,241,0.06); padding: 10px 16px; border-radius: 8px; border-left: 3px solid var(--accent); }
   .inspiracao-card .ic-desafio { margin-top: 10px; font-size: 0.78rem; color: #92400e; background: #fef3c7; padding: 8px 14px; border-radius: 6px; display: inline-block; }
 
-  /* ---- MISC DIÃRIO ---- */
+  /* ---- MISC DIÁRIO ---- */
   .diario-acoes { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
   .diario-acoes button { font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
   .diario-acoes button:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* FormulÃ¡rio entrada */
+  /* Formulário entrada */
   .diario-form-grid { display: grid; gap: 12px; }
   .diario-form-grid .campo-full { grid-column: 1 / -1; }
 
@@ -2227,7 +2227,7 @@
   .photo-strip .ps-item .ps-remove { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; border-radius: 50%; background: #dc2626; color: #fff; border: none; font-size: 0.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
   /* Estilo de rascunho / bullet journal */
-  .diario-card .dc-texto p:first-child::before { content: 'â–ª '; color: var(--accent); }
+  .diario-card .dc-texto p:first-child::before { content: '▪ '; color: var(--accent); }
   .diario-entry-grid .diario-card:last-child { border-style: dashed; }
 
   /* Responsivo */
@@ -2238,23 +2238,23 @@
     .inspiracao-card .ic-citacao { font-size: 1.2rem; }
   }
   /* ==========================================================================
-     CSS â€” ACESSIBILIDADE, ALTO CONTRASTE, FONTE, ANIMAÃ‡Ã•ES E FOOTER
+     CSS — ACESSIBILIDADE, ALTO CONTRASTE, FONTE, ANIMAÇÕES E FOOTER
      ========================================================================== */
 
   /* Skip to content (acessibilidade) */
   .skip-link { position: absolute; top: -100px; left: 10px; background: var(--accent); color: var(--accent-contrast); padding: 8px 16px; border-radius: 0 0 6px 6px; z-index: 9999; font-size: 0.85rem; text-decoration: none; }
   .skip-link:focus { top: 0; }
 
-  /* Foco visÃ­vel */
+  /* Foco visível */
   *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   .nav-item:focus-visible, .tab-btn:focus-visible, .btn-primario:focus-visible, .btn-secundario:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* ReduÃ§Ã£o de movimento */
+  /* Redução de movimento */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   }
 
-  /* Fontes ajustÃ¡veis */
+  /* Fontes ajustáveis */
   body[data-font-size="pequeno"] { --font-principal: 'Inter', sans-serif; font-size: 13px; }
   body[data-font-size="medio"] { --font-principal: 'Inter', sans-serif; font-size: 15px; }
   body[data-font-size="grande"] { --font-principal: 'Inter', sans-serif; font-size: 17px; }
@@ -2275,7 +2275,7 @@
   body[data-high-contrast="true"] .dc-descobertas { background: #332200; color: #ffcc66; border: 1px solid #ffaa00; }
   body[data-high-contrast="true"] * { border-color: #ffffff !important; }
 
-  /* AnimaÃ§Ãµes de transiÃ§Ã£o entre views */
+  /* Animações de transição entre views */
   /* View transitions premium */
   .view-transition { animation-fill-mode: both; }
   .view-enter-fade { animation: vtFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -2326,7 +2326,7 @@
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Toasts refinados com animaÃ§Ãµes premium */
+  /* Toasts refinados com animações premium */
   .toast {
     position: fixed;
     top: 16px;
@@ -2495,7 +2495,7 @@
   /* Checkbox animado */
   input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; width: 16px; height: 16px; }
 
-  /* Feedback tÃ¡til em botÃµes */
+  /* Feedback tátil em botões */
   .btn-primario, .btn-secundario, .tab-btn { transition: transform 0.1s, box-shadow 0.15s; }
   .btn-primario:active, .btn-secundario:active { transform: scale(0.97); }
   .tab-btn:active { transform: scale(0.98); }
@@ -2614,14 +2614,14 @@
     .spotlight-box { max-width: 100%; margin: 0 8px; }
     .tour-tooltip { max-width: 260px; }
   }
-  /* ===== CATÃLOGO PREMIUM ===== */
+  /* ===== CATÁLOGO PREMIUM ===== */
   /* Dropzone de imagens */
   .dropzone-imagens { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--card); margin-bottom: 12px; }
   .dropzone-imagens:hover, .dropzone-imagens.dragging { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
   .dropzone-icone { font-size: 2.5rem; display: block; margin-bottom: 8px; }
   .dropzone-imagens p { margin: 4px 0; }
 
-  /* Grade de miniaturas no formulÃ¡rio */
+  /* Grade de miniaturas no formulário */
   .grade-miniaturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 10px 0; }
   .miniatura-imagem { position: relative; border-radius: 8px; overflow: hidden; border: 2px solid var(--border); aspect-ratio: 1; background: var(--card); }
   .miniatura-imagem.destacada { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
@@ -2662,13 +2662,13 @@
   .gdo-text { font-size: 1.3rem; color: white; font-weight: 600; }
   .gdo-hint { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
-  /* Badge de mÃºltiplas imagens nos cards */
+  /* Badge de múltiplas imagens nos cards */
   .badge-multiplas-imagens { position: absolute; top: 8px; right: 8px; background: var(--accent); color: var(--accent-contrast); border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; pointer-events: none; z-index: 2; }
   .btn-slideshow-card { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 2; }
   .card-obra:hover .btn-slideshow-card { opacity: 1; }
   .imagem-card-wrapper { position: relative; }
 
-  /* Ficha tÃ©cnica premium */
+  /* Ficha técnica premium */
   .ficha-premium { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 800px; }
   .ficha-galeria { display: flex; flex-direction: column; gap: 10px; }
   .ficha-imagem-principal { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--card); }
@@ -2713,7 +2713,7 @@
   .slideshow-thumb:hover { border-color: var(--accent); }
   .slideshow-thumb.ativo { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 
-  /* ComparaÃ§Ã£o lado a lado */
+  /* Comparação lado a lado */
   .comparacao-container { display: grid; gap: 16px; max-width: 90vw; max-height: 70vh; overflow-y: auto; padding: 4px; }
   .comparacao-coluna { background: var(--card); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
   .comparacao-imagem { border-radius: 8px; overflow: hidden; aspect-ratio: 4/3; background: var(--bg); }
@@ -2764,10 +2764,10 @@
   .widget-titulo { font-size: 0.85rem; font-weight: 600; margin: 0; flex: 1; }
   .widget-body { padding: 16px; min-height: 60px; }
 
-  /* GrÃ¡ficos */
+  /* Gráficos */
   .widget-body canvas { max-height: 200px; width: 100% !important; }
 
-  /* PrevisÃ£o */
+  /* Previsão */
   .previsao-container { display: flex; flex-direction: column; gap: 12px; }
   .previsao-valor-atual { display: flex; flex-direction: column; }
   .previsao-rotulo { font-size: 0.75rem; color: var(--text-muted); }
@@ -2779,7 +2779,7 @@
   .previsao-numero-peq.negativa { color: #dc2626; }
   .previsao-detalhe { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
-  /* NotificaÃ§Ãµes */
+  /* Notificações */
   .notificacoes-lista { display: flex; flex-direction: column; gap: 6px; }
   .notificacao-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem; background: var(--bg); }
   .notificacao-alta { border-left: 3px solid #dc2626; }
@@ -3057,8 +3057,8 @@
   }
 
   /* ==========================================================================
-     ===== PREMIUM DESIGN v2 â€” ElevaÃ§Ã£o Visual, Micro-interaÃ§Ãµes, =====
-     ===== Glassmorphism, AnimaÃ§Ãµes de Entrada, Tipografia Refinada  =====
+     ===== PREMIUM DESIGN v2 — Elevação Visual, Micro-interações, =====
+     ===== Glassmorphism, Animações de Entrada, Tipografia Refinada  =====
      ========================================================================== */
 
   /* --- Background subtle noise & gradient base --- */
@@ -3595,7 +3595,7 @@
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 
-  /* --- Entrada/saÃ­da value colors with icon pulse --- */
+  /* --- Entrada/saída value colors with icon pulse --- */
   .card .valor-card {
     transition: all 0.3s ease;
   }
@@ -3720,18 +3720,18 @@
   /* Responsive adjustments for premium elements */
 
   /* ==========================================================================
-     ===== PREMIUM V3 â€” Personalidade por Tema, Glow Accent-Adaptivo =====
+     ===== PREMIUM V3 — Personalidade por Tema, Glow Accent-Adaptivo =====
      ===== Gradiente Ambiental, Vidro no Header, Foco Teatral =====
      ========================================================================== */
 
-  /* --- Gradiente ambiental por tema no fundo (sobreposiÃ§Ã£o das vars) --- */
+  /* --- Gradiente ambiental por tema no fundo (sobreposição das vars) --- */
   .view::before {
     background:
       radial-gradient(ellipse 90% 65% at 0% 15%, var(--ambient) 0%, transparent 55%),
       radial-gradient(ellipse 70% 55% at 95% 90%, color-mix(in srgb, var(--accent-bright) 7%, transparent) 0%, transparent 50%);
   }
 
-  /* --- Vidro no header: header levemente translÃºcido com blur --- */
+  /* --- Vidro no header: header levemente translúcido com blur --- */
   .header {
     background: color-mix(in srgb, var(--card) 72%, transparent);
     backdrop-filter: blur(14px) saturate(1.35);
@@ -3740,17 +3740,17 @@
     box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
   }
 
-  /* --- TÃ­tulo da view com toque accent (degradÃª) --- */
+  /* --- Título da view com toque accent (degradê) --- */
   .view-cabecalho h2 {
     background: linear-gradient(135deg, var(--text) 45%, color-mix(in srgb, var(--accent-bright) 70%, var(--text-muted)));
     -webkit-background-clip: text;
     background-clip: text;
   }
 
-  /* --- Links/Ã¢ncoras accent-adaptivos --- */
+  /* --- Links/âncoras accent-adaptivos --- */
   a:not(.nav-item):not(.btn):hover { color: var(--accent-bright); }
 
-  /* --- Foco teatral: anÃ©is accent-adaptivos (replace indigo hardcoded) --- */
+  /* --- Foco teatral: anéis accent-adaptivos (replace indigo hardcoded) --- */
   .campo-form input:focus,
   .campo-form select:focus,
   .campo-form textarea:focus,
@@ -3776,7 +3776,7 @@
     background-image: linear-gradient(var(--card), var(--card)), linear-gradient(135deg, var(--accent), var(--accent-bright), var(--accent));
   }
 
-  /* --- BotÃµes gradiente accent-adaptivos --- */
+  /* --- Botões gradiente accent-adaptivos --- */
   .btn-gradient {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
     box-shadow: 0 4px 12px var(--accent-glow);
@@ -3797,7 +3797,7 @@
     border-color: color-mix(in srgb, var(--accent) 28%, transparent);
   }
 
-  /* --- Item de navegaÃ§Ã£o ativo: accent puro + glow coerente --- */
+  /* --- Item de navegação ativo: accent puro + glow coerente --- */
   .nav-item.ativo {
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
     box-shadow: 0 4px 16px var(--accent-glow);
@@ -3842,7 +3842,7 @@
   }
 
   /* ==========================================================================
-     ===== TOAST DISCRETO â€” compacto, pill, glass sutil =====
+     ===== TOAST DISCRETO — compacto, pill, glass sutil =====
      ========================================================================== */
   .toast {
     position: fixed;
@@ -3917,12 +3917,12 @@
   }
 
   /* ==========================================================================
-     ===== PREMIUM V4 â€” micro-interaÃ§Ãµes, brilho e acabamento fino =====
+     ===== PREMIUM V4 — micro-interações, brilho e acabamento fino =====
      ========================================================================== */
   html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
   body { font-variant-numeric: tabular-nums; }
 
-  /* --- Entrada suave das views (sÃ³ opacity: seguro para elementos arrastÃ¡veis) --- */
+  /* --- Entrada suave das views (só opacity: seguro para elementos arrastáveis) --- */
   @media (prefers-reduced-motion: no-preference) {
     .view-cabecalho, .tabela-wrapper, .grid-cards, .estado-vazio, .catalogo-filtros, .painel-filtros { animation: v4FadeIn 0.28s ease both; }
     .kpi-card { animation: v4FadeIn 0.34s ease both; }
@@ -3934,7 +3934,7 @@
     @keyframes v4FadeIn { from { opacity: 0; } to { opacity: 1; } }
   }
 
-  /* --- KPI cards: chip de Ã­cone com brilho prÃ³prio + valor em gradiente --- */
+  /* --- KPI cards: chip de ícone com brilho próprio + valor em gradiente --- */
   .kpi-card {
     background-image: radial-gradient(150px 70px at 10% 0%, color-mix(in srgb, var(--kpi-cor) 12%, transparent), transparent 72%);
   }
@@ -3959,7 +3959,7 @@
   }
   .kpi-sparkline svg { filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--kpi-cor) 45%, transparent)); }
 
-  /* --- BotÃµes: topo "aceso", sombra tingida pelo accent e pressÃ£o satisfatÃ³ria --- */
+  /* --- Botões: topo "aceso", sombra tingida pelo accent e pressão satisfatória --- */
   .btn-primario {
     background-image: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 42%), linear-gradient(0deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0) 42%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 4px 14px color-mix(in srgb, var(--accent) 32%, transparent);
@@ -3977,7 +3977,7 @@
     box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 14%, transparent), inset 0 1px 0 rgba(255,255,255,0.06);
   }
 
-  /* --- Sidebar: glow no logo, micro-nudge do Ã­cone, ativo com topo aceso --- */
+  /* --- Sidebar: glow no logo, micro-nudge do ícone, ativo com topo aceso --- */
   .sidebar-logo .icone { filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--accent) 50%, transparent)); }
   .nav-item .icone { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .nav-item:hover .icone { transform: scale(1.14) translateX(2px); }
@@ -3995,12 +3995,12 @@
   .tabela-wrapper tbody td:first-child { border-left: 3px solid transparent; }
   .tabela-wrapper tbody tr:hover td:first-child { border-left-color: var(--accent); }
 
-  /* --- FormulÃ¡rios: glow de foco mais presente --- */
+  /* --- Formulários: glow de foco mais presente --- */
   input:focus, textarea:focus, select:focus {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent), 0 6px 18px color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
-  /* --- Estado vazio: Ã­cone em chip gradiente com brilho --- */
+  /* --- Estado vazio: ícone em chip gradiente com brilho --- */
   .estado-vazio .icone-vazio {
     display: inline-flex; align-items: center; justify-content: center;
     width: 76px; height: 76px; border-radius: 24px;
