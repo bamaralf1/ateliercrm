@@ -7,3 +7,4 @@ coverage/
 Thumbs.db
 supabase/.env
 vite*.log
+*.log
