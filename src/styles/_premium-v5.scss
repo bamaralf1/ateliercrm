@@ -1637,3 +1637,479 @@ tr.linha-atrasada td {
 
 /* Configurações V17 — KPIs */
 .kpi-grid.cfg-kpis { margin-bottom: 14px; max-width: 560px; }
+
+/* ==========================================================================
+   V18 — ATELIER PREMIER (passada ultra-premium)
+   Aditivo, não altera layout. Refina: tipografia editorial, sidebar,
+   header, cards, tabelas, modais, toasts, scrollbar e micro-interações.
+   Textos sempre com cores sólidas — SEM text-shadow em hover (regra V17).
+   Guards: prefers-reduced-motion + high-contrast no fim da seção.
+   ========================================================================== */
+
+/* ---------- Tipografia editorial ---------- */
+.view .view-cabecalho h2 {
+  letter-spacing: -0.028em;
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+  text-wrap: balance;
+}
+.view .view-cabecalho p.subtitulo {
+  letter-spacing: 0.014em;
+  font-weight: 600;
+}
+.kpi-valor { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.kpi-rotulo { letter-spacing: 0.1em; }
+.kpi-cards, .kpi-grid, .grid-cards { text-wrap: balance; }
+
+/* ---------- Sidebar Premier ---------- */
+.sidebar {
+  background:
+    radial-gradient(140% 90% at -20% -10%, color-mix(in srgb, var(--sidebar-vignette) 100%, transparent), transparent 62%),
+    radial-gradient(120% 90% at 120% 112%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sidebar-bg) 94%, var(--accent) 3%) 0%, var(--sidebar-bg) 100%);
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+}
+.sidebar-topo { position: relative; }
+.sidebar-topo::after {
+  content: '';
+  position: absolute;
+  left: 16px; right: 16px; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 50%, transparent), transparent);
+  pointer-events: none;
+}
+.sidebar-logo .icone {
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--accent) 50%, transparent));
+  transition: filter 0.3s ease;
+}
+.sidebar-logo:hover .icone { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 72%, transparent)); }
+.sidebar-logo .rotulo {
+  letter-spacing: 0.04em;
+}
+.nav-separador {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--sidebar-text) 58%, transparent);
+  margin: 18px 16px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-separador::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sidebar-text) 22%, transparent), transparent);
+}
+.nav-item {
+  margin: 2px 8px;
+  border-radius: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: background 0.22s ease, color 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+.nav-item:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+}
+#sidebar .nav-item.ativo {
+  background-image: linear-gradient(115deg, color-mix(in srgb, var(--accent) 92%, #000 8%), color-mix(in srgb, var(--accent-strong) 82%, var(--accent)));
+  background-color: transparent;
+  box-shadow:
+    0 6px 20px color-mix(in srgb, var(--accent) 36%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
+  color: var(--accent-contrast);
+}
+#sidebar .nav-item.ativo::before {
+  left: 7px;
+  width: 3px;
+  height: 62%;
+  border-radius: 999px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, #fff 82%, var(--accent-bright)), color-mix(in srgb, var(--accent-bright) 45%, transparent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-bright) 75%, transparent);
+}
+#sidebar .nav-item.ativo .rotulo { letter-spacing: 0.02em; }
+.btn-colapsar {
+  border-radius: 9px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, color 0.2s ease;
+}
+.btn-colapsar:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--sidebar-text) 12%, transparent); }
+.sidebar-rodape {
+  position: relative;
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 14%, transparent);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+
+/* ---------- Header Premier ---------- */
+.header {
+  position: sticky;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 86%, var(--bg) 14%) 0%, var(--card) 100%);
+  backdrop-filter: blur(18px) saturate(1.35);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 2%, color-mix(in srgb, var(--accent) 42%, transparent) 50%, transparent 98%);
+  pointer-events: none;
+}
+.header-titulo h1 {
+  font-family: var(--font-display, var(--font-principal));
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+.select-tema {
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--text-muted) 34%, transparent);
+  padding: 8px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.select-tema:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.btn-header, .btn-notif {
+  border-radius: 10px;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-header:hover { transform: translateY(-1px); }
+.btn-header:active { transform: translateY(0) scale(0.96); }
+.notif-badge {
+  box-shadow: 0 0 0 2px var(--card), 0 2px 6px color-mix(in srgb, #dc2626 40%, transparent);
+}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb { letter-spacing: 0.02em; }
+.breadcrumb a { transition: color 0.2s ease, transform 0.2s ease; display: inline-flex; }
+.breadcrumb a:hover { color: var(--accent); transform: translateY(-1px); }
+
+/* ---------- Cards & grids ---------- */
+.card, .painel {
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease, border-color 0.24s ease;
+}
+.card:hover, .painel:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 34px color-mix(in srgb, var(--accent) 12%, rgba(0,0,0,0.18)),
+    0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
+    0 0 22px color-mix(in srgb, var(--accent-glow) 32%, transparent);
+}
+.kpi-grid { perspective: 1400px; }
+.kpi-card {
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--accent) 16%, rgba(0,0,0,0.2)),
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 0 26px color-mix(in srgb, var(--accent-glow) 40%, transparent);
+}
+.kpi-icone, .fi-icone {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+}
+.kpi-card:hover .kpi-icone, .fi-item:hover .fi-icone { transform: scale(1.12); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent)); }
+
+/* ---------- Tabelas ---------- */
+.tabela-wrapper tbody tr { transition: background 0.15s ease; }
+.tabela-wrapper th { position: relative; }
+.tabela-wrapper th + th::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 28%;
+  height: 44%;
+  width: 1px;
+  background: color-mix(in srgb, var(--card) 26%, transparent);
+  pointer-events: none;
+}
+.tabela-wrapper td {
+  transition: background 0.15s ease, box-shadow 0.2s ease;
+}
+.tabela-wrapper tbody tr:hover td {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* ---------- Modais ---------- */
+.modal-overlay {
+  backdrop-filter: blur(14px) saturate(1.25);
+}
+.modal-caixa {
+  overflow: hidden;
+  box-shadow:
+    0 30px 90px color-mix(in srgb, var(--accent) 12%, rgba(0,0,0,0.34)),
+    0 0 0 1px color-mix(in srgb, var(--card-border) 60%, transparent);
+}
+.modal-caixa::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 65%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* ---------- Toasts ---------- */
+.toast {
+  backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.22), 0 0 0 1px color-mix(in srgb, var(--card-border) 50%, transparent);
+}
+.toast[data-tipo="sucesso"], .toast[data-tipo="ok"] { box-shadow: 0 18px 44px rgba(0,0,0,0.22), 0 0 22px color-mix(in srgb, var(--ok, #16a34a) 30%, transparent); }
+
+/* ---------- Scrollbar ---------- */
+.view::-webkit-scrollbar-thumb, .tabela-wrapper::-webkit-scrollbar-thumb, .modal-caixa::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 38%, transparent), color-mix(in srgb, var(--accent) 22%, transparent)) border-box;
+}
+
+/* ---------- Estado vazio / sugestões ---------- */
+.estado-vazio {
+  border-radius: 16px;
+}
+
+/* ---------- Guards V18 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item, .nav-item.ativo, .btn-colapsar, .header, .btn-header, .btn-notif,
+  .card, .painel, .kpi-card, .kpi-icone, .fi-icone, .breadcrumb a, .toast { transition: none; animation: none; }
+  .nav-item:hover, .card:hover, .painel:hover, .kpi-card:hover { transform: none; }
+  .btn-header:hover, .btn-colapsar:hover { transform: none; }
+}
+body[data-high-contrast="true"] .kpi-card,
+body[data-high-contrast="true"] .card,
+body[data-high-contrast="true"] .painel,
+body[data-high-contrast="true"] .nav-item.ativo { transform: none; }
+body[data-high-contrast="true"] .sidebar,
+body[data-high-contrast="true"] .header { background: var(--sidebar-bg, var(--card)); }
+body[data-high-contrast="true"] .nav-item.ativo::before { display: none; }
+body[data-high-contrast="true"] .notif-badge { box-shadow: none; }
+
+/* ==========================================================================
+   V19 — ASSINATURA CURATORIAL POR TEMA
+   Camada 100% aditiva ao fim do arquivo (importada por último → vence).
+   Dá a cada um dos 8 temas uma identidade premium distinta a partir de tokens
+   de casa (--v19-*): polimento de superfícies, ornamento, gradiente de botão,
+   sombra de hover, mitre da sidebar, hairline do header, tabela, scrollbar e
+   seleção. Não altera layout, não cria motion novo; textos sempre com cor
+   sólida (regra V17); color-mix sempre ≤100%.
+   ========================================================================== */
+
+/* ---------- Tokens de casa (1 por tema, 8 temas) ---------- */
+body[data-tema="classico"] {
+  --v19-hi: #c1783f;
+  --v19-sheen: rgba(209, 156, 109, 0.16);
+  --v19-orn: linear-gradient(90deg, #6d3510, #c1783f);
+  --v19-scroll: linear-gradient(180deg, rgba(139, 69, 19, 0.62), rgba(139, 69, 19, 0.34));
+  --v19-sel-bg: #8b4513; --v19-sel-col: #fff7ec;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(160, 82, 45, 0.55) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(139, 69, 19, 0.10) 0%, rgba(139, 69, 19, 0.02) 100%);
+  --v19-hover-shade: #a0522d;
+  --v19-sb-glow1: rgba(193, 120, 63, 0.16);
+  --v19-sb-glow2: rgba(139, 69, 19, 0.26);
+}
+body[data-tema="clean"] {
+  --v19-hi: #4d4d4d;
+  --v19-sheen: rgba(0, 0, 0, 0.045);
+  --v19-orn: linear-gradient(90deg, #111, #4d4d4d);
+  --v19-scroll: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.28));
+  --v19-sel-bg: #1c1c1c; --v19-sel-col: #ffffff;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5) 50%, transparent);
+  --v19-th: linear-gradient(180deg, #f2f0ec 0%, #ffffff 100%);
+  --v19-hover-shade: #1c1c1c;
+  --v19-sb-glow1: rgba(255, 255, 255, 0.05);
+  --v19-sb-glow2: rgba(0, 0, 0, 0.3);
+}
+body[data-tema="escuro"] {
+  --v19-hi: #e2c27d;
+  --v19-sheen: rgba(226, 194, 125, 0.10);
+  --v19-orn: linear-gradient(90deg, #a8863f, #e2c27d);
+  --v19-scroll: linear-gradient(180deg, rgba(200, 163, 90, 0.68), rgba(200, 163, 90, 0.38));
+  --v19-sel-bg: #c8a35a; --v19-sel-col: #191303;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(226, 194, 125, 0.5) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(200, 163, 90, 0.13) 0%, rgba(200, 163, 90, 0.03) 100%);
+  --v19-hover-shade: #c8a35a;
+  --v19-sb-glow1: rgba(226, 194, 125, 0.15);
+  --v19-sb-glow2: rgba(200, 163, 90, 0.2);
+}
+body[data-tema="galeria"] {
+  --v19-hi: #555555;
+  --v19-sheen: rgba(0, 0, 0, 0.04);
+  --v19-orn: linear-gradient(90deg, #141414, #666666);
+  --v19-scroll: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.26));
+  --v19-sel-bg: #141414; --v19-sel-col: #ffffff;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.42) 50%, transparent);
+  --v19-th: linear-gradient(180deg, #efede8 0%, #ffffff 100%);
+  --v19-hover-shade: #222222;
+  --v19-sb-glow1: rgba(255, 255, 255, 0.07);
+  --v19-sb-glow2: rgba(0, 0, 0, 0.22);
+}
+body[data-tema="boho"] {
+  --v19-hi: #d99a72;
+  --v19-sheen: rgba(217, 154, 114, 0.16);
+  --v19-orn: linear-gradient(90deg, #8b5a3a, #d99a72);
+  --v19-scroll: linear-gradient(180deg, rgba(193, 127, 89, 0.62), rgba(193, 127, 89, 0.34));
+  --v19-sel-bg: #c17f59; --v19-sel-col: #fff9f4;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(193, 127, 89, 0.55) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(193, 127, 89, 0.10) 0%, rgba(193, 127, 89, 0.02) 100%);
+  --v19-hover-shade: #c17f59;
+  --v19-sb-glow1: rgba(217, 154, 114, 0.2);
+  --v19-sb-glow2: rgba(160, 96, 60, 0.26);
+}
+body[data-tema="dourado"] {
+  --v19-hi: #eccc68;
+  --v19-sheen: rgba(236, 204, 104, 0.12);
+  --v19-orn: linear-gradient(90deg, #8a6d1a, #eccc68);
+  --v19-scroll: linear-gradient(180deg, rgba(201, 162, 39, 0.72), rgba(201, 162, 39, 0.42));
+  --v19-sel-bg: #c9a227; --v19-sel-col: #1a1400;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(232, 185, 35, 0.55) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(201, 162, 39, 0.14) 0%, rgba(201, 162, 39, 0.03) 100%);
+  --v19-hover-shade: #e8b923;
+  --v19-sb-glow1: rgba(232, 185, 35, 0.16);
+  --v19-sb-glow2: rgba(166, 130, 20, 0.28);
+}
+body[data-tema="marmore"] {
+  --v19-hi: #c47a52;
+  --v19-sheen: rgba(196, 122, 82, 0.12);
+  --v19-orn: linear-gradient(90deg, #7a4a2e, #c47a52);
+  --v19-scroll: linear-gradient(180deg, rgba(160, 82, 45, 0.58), rgba(160, 82, 45, 0.32));
+  --v19-sel-bg: #a0522d; --v19-sel-col: #fff9f4;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(160, 82, 45, 0.5) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(160, 82, 45, 0.08) 0%, rgba(160, 82, 45, 0.02) 100%);
+  --v19-hover-shade: #a0522d;
+  --v19-sb-glow1: rgba(196, 122, 82, 0.18);
+  --v19-sb-glow2: rgba(139, 90, 60, 0.24);
+}
+body[data-tema="esmeralda"] {
+  --v19-hi: #6fd9a0;
+  --v19-sheen: rgba(111, 217, 160, 0.10);
+  --v19-orn: linear-gradient(90deg, #227a4e, #6fd9a0);
+  --v19-scroll: linear-gradient(180deg, rgba(60, 174, 114, 0.68), rgba(60, 174, 114, 0.38));
+  --v19-sel-bg: #3cae72; --v19-sel-col: #06210f;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(111, 217, 160, 0.5) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(60, 174, 114, 0.14) 0%, rgba(60, 174, 114, 0.03) 100%);
+  --v19-hover-shade: #3cae72;
+  --v19-sb-glow1: rgba(111, 217, 160, 0.14);
+  --v19-sb-glow2: rgba(34, 122, 78, 0.26);
+}
+
+/* ---------- Polimento de superfícies por tema (substitui o branco fixo V6) ---------- */
+.card::after,
+.painel::after,
+.kpi-card::after,
+.modal-caixa::after {
+  background: linear-gradient(180deg, var(--v19-sheen, rgba(255, 255, 255, 0.09)) 0%, transparent 44%);
+}
+
+/* ---------- Ornamento de painel ---------- */
+.painel::before {
+  background: var(--v19-orn);
+  opacity: 0.85;
+}
+
+/* ---------- Gradiente de botões principal: acento da casa ---------- */
+body[data-tema] .btn-gradient {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 55%, var(--v19-hi, var(--accent-bright))) 0%,
+    var(--accent-strong) 100%);
+}
+
+/* ---------- Barra ativa da sidebar com tintura da casa ---------- */
+#sidebar .nav-item.ativo {
+  background-image: linear-gradient(115deg,
+    color-mix(in srgb, var(--accent) 88%, var(--v19-hi, var(--accent-bright))) 0%,
+    color-mix(in srgb, var(--accent-strong) 82%, var(--accent)) 100%);
+}
+
+/* ---------- Sidebar: aurora da casa (poça de luz própria por tema) ---------- */
+.sidebar {
+  background:
+    radial-gradient(140% 90% at -20% -10%, color-mix(in srgb, var(--v19-sb-glow1, var(--sidebar-vignette)) 100%, transparent), transparent 62%),
+    radial-gradient(120% 90% at 120% 112%, color-mix(in srgb, var(--v19-sb-glow2, var(--accent)) 12%, transparent), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sidebar-bg) 94%, var(--accent) 3%) 0%, var(--sidebar-bg) 100%);
+}
+
+/* ---------- Header: hairline da casa ---------- */
+.header::after {
+  background: var(--v19-hairline, linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 42%, transparent) 50%, transparent));
+}
+
+/* ---------- Sombra de hover com temperatura da casa ---------- */
+.card:hover,
+.painel:hover {
+  box-shadow:
+    0 14px 34px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 16%, rgba(0, 0, 0, 0.18)),
+    0 0 0 1px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 30%, transparent),
+    0 0 22px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 40%, transparent);
+}
+.kpi-card:hover {
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 20%, rgba(0, 0, 0, 0.2)),
+    0 0 0 1px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 36%, transparent),
+    0 0 26px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 50%, transparent);
+}
+
+/* ---------- Modal: sombra volumétrica com matiz da casa ---------- */
+.modal-caixa {
+  box-shadow:
+    0 30px 90px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 14%, rgba(0, 0, 0, 0.34)),
+    0 0 0 1px color-mix(in srgb, var(--card-border) 60%, transparent);
+}
+
+/* ---------- Tabela: topo tintado ---------- */
+.tabela-wrapper th {
+  background: var(--v19-th, linear-gradient(180deg, color-mix(in srgb, var(--card) 62%, var(--accent) 6%) 0%, var(--card) 100%));
+}
+
+/* ---------- Scrollbar da casa ---------- */
+.view::-webkit-scrollbar-thumb,
+.tabela-wrapper::-webkit-scrollbar-thumb,
+.modal-caixa::-webkit-scrollbar-thumb {
+  background: var(--v19-scroll, linear-gradient(180deg, color-mix(in srgb, var(--accent) 38%, transparent), color-mix(in srgb, var(--accent) 22%, transparent))) border-box;
+}
+
+/* ---------- Seleção de texto da casa ---------- */
+::selection {
+  background: var(--v19-sel-bg, var(--accent));
+  color: var(--v19-sel-col, var(--accent-contrast));
+}
+
+/* ---------- Bordas de superfície por tema (hairline viva, cor apenas) ---------- */
+body[data-tema="classico"] .card,
+body[data-tema="classico"] .painel {
+  border-color: color-mix(in srgb, rgba(160, 82, 45, 0.22), var(--card));
+}
+body[data-tema="clean"] .card,
+body[data-tema="clean"] .painel {
+  border-color: color-mix(in srgb, rgba(0, 0, 0, 0.14), var(--card));
+}
+body[data-tema="boho"] .card,
+body[data-tema="boho"] .painel {
+  border-color: color-mix(in srgb, rgba(160, 96, 60, 0.20), var(--card));
+}
+body[data-tema="marmore"] .card,
+body[data-tema="marmore"] .painel {
+  border-color: color-mix(in srgb, rgba(160, 82, 45, 0.18), var(--card));
+}
+body[data-tema="escuro"] .kpi-card { border-color: color-mix(in srgb, rgba(200, 163, 90, 0.26), var(--card)); }
+body[data-tema="dourado"] .kpi-card { border-color: color-mix(in srgb, rgba(236, 204, 104, 0.26), var(--card)); }
+body[data-tema="esmeralda"] .kpi-card { border-color: color-mix(in srgb, rgba(111, 217, 160, 0.24), var(--card)); }
+body[data-tema="boho"] .kpi-card { border-color: color-mix(in srgb, rgba(193, 127, 89, 0.26), var(--card)); }
+body[data-tema="marmore"] .kpi-card { border-color: color-mix(in srgb, rgba(160, 82, 45, 0.20), var(--card)); }
+
+/* ---------- Guards V19 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .painel::before, .header::after { transition: none; animation: none; }
+}
+body[data-high-contrast="true"] .card::after,
+body[data-high-contrast="true"] .painel::after,
+body[data-high-contrast="true"] .kpi-card::after,
+body[data-high-contrast="true"] .modal-caixa::after { background: none; }
+body[data-high-contrast="true"] .modal-caixa { box-shadow: none; }
+body[data-high-contrast="true"] ::selection { color: #ffffff; background: var(--accent); }
+body[data-high-contrast="true"] .card:hover,
+body[data-high-contrast="true"] .painel:hover,
+body[data-high-contrast="true"] .kpi-card:hover { box-shadow: none; }
