@@ -229,28 +229,82 @@ export class CatalogoView extends BaseView {
     }, 150);
   }
 
+  _renderMolduraMuseu(o, idx) {
+    const numAcervo = String(idx + 1).padStart(4, '0');
+    const serie = o.serie ? `<div class="etiqueta-serie">${sanitizarHTML(o.serie)}</div>` : '';
+    const svgId = `frame-${o.id}`.replace(/[^a-zA-Z0-9-]/g, '');
+    return `
+      <div class="card-obra-museu">
+        <div class="parede-museu">
+          <svg class="moldura-svg" viewBox="0 0 300 370" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="wood-${svgId}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--v27-frame-wood, #3a2c1a)"/>
+                <stop offset="50%" stop-color="color-mix(in srgb, var(--v27-frame-wood, #3a2c1a) 70%, #000)"/>
+                <stop offset="100%" stop-color="var(--v27-frame-wood, #3a2c1a)"/>
+              </linearGradient>
+              <linearGradient id="gold-${svgId}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--v27-frame-gold, #c9a227)"/>
+                <stop offset="40%" stop-color="color-mix(in srgb, var(--v27-frame-gold, #c9a227) 80%, #fff)"/>
+                <stop offset="100%" stop-color="var(--v27-frame-gold, #c9a227)"/>
+              </linearGradient>
+              <linearGradient id="inner-${svgId}" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="rgba(0,0,0,0.18)"/>
+                <stop offset="100%" stop-color="rgba(0,0,0,0.04)"/>
+              </linearGradient>
+              <pattern id="canvas-${svgId}" width="6" height="6" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="3" x2="6" y2="3" stroke="rgba(0,0,0,0.07)" stroke-width="0.5"/>
+                <line x1="3" y1="0" x2="3" y2="6" stroke="rgba(0,0,0,0.07)" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <!-- Canvas texture behind frame -->
+            <rect x="0" y="0" width="300" height="370" fill="url(#canvas-${svgId})" opacity="0.5"/>
+            <!-- Outer frame body -->
+            <rect x="2" y="2" width="296" height="366" rx="3" fill="url(#wood-${svgId})"/>
+            <!-- Outer highlight -->
+            <rect x="2" y="2" width="296" height="366" rx="3" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.75"/>
+            <!-- Carved molding top -->
+            <path d="M 12,12 Q 150,8 288,12 Q 150,16 12,12" fill="rgba(255,255,255,0.08)"/>
+            <!-- Carved molding bottom -->
+            <path d="M 12,358 Q 150,362 288,358 Q 150,354 12,358" fill="rgba(0,0,0,0.12)"/>
+            <!-- Carved molding left -->
+            <path d="M 12,12 Q 8,185 12,358 Q 16,185 12,12" fill="rgba(255,255,255,0.06)"/>
+            <!-- Carved molding right -->
+            <path d="M 288,12 Q 292,185 288,358 Q 284,185 288,12" fill="rgba(0,0,0,0.10)"/>
+            <!-- Inner gold filet -->
+            <rect x="20" y="20" width="260" height="330" rx="1" fill="none" stroke="url(#gold-${svgId})" stroke-width="1.5"/>
+            <!-- Inner wood edge -->
+            <rect x="23" y="23" width="254" height="324" rx="1" fill="var(--v27-frame-wood, #3a2c1a)"/>
+            <!-- Inner shadow -->
+            <rect x="23" y="23" width="254" height="324" rx="1" fill="url(#inner-${svgId})"/>
+          </svg>
+          <div class="imagem-frame-container">
+            <img class="imagem-obra-museu lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${sanitizarHTML(o.titulo)}" loading="lazy"${this.imgDataIdb(o)}>
+          </div>
+          ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
+          <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${sanitizarHTML(o.titulo)}"><i data-lucide="play" aria-hidden="true"></i></button>
+        </div>
+        <div class="etiqueta-museu">
+          <div class="etiqueta-numero">Nº ${numAcervo}</div>
+          <div class="etiqueta-titulo">${sanitizarHTML(o.titulo)}</div>
+          <div class="etiqueta-info">${sanitizarHTML(capitalizarTexto(o.tecnica))} · ${this.formatarDimensoes(o.dimensoes)}${o.ano ? ` · ${o.ano}` : ''}</div>
+          ${serie}
+          <div class="etiqueta-preco">${formatarMoeda(o.preco)}</div>
+        </div>
+      </div>
+    `;
+  }
+
   renderGrid(obras) {
     return `
       <div class="grid-obras stagger-in">
-        ${obras.map(o => `
+        ${obras.map((o, idx) => `
           <div class="card-obra ${o.favorita ? 'favorita' : ''} ${this.selecionados.has(o.id) ? 'selecionada' : ''}">
             <div class="checkbox-bulk">
               <input type="checkbox" class="checkbox-item" data-id="${o.id}" aria-label="Selecionar ${sanitizarHTML(o.titulo || 'obra')}" ${this.selecionados.has(o.id) ? 'checked' : ''}>
             </div>
             ${o.favorita ? '<div class="badge-favorita"><i data-lucide="star"></i></div>' : ''}
-            <div class="imagem-card-wrapper" data-abrir-ficha="${o.id}">
-              <img class="imagem-obra lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${sanitizarHTML(o.titulo)}" loading="lazy"${this.imgDataIdb(o)}>
-              ${(o.imagens && o.imagens.length > 1) ? `<span class="badge-multiplas-imagens">+${o.imagens.length}</span>` : ''}
-              <button class="btn-slideshow-card" data-slideshow="${o.id}" title="Ver galeria" aria-label="Ver galeria ${sanitizarHTML(o.titulo)}"><i data-lucide="play" aria-hidden="true"></i></button>
-            </div>
-            <div class="corpo-card-obra" data-abrir-ficha="${o.id}">
-              <div class="titulo-obra">${sanitizarHTML(o.titulo)}</div>
-              <div class="meta-obra">${sanitizarHTML(capitalizarTexto(o.tecnica))} · ${this.formatarDimensoes(o.dimensoes)}</div>
-              <div class="rodape-card-obra">
-                <span class="preco-obra">${formatarMoeda(o.preco)}</span>
-                <span class="tag-status ${classeStatus(o.status)}">${rotuloStatus(o.status)}</span>
-              </div>
-            </div>
+            ${this._renderMolduraMuseu(o, idx)}
             <div class="acoes-card-obra">
               <button data-favoritar-obra="${o.id}" title="${o.favorita ? 'Remover favorita' : 'Marcar favorita'}" aria-label="${o.favorita ? 'Remover favorita' : 'Marcar favorita'} ${sanitizarHTML(o.titulo)}">${o.favorita ? '★' : '☆'}</button>
               <button data-comparar-obra="${o.id}" title="Adicionar à comparação" aria-label="Adicionar ${sanitizarHTML(o.titulo)} à comparação"><i data-lucide="bar-chart-3"></i></button>

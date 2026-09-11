@@ -123,66 +123,180 @@ body[data-view="dashboard"] .atalhos-rodape {
 }
 
 /* ── 3. IDENTITY SPATIAL: CATÁLOGO — GALERIA DE QUADROS ──────────────────── */
-/* Card de obra = quadro emoldurado com etiqueta de museu */
-body[data-view="catalogo"] .card-obra {
-  @extend %frame-quadro;
-  border-radius: 2px;
+/* Grid: espaçamento de quadros pendurados na parede */
+body[data-view="catalogo"] .grid-obras {
+  gap: 2.5rem 2rem;
+  padding: 1rem;
+}
+/* ── CARD MUSEU: mouldure SVG real + etiqueta + parede ────────────────────── */
+.card-obra-museu {
   position: relative;
-  overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-body[data-view="catalogo"] .card-obra:hover {
-  transform: translateY(-3px) scale(1.005);
-  box-shadow:
-    inset 0 0 0 1px var(--v27-frame-gold),
-    inset 0 0 0 2px color-mix(in srgb, var(--v27-frame-gold) 30%, transparent),
-    inset 0 0 0 3px var(--v27-frame-wood),
-    inset 0 2px 4px rgba(0, 0, 0, 0.25),
-    0 8px 24px var(--v27-frame-shadow),
-    0 2px 6px color-mix(in srgb, var(--v27-frame-gold) 18%, transparent);
-}
-/* Imagem com moldura interna e pátina de galeria */
-body[data-view="catalogo"] .imagem-card-wrapper {
+/* Parede do museu = fundo com sombra assimétrica */
+.parede-museu {
   position: relative;
-  overflow: hidden;
-  border-bottom: none;
-  box-shadow: inset 0 0 0 2px var(--v27-frame-wood);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem 1rem;
+  /* Sombra assimétrica: luz vem do alto-esquerda → sombra projetada baixo-direita */
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 25% 15%,
+      rgba(255, 255, 255, var(--v27-grain-opacity, 0.028)) 0%,
+      transparent 70%
+    ),
+    linear-gradient(
+      175deg,
+      transparent 0%,
+      transparent 60%,
+      rgba(0, 0, 0, 0.06) 85%,
+      rgba(0, 0, 0, 0.12) 100%
+    );
+  /* Textura de parede */
+  background-color: var(--v27-wall, var(--bg));
 }
-/* Pátina sutil nas fotos (sepia leve + contraste) */
-body[data-view="catalogo"] .imagem-obra,
-body[data-view="catalogo"] img.imagem-obra {
+body[data-tema="escuro"] .parede-museu {
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 25% 15%,
+      rgba(185, 141, 46, 0.04) 0%,
+      transparent 70%
+    ),
+    linear-gradient(
+      175deg,
+      transparent 0%,
+      transparent 60%,
+      rgba(0, 0, 0, 0.14) 85%,
+      rgba(0, 0, 0, 0.22) 100%
+    );
+  background-color: var(--v27-wall, var(--bg));
+}
+/* Moldura SVG = sobreposta à parede */
+.moldura-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  /* Sombra projetada pela moldura na parede (asimétrica: mais forte baixo-direita) */
+  filter:
+    drop-shadow(3px 5px 8px rgba(0, 0, 0, 0.30))
+    drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.18));
+}
+body[data-tema="escuro"] .moldura-svg {
+  filter:
+    drop-shadow(4px 6px 10px rgba(0, 0, 0, 0.50))
+    drop-shadow(2px 3px 5px rgba(0, 0, 0, 0.30));
+}
+/* Container da imagem (dentro da mouldure) */
+.imagem-frame-container {
+  position: relative;
+  width: calc(100% - 48px);
+  height: 0;
+  padding-bottom: 82%;
+  margin: 0 auto;
+  overflow: hidden;
+  z-index: 1;
+}
+.imagem-obra-museu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Pátina de galeria: sepia leve, contraste suave */
   filter: sepia(0.06) contrast(1.02) saturate(0.96);
-  transition: filter 0.3s ease;
+  transition: filter 0.35s ease, transform 0.35s ease;
 }
-body[data-view="catalogo"] .card-obra:hover .imagem-obra {
+/* Hover: imagem se aproxima (parallax — imagem se move 3px, mouldure fica) */
+.card-obra:hover .imagem-obra-museu {
   filter: sepia(0.02) contrast(1.05) saturate(1.0);
+  transform: scale(1.03) translateY(-2px);
 }
-/* Etiqueta de museu abaixo da imagem */
-body[data-view="catalogo"] .corpo-card-obra {
-  padding: 0.6rem 0.7rem 0.5rem;
-  border-top: 2px solid var(--v27-frame-wood);
-  background-color: var(--v27-parchment);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.82 0 0 0 0 0.76 0 0 0 0 0.64 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
+.card-obra:hover .moldura-svg {
+  filter:
+    drop-shadow(5px 8px 14px rgba(0, 0, 0, 0.38))
+    drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.22));
 }
-body[data-view="catalogo"] .titulo-obra {
+/* ── ETIQUETA DE MUSEU ────────────────────────────────────────────────────── */
+.etiqueta-museu {
+  position: relative;
+  margin: 0.6rem 1.2rem 0.3rem;
+  padding: 0.5rem 0.7rem 0.4rem;
+  text-align: center;
+  /* Placa de latão sobre parede */
+  background:
+    linear-gradient(
+      170deg,
+      rgba(255, 255, 255, 0.10) 0%,
+      transparent 40%,
+      rgba(0, 0, 0, 0.04) 100%
+    ),
+    var(--v27-parchment, var(--card));
+  border: 1px solid color-mix(in srgb, var(--v27-frame-gold, #c9a227) 30%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.10);
+}
+.etiqueta-numero {
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.72rem;
-  font-weight: 600;
+  color: var(--text-muted);
   margin-bottom: 0.2rem;
 }
-body[data-view="catalogo"] .meta-obra {
-  font-style: italic;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-body[data-view="catalogo"] .preco-obra {
+.etiqueta-titulo {
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.7rem;
   font-weight: 600;
-  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  margin-bottom: 0.15rem;
+}
+.etiqueta-info {
+  font-style: italic;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+.etiqueta-serie {
+  font-size: 0.55rem;
+  color: var(--v27-frame-gold, var(--accent));
+  letter-spacing: 0.05em;
+  margin-top: 0.15rem;
+}
+.etiqueta-preco {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
   letter-spacing: 0.02em;
+}
+/* Favorita: estrela sobre a moldura */
+.card-obra .badge-favorita {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  color: var(--v27-frame-gold, var(--accent));
+}
+/* Ações do card (embaixo da etiqueta) */
+.acoes-card-obra {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+  padding: 0.3rem 0.5rem 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.card-obra:hover .acoes-card-obra {
+  opacity: 1;
 }
 /* Linha de lista = ficha de arquivo */
 body[data-view="catalogo"] .linha-obra-lista {
@@ -198,10 +312,6 @@ body[data-view="catalogo"] .linha-obra-lista .titulo-obra {
 /* Filtros = painel de curadoria */
 body[data-view="catalogo"] .catalogo-filtros {
   @extend %frame-quadro-fino;
-}
-/* Grid de galeria com espaçamento de quadros */
-body[data-view="catalogo"] .grid-obras {
-  gap: 1.2rem;
 }
 
 /* ── 4. IDENTITY SPATIAL: CLIENTES — LIVRO DE MECENAS ─────────────────────── */

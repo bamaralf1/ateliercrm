@@ -305,3 +305,22 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - ⚠️ **Cascade V25→V27**: partial novo importado por último → vence. Regras base `[data-tema="x"] .y` da base não são sobrescritas (V27 só adiciona visual). Para specular `[data-view]`, usar `body[data-view] .y` para especificidade adequada.
 - ⚠️ **CSS size**: 297.5 kB injetado (+86 kB vs V25) devido a SVG data-URIs inline (tinturas de madeira/tela/pergaminho).
 - **out**: 14/14 suítes (199/199); `vite build` OK; console limpo; `<style>` 297.5 kB com V27 blocks presentes.
+
+### Catálogo de Obras — Moldura SVG real + Etiqueta de museu (V28)
+- **Motivo**: feedback do cliente — "pare de iterar em CSS, comece a projetar um cômodo". Rodadas V18-V27 falharam porque eram camadas de box-shadow/color-mix sobre markup de e-commerce. A mudança real é no **markup**, não no CSS.
+- **Markup novo** (`catalogo-view.ts`):
+  - `_renderMolduraMuseu(o, idx)`: gera SVG inline com perfil de talha + etiqueta de museu.
+  - **SVG frame** (`<svg class="moldura-svg" viewBox="0 0 300 370">`): gradientes `wood`/`gold`/`inner`, 4 paths de molding com curvas Q (topo/baixo/esq/dir), `<pattern>` de textura de tela (6×6, linhas cruzadas `stroke-width:0.5`, `opacity:0.07`), `drop-shadow` assimétrico via CSS filter.
+  - **Etiqueta de museu** (`<div class="etiqueta-museu">`): `etiqueta-numero` (Nº 0001, idx+1 padded), `etiqueta-titulo` (Cinzel uppercase), `etiqueta-info` (técnica · dimensões · ano, itálico), `etiqueta-serie` (opcional), `etiqueta-preco`.
+  - **Parede** (`<div class="parede-museu">`): radial gradient em `25% 15%` (luz alto-esquerda) + linear gradient `175deg` (sombra baixo-direita).
+  - **Parallax hover**: imagem `scale(1.03) translateY(-2px)`, moldura `drop-shadow` mais profundo.
+- **CSS** (`_premium-v27.scss`): seção 3 reescrita — `.card-obra-museu`, `.parede-museu`, `.moldura-svg`, `.imagem-frame-container`, `.imagem-obra-museu`, `.etiqueta-museu/*`, `.acoes-card-obra` (opacity 0 → 1 no hover).
+- **Removido**: `.card-obra` antigo com `@extend %frame-quadro`, `.imagem-card-wrapper`, `.corpo-card-obra`, `.titulo-obra`, `.meta-obra`, `.rodape-card-obra` (substituídos pelo novo markup).
+- **Testes**: nenhum teste referenciava os seletores antigos diretamente — 14/14 suítes, 199/199 testes.
+- **CSS size**: 298.5 kB (+1 kB vs V27, devido ao novo markup SVG inline).
+- **Critérios de validação**:
+  - Moldura SVG com perfil de talha (curvas Q, não retângulos) ✓
+  - Etiqueta de museu com Nº de acervo ✓
+  - Textura de tela via SVG `<pattern>` (não repeating-linear-gradient) ✓
+  - Iluminação assimétrica (luz alto-esquerda, sombra baixo-direita) ✓
+  - Parallax no hover (imagem e moldura se movem em velocidades diferentes) ✓
