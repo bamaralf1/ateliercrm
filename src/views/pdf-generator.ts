@@ -93,8 +93,17 @@ export class PDFGenerator {
     canvas.addEventListener('touchmove', continuarTraco, { passive: false });
     canvas.addEventListener('touchend', finalizarTraco);
 
+    const cleanup = () => {
+      window.removeEventListener('mouseup', finalizarTraco);
+      canvas.removeEventListener('mousedown', iniciarTraco);
+      canvas.removeEventListener('mousemove', continuarTraco);
+      canvas.removeEventListener('touchstart', iniciarTraco);
+      canvas.removeEventListener('touchmove', continuarTraco);
+      canvas.removeEventListener('touchend', finalizarTraco);
+    };
+
     document.getElementById('btnLimparAssinatura').addEventListener('click', () => ctx.clearRect(0, 0, canvas.width, canvas.height));
-    document.getElementById('btnCancelarPdf').addEventListener('click', fecharModal);
+    document.getElementById('btnCancelarPdf').addEventListener('click', () => { cleanup(); fecharModal(); });
     document.getElementById('btnGerarPdfFinal').addEventListener('click', () => {
       this.gerarPdf(venda, obra, cliente, tipo, canvas.toDataURL('image/png'));
     });

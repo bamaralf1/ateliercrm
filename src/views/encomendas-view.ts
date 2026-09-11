@@ -785,9 +785,8 @@ export class EncomendasView extends BaseView {
   async exportarPortalHTML(encomendaId) {
     const enc = encomendaId ? this.dataStore.buscarPorId('encomendas', encomendaId) : null;
     if (!enc) { mostrarToast('Selecione uma encomenda para exportar.', 'aviso'); return; }
-    const config = this.dataStore.obter('configuracoes') || {};
-
-    mostrarLoading(true);
+    const config = configStore();
+    mostrarLoading('Exportando portal...');
     const imgs = [];
     for (const img of (enc.imagens || [])) {
       if (img && img.startsWith('idb:')) { try { const url = await imageStore.carregar(img); imgs.push(url || img); } catch { imgs.push(img); } }

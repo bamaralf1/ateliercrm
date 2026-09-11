@@ -1,8 +1,9 @@
 // Globais do Atelier CRM — funções expostas no escopo global pelo main.ts
 
-declare function mostrarToast(mensagem: string, tipo?: string): void;declare function mostrarLoading(mostrar: boolean): void;
+declare function mostrarToast(mensagem: string, tipo?: string): void;
+declare function mostrarLoading(msg?: string): void;
 declare function esconderLoading(): void;
-declare function abrirModal(titulo: string, conteudo: string): void;
+declare function abrirModal(htmlConteudo: string): void;
 declare function confirmarAcao(mensagem: string, opcoes?: { textoConfirmar?: string; titulo?: string; perigoso?: boolean }): Promise<boolean>;
 declare function mostrarToastComDesfazer(mensagem: string, aoDesfazer: () => void): void;
 declare function fecharModal(): void;

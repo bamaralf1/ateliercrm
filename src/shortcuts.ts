@@ -91,7 +91,7 @@ export function editarAtalhos() {
     });
   });
 
-  document.addEventListener('keydown', function capturar(e) {
+  function handlerCapturar(e) {
     if (!capturando) return;
     e.preventDefault();
     const input = document.querySelector(`.sc-edit-input[data-chave="${capturando}"]`);
@@ -103,11 +103,13 @@ export function editarAtalhos() {
     }
     if (btn) btn.innerHTML = '<i data-lucide="check" style="color:#22c55e"></i>';
     capturando = null;
-  });
+  }
+  document.addEventListener('keydown', handlerCapturar);
 
   document.getElementById('btnResetarAtalhos')?.addEventListener('click', () => {
     localStorage.removeItem('atelier_atalhos');
     recarregarAtalhos();
+    document.removeEventListener('keydown', handlerCapturar);
     mostrarToast('Atalhos restaurados!', 'sucesso');
     fecharModal();
   });
@@ -121,6 +123,7 @@ export function editarAtalhos() {
     });
     localStorage.setItem('atelier_atalhos', JSON.stringify(personalizados));
     recarregarAtalhos();
+    document.removeEventListener('keydown', handlerCapturar);
     mostrarToast('Atalhos personalizados salvos!', 'sucesso');
     fecharModal();
   });
