@@ -157,7 +157,7 @@ select:focus {
 /* ---------- Botões ---------- */
 .btn-gradient:hover {
   box-shadow:
-    0 10px 30px var(--accent-glow),
+    0 6px 20px var(--accent-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 .btn-primario {
@@ -483,10 +483,12 @@ body[data-tema="esmeralda"] .kpi-card {
   border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
 
-/* Botoes: elevacao com brilho */
+/* Botoes: elevacao com brilho reduzido */
 .btn-gradient:hover,
 .btn-primario:hover {
-  box-shadow: 0 12px 34px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  box-shadow:
+    0 8px 26px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
   transform: translateY(-1px);
 }
 
