@@ -232,3 +232,28 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - **Redução de glow de botões (commit `c830243`)**: além do V23, ajustes diretos `.btn-gradient:hover` `0 10px 30px → 0 6px 20px` e `.btn-primario/.btn-gradient:hover` `0 12px 34px → 0 8px 26px`.
 - Validado: 14/14 suítes, 199/199 testes; `vite build` OK (~961ms, só warning de chunk pré-existente); console limpo; 8 temas com `v23Respirar`, paleta quente e shadow de botão V23 no `getComputedStyle`.
 - ⚠️ **Dev server**: `npm run dev` serve na porta **3000** (vite.config `server.port: 3000`); a instância antiga na 3001 morria com cache da index.html — reiniciar o vite após editar scss é obrigatório (a `index.html` é re-escrita pelo `sync-css.js` no disco, mas o vite cacheia o transform). Logs em `vite-dev.log` quando iniciado via `Start-Process cmd /c "node node_modules/vite/bin/vite.js --port 3000 > vite-dev.log 2>&1"`.
+
+### Refatoração Clássico Atelier (V24) — 3 temas radicais (`_themes.scss` + `_premium-v5.scss` + `index.html` + `configuracoes-view.ts`)
+- **Pedido**: "limite os temas a Dourado / Moderno Escuro / Clean Minimalista, mudança radical: tudo clássico" → 8 temas reduzidos a 3, IDs preservados (`dourado`/`escuro`/`clean`) para compatibilidade de config persistida em localStorage.
+- **`src/styles/_themes.scss` reescrito** — só `:root` + 3 temas: todos com serif (`--font-principal: 'Crimson Text', Georgia, serif`), display Playfair, `--font-ui: 'Inter'`, tokens de superfície e sombra por tema.
+  - Dourado "Ouro & Marfim" (`bg: #0f0b05`, accent `#c9a227`, card `#161007`, ebonised escura).
+  - Moderno Escuro "Charbon & Platina" (`bg: #131416`, accent `#b8bbb1`, card `#1a1b1e`, cinza frio mineral).
+  - Clean Minimalista "Tinta & Papel" (`bg: #faf9f5`, accent `#1c1b17`, quase-branco editorial).
+- **`_premium-v5.scss` emendado** — blocos V5 de tokens de atmosfera, V19 de tokens de casa e V19 de bordas reduzidos de 8→3; seletor V23 `::before` corrigido (removido `esmeralda`); `body[data-tema] .view::before { background:none }` neutraliza o ciano legado do escuro; bloco **V24 "Clássico Atelier"** anexado no fim (último no cascade):
+  - **Tipografia**: `body` serif Crimson Text (vence `--font-principal: Inter` forçado pela base em `body[data-font-size]` via seletor (0,3,0) `body[data-tema][data-font-size]`); nova variável `--font-ui` (Inter) para UI fina.
+  - **Atmosferas por tema**: `v24Respirar` 20s (gravidade reduzida), dourado com luz quente de lustre, escuro com névoa de platina fria, clean quase plano.
+  - **Botões**: versalete (`text-transform:uppercase`, `letter-spacing:0.08em`, `border-radius:4px`), bevel interno `inset + sombra` com `body[data-tema]` para (0,2,1).
+  - **Cards**: "papel cortado" (radius `6px`, hairline `inset --v19-sheen`, hover `translateY(-1px/-2px)` com ring accent).
+  - **h2**: cor sólida por tema (sem `background-clip:text`), Playfair 700.
+  - **Header**: pedimental com `--font-display` + hairline dupla gradiente accent.
+  - **Tabelas**: cabeçalho uppercase + tracking (versalete de catálogo).
+  - **Labels**: `.campo-form label` uppercase + tracking em `--font-ui`.
+  - **Modal**: radius `8px`, overlay por tema (escuro/dourado 0.62 opaco, clean 0.42).
+  - **Guards**: `prefers-reduced-motion` sem animações/transições; `data-high-contrast` sem gradientes.
+- **`index.html`**: `<body data-tema="dourado">` (era `classico`); select `#seletorTema` 8→3 options (`Dourado`/`Moderno Escuro`/`Clean Minimalista`).
+- **`src/views/configuracoes-view.ts`**: array `temas` reduzido a 3 entradas com cores de sidebar/bg/accent novas (dourado ébano, escuro carvão, clean paper).
+- **`src/stores/configStore.ts`**: `tema: 'dourado'` (era `'classico'`).
+- **`src/tour.ts`**: "8 temas" → "3 temas clássicos".
+- ⚠️ **Cascade (lição V23→V24)**: regras base `[data-tema="x"] .y` (0,2,0) sobrescrevem blocos premium `.y` (0,1,0) mesmo com `@import` por último — ao sobrescrever no premium, usar `body[data-tema] .y` para especificidade (0,2,1) que vence.
+- ⚠️ **Dev server**: `npm run dev` serve na porta **3000**; reiniciar o vite (`Stop-Process` + `Start-Process cmd /c "node node_modules\vite\bin\vite.js --port 3000 > vite-dev.log 2>&1"`) após editar scss. O `<style>` inline é re-escrito pelo `sync-css.js` no disco mas o vite cacheia o transform.
+- Validado: 14/14 suítes, 199/199 testes; `vite build` OK; console limpo; 3 temas no browser via CDP (serif Crimson aplicado, versalete uppercase, radius 6px, ciano legado morto, labels/cards/tabelas consistente).

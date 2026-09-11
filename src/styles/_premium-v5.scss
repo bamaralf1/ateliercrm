@@ -3,62 +3,27 @@
    Camada mais externa do cascade: sobrescreve/refina a base sem quebrar layout.
    ========================================================================== */
 
-/* ---------- Tokens de atmosfera e texto por tema ---------- */
-body[data-tema="classico"] {
-  --pv5-amb-1: rgba(193, 120, 63, 0.34);
-  --pv5-amb-2: rgba(139, 69, 19, 0.17);
-  --pv5-amb-3: rgba(240, 196, 120, 0.12);
-  --pv5-glow-c: #d9a05a;
-  --pv5-h2-grad: linear-gradient(135deg, #5b3a24 0%, #8b5a33 55%, #c1783f 100%);
-}
+/* ---------- Tokens de atmosfera e texto por tema (V24: 3 temas clássicos) ---------- */
 body[data-tema="clean"] {
-  --pv5-amb-1: rgba(0, 0, 0, 0.05);
-  --pv5-amb-2: rgba(0, 0, 0, 0.04);
-  --pv5-amb-3: rgba(0, 0, 0, 0.03);
-  --pv5-glow-c: #3f3f3f;
-  --pv5-h2-grad: linear-gradient(135deg, #161616 0%, #4d4d4d 75%);
+  --pv5-amb-1: rgba(0, 0, 0, 0.035);
+  --pv5-amb-2: rgba(0, 0, 0, 0.028);
+  --pv5-amb-3: rgba(140, 130, 100, 0.05);
+  --pv5-glow-c: #6b675e;
+  --pv5-h2-grad: linear-gradient(135deg, #1c1b17 0%, #55524b 80%);
 }
 body[data-tema="escuro"] {
-  --pv5-amb-1: rgba(200, 163, 90, 0.17);
-  --pv5-amb-2: rgba(226, 194, 125, 0.10);
-  --pv5-amb-3: rgba(232, 185, 35, 0.06);
-  --pv5-glow-c: #e2c27d;
-  --pv5-h2-grad: linear-gradient(135deg, #f0ead9 0%, #e2c27d 78%);
-}
-body[data-tema="galeria"] {
-  --pv5-amb-1: rgba(0, 0, 0, 0.05);
-  --pv5-amb-2: rgba(0, 0, 0, 0.04);
-  --pv5-amb-3: rgba(0, 0, 0, 0.035);
-  --pv5-glow-c: #262626;
-  --pv5-h2-grad: linear-gradient(135deg, #141414 0%, #666666 80%);
-}
-body[data-tema="boho"] {
-  --pv5-amb-1: rgba(217, 154, 114, 0.28);
-  --pv5-amb-2: rgba(193, 127, 89, 0.15);
-  --pv5-amb-3: rgba(242, 204, 150, 0.10);
-  --pv5-glow-c: #e8b384;
-  --pv5-h2-grad: linear-gradient(135deg, #4a3f35 0%, #b06a47 70%, #d99a72 100%);
+  --pv5-amb-1: rgba(160, 165, 155, 0.08);
+  --pv5-amb-2: rgba(140, 145, 137, 0.06);
+  --pv5-amb-3: rgba(180, 185, 175, 0.05);
+  --pv5-glow-c: #cfd2c8;
+  --pv5-h2-grad: linear-gradient(135deg, #efeef8 0%, #b8bbb1 80%);
 }
 body[data-tema="dourado"] {
-  --pv5-amb-1: rgba(232, 185, 35, 0.15);
-  --pv5-amb-2: rgba(201, 162, 39, 0.10);
-  --pv5-amb-3: rgba(236, 204, 104, 0.07);
-  --pv5-glow-c: #ffe08a;
-  --pv5-h2-grad: linear-gradient(135deg, #f5ecd6 0%, #eccc68 75%);
-}
-body[data-tema="marmore"] {
-  --pv5-amb-1: rgba(196, 122, 82, 0.22);
-  --pv5-amb-2: rgba(160, 82, 45, 0.13);
-  --pv5-amb-3: rgba(232, 214, 190, 0.12);
-  --pv5-glow-c: #cf9a6b;
-  --pv5-h2-grad: linear-gradient(135deg, #2b211b 0%, #a0522d 60%, #c47a52 100%);
-}
-body[data-tema="esmeralda"] {
-  --pv5-amb-1: rgba(60, 174, 114, 0.16);
-  --pv5-amb-2: rgba(111, 217, 160, 0.09);
-  --pv5-amb-3: rgba(0, 150, 255, 0.05);
-  --pv5-glow-c: #7fe0ab;
-  --pv5-h2-grad: linear-gradient(135deg, #e0e9dc 0%, #6fd9a0 75%);
+  --pv5-amb-1: rgba(232, 185, 35, 0.12);
+  --pv5-amb-2: rgba(201, 162, 39, 0.08);
+  --pv5-amb-3: rgba(236, 204, 104, 0.06);
+  --pv5-glow-c: #f0d688;
+  --pv5-h2-grad: linear-gradient(135deg, #f6edda 0%, #e8c96e 78%);
 }
 
 /* ---------- Atmosfera de fundo (mudança de tom mais visível) ---------- */
@@ -1894,109 +1859,49 @@ body[data-high-contrast="true"] .notif-badge { box-shadow: none; }
 /* ==========================================================================
    V19 — ASSINATURA CURATORIAL POR TEMA
    Camada 100% aditiva ao fim do arquivo (importada por último → vence).
-   Dá a cada um dos 8 temas uma identidade premium distinta a partir de tokens
+   Dá a cada um dos 3 temas clássicos uma identidade palavra a partir de tokens
    de casa (--v19-*): polimento de superfícies, ornamento, gradiente de botão,
    sombra de hover, mitre da sidebar, hairline do header, tabela, scrollbar e
    seleção. Não altera layout, não cria motion novo; textos sempre com cor
    sólida (regra V17); color-mix sempre ≤100%.
    ========================================================================== */
 
-/* ---------- Tokens de casa (1 por tema, 8 temas) ---------- */
-body[data-tema="classico"] {
-  --v19-hi: #c1783f;
-  --v19-sheen: rgba(209, 156, 109, 0.16);
-  --v19-orn: linear-gradient(90deg, #6d3510, #c1783f);
-  --v19-scroll: linear-gradient(180deg, rgba(139, 69, 19, 0.62), rgba(139, 69, 19, 0.34));
-  --v19-sel-bg: #8b4513; --v19-sel-col: #fff7ec;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(160, 82, 45, 0.55) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(139, 69, 19, 0.10) 0%, rgba(139, 69, 19, 0.02) 100%);
-  --v19-hover-shade: #a0522d;
-  --v19-sb-glow1: rgba(193, 120, 63, 0.16);
-  --v19-sb-glow2: rgba(139, 69, 19, 0.26);
-}
+/* ---------- Tokens de casa (1 por tema, 3 temas clássicos V24) ---------- */
 body[data-tema="clean"] {
-  --v19-hi: #4d4d4d;
-  --v19-sheen: rgba(0, 0, 0, 0.045);
-  --v19-orn: linear-gradient(90deg, #111, #4d4d4d);
-  --v19-scroll: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.28));
-  --v19-sel-bg: #1c1c1c; --v19-sel-col: #ffffff;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5) 50%, transparent);
-  --v19-th: linear-gradient(180deg, #f2f0ec 0%, #ffffff 100%);
-  --v19-hover-shade: #1c1c1c;
-  --v19-sb-glow1: rgba(255, 255, 255, 0.05);
-  --v19-sb-glow2: rgba(0, 0, 0, 0.3);
+  --v19-hi: #45433c;
+  --v19-sheen: rgba(0, 0, 0, 0.05);
+  --v19-orn: linear-gradient(90deg, #1c1b17, #6b675e);
+  --v19-scroll: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.26));
+  --v19-sel-bg: #1c1b17; --v19-sel-col: #ffffff;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(28, 27, 23, 0.55) 50%, transparent);
+  --v19-th: linear-gradient(180deg, #f2efe9 0%, #ffffff 100%);
+  --v19-hover-shade: #38362e;
+  --v19-sb-glow1: rgba(255, 255, 255, 0.06);
+  --v19-sb-glow2: rgba(28, 27, 23, 0.26);
 }
 body[data-tema="escuro"] {
-  --v19-hi: #e2c27d;
-  --v19-sheen: rgba(226, 194, 125, 0.10);
-  --v19-orn: linear-gradient(90deg, #a8863f, #e2c27d);
-  --v19-scroll: linear-gradient(180deg, rgba(200, 163, 90, 0.68), rgba(200, 163, 90, 0.38));
-  --v19-sel-bg: #c8a35a; --v19-sel-col: #191303;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(226, 194, 125, 0.5) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(200, 163, 90, 0.13) 0%, rgba(200, 163, 90, 0.03) 100%);
-  --v19-hover-shade: #c8a35a;
-  --v19-sb-glow1: rgba(226, 194, 125, 0.15);
-  --v19-sb-glow2: rgba(200, 163, 90, 0.2);
-}
-body[data-tema="galeria"] {
-  --v19-hi: #555555;
-  --v19-sheen: rgba(0, 0, 0, 0.04);
-  --v19-orn: linear-gradient(90deg, #141414, #666666);
-  --v19-scroll: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.26));
-  --v19-sel-bg: #141414; --v19-sel-col: #ffffff;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.42) 50%, transparent);
-  --v19-th: linear-gradient(180deg, #efede8 0%, #ffffff 100%);
-  --v19-hover-shade: #222222;
-  --v19-sb-glow1: rgba(255, 255, 255, 0.07);
-  --v19-sb-glow2: rgba(0, 0, 0, 0.22);
-}
-body[data-tema="boho"] {
-  --v19-hi: #d99a72;
-  --v19-sheen: rgba(217, 154, 114, 0.16);
-  --v19-orn: linear-gradient(90deg, #8b5a3a, #d99a72);
-  --v19-scroll: linear-gradient(180deg, rgba(193, 127, 89, 0.62), rgba(193, 127, 89, 0.34));
-  --v19-sel-bg: #c17f59; --v19-sel-col: #fff9f4;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(193, 127, 89, 0.55) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(193, 127, 89, 0.10) 0%, rgba(193, 127, 89, 0.02) 100%);
-  --v19-hover-shade: #c17f59;
-  --v19-sb-glow1: rgba(217, 154, 114, 0.2);
-  --v19-sb-glow2: rgba(160, 96, 60, 0.26);
+  --v19-hi: #e2e4dc;
+  --v19-sheen: rgba(215, 218, 208, 0.07);
+  --v19-orn: linear-gradient(90deg, #6f726a, #d5d7cf);
+  --v19-scroll: linear-gradient(180deg, rgba(215, 218, 208, 0.55), rgba(215, 218, 208, 0.30));
+  --v19-sel-bg: #cdd0c6; --v19-sel-col: #141519;
+  --v19-hairline: linear-gradient(90deg, transparent, rgba(210, 213, 203, 0.50) 50%, transparent);
+  --v19-th: linear-gradient(180deg, rgba(215, 218, 208, 0.10) 0%, rgba(215, 218, 208, 0.03) 100%);
+  --v19-hover-shade: #c4c7bd;
+  --v19-sb-glow1: rgba(215, 218, 208, 0.08);
+  --v19-sb-glow2: rgba(150, 155, 145, 0.14);
 }
 body[data-tema="dourado"] {
   --v19-hi: #eccc68;
-  --v19-sheen: rgba(236, 204, 104, 0.12);
+  --v19-sheen: rgba(236, 204, 104, 0.11);
   --v19-orn: linear-gradient(90deg, #8a6d1a, #eccc68);
-  --v19-scroll: linear-gradient(180deg, rgba(201, 162, 39, 0.72), rgba(201, 162, 39, 0.42));
+  --v19-scroll: linear-gradient(180deg, rgba(201, 162, 39, 0.70), rgba(201, 162, 39, 0.40));
   --v19-sel-bg: #c9a227; --v19-sel-col: #1a1400;
   --v19-hairline: linear-gradient(90deg, transparent, rgba(232, 185, 35, 0.55) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(201, 162, 39, 0.14) 0%, rgba(201, 162, 39, 0.03) 100%);
+  --v19-th: linear-gradient(180deg, rgba(201, 162, 39, 0.13) 0%, rgba(201, 162, 39, 0.03) 100%);
   --v19-hover-shade: #e8b923;
-  --v19-sb-glow1: rgba(232, 185, 35, 0.16);
-  --v19-sb-glow2: rgba(166, 130, 20, 0.28);
-}
-body[data-tema="marmore"] {
-  --v19-hi: #c47a52;
-  --v19-sheen: rgba(196, 122, 82, 0.12);
-  --v19-orn: linear-gradient(90deg, #7a4a2e, #c47a52);
-  --v19-scroll: linear-gradient(180deg, rgba(160, 82, 45, 0.58), rgba(160, 82, 45, 0.32));
-  --v19-sel-bg: #a0522d; --v19-sel-col: #fff9f4;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(160, 82, 45, 0.5) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(160, 82, 45, 0.08) 0%, rgba(160, 82, 45, 0.02) 100%);
-  --v19-hover-shade: #a0522d;
-  --v19-sb-glow1: rgba(196, 122, 82, 0.18);
-  --v19-sb-glow2: rgba(139, 90, 60, 0.24);
-}
-body[data-tema="esmeralda"] {
-  --v19-hi: #6fd9a0;
-  --v19-sheen: rgba(111, 217, 160, 0.10);
-  --v19-orn: linear-gradient(90deg, #227a4e, #6fd9a0);
-  --v19-scroll: linear-gradient(180deg, rgba(60, 174, 114, 0.68), rgba(60, 174, 114, 0.38));
-  --v19-sel-bg: #3cae72; --v19-sel-col: #06210f;
-  --v19-hairline: linear-gradient(90deg, transparent, rgba(111, 217, 160, 0.5) 50%, transparent);
-  --v19-th: linear-gradient(180deg, rgba(60, 174, 114, 0.14) 0%, rgba(60, 174, 114, 0.03) 100%);
-  --v19-hover-shade: #3cae72;
-  --v19-sb-glow1: rgba(111, 217, 160, 0.14);
-  --v19-sb-glow2: rgba(34, 122, 78, 0.26);
+  --v19-sb-glow1: rgba(232, 185, 35, 0.14);
+  --v19-sb-glow2: rgba(166, 130, 20, 0.24);
 }
 
 /* ---------- Polimento de superfícies por tema (substitui o branco fixo V6) ---------- */
@@ -2081,27 +1986,12 @@ body[data-tema] .btn-gradient {
 }
 
 /* ---------- Bordas de superfície por tema (hairline viva, cor apenas) ---------- */
-body[data-tema="classico"] .card,
-body[data-tema="classico"] .painel {
-  border-color: color-mix(in srgb, rgba(160, 82, 45, 0.22), var(--card));
-}
 body[data-tema="clean"] .card,
 body[data-tema="clean"] .painel {
-  border-color: color-mix(in srgb, rgba(0, 0, 0, 0.14), var(--card));
+  border-color: color-mix(in srgb, rgba(40, 37, 30, 0.16), var(--card));
 }
-body[data-tema="boho"] .card,
-body[data-tema="boho"] .painel {
-  border-color: color-mix(in srgb, rgba(160, 96, 60, 0.20), var(--card));
-}
-body[data-tema="marmore"] .card,
-body[data-tema="marmore"] .painel {
-  border-color: color-mix(in srgb, rgba(160, 82, 45, 0.18), var(--card));
-}
-body[data-tema="escuro"] .kpi-card { border-color: color-mix(in srgb, rgba(200, 163, 90, 0.26), var(--card)); }
-body[data-tema="dourado"] .kpi-card { border-color: color-mix(in srgb, rgba(236, 204, 104, 0.26), var(--card)); }
-body[data-tema="esmeralda"] .kpi-card { border-color: color-mix(in srgb, rgba(111, 217, 160, 0.24), var(--card)); }
-body[data-tema="boho"] .kpi-card { border-color: color-mix(in srgb, rgba(193, 127, 89, 0.26), var(--card)); }
-body[data-tema="marmore"] .kpi-card { border-color: color-mix(in srgb, rgba(160, 82, 45, 0.20), var(--card)); }
+body[data-tema="escuro"] .kpi-card { border-color: color-mix(in srgb, rgba(215, 218, 208, 0.16), var(--card)); }
+body[data-tema="dourado"] .kpi-card { border-color: color-mix(in srgb, rgba(236, 204, 104, 0.22), var(--card)); }
 
 /* ---------- Guards V19 ---------- */
 @media (prefers-reduced-motion: reduce) {
@@ -2584,8 +2474,7 @@ body::before {
   animation: v23Respirar 14s ease-in-out infinite;
 }
 body[data-tema="escuro"]::before,
-body[data-tema="dourado"]::before,
-body[data-tema="esmeralda"]::before {
+body[data-tema="dourado"]::before {
   background:
     radial-gradient(560px 360px at var(--glow-x) var(--glow-y),
       color-mix(in srgb, var(--pv5-glow-c) 6%, transparent) 0%,
@@ -2715,3 +2604,258 @@ body[data-tema] .btn-gradient:hover {
 body[data-high-contrast="true"]::before,
 body[data-high-contrast="true"]::after { display: none; }
 body[data-high-contrast="true"] .fab-main { animation: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); }
+
+/* ==========================================================================
+   PREMIUM V24 — CLÁSSICO ATELIER (REFATORAÇÃO RADICAL)
+   Refatoração completa: os 3 temas (dourado/escuro/clean) viram clássicos
+   de verdade, cada um com a sua identidade:
+     • dourado — "Ouro & Marfim": ébano, pergaminho e ouro (galeria à noite)
+     • escuro  — "Moderno Escuro": charbon & platina (academia noturna, aço)
+     • clean   — "Clean Minimalista": tinta & papel editorial (quase-branco)
+   Linguagem clássica comum: serif no corpo (Crimson Text) + serif de
+   exibição (Playfair), botões em versalete (versalete + tracking), tabelas
+   de catálogo, superfícies de papel cortado com hairline e cantos contidos.
+   Última no cascade → vence V23/V19/V18. Não altera layout — só tipo/superfície.
+   ========================================================================== */
+
+/* ---------- 1. Tipografia clássica: serif no corpo (vence o Inter da base) ---------- */
+body { font-family: var(--font-principal, 'Crimson Text', Georgia, serif); }
+body[data-tema][data-font-size] { --font-principal: 'Crimson Text', 'Georgia', serif; }
+body[data-tema] { --font-ui: 'Inter', 'Segoe UI', sans-serif; }
+:root { --font-ui: 'Inter', 'Segoe UI', sans-serif; }
+
+/* ---------- 2. Neutraliza o ruído índigo/ciano da camada base ---------- */
+body[data-tema] .view::before { background: none; }
+
+/* ---------- 3. Atmosfera de galeria clássica (por tema) ---------- */
+body::before {
+  background:
+    radial-gradient(620px 400px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, var(--pv5-glow-c) 3.5%, transparent) 0%, transparent 70%),
+    radial-gradient(130% 80% at 50% -18%,
+      color-mix(in srgb, var(--pv5-glow-c) 5%, transparent) 0%, transparent 55%),
+    linear-gradient(180deg, transparent 0%,
+      color-mix(in srgb, var(--pv5-glow-c) 1.2%, transparent) 100%),
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 62%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 58%),
+    radial-gradient(140% 120% at 50% 45%,
+      transparent 70%, color-mix(in srgb, var(--bg) 18%, rgba(0, 0, 0, 0.16)) 100%);
+  animation: v24Respirar 20s ease-in-out infinite;
+}
+@keyframes v24Respirar {
+  0%, 100% { opacity: 0.985; }
+  50% { opacity: 1; }
+}
+/* dourado: luz de lustre (rais quentes sobre ébano) */
+body[data-tema="dourado"]::before {
+  background:
+    radial-gradient(620px 400px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, #f0d688 5%, transparent) 0%, transparent 70%),
+    radial-gradient(130% 80% at 50% -18%,
+      color-mix(in srgb, #e8c96e 7%, transparent) 0%, transparent 55%),
+    linear-gradient(180deg, transparent 0%,
+      color-mix(in srgb, #e8c96e 1.6%, transparent) 100%),
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 62%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 58%),
+    radial-gradient(140% 120% at 50% 45%,
+      transparent 66%, rgba(0, 0, 0, 0.30) 100%);
+  animation: v24Respirar 20s ease-in-out infinite;
+}
+/* escuro: névoa de platina (fria, mineral) */
+body[data-tema="escuro"]::before {
+  background:
+    radial-gradient(620px 400px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, #cfd2c8 4%, transparent) 0%, transparent 70%),
+    radial-gradient(130% 80% at 50% -18%,
+      color-mix(in srgb, #d5d7cf 5.5%, transparent) 0%, transparent 55%),
+    radial-gradient(980px 560px at 8% -12%, var(--pv5-amb-1) 0%, transparent 62%),
+    radial-gradient(860px 540px at 98% 6%, var(--pv5-amb-2) 0%, transparent 58%),
+    radial-gradient(140% 120% at 50% 45%,
+      transparent 66%, rgba(0, 0, 0, 0.26) 100%);
+  animation: v24Respirar 20s ease-in-out infinite;
+}
+/* clean: champanhe plano (editorial, quase nada) */
+body[data-tema="clean"]::before {
+  background:
+    radial-gradient(620px 400px at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, var(--pv5-glow-c) 2.5%, transparent) 0%, transparent 70%),
+    radial-gradient(130% 80% at 50% -18%,
+      color-mix(in srgb, var(--pv5-glow-c) 3%, transparent) 0%, transparent 58%),
+    radial-gradient(140% 120% at 50% 45%,
+      transparent 74%, color-mix(in srgb, var(--bg) 14%, rgba(0, 0, 0, 0.10)) 100%);
+  animation: v24Respirar 20s ease-in-out infinite;
+}
+
+/* ---------- 4. Superfícies: papel cortado (hairline + cantos contidos) ---------- */
+.card,
+.painel,
+.catalogo-filtros,
+.tabela-wrapper {
+  border-radius: 6px;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.035),
+    inset 0 1px 0 color-mix(in srgb, var(--v19-sheen, #ffffff) 40%, transparent);
+}
+.kpi-card {
+  border-radius: 6px;
+}
+.card:hover,
+.painel:hover {
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 10%, rgba(0, 0, 0, 0.12)),
+    0 0 0 1px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 16%, transparent);
+  transform: translateY(-1px);
+}
+.kpi-card:hover {
+  box-shadow:
+    0 8px 22px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 12%, rgba(0, 0, 0, 0.14)),
+    0 0 0 1px color-mix(in srgb, var(--v19-hover-shade, var(--accent)) 20%, transparent);
+  transform: translateY(-2px);
+}
+
+/* ---------- 5. Títulos de catálogo: serif sólido (sem gradiente-clip) ---------- */
+.view .view-cabecalho h2 {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+}
+body[data-tema="dourado"] .view-cabecalho h2 { color: #f3e6c4; }
+body[data-tema="escuro"] .view-cabecalho h2 { color: #eeede7; }
+body[data-tema="clean"] .view-cabecalho h2 { color: #1c1b17; }
+
+/* ---------- 6. Header pedimental: serif + hairline dupla ---------- */
+.header h1 {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.header::after {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 30%,
+    color-mix(in srgb, var(--accent) 70%, transparent) 50%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 70%, transparent 100%);
+  opacity: 0.9;
+}
+
+/* ---------- 7. Plaquetas de botão: versalete + cantos contidos ---------- */
+.btn-primario,
+.btn-gradient,
+.btn-secundario,
+.btn-ghost,
+.btn-danger,
+.btn-perigo,
+.btn-miniatura,
+.btn-icone-tabela,
+.tab-btn,
+.chip-filtro,
+.select-tema {
+  font-family: var(--font-ui, 'Inter', sans-serif);
+}
+.btn-primario,
+.btn-gradient,
+.btn-secundario {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.72rem;
+  border-radius: 4px;
+}
+.btn-primario,
+.btn-gradient {
+  letter-spacing: 0.08em;
+}
+.btn-secundario {
+  letter-spacing: 0.06em;
+}
+body[data-tema] .btn-primario,
+body[data-tema] .btn-gradient {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 16%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+    0 1px 2px rgba(0, 0, 0, 0.22);
+}
+body[data-tema] .btn-primario:hover,
+body[data-tema] .btn-gradient:hover {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+    0 3px 8px color-mix(in srgb, var(--accent) 22%, rgba(0, 0, 0, 0.18));
+}
+.btn-ghost,
+.btn-miniatura,
+.btn-icone-tabela {
+  border-radius: 4px;
+}
+
+/* ---------- 8. Tabela de catálogo: cabeçalho em versalete ---------- */
+.tabela-wrapper th {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-family: var(--font-ui, 'Inter', sans-serif);
+}
+
+/* ---------- 9. Microtipografia clássica (labels, KPIs, navegação) ---------- */
+.campo-form label {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-family: var(--font-ui, 'Inter', sans-serif);
+  color: var(--text-muted);
+}
+.kpi-rotulo {
+  font-family: var(--font-ui, 'Inter', sans-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+}
+.nav-item {
+  font-family: var(--font-ui, 'Inter', sans-serif);
+  letter-spacing: 0.035em;
+}
+.select-tema {
+  font-size: 0.7rem;
+}
+.toast {
+  font-family: var(--font-principal, 'Crimson Text', Georgia, serif);
+}
+
+/* ---------- 10. Modal clássico ---------- */
+.modal-caixa {
+  border-radius: 8px;
+}
+body[data-tema="escuro"] .modal-overlay,
+body[data-tema="dourado"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.62);
+}
+body[data-tema="clean"] .modal-overlay {
+  background: rgba(28, 27, 23, 0.42);
+}
+
+/* ---------- 11. Ornamento de painel: filete clássico ---------- */
+.painel::before {
+  opacity: 1;
+  border-radius: 1px;
+}
+
+/* ---------- 12. Guards V24 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after { animation: none; }
+  .card, .painel, .kpi-card, .btn-primario, .btn-gradient, .btn-secundario { transition: none; }
+  .btn-primario, .btn-gradient, .btn-secundario { text-transform: none; letter-spacing: 0.02em; }
+}
+body[data-high-contrast="true"] .view-cabecalho h2 {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+  color: var(--text);
+}

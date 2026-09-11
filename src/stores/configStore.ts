@@ -8,7 +8,7 @@ const CHAVE = 'atelier_crm_config'
 export const useConfigStore = defineStore('config', {
   state: () => ({
     artista: { nome: 'Meu Ateliê', email: '', telefone: '', assinatura: '' },
-    tema: 'classico' as string,
+    tema: 'dourado' as string,
     idioma: 'pt-BR',
     altoContraste: false,
     tamanhoFonte: 'medio',

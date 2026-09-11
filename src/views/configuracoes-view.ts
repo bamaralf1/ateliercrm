@@ -83,14 +83,9 @@ export class ConfiguracoesView extends BaseView {
     ];
 
     const temas = [
-      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#050505', bg: '#0d0d0d', accent: '#c9a227', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.1)' },
-      { id: 'classico', label: 'Clássico', icone: '<i data-lucide="palette" aria-hidden="true"></i>', sidebar: '#3d2b1f', bg: '#f5f0e6', accent: '#8b4513', textBar: 'rgba(255,255,255,0.35)', contentBar: 'rgba(0,0,0,0.15)' },
-      { id: 'escuro', label: 'Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#000000', bg: '#0f0f0f', accent: '#00d4ff', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(255,255,255,0.12)' },
-      { id: 'galeria', label: 'Galeria', icone: '<i data-lucide="image" aria-hidden="true"></i>', sidebar: '#fafafa', bg: '#fafafa', accent: '#000000', textBar: 'rgba(0,0,0,0.15)', contentBar: 'rgba(0,0,0,0.1)' },
-      { id: 'boho', label: 'Boho', icone: '<i data-lucide="leaf" aria-hidden="true"></i>', sidebar: '#4a3f35', bg: '#f7f3ee', accent: '#c17f59', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
-      { id: 'clean', label: 'Clean', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#ffffff', bg: '#ffffff', accent: '#1a1a1a', textBar: 'rgba(0,0,0,0.1)', contentBar: 'rgba(0,0,0,0.08)' },
-      { id: 'marmore', label: 'Mármore', icone: '<i data-lucide="landmark" aria-hidden="true"></i>', sidebar: '#2b1f18', bg: '#f2ece6', accent: '#a0522d', textBar: 'rgba(255,255,255,0.25)', contentBar: 'rgba(0,0,0,0.12)' },
-      { id: 'esmeralda', label: 'Esmeralda', icone: '<i data-lucide="gem" aria-hidden="true"></i>', sidebar: '#040a06', bg: '#0a120e', accent: '#00c853', textBar: 'rgba(255,255,255,0.2)', contentBar: 'rgba(255,255,255,0.1)' },
+      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#080603', bg: '#0f0b05', accent: '#c9a227', textBar: 'rgba(255,255,255,0.18)', contentBar: 'rgba(255,255,255,0.08)' },
+      { id: 'escuro', label: 'Moderno Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#0b0c0d', bg: '#131416', accent: '#b8bbb1', textBar: 'rgba(255,255,255,0.18)', contentBar: 'rgba(255,255,255,0.08)' },
+      { id: 'clean', label: 'Clean Minimalista', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#171614', bg: '#faf9f5', accent: '#1c1b17', textBar: 'rgba(0,0,0,0.12)', contentBar: 'rgba(0,0,0,0.07)' },
     ];
 
     return `

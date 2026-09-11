@@ -2,7 +2,7 @@
 
 const tourPassos = [
   { alvo: '.sidebar', titulo: '<i data-lucide="palette"></i> Bem-vindo ao Atelier CRM!', desc: 'Este é seu hub criativo. Navegue entre os módulos pelo menu lateral.', pos: 'right' },
-  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 8 temas.', pos: 'bottom' },
+  { alvo: '#seletorTema', titulo: '🎭 Escolha seu Tema', desc: 'Personalize o visual com 3 temas clássicos.', pos: 'bottom' },
   { alvo: '#btnBackup', titulo: '<i data-lucide="save"></i> Backup Seguro', desc: 'Exporte seus dados periodicamente.', pos: 'bottom' },
   { alvo: '[data-rota="catalogo"]', titulo: '<i data-lucide="images"></i> Catálogo de Obras', desc: 'Cadastre, edite e gerencie seu portfólio.', pos: 'right' },
   { alvo: '[data-rota="vendas"]', titulo: '<i data-lucide="dollar-sign"></i> Vendas e Recibos', desc: 'Registre vendas e gere recibos em PDF.', pos: 'right' },
