@@ -44,6 +44,7 @@ const ORDER = [
   'stores/vendaStore.ts',
   'stores/configStore.ts',
   'store-bridge.ts',
+  'save-manager.ts',
   'spotlight.ts',
   'confetti.ts',
   'tour.ts',

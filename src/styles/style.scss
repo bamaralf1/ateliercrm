@@ -4699,5 +4699,22 @@ html{scrollbar-color: color-mix(in srgb, var(--text-muted) 35%, transparent) tra
 @media (prefers-reduced-motion: reduce){body::after{ opacity: .015; } .estado-vazio .icone-vazio::before, .nav-item, .nav-item::before, .card-obra .imagem-obra, .btn-carregando::after{ animation: none; transition: none; } .toast-progress{ animation-duration: 4s; }}
 .fab-main{background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 0 var(--accent-glow);}
 .nav-item.ativo{background: linear-gradient(135deg, var(--accent), var(--accent-strong));}
+
+/* Save button states */
+.btn-save{transition: all .3s ease; font-variant-numeric: tabular-nums;}
+.btn-save .save-text{font-size: .82em;}
+.btn-save .save-text,
+.btn-save svg{transition: color .3s ease, transform .2s ease;}
+/* Saved state (default) */
+.btn-save:not(.save-sujo):not(.save-salvando){color: var(--text-muted); opacity: .7;}
+/* Unsaved changes */
+.btn-save.save-sujo{color: var(--accent); opacity: 1; animation: savePulse 2s ease-in-out infinite;}
+.btn-save.save-sujo svg{color: var(--accent); transform: scale(1.15);}
+/* Saving in progress */
+.btn-save.save-salvando{color: var(--ok); opacity: 1;}
+.btn-save.save-salvando svg{animation: spin 1s linear infinite;}
+@keyframes savePulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 @import '_premium-v5';
 @import '_premium-v27';

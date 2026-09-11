@@ -12,6 +12,7 @@ import { iniciarMonitorInatividade } from './security'
 import { iniciarNotificacoes } from './notificacoes'
 import { iniciarDragDrop } from './drag-drop'
 import { inicializarIconesLucide } from './icones'
+import { iniciarAutoSave } from './save-manager'
 
 // Renderiza o Dashboard
 export function renderizarDashboard(dataStore) {
@@ -489,6 +490,7 @@ iniciarObserverConfetti();
 iniciarNotificacoes();
 iniciarDragDrop();
 iniciarAtmosferaCinematografica();
+iniciarAutoSave();
 if (dataStore && !dataStore.dados.config.tourCompleted) { setTimeout(() => iniciarTour(), 1000); }
 
 // Hash listener — rotas profundas: #portal, #verificar, #galeria=virtual e rota direta
