@@ -132,6 +132,9 @@ body[data-view="catalogo"] .grid-obras {
 .card-obra-museu {
   position: relative;
 }
+.card-obra:has(.card-obra-museu) {
+  overflow: visible;
+}
 /* Parede do museu = fundo com sombra assimétrica */
 .parede-museu {
   position: relative;
@@ -195,8 +198,7 @@ body[data-tema="escuro"] .moldura-svg {
 .imagem-frame-container {
   position: relative;
   width: calc(100% - 48px);
-  height: 0;
-  padding-bottom: 82%;
+  aspect-ratio: 5 / 4;
   margin: 0 auto;
   overflow: hidden;
   z-index: 1;
