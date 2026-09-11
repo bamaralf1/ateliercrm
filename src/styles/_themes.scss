@@ -42,6 +42,14 @@
   --radius: 3px;
   --radius-card: 4px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+  --v27-frame-shadow: rgba(0, 0, 0, 0.18);
+  --v27-wall: #e9ddc9;
+  --v27-grain-opacity: 0.028;
+  --v27-parchment: #f0e6d0;
+  --v27-ink: #241c11;
+  --v27-sanguine: #9c3d1f;
+  --v27-frame-gold: #c9a227;
+  --v27-frame-wood: #3a2c1a;
 }
 
 /* ------------- Tokens de sala (perfil de ornamento por tema) ------------- */
@@ -107,6 +115,14 @@
   --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --v27-frame-shadow: rgba(60, 44, 22, 0.35);
+  --v27-wall: #e9dec9;
+  --v27-grain-opacity: 0.032;
+  --v27-parchment: #f6efe2;
+  --v27-ink: #21190f;
+  --v27-sanguine: #9c3d1f;
+  --v27-frame-gold: #c9a227;
+  --v27-frame-wood: #3a2c1a;
 }
 
 /* 2. Moderno Escuro — Galeria Noturna (verde-museu, bronze, vela) */
@@ -134,6 +150,14 @@
   --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --v27-frame-shadow: rgba(0, 0, 0, 0.42);
+  --v27-wall: #0f1a15;
+  --v27-grain-opacity: 0.022;
+  --v27-parchment: #16241d;
+  --v27-ink: #e9dfc4;
+  --v27-sanguine: #9c4a35;
+  --v27-frame-gold: #c49a3a;
+  --v27-frame-wood: #26261f;
 }
 
 /* 3. Clean Minimalista — Atelier do Renascimento (pergaminho, tinta, sanguínea) */
@@ -161,4 +185,12 @@
   --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --v27-frame-shadow: rgba(50, 34, 16, 0.30);
+  --v27-wall: #f2e8d3;
+  --v27-grain-opacity: 0.035;
+  --v27-parchment: #f6ecd7;
+  --v27-ink: #241c11;
+  --v27-sanguine: #9c3d1f;
+  --v27-frame-gold: #c2633a;
+  --v27-frame-wood: #453418;
 }

@@ -77,6 +77,7 @@ export class Router {
       try { instanciaAnterior.destruir(); } catch (e) { console.warn('Erro ao destruir view anterior:', e); }
     }
     this.viewAtual = chave;
+    document.body.setAttribute('data-view', chave);
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('ativo', item.dataset.rota === chave);
     });

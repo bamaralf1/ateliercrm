@@ -1,0 +1,463 @@
+/* ==========================================================================
+   PREMIUM V27 — ATELIÊ ABSOLUTO
+   Refatoração total: cenografia, não CSS. Cada view é um cômodo do ateliê.
+   Novo partial importado APÓS _premium-v5 em style.scss (vence no cascade).
+   ========================================================================== */
+
+/* ── 0. TEXTURAS SVG (data-URIs reutilizáveis) ─────────────────────────────── */
+/* Madeira envelhecida — veios irregulares */
+%tex-madeira {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015 0.18' numOctaves='5' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.12 0 0 0 0 0.06 0 0 0 8 -3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23w)'/%3E%3C/svg%3E");
+}
+/* Tela/linho — trama de quadros */
+%tex-tela {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.35' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.88 0 0 0 0 0.85 0 0 0 0 0.78 0 0 0 0.10 0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23c)'/%3E%3C/svg%3E");
+}
+/* Pergaminho — fibras + manchas suaves */
+%tex-pergaminho {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.82 0 0 0 0 0.76 0 0 0 0 0.64 0 0 0 0.06 0'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.12' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.42 0 0 0 0 0.28 0 0 0 0.04 0'/%3E%3CfeBlend in2='SourceGraphic' mode='multiply'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+/* Moldura de quadro vetorial (filete + chanfro + sombra interna) */
+%frame-quadro {
+  border: 6px solid var(--v27-frame-wood);
+  box-shadow:
+    inset 0 0 0 1px var(--v27-frame-gold),
+    inset 0 0 0 2px color-mix(in srgb, var(--v27-frame-gold) 30%, transparent),
+    inset 0 0 0 3px var(--v27-frame-wood),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25),
+    0 4px 12px var(--v27-frame-shadow);
+}
+%frame-quadro-fino {
+  border: 3px solid var(--v27-frame-wood);
+  box-shadow:
+    inset 0 0 0 1px var(--v27-frame-gold),
+    inset 0 1px 3px rgba(0, 0, 0, 0.20),
+    0 3px 8px var(--v27-frame-shadow);
+}
+
+/* ── 1. MATERIALIDADE GLOBAL ──────────────────────────────────────────────── */
+/* Tela de fundo para toda a área de conteúdo */
+body[data-tema] .view {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.4' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.90 0 0 0 0 0.87 0 0 0 0 0.82 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23t)'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+}
+body[data-tema="dourado"] .view {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.4' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.91 0 0 0 0 0.87 0 0 0 0 0.79 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23t)'/%3E%3C/svg%3E");
+}
+body[data-tema="escuro"] .view {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.4' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.14 0 0 0 0 0.11 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23t)'/%3E%3C/svg%3E");
+}
+/* Moldura global em todo card/painel — vence V25 */
+body[data-tema] .card,
+body[data-tema] .painel,
+body[data-tema] .catalogo-filtros,
+body[data-tema] .painel-filtros {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+  background-color: var(--v27-parchment);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.82 0 0 0 0 0.76 0 0 0 0 0.64 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+body[data-tema="escuro"] .card,
+body[data-tema="escuro"] .painel,
+body[data-tema="escuro"] .catalogo-filtros,
+body[data-tema="escuro"] .painel-filtros {
+  background-color: var(--v27-parchment);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.4' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.14 0 0 0 0 0.11 0 0 0 0.02 0'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23t)'/%3E%3C/svg%3E");
+}
+
+/* ── 2. IDENTITY SPATIAL: DASHBOARD — SALÃO DE HONRA ──────────────────────── */
+/* KPIs = medalhões pendurados na parede do salão */
+body[data-view="dashboard"] .kpi-card {
+  @extend %frame-quadro;
+  border-radius: 2px;
+  text-align: center;
+  padding-top: 1.1rem;
+  background-color: var(--v27-parchment);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.35' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.88 0 0 0 0 0.85 0 0 0 0 0.78 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23c)'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  position: relative;
+}
+/* Corda/mollet de pendura no medalhão */
+body[data-view="dashboard"] .kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+  background: linear-gradient(180deg, transparent, var(--v27-frame-gold));
+}
+body[data-view="dashboard"] .kpi-card::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--v27-frame-gold);
+  background: var(--v27-frame-wood);
+}
+/* Widget = moldura pesada no salão */
+body[data-view="dashboard"] .widget-card {
+  @extend %frame-quadro;
+  border-radius: 2px;
+}
+body[data-view="dashboard"] .widget-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--v27-frame-gold) 30%, transparent);
+  padding-bottom: 0.5rem;
+}
+body[data-view="dashboard"] .widget-titulo {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+/* Painel de atalhos = rodapé de salão (estone + latão) */
+body[data-view="dashboard"] .atalhos-rodape {
+  @extend %frame-quadro;
+  border-radius: 2px;
+}
+
+/* ── 3. IDENTITY SPATIAL: CATÁLOGO — GALERIA DE QUADROS ──────────────────── */
+/* Card de obra = quadro emoldurado com etiqueta de museu */
+body[data-view="catalogo"] .card-obra {
+  @extend %frame-quadro;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+body[data-view="catalogo"] .card-obra:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow:
+    inset 0 0 0 1px var(--v27-frame-gold),
+    inset 0 0 0 2px color-mix(in srgb, var(--v27-frame-gold) 30%, transparent),
+    inset 0 0 0 3px var(--v27-frame-wood),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25),
+    0 8px 24px var(--v27-frame-shadow),
+    0 2px 6px color-mix(in srgb, var(--v27-frame-gold) 18%, transparent);
+}
+/* Imagem com moldura interna e pátina de galeria */
+body[data-view="catalogo"] .imagem-card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-bottom: none;
+  box-shadow: inset 0 0 0 2px var(--v27-frame-wood);
+}
+/* Pátina sutil nas fotos (sepia leve + contraste) */
+body[data-view="catalogo"] .imagem-obra,
+body[data-view="catalogo"] img.imagem-obra {
+  filter: sepia(0.06) contrast(1.02) saturate(0.96);
+  transition: filter 0.3s ease;
+}
+body[data-view="catalogo"] .card-obra:hover .imagem-obra {
+  filter: sepia(0.02) contrast(1.05) saturate(1.0);
+}
+/* Etiqueta de museu abaixo da imagem */
+body[data-view="catalogo"] .corpo-card-obra {
+  padding: 0.6rem 0.7rem 0.5rem;
+  border-top: 2px solid var(--v27-frame-wood);
+  background-color: var(--v27-parchment);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.82 0 0 0 0 0.76 0 0 0 0 0.64 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+body[data-view="catalogo"] .titulo-obra {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+body[data-view="catalogo"] .meta-obra {
+  font-style: italic;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+body[data-view="catalogo"] .preco-obra {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+/* Linha de lista = ficha de arquivo */
+body[data-view="catalogo"] .linha-obra-lista {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+}
+body[data-view="catalogo"] .linha-obra-lista .titulo-obra {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+}
+/* Filtros = painel de curadoria */
+body[data-view="catalogo"] .catalogo-filtros {
+  @extend %frame-quadro-fino;
+}
+/* Grid de galeria com espaçamento de quadros */
+body[data-view="catalogo"] .grid-obras {
+  gap: 1.2rem;
+}
+
+/* ── 4. IDENTITY SPATIAL: CLIENTES — LIVRO DE MECENAS ─────────────────────── */
+/* Card = ficha de arquivo com avatar de selo de cera */
+body[data-view="clientes"] .card-cliente {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+  position: relative;
+  background-color: var(--v27-parchment);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.82 0 0 0 0 0.76 0 0 0 0 0.64 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+/* Avatar = selo de cera */
+body[data-view="clientes"] .cc-avatar {
+  border: 2px solid var(--v27-frame-gold);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.20),
+    0 2px 6px var(--v27-frame-shadow);
+}
+body[data-view="clientes"] .cc-nome {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+}
+/* Linha de tabela = entrada de livro-registro */
+body[data-view="clientes"] .tabela-wrapper tbody tr {
+  border-bottom: 1px solid color-mix(in srgb, var(--v27-frame-wood) 18%, transparent);
+}
+body[data-view="clientes"] .tabela-wrapper tbody tr:hover td {
+  box-shadow: inset 3px 0 0 var(--v27-frame-gold);
+}
+
+/* ── 5. IDENTITY SPATIAL: DIÁRIO — CADERNO DE ESBOÇOS ────────────────────── */
+/* Cartão de entrada = folha de caderno */
+body[data-view="diario"] .diario-card {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+  background-color: var(--v27-parchment);
+  background-image:
+    /* Linhas horizontais de caderno */
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 1.6rem,
+      color-mix(in srgb, var(--v27-frame-gold) 12%, transparent) 1.6rem calc(1.6rem + 1px)
+    ),
+    /* Margem vermelha */
+    linear-gradient(
+      90deg,
+      transparent 0 2.8rem,
+      color-mix(in srgb, var(--v27-sanguine) 18%, transparent) 2.8rem calc(2.8rem + 1px),
+      transparent calc(2.8rem + 1px) 100%
+    );
+  background-size: 100% 100%;
+  padding-left: 3.2rem;
+  position: relative;
+}
+/* Furo de espiral no caderno */
+body[data-view="diario"] .diario-card::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--v27-frame-gold) 0 6px,
+    transparent 6px 16px
+  );
+  opacity: 0.45;
+}
+/* Drop-cap na primeira letra do texto */
+body[data-view="diario"] .dc-texto::first-letter {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 2.2em;
+  float: left;
+  line-height: 0.85;
+  margin: 0.08em 0.12em 0 0;
+  color: var(--v27-frame-gold);
+  font-weight: 700;
+}
+/* Humor = selo circular */
+body[data-view="diario"] .dc-humor {
+  border: 1px solid color-mix(in srgb, var(--v27-frame-gold) 35%, transparent);
+  border-radius: 2px;
+  padding: 0.15rem 0.4rem;
+  display: inline-block;
+}
+
+/* ── 6. IDENTITY SPATIAL: PRECIFICADOR — ESCRITÓRIO DO CURADOR ────────────── */
+/* Painéis = pasta de contabilidade */
+body[data-view="precificador"] .card,
+body[data-view="precificador"] .painel {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+  background-color: var(--v27-parchment);
+  background-image:
+    /* Linhas de ledger */
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 1.8rem,
+      color-mix(in srgb, var(--v27-frame-wood) 10%, transparent) 1.8rem calc(1.8rem + 1px)
+    );
+  background-size: 100% 100%;
+}
+/* Resultado de preço = placa de latão gravada */
+body[data-view="precificador"] .resultado-preco,
+body[data-view="precificador"] .valor-sugerido {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25),
+    0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+/* Abas = pastilhas de分类 */
+body[data-view="precificador"] .prec-tab {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.64rem;
+}
+/* Orçamento Kanban = prateleiras de exposição */
+body[data-view="precificador"] .orc-status {
+  @extend %frame-quadro-fino;
+  border-radius: 2px;
+}
+
+/* ── 7. IDENTITY SPATIAL: VENDAS / CERTIFICADOS / FINANCEIRO ─────────────── */
+/* Vendas = livro-caixa */
+body[data-view="vendas"] .tabela-wrapper {
+  @extend %frame-quadro;
+  border-radius: 2px;
+}
+body[data-view="vendas"] .tabela-wrapper tbody tr {
+  border-bottom: 1px solid color-mix(in srgb, var(--v27-frame-wood) 15%, transparent);
+}
+/* Certificados = documento oficial com selo */
+body[data-view="certificados"] .cert-card,
+body[data-view="certificados"] .card {
+  @extend %frame-quadro;
+  border-radius: 2px;
+}
+/* Financeiro = livro-razão */
+body[data-view="financeiro"] .card,
+body[data-view="financeiro"] .painel {
+  @extend %frame-quadro-fino;
+}
+
+/* ── 8. TIPOGRAFIA COMO RITUAL ────────────────────────────────────────────── */
+/* Números KPI = placa gravada em metal/pedra */
+body[data-tema] .kpi-valor {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.20),
+    0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+body[data-tema="dourado"] .kpi-valor {
+  text-shadow:
+    0 1px 0 color-mix(in srgb, var(--v27-frame-gold) 18%, rgba(255, 255, 255, 0.30)),
+    0 -1px 0 rgba(0, 0, 0, 0.10);
+}
+body[data-tema="escuro"] .kpi-valor {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+body[data-tema="clean"] .kpi-valor {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.40),
+    0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+/* Etiqueta de museu: título + subtítulo técnico + cartela de contexto */
+body[data-tema] .view-cabecalho h2 {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+body[data-tema] .view-cabecalho .subtitulo,
+body[data-tema] .view-cabecalho p:not(.subtitulo) {
+  font-style: italic;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── 9. MICRO-RITUAIS DE INTERAÇÃO ────────────────────────────────────────── */
+/* Modal = abrir vitrine de vidro */
+.modal-overlay.aberto {
+  animation: v27VitrineFade 0.28s ease both;
+}
+.modal-overlay.aberto .modal-caixa {
+  animation: v27VitrineSlide 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes v27VitrineFade {
+  from { opacity: 0; backdrop-filter: blur(8px); }
+  to { opacity: 1; backdrop-filter: blur(2px); }
+}
+@keyframes v27VitrineSlide {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateY(-4deg) translateX(-12px) scale(0.97);
+    filter: brightness(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateY(0deg) translateX(0) scale(1);
+    filter: brightness(1);
+  }
+}
+/* Transição de tema = acender/apagar luzes da sala */
+body[data-tema]::after {
+  transition: opacity 0.6s ease;
+}
+/* Hover em obra = aproximar-se do quadro (parallax sutil) */
+body[data-view="catalogo"] .card-obra:hover .imagem-obra {
+  transform: scale(1.02) translateY(-1px);
+  transition: transform 0.3s ease;
+}
+/* Glow do cursor reage por sala — intensidade diferente */
+body[data-tema="dourado"][data-view="dashboard"]::before {
+  opacity: 1;
+}
+body[data-tema="dourado"][data-view="catalogo"]::before {
+  opacity: 0.94;
+}
+body[data-tema="escuro"][data-view="dashboard"]::before {
+  opacity: 0.97;
+}
+
+/* ── 10. GUARDS DE ACESSIBILIDADE ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.aberto,
+  .modal-overlay.aberto .modal-caixa {
+    animation: none !important;
+  }
+  body[data-view="catalogo"] .card-obra:hover {
+    transform: none;
+  }
+  body[data-view="catalogo"] .card-obra:hover .imagem-obra {
+    transform: none;
+    filter: none;
+  }
+}
+body[data-high-contrast="true"] .card,
+body[data-high-contrast="true"] .painel,
+body[data-high-contrast="true"] .kpi-card,
+body[data-high-contrast="true"] .card-obra,
+body[data-high-contrast="true"] .card-cliente,
+body[data-high-contrast="true"] .diario-card {
+  background-image: none !important;
+  background-color: var(--card) !important;
+}
+body[data-high-contrast="true"] .card::before,
+body[data-high-contrast="true"] .painel::before,
+body[data-high-contrast="true"] .diario-card::before {
+  display: none !important;
+}
+body[data-high-contrast="true"] .kpi-valor {
+  text-shadow: none !important;
+}

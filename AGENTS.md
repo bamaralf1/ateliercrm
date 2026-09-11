@@ -6,7 +6,7 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 ## Stack
 - Single HTML: 1 arquivo `index.html` + `translations.js` (dados locais, sem backend)
 - TypeScript → concatenado por `tools/concat-source.js` → compilado por `tsc` → `js/atelier-crm.js`
-- **CSS: fonte única** `src/styles/style.scss` (partials `_tokens/_themes/_animations/_responsive/_premium-v5`) → `tools/sync-css.js` compila (sass, `style:'compressed'`) e **substitui o bloco `<style>` inline do `index.html`**. Editar só o scss + rodar `npm run styles` (ou `build`). `src/vite-entry.ts` NÃO importa mais scss
+- **CSS: fonte única** `src/styles/style.scss` (partials `_tokens/_themes/_animations/_responsive/_premium-v5/_premium-v27`) → `tools/sync-css.js` compila (sass, `style:'compressed'`) e **substitui o bloco `<style>` inline do `index.html`**. Editar só o scss + rodar `npm run styles` (ou `build`). `src/vite-entry.ts` NÃO importa mais scss
 - `npm run build`: `concat-source.js && sync-css.js && vite build` (Vite = servidor dev/build; CSS gerido pelo sync-css)
 - 26 arquivos em `src/`, 10 classes de view, 3 classes de serviço
 - CDNs carregadas: jsPDF, html2canvas, Chart.js 4.4.1, qrcodejs, D3.js 7.8.5 (Three.js removido — ver Galeria 2D); ícones: **Lucide vendorizado** em `public/lucide.min.js` (ver V13)
@@ -281,3 +281,27 @@ CRM para artistas visuais: catálogo de obras, clientes, vendas, certificados, c
 - **`configuracoes-view.ts`**: temas preview com novas cores de sala (dourado marfim `#e9dec9`/ouro `#a67c1e`, escuro verde `#0f1a15`/bronze `#b98d2e`, clean pergaminho `#f2e8d3`/sanguínea `#9c3d1f`).
 - **⚠️ Cascade V24→V25**: os overrides do V24 `body[data-tema][data-font-size]` (0,3,0) e `body[data-tema] { --font-ui: Inter }` (0,2,0) seguravam `--font-principal`/`--font-ui` em Crimson/Inter mesmo com `_themes.scss` novo → **atualizar OU remover** quando trocar tipografia no `_themes.scss` (V25 usa EB Garamond nos dois). Regras base `.dashboard .kpi-card`/`.painel` (0,2,0) vencem `.kpi-card` (0,1,0) → subir para `body[data-tema] .kpi-card` (0,2,1).
 - **out: render** validado por computed styles (CDP): EB Garamond no body, Cinzel h1/h2/th/kpi, ornamento ◆—◆—◆, nav ativo placa ouro (gradiente ouro-clar→ouro→ouro-esc), kpi/card com `inset` filete ouro, tabela Cinzel uppercase com underline ouro, botões ouro/bronze/sanguínea, `v25Respira` presente no `<style>`, console limpo. 14/14 suítes (199/199), `vite build` OK.
+
+### Ateliê Absoluto (V27) — cenografia espacial (`_premium-v27.scss` + `router.ts` + `_themes.scss`)
+- **Pedido**: "refatoração radical completa, CADA VIEW DEVE SER UM AMBIENTE DIFERENTE" — V25 era decoração; V27 transforma cada view em um cômodo distinto do ateliê.
+- **TS mínimo**: `router.ts` ganha `document.body.setAttribute('data-view', chave)` na `navegar()` — CSS pode agora usar `body[data-view="X"] .y`.
+- **Partial novo**: `src/styles/_premium-v27.scss` (importado APÓS `_premium-v5` em `style.scss`, vence no cascade).
+- **Texturas SVG data-URI** (sem dependência externa, sem canvas):
+  - Madeira envelhecida: `feTurbulence fractalNoise baseFrequency='0.015 0.18' numOctaves=5 seed=7` → veios irregulares.
+  - Tela/linho: `turbulence baseFrequency='0.35' numOctaves=2` → trama de quadros.
+  - Pergaminho: `fractalNoise baseFrequency='0.04' numOctaves=4` + `multiply blend` → fibras + manchas suaves.
+  - Moldura vetorial: `border: 6px wood` + `inset filete gold` + `chanfro` + `sombra interna` (via `%frame-quadro` / `%frame-quadro-fino`).
+- **Per-view spatial identity** (`body[data-view="X"]`):
+  - **Dashboard = Salão de Honra**: `.kpi-card` = medalhão com corda/mollet (`::before` fio + `::after` prego ouro); `.widget-card` = moldura pesada; `.atalhos-rodape` = rodapé de salão.
+  - **Catálogo = Galeria de Quadros**: `.card-obra` = quadro emoldurado com `%frame-quadro`; `.imagem-card-wrapper` = moldura interna; `.corpo-card-obra` = etiqueta de museu (Cinzel uppercase, borda madeira); `.grid-obras` com espaçamento de quadros; pátina sutil sepia/contraste nas fotos; hover = aproximar do quadro.
+  - **Clientes = Livro de Mecenas**: `.card-cliente` = ficha de arquivo com pergaminho; `.cc-avatar` = selo de cera (anel ouro); `.cc-nome` Cinzel uppercase.
+  - **Diário = Caderno de Esboços**: `.diario-card` = folha de caderno com linhas horizontais (repeating-linear-gradient), margem vermelha, furos de espiral (`::before`); `.dc-texto::first-letter` = drop-cap Cinzel 2.2em ouro.
+  - **Precificador = Escritório do Curador**: painéis com linhas de ledger; resultado-preco/valor-sugerido em Cinzel com text-shadow de gravação; abas em uppercase.
+  - **Vendas/Certificados/Financeiro**: `.tabela-wrapper` com moldura quadro; linhas com borda madeira; certificados = documento oficial.
+- **Tipografia ritual**: KPIs = placa gravada (text-shadow quádruplo por tema); `.view-cabecalho h2` Cinzel uppercase; subtitulo itálico.
+- **Micro-rituais**: modal = abrir vitrine de vidro (`v27VitrineFade` + `v27VitrineSlide` com `perspective(800px) rotateY(-4deg)`); hover de obra = aproximar do quadro (`translateY(-3px) scale(1.005)`); glow do cursor varia por sala.
+- **Guards**: `prefers-reduced-motion` desliga animações de modal/hover; `[data-high-contrast]` remove texturas/fundos especiais, fundo = `var(--card)` sólido.
+- **Tokens novos** (`_themes.scss`): `--v27-frame-shadow/--v27-wall/--v27-grain-opacity/--v27-parchment/--v27-ink/--v27-sanguine/--v27-frame-gold/--v27-frame-wood` em `:root` + 3 temas.
+- ⚠️ **Cascade V25→V27**: partial novo importado por último → vence. Regras base `[data-tema="x"] .y` da base não são sobrescritas (V27 só adiciona visual). Para specular `[data-view]`, usar `body[data-view] .y` para especificidade adequada.
+- ⚠️ **CSS size**: 297.5 kB injetado (+86 kB vs V25) devido a SVG data-URIs inline (tinturas de madeira/tela/pergaminho).
+- **out**: 14/14 suítes (199/199); `vite build` OK; console limpo; `<style>` 297.5 kB com V27 blocks presentes.
