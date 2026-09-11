@@ -3335,3 +3335,190 @@ body[data-high-contrast="true"] .fab-main {
   background-color: var(--accent);
   color: var(--accent-contrast);
 }
+
+/* ================================================================
+   V29 — SIDEBAR MINIMALISTA RENASCENTISTA
+   Conceito: Painel de Intarsia — madeira escura, linhas limpas,
+   sem glow, sem aurora, sem gradientes. Tipografia e proporção.
+   ================================================================ */
+
+/* Fundo: madeira sólida, sem gradientes multicamada */
+.sidebar {
+  background: var(--v25-madeira, var(--sidebar-bg));
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--v25-ouro, var(--accent)) 14%, transparent);
+}
+.sidebar::after { display: none; }
+
+/* Topo: limpo, sem hairline animada */
+.sidebar-topo {
+  padding: 16px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 10%, transparent);
+}
+.sidebar-topo::after { display: none; }
+
+/* Logo: sem glow, sem drop-shadow, só texto */
+.sidebar-logo {
+  gap: 8px;
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--sidebar-text-active);
+}
+.sidebar-logo .icone {
+  font-size: 1.1rem;
+  filter: none;
+  color: var(--v25-ouro, var(--accent));
+  opacity: 0.8;
+}
+.sidebar-logo .rotulo {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: initial;
+  color: var(--sidebar-text-active);
+  font-family: inherit;
+}
+
+/* Botão colapsar: discreto */
+.btn-colapsar {
+  opacity: 0.5;
+  border-radius: 4px;
+  transition: opacity 0.2s ease;
+}
+.btn-colapsar:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+  transform: none;
+}
+
+/* Lista: espaçamento generoso */
+.nav-lista {
+  padding: 8px 6px;
+}
+
+/* Separador: apenas texto, sem linha gradiente */
+.nav-separador {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.56rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: color-mix(in srgb, var(--v25-ouro, var(--accent)) 50%, var(--sidebar-text));
+  padding: 16px 12px 4px;
+  margin: 0;
+}
+.nav-separador::after { display: none; }
+
+/* Nav items: limpos, sem borda, sem gradiente */
+.nav-item {
+  margin: 1px 4px;
+  padding: 9px 12px;
+  border-radius: 4px;
+  font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
+  font-size: 0.88rem;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.nav-item .icone {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+  opacity: 0.65;
+  transition: opacity 0.18s ease;
+}
+.nav-item:hover {
+  background: color-mix(in srgb, var(--sidebar-text) 6%, transparent);
+  color: var(--sidebar-text-active);
+  transform: none;
+  box-shadow: none;
+}
+.nav-item:hover .icone {
+  opacity: 0.9;
+  transform: none;
+}
+
+/* Ativo: barra esquerda + cor de texto, sem gradiente de fundo */
+.nav-item.ativo {
+  background: color-mix(in srgb, var(--v25-ouro, var(--accent)) 10%, transparent);
+  color: var(--sidebar-text-active);
+  font-weight: 500;
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--v25-ouro, var(--accent)) 18%, transparent);
+}
+.nav-item.ativo .icone {
+  color: var(--v25-ouro, var(--accent));
+  opacity: 1;
+}
+.nav-item.ativo::before {
+  left: 0;
+  width: 2px;
+  height: 55%;
+  border-radius: 0 1px 1px 0;
+  background: var(--v25-ouro, var(--accent));
+  box-shadow: none;
+}
+.nav-item.ativo .rotulo {
+  letter-spacing: 0.01em;
+}
+
+/* Rodapé: simples, sem chip, sem backdrop */
+.sidebar-rodape {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  opacity: 0.5;
+  background: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* Colapsada: centraliza ícone, sem decoração extra */
+.sidebar.colapsada .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+  margin: 1px 2px;
+}
+.sidebar.colapsada .nav-item .rotulo { display: none; }
+.sidebar.colapsada .nav-item .icone { font-size: 1.1rem; margin: 0; }
+.sidebar.colapsada .nav-separador { display: none; }
+.sidebar.colapsada .sidebar-logo .rotulo { display: none; }
+.sidebar.colapsada .sidebar-rodape { opacity: 0; }
+
+/* Sobrepôr temas: sidebar unificada, sem variação por tema */
+body[data-tema="dourado"] .sidebar,
+body[data-tema="escuro"] .sidebar,
+body[data-tema="clean"] .sidebar {
+  background: var(--v25-madeira, var(--sidebar-bg));
+}
+body[data-tema="escuro"] .sidebar {
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--v25-ouro) 10%, transparent);
+}
+
+/* High contrast: preserva acessibilidade */
+body[data-high-contrast="true"] .sidebar {
+  background: #000;
+  box-shadow: inset -1px 0 0 #fff;
+}
+body[data-high-contrast="true"] .sidebar-logo .icone { filter: none; }
+body[data-high-contrast="true"] .nav-item.ativo {
+  background: rgba(255, 255, 0, 0.15);
+  color: #ffff00;
+  border-color: #ffff00;
+}
+body[data-high-contrast="true"] .nav-item.ativo::before { background: #ffff00; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item { transition: none; }
+  .btn-colapsar { transition: none; }
+}
