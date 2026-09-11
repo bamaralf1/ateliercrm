@@ -83,9 +83,9 @@ export class ConfiguracoesView extends BaseView {
     ];
 
     const temas = [
-      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#080603', bg: '#0f0b05', accent: '#c9a227', textBar: 'rgba(255,255,255,0.18)', contentBar: 'rgba(255,255,255,0.08)' },
-      { id: 'escuro', label: 'Moderno Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#0b0c0d', bg: '#131416', accent: '#b8bbb1', textBar: 'rgba(255,255,255,0.18)', contentBar: 'rgba(255,255,255,0.08)' },
-      { id: 'clean', label: 'Clean Minimalista', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#171614', bg: '#faf9f5', accent: '#1c1b17', textBar: 'rgba(0,0,0,0.12)', contentBar: 'rgba(0,0,0,0.07)' },
+      { id: 'dourado', label: 'Dourado', icone: '<i data-lucide="crown" aria-hidden="true"></i>', sidebar: '#241a10', bg: '#e9dec9', accent: '#a67c1e', textBar: 'rgba(0,0,0,0.14)', contentBar: 'rgba(0,0,0,0.07)' },
+      { id: 'escuro', label: 'Moderno Escuro', icone: '<i data-lucide="moon" aria-hidden="true"></i>', sidebar: '#0c0e0b', bg: '#0f1a15', accent: '#b98d2e', textBar: 'rgba(255,255,255,0.18)', contentBar: 'rgba(255,255,255,0.08)' },
+      { id: 'clean', label: 'Clean Minimalista', icone: '<i data-lucide="circle" aria-hidden="true"></i>', sidebar: '#2c2112', bg: '#f2e8d3', accent: '#9c3d1f', textBar: 'rgba(0,0,0,0.16)', contentBar: 'rgba(0,0,0,0.08)' },
     ];
 
     return `

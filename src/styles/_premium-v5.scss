@@ -2619,10 +2619,10 @@ body[data-high-contrast="true"] .fab-main { animation: none; box-shadow: 0 6px 1
    ========================================================================== */
 
 /* ---------- 1. Tipografia clássica: serif no corpo (vence o Inter da base) ---------- */
-body { font-family: var(--font-principal, 'Crimson Text', Georgia, serif); }
-body[data-tema][data-font-size] { --font-principal: 'Crimson Text', 'Georgia', serif; }
-body[data-tema] { --font-ui: 'Inter', 'Segoe UI', sans-serif; }
-:root { --font-ui: 'Inter', 'Segoe UI', sans-serif; }
+body { font-family: var(--font-principal, 'EB Garamond', Georgia, serif); }
+body[data-tema][data-font-size] { --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif; }
+body[data-tema] { --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif; }
+:root { --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif; }
 
 /* ---------- 2. Neutraliza o ruído índigo/ciano da camada base ---------- */
 body[data-tema] .view::before { background: none; }
@@ -2858,4 +2858,480 @@ body[data-high-contrast="true"] .view-cabecalho h2 {
   background-clip: initial;
   -webkit-text-fill-color: currentColor;
   color: var(--text);
+}
+
+/* ==========================================================================
+   PREMIUM V25 — MUSEO RENACIMIENTO (REFATORAÇÃO TOTAL, ESTILO MUSEU)
+   O app vira UMA GRANDE GALERIA: nada de pripples/facets modernos —
+   cada tema é uma sala:
+     • dourado — Salão do Museu  (gesso marfim, talha dourada, carvalho)
+     • escuro  — Galeria Noturna  (verde-museu, bronze, candeeiro)
+     • clean   — Atelier do Renascimento (pergaminho, tinta, sanguínea)
+   Linguagem: tipografia Garamond + Cinzel (capitais romanas), molduras
+   duplas (madeira + filete de ouro), placas douradas, catálogo de arquivo,
+   atmosfera de candeeiro. ÚLTIMA no cascade — vence V24/V23/V19.
+   Não altera layout — só pele/material/ornamento.
+   ========================================================================== */
+
+/* ---------- 1. Luz de sala: candeeiro + parede + sombra de chão ---------- */
+body[data-tema]::before {
+  background:
+    radial-gradient(640px 440px at 50% -8%,
+      color-mix(in srgb, var(--v25-ouro-clar) 8%, transparent) 0%, transparent 56%),
+    radial-gradient(900px 620px at 12% 4%,
+      color-mix(in srgb, var(--v25-ouro-clar) 4%, transparent) 0%, transparent 60%),
+    radial-gradient(130% 100% at 50% 116%,
+      rgba(0, 0, 0, 0.30) 0%, transparent 46%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--v25-gesso) 34%, transparent) 0%,
+      color-mix(in srgb, var(--v25-gesso) 14%, transparent) 100%);
+  animation: v25Respira 24s ease-in-out infinite;
+}
+@keyframes v25Respira {
+  0%, 100% { opacity: 0.93; }
+  50% { opacity: 1; }
+}
+/* grão = verniz do quadro (camada V25, sobre o grão de filme) */
+body[data-tema]::after {
+  opacity: 0.035;
+  animation: none;
+}
+
+/* ---------- 2. Moldura de quadro: madeira + filete de ouro ---------- */
+.card,
+.painel,
+.catalogo-filtros,
+.tabela-wrapper,
+.painel-filtros {
+  border: 1px solid color-mix(in srgb, var(--v25-madeira) 58%, transparent);
+  border-radius: 3px;
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--card) 100%, var(--v25-gesso)) 0%,
+      color-mix(in srgb, var(--card) 95%, var(--v25-gesso)) 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--v25-ouro) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.card:hover,
+.painel:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--v25-ouro) 62%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 12px color-mix(in srgb, var(--v25-ouro) 18%, rgba(0, 0, 0, 0.14));
+  transform: translateY(-1px);
+}
+body[data-tema] .kpi-card {
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--v25-madeira) 62%, transparent);
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--card) 100%, var(--v25-gesso)) 0%,
+      color-mix(in srgb, var(--card) 96%, var(--v25-gesso)) 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--v25-ouro) 44%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40),
+    0 1px 2px rgba(0, 0, 0, 0.09);
+}
+body[data-tema] .kpi-card:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--v25-ouro) 66%, transparent),
+    0 6px 14px color-mix(in srgb, var(--v25-ouro) 22%, rgba(0, 0, 0, 0.14));
+  transform: translateY(-2px);
+}
+
+/* ---------- 3. Tipografia romana: Cinzel para títulos, Garamond corpo ---------- */
+body {
+  font-family: var(--font-principal, 'EB Garamond', Georgia, serif);
+}
+.view .view-cabecalho h2 {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text);
+}
+/* ornamento sob o título: filete + losango dourado */
+.view-cabecalho h2::after {
+  content: '◆—◆—◆';
+  display: block;
+  font-size: 0.5rem;
+  line-height: 1;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: var(--v25-ouro);
+  margin-top: 0.4rem;
+  opacity: 0.9;
+  -webkit-text-fill-color: currentColor;
+}
+.view-cabecalho p.subtitulo {
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+body[data-tema] .view-cabecalho h2 { color: var(--text); }
+
+/* ---------- 4. Sidebar: painel de carvalho tingido + placas douradas ---------- */
+.sidebar {
+  background-image:
+    repeating-linear-gradient(90deg,
+      transparent 0 26px,
+      rgba(0, 0, 0, 0.07) 26px 27px,
+      transparent 27px 60px),
+    radial-gradient(140% 100% at 0% 0%,
+      color-mix(in srgb, var(--v25-madeira-clar) 55%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, var(--v25-madeira) 0%, color-mix(in srgb, var(--v25-madeira) 78%, #000) 100%);
+  box-shadow:
+    inset -1px 0 0 color-mix(in srgb, var(--v25-ouro) 22%, transparent),
+    inset 2px 0 0 rgba(255, 255, 255, 0.03);
+}
+.sidebar-logo .rotulo {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+}
+#sidebar .nav-separador {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--v25-ouro) 78%, var(--sidebar-text));
+}
+.nav-item {
+  font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+#sidebar .nav-item.ativo {
+  background-image: linear-gradient(180deg, var(--v25-ouro-clar) 0%, var(--v25-ouro) 46%, var(--v25-ouro-esc) 100%);
+  color: var(--accent-contrast);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 2px 6px color-mix(in srgb, var(--v25-ouro) 32%, rgba(0, 0, 0, 0.25));
+}
+#sidebar .nav-item.ativo::before {
+  background: linear-gradient(180deg, var(--accent-contrast), color-mix(in srgb, var(--accent-contrast) 60%, var(--v25-ouro)));
+}
+#sidebar .sidebar-topo::after {
+  background: linear-gradient(90deg, transparent, var(--v25-ouro) 50%, transparent);
+  height: 1px;
+}
+#sidebar .sidebar-rodape {
+  border-top: 1px solid color-mix(in srgb, var(--v25-ouro) 22%, transparent);
+}
+
+/* ---------- 5. Header: friso de museu ---------- */
+.header {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--v25-gesso) 26%, var(--card)) 0%,
+      color-mix(in srgb, var(--card) 96%, var(--v25-gesso)) 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+}
+.header h1 {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.header::after {
+  background: linear-gradient(90deg, transparent 0%,
+    color-mix(in srgb, var(--v25-ouro) 55%, transparent) 30%,
+    var(--v25-ouro) 50%,
+    color-mix(in srgb, var(--v25-ouro) 55%, transparent) 70%, transparent 100%);
+}
+.btn-header,
+.btn-notif {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 45%, transparent);
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+.select-tema {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 45%, transparent);
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+  font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
+  letter-spacing: 0.03em;
+}
+
+/* ---------- 6. Botões: placas de ouro e marfim gravado ---------- */
+body[data-tema] .btn-primario,
+body[data-tema] .btn-gradient {
+  background-image: linear-gradient(180deg, var(--v25-ouro-clar) 0%, var(--v25-ouro) 46%, var(--v25-ouro-esc) 100%);
+  background-color: transparent;
+  color: var(--accent-contrast);
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 72%, #000);
+  border-radius: 2px;
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+body[data-tema] .btn-primario:hover,
+body[data-tema] .btn-gradient:hover {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--v25-ouro-clar) 88%, #fff) 0%, var(--v25-ouro) 46%, var(--v25-ouro-esc) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 3px 10px color-mix(in srgb, var(--v25-ouro) 30%, rgba(0, 0, 0, 0.2));
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+}
+body[data-tema] .btn-primario:active,
+body[data-tema] .btn-gradient:active {
+  background-image: linear-gradient(180deg, var(--v25-ouro-esc) 0%, var(--v25-ouro) 100%);
+}
+.btn-secundario {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 46%, transparent);
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+  color: var(--text);
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  font-size: 0.66rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+.btn-secundario:hover {
+  border-color: color-mix(in srgb, var(--v25-ouro) 66%, transparent);
+  color: var(--v25-ouro-esc);
+}
+body[data-tema] .btn-danger,
+body[data-tema] .btn-perigo {
+  background-image: linear-gradient(180deg, var(--v25-laca-clar) 0%, var(--v25-laca) 100%);
+  color: #f4ead8;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  font-size: 0.66rem;
+}
+.btn-ghost,
+.btn-miniatura,
+.btn-icone-tabela,
+.btn-mover-esq,
+.btn-mover-dir {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 38%, transparent);
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.btn-ghost:hover,
+.btn-miniatura:hover,
+.btn-icone-tabela:hover {
+  border-color: color-mix(in srgb, var(--v25-ouro) 60%, transparent);
+  color: var(--v25-ouro-esc);
+}
+
+/* ---------- 7. Tabela: catálogo de arquivo (regras finas de ouro) ---------- */
+.tabela-wrapper thead th {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 74%, var(--v25-ouro));
+  background-color: color-mix(in srgb, var(--card) 96%, var(--v25-gesso));
+  border-bottom: 1px solid color-mix(in srgb, var(--v25-ouro) 42%, var(--card-border));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--v25-ouro) 26%, transparent);
+}
+.tabela-wrapper td {
+  border-bottom: 1px solid color-mix(in srgb, var(--v25-madeira) 22%, transparent);
+}
+.tabela-wrapper tbody tr:hover td {
+  box-shadow: inset 2px 0 0 var(--v25-ouro);
+  background-color: color-mix(in srgb, var(--v25-ouro) 5%, transparent);
+}
+
+/* ---------- 8. Campos: pergaminho e tinta (com filete dourado no foco) ---------- */
+.campo-form input,
+.campo-form select,
+.campo-form textarea,
+.input,
+.filter-input,
+.input-linha,
+.search-input {
+  background-color: color-mix(in srgb, var(--card) 88%, var(--v25-gesso));
+  border: 1px solid color-mix(in srgb, var(--v25-madeira) 42%, transparent);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.campo-form input:focus,
+.campo-form select:focus,
+.campo-form textarea:focus,
+.input:focus,
+.filter-input:focus,
+.search-input:focus {
+  border-color: var(--v25-ouro);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--v25-ouro) 22%, transparent),
+    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
+}
+.campo-form label {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  font-size: 0.6rem;
+}
+
+/* ---------- 9. Placas pequenas: tags, chips, abas, KPI ---------- */
+.tag-status,
+.badge,
+.chip-filtro,
+.tab-btn {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 40%, transparent);
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.chip-filtro.ativo,
+.tab-btn.ativo {
+  background-image: linear-gradient(180deg, var(--v25-ouro-clar) 0%, var(--v25-ouro) 46%, var(--v25-ouro-esc) 100%);
+  color: var(--accent-contrast);
+  border-color: color-mix(in srgb, var(--v25-ouro-esc) 70%, #000);
+}
+.kpi-rotulo,
+.kpi-label {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.kpi-valor {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.kpi-icone,
+.fi-icone {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro) 45%, transparent);
+  border-radius: 50%;
+  background-image: radial-gradient(circle at 50% 30%,
+    color-mix(in srgb, var(--card) 100%, #fff) 0%, var(--card) 100%);
+}
+
+/* ---------- 10. Modal: moldura dourada com passe-partout ---------- */
+.modal-caixa {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 68%, #000);
+  border-radius: 3px;
+  background-color: var(--card);
+  background-image: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 97%, var(--v25-gesso)) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--v25-ouro) 34%, transparent),
+    0 18px 60px rgba(0, 0, 0, 0.34);
+}
+.modal-caixa::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid color-mix(in srgb, var(--v25-ouro) 30%, transparent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.modal-caixa .modal-titulo {
+  font-family: var(--font-display, 'Cinzel', Georgia, serif);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* ---------- 11. Toast, FAB, scrollbar, seleção ---------- */
+.toast {
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 50%, transparent);
+  border-left-width: 3px;
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, var(--card) 0%, color-mix(in srgb, var(--card) 96%, var(--v25-gesso)) 100%);
+  color: var(--text);
+  font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
+}
+.fab-main {
+  background-image: linear-gradient(180deg, var(--v25-ouro-clar) 0%, var(--v25-ouro) 46%, var(--v25-ouro-esc) 100%);
+  color: var(--accent-contrast);
+  border: 1px solid color-mix(in srgb, var(--v25-ouro-esc) 72%, #000);
+}
+.view::-webkit-scrollbar-thumb,
+.tabela-wrapper::-webkit-scrollbar-thumb,
+.modal-caixa::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--v25-ouro) 0%, var(--v25-ouro-esc) 100%);
+  border-radius: 2px;
+}
+body[data-tema] ::selection {
+  background: color-mix(in srgb, var(--v25-ouro) 32%, transparent);
+  color: var(--text);
+}
+
+/* ---------- 12. Ajustes de superfície por sala ---------- */
+/* Salão do Museu: marfim claro, talha visível em tons de sépia */
+body[data-tema="dourado"] .kpi-card {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--card) 100%, var(--v25-marmore)) 0%,
+      color-mix(in srgb, var(--card) 94%, var(--v25-marmore)) 100%);
+}
+body[data-tema="dourado"] .header {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--v25-marmore) 32%, var(--card)) 0%,
+      color-mix(in srgb, var(--card) 96%, var(--v25-gesso)) 100%);
+}
+/* Galeria Noturna: verde-museu profundo, placas de bronze */
+body[data-tema="escuro"] .kpi-card,
+body[data-tema="escuro"] .card,
+body[data-tema="escuro"] .painel {
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--card) 100%, var(--v25-gesso)) 0%,
+      color-mix(in srgb, var(--card) 90%, var(--v25-gesso)) 100%);
+}
+body[data-tema="escuro"] .sidebar {
+  background-image:
+    linear-gradient(180deg, var(--v25-madeira) 0%, color-mix(in srgb, var(--v25-madeira) 70%, #000) 100%);
+}
+/* Atelier do Renascimento: pergaminho, sanguínea */
+body[data-tema="clean"] .btn-primario,
+body[data-tema="clean"] .btn-gradient {
+  background-image: linear-gradient(180deg, var(--v25-ouro-clar) 0%, var(--v25-ouro) 52%, var(--v25-ouro-esc) 100%);
+}
+
+/* ---------- 13. Guards V25 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  body[data-tema]::before, body[data-tema]::after { animation: none; }
+  .card, .painel, .kpi-card, .btn-primario, .btn-gradient, .btn-secundario, .fab-main {
+    transition: none;
+  }
+}
+body[data-high-contrast="true"] .view-cabecalho h2::after,
+body[data-high-contrast="true"] .modal-caixa::before,
+body[data-high-contrast="true"] #sidebar .nav-item.ativo,
+body[data-high-contrast="true"] .btn-primario,
+body[data-high-contrast="true"] .btn-gradient,
+body[data-high-contrast="true"] .fab-main {
+  background-image: none;
+}
+body[data-high-contrast="true"] .view-cabecalho h2::after { display: none; }
+body[data-high-contrast="true"] .modal-caixa::before { display: none; }
+body[data-high-contrast="true"] .btn-primario,
+body[data-high-contrast="true"] .btn-gradient,
+body[data-high-contrast="true"] .fab-main {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
 }
