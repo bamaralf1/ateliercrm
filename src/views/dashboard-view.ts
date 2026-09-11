@@ -85,7 +85,7 @@ export class DashboardView extends BaseView {
     return `
       <div class="view-cabecalho">
         <div>
-          <h2>${saudacao}${nomeArtista ? `, ${sanitizarHTML(nomeArtista.split(' ')[0])}` : ''} 👋</h2>
+          <h2>${saudacao}${nomeArtista ? `, ${sanitizarHTML(nomeArtista.split(' ')[0])}` : ''} <span class="dashboard-emoji" style="-webkit-text-fill-color: auto">👋</span></h2>
           <p class="subtitulo">Visão geral do seu ateliê · ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div class="dashboard-acoes">
