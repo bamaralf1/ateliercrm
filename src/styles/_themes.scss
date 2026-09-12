@@ -1,196 +1,191 @@
 // ═══════════════════════════════════════════════
-//  THEME DEFINITIONS — 3 MUSEUS RENASCENTISTAS (V25)
-//  Refatoração completa: cada tema é UMA SALA de um
-//  museu / ateliê renascentista clássico:
-//    1. dourado — "Salão do Museu": paredes de gesso marfim,
-//       molduras e talha dourada, tábuas de carvalho —— sala
-//       iluminada de galeria (Louvre).
-//    2. escuro  — "Galeria Noturna": paredes verde-museu
-//       (verde-de-gris) com bronze/ouro e candeeiros ——
-//       a galeria noturna de pintura a óleo.
-//    3. clean   — "Atelier do Renascimento": pergaminho,
-//       tinta sépia, sanguínea (giz vermelho), reagente fresco
-//       —— a prancheta do pintor renascentista.
-//  Tipografia: corpo em EB Garamond (renascentista), títulos
-//  em Cinzel (capitais romanas monumentais), UI fina serif.
+//  THEME DEFINITIONS — 3 MUSEUS RENASCENTISTAS (V30)
+//  Cores sóbrias e desaturadas. Cada tema é uma sala
+//  de museu com paleta contida e sem extravagância.
+//    1. dourado — "Salão de Honra": marfim envelhecido,
+//       ouro desbotado, carvalho escuro.
+//    2. escuro  — "Gabinete Noturno": grafite quente,
+//       bronze apagado, sombras profundas.
+//    3. clean   — "Estúdio do Mestre": pergaminho suave,
+//       sépia, sanguínea em detalhes.
+//  Tipografia: EB Garamond (corpo), Cinzel (títulos).
 // ═══════════════════════════════════════════════
 
 :root {
-  --bg: #efe7d8;
-  --text: #21190f;
-  --text-muted: #7d715d;
-  --accent: #a67c1e;
-  --accent-strong: #7a5710;
-  --accent-soft: rgba(166, 124, 30, 0.14);
-  --accent-bright: #c9a227;
-  --accent-glow: rgba(166, 124, 30, 0.22);
-  --accent-contrast: #f7f0dd;
-  --card: #f6efe2;
-  --card-border: rgba(60, 44, 22, 0.30);
-  --border: rgba(60, 44, 22, 0.22);
-  --bg-grad-1: #efe7d8;
-  --bg-grad-2: #e3d7c2;
-  --ambient: rgba(122, 87, 16, 0.06);
-  --sidebar-bg: #241a10;
-  --sidebar-vignette: rgba(201, 162, 39, 0.10);
-  --sidebar-text: #b9aa8c;
-  --sidebar-text-active: #f3e6c4;
+  --bg: #e8e0d0;
+  --text: #2a2218;
+  --text-muted: #7a6e5c;
+  --accent: #8b6914;
+  --accent-strong: #6b4f0e;
+  --accent-soft: rgba(139, 105, 20, 0.10);
+  --accent-bright: #a8831e;
+  --accent-glow: rgba(139, 105, 20, 0.12);
+  --accent-contrast: #f5efe3;
+  --card: #f2ebe0;
+  --card-border: rgba(60, 44, 22, 0.18);
+  --border: rgba(60, 44, 22, 0.14);
+  --bg-grad-1: #e8e0d0;
+  --bg-grad-2: #ddd3c1;
+  --ambient: rgba(122, 87, 16, 0.04);
+  --sidebar-bg: #1e1710;
+  --sidebar-vignette: rgba(139, 105, 20, 0.06);
+  --sidebar-text: #9e9078;
+  --sidebar-text-active: #e8dcc4;
   --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --radius: 3px;
   --radius-card: 4px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
-  --v27-frame-shadow: rgba(0, 0, 0, 0.18);
-  --v27-wall: #e9ddc9;
-  --v27-grain-opacity: 0.028;
-  --v27-parchment: #f0e6d0;
-  --v27-ink: #241c11;
-  --v27-sanguine: #9c3d1f;
-  --v27-frame-gold: #c9a227;
-  --v27-frame-wood: #3a2c1a;
-}
-
-/* ------------- Tokens de sala (perfil de ornamento por tema) ------------- */
-/* expressões de ouro / laca / madeira / gesso usadas na camada V25 */
-[data-tema="dourado"] {
-  --v25-ouro: #c9a227;
-  --v25-ouro-esc: #8f6a1a;
-  --v25-ouro-clar: #efd488;
-  --v25-laca: #5e3326;
-  --v25-laca-clar: #8c4b35;
-  --v25-madeira: #241a10;
-  --v25-madeira-clar: #3a2c1a;
-  --v25-gesso: #e8ddc9;
-  --v25-marmore: #d8cbb2;
-}
-
-[data-tema="escuro"] {
-  --v25-ouro: #c49a3a;
-  --v25-ouro-esc: #8a671c;
-  --v25-ouro-clar: #e9c97a;
-  --v25-laca: #6e2620;
-  --v25-laca-clar: #9c4a35;
-  --v25-madeira: #12120f;
-  --v25-madeira-clar: #26261f;
-  --v25-gesso: #18241e;
-  --v25-marmore: #22312a;
-}
-
-[data-tema="clean"] {
-  --v25-ouro: #9c3d1f;
-  --v25-ouro-esc: #6f2811;
-  --v25-ouro-clar: #c2633a;
-  --v25-laca: #5e3326;
-  --v25-laca-clar: #8c4b35;
-  --v25-madeira: #2c2112;
-  --v25-madeira-clar: #453418;
-  --v25-gesso: #efe6d2;
-  --v25-marmore: #e6d9c0;
-}
-
-/* 1. Dourado — Salão do Museu (gesso marfim, talha dourada, carvalho) */
-[data-tema="dourado"] {
-  --bg: #e9dec9;
-  --text: #21190f;
-  --text-muted: #7d715d;
-  --accent: #a67c1e;
-  --accent-strong: #7a5710;
-  --accent-soft: rgba(166, 124, 30, 0.14);
-  --accent-bright: #c9a227;
-  --accent-glow: rgba(166, 124, 30, 0.22);
-  --accent-contrast: #f7f0dd;
-  --card: #f6efe2;
-  --card-border: rgba(60, 44, 22, 0.30);
-  --border: rgba(60, 44, 22, 0.22);
-  --bg-grad-1: #e9dec9;
-  --bg-grad-2: #dccdb1;
-  --ambient: rgba(166, 124, 30, 0.07);
-  --sidebar-bg: #241a10;
-  --sidebar-vignette: rgba(143, 106, 26, 0.28);
-  --sidebar-text: #b9aa8c;
-  --sidebar-text-active: #f3e6c4;
-  --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
-  --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --v27-frame-shadow: rgba(60, 44, 22, 0.35);
-  --v27-wall: #e9dec9;
-  --v27-grain-opacity: 0.032;
-  --v27-parchment: #f6efe2;
-  --v27-ink: #21190f;
-  --v27-sanguine: #9c3d1f;
-  --v27-frame-gold: #c9a227;
-  --v27-frame-wood: #3a2c1a;
-}
-
-/* 2. Moderno Escuro — Galeria Noturna (verde-museu, bronze, vela) */
-[data-tema="escuro"] {
-  --bg: #0f1a15;
-  --text: #e9dfc4;
-  --text-muted: #9aa189;
-  --accent: #b98d2e;
-  --accent-strong: #8a671c;
-  --accent-soft: rgba(185, 141, 46, 0.16);
-  --accent-bright: #dfb95c;
-  --accent-glow: rgba(185, 141, 46, 0.26);
-  --accent-contrast: #171204;
-  --card: #16241d;
-  --card-border: rgba(196, 154, 58, 0.30);
-  --border: rgba(196, 154, 58, 0.22);
-  --bg-grad-1: #0f1a15;
-  --bg-grad-2: #0b120e;
-  --ambient: rgba(185, 141, 46, 0.06);
-  --sidebar-bg: #0c0e0b;
-  --sidebar-vignette: rgba(201, 162, 39, 0.16);
-  --sidebar-text: #a8ab93;
-  --sidebar-text-active: #ebd9a0;
-  --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
-  --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --v27-frame-shadow: rgba(0, 0, 0, 0.42);
-  --v27-wall: #0f1a15;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --v27-frame-shadow: rgba(0, 0, 0, 0.15);
+  --v27-wall: #e5dcc9;
   --v27-grain-opacity: 0.022;
-  --v27-parchment: #16241d;
-  --v27-ink: #e9dfc4;
-  --v27-sanguine: #9c4a35;
-  --v27-frame-gold: #c49a3a;
-  --v27-frame-wood: #26261f;
+  --v27-parchment: #ede4d3;
+  --v27-ink: #2a2218;
+  --v27-sanguine: #8b3a1a;
+  --v27-frame-gold: #a8831e;
+  --v27-frame-wood: #32261a;
 }
 
-/* 3. Clean Minimalista — Atelier do Renascimento (pergaminho, tinta, sanguínea) */
+/* ------------- Tokens de sala (por tema) ------------- */
+[data-tema="dourado"] {
+  --v25-ouro: #a8831e;
+  --v25-ouro-esc: #7a5e14;
+  --v25-ouro-clar: #d4b86a;
+  --v25-laca: #5e3326;
+  --v25-laca-clar: #7a4838;
+  --v25-madeira: #1e1710;
+  --v25-madeira-clar: #32261a;
+  --v25-gesso: #e5dcc9;
+  --v25-marmore: #d5c8ae;
+}
+
+[data-tema="escuro"] {
+  --v25-ouro: #a07828;
+  --v25-ouro-esc: #6e5420;
+  --v25-ouro-clar: #c8a458;
+  --v25-laca: #5a2218;
+  --v25-laca-clar: #7a3828;
+  --v25-madeira: #101210;
+  --v25-madeira-clar: #1e201c;
+  --v25-gesso: #151c18;
+  --v25-marmore: #1e2822;
+}
+
 [data-tema="clean"] {
-  --bg: #f2e8d3;
-  --text: #241c11;
-  --text-muted: #85755c;
-  --accent: #9c3d1f;
-  --accent-strong: #6f2811;
-  --accent-soft: rgba(156, 61, 31, 0.13);
-  --accent-bright: #c2633a;
-  --accent-glow: rgba(156, 61, 31, 0.20);
-  --accent-contrast: #f7ede0;
-  --card: #f6ecd7;
-  --card-border: rgba(50, 34, 16, 0.32);
-  --border: rgba(50, 34, 16, 0.24);
-  --bg-grad-1: #f2e8d3;
-  --bg-grad-2: #e8d9bd;
-  --ambient: rgba(156, 61, 31, 0.05);
-  --sidebar-bg: #2c2112;
-  --sidebar-vignette: rgba(194, 99, 58, 0.18);
-  --sidebar-text: #c2b295;
-  --sidebar-text-active: #f7ecd6;
+  --v25-ouro: #7a3820;
+  --v25-ouro-esc: #5a2815;
+  --v25-ouro-clar: #a85838;
+  --v25-laca: #4e2a1a;
+  --v25-laca-clar: #6a3828;
+  --v25-madeira: #261c10;
+  --v25-madeira-clar: #3a2c18;
+  --v25-gesso: #e8decc;
+  --v25-marmore: #ddd0b8;
+}
+
+/* 1. Dourado — Salão de Honra */
+[data-tema="dourado"] {
+  --bg: #e5dcc9;
+  --text: #2a2218;
+  --text-muted: #7a6e5c;
+  --accent: #8b6914;
+  --accent-strong: #6b4f0e;
+  --accent-soft: rgba(139, 105, 20, 0.10);
+  --accent-bright: #a8831e;
+  --accent-glow: rgba(139, 105, 20, 0.12);
+  --accent-contrast: #f5efe3;
+  --card: #f2ebe0;
+  --card-border: rgba(60, 44, 22, 0.18);
+  --border: rgba(60, 44, 22, 0.14);
+  --bg-grad-1: #e5dcc9;
+  --bg-grad-2: #d8cdb5;
+  --ambient: rgba(139, 105, 20, 0.05);
+  --sidebar-bg: #1e1710;
+  --sidebar-vignette: rgba(139, 105, 20, 0.06);
+  --sidebar-text: #9e9078;
+  --sidebar-text-active: #e8dcc4;
   --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
   --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
-  --v27-frame-shadow: rgba(50, 34, 16, 0.30);
-  --v27-wall: #f2e8d3;
-  --v27-grain-opacity: 0.035;
-  --v27-parchment: #f6ecd7;
-  --v27-ink: #241c11;
-  --v27-sanguine: #9c3d1f;
-  --v27-frame-gold: #c2633a;
-  --v27-frame-wood: #453418;
+  --v27-frame-shadow: rgba(50, 36, 20, 0.28);
+  --v27-wall: #e5dcc9;
+  --v27-grain-opacity: 0.025;
+  --v27-parchment: #f2ebe0;
+  --v27-ink: #2a2218;
+  --v27-sanguine: #8b3a1a;
+  --v27-frame-gold: #a8831e;
+  --v27-frame-wood: #32261a;
+}
+
+/* 2. Gabinete Noturno */
+[data-tema="escuro"] {
+  --bg: #0e1310;
+  --text: #d8d0c0;
+  --text-muted: #7a7e6c;
+  --accent: #9a7828;
+  --accent-strong: #6e5420;
+  --accent-soft: rgba(154, 120, 40, 0.10);
+  --accent-bright: #b89438;
+  --accent-glow: rgba(154, 120, 40, 0.14);
+  --accent-contrast: #141208;
+  --card: #141c17;
+  --card-border: rgba(160, 120, 40, 0.16);
+  --border: rgba(160, 120, 40, 0.12);
+  --bg-grad-1: #0e1310;
+  --bg-grad-2: #0a0e0b;
+  --ambient: rgba(154, 120, 40, 0.04);
+  --sidebar-bg: #0a0d0a;
+  --sidebar-vignette: rgba(160, 120, 40, 0.06);
+  --sidebar-text: #7a7e6c;
+  --sidebar-text-active: #d0c8a8;
+  --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --v27-frame-shadow: rgba(0, 0, 0, 0.35);
+  --v27-wall: #0e1310;
+  --v27-grain-opacity: 0.018;
+  --v27-parchment: #141c17;
+  --v27-ink: #d8d0c0;
+  --v27-sanguine: #8b4028;
+  --v27-frame-gold: #a07828;
+  --v27-frame-wood: #1e201c;
+}
+
+/* 3. Estúdio do Mestre */
+[data-tema="clean"] {
+  --bg: #efe5d2;
+  --text: #2c2215;
+  --text-muted: #7a6c52;
+  --accent: #7a3820;
+  --accent-strong: #5a2815;
+  --accent-soft: rgba(122, 56, 32, 0.08);
+  --accent-bright: #a85838;
+  --accent-glow: rgba(122, 56, 32, 0.12);
+  --accent-contrast: #f5ede0;
+  --card: #f0e6d5;
+  --card-border: rgba(50, 34, 16, 0.20);
+  --border: rgba(50, 34, 16, 0.15);
+  --bg-grad-1: #efe5d2;
+  --bg-grad-2: #e2d5be;
+  --ambient: rgba(122, 56, 32, 0.04);
+  --sidebar-bg: #261c10;
+  --sidebar-vignette: rgba(122, 56, 32, 0.06);
+  --sidebar-text: #9e8e72;
+  --sidebar-text-active: #e8dcc0;
+  --font-principal: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-serif: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --font-ui: 'EB Garamond', 'Crimson Text', Georgia, serif;
+  --v27-frame-shadow: rgba(40, 28, 14, 0.22);
+  --v27-wall: #efe5d2;
+  --v27-grain-opacity: 0.028;
+  --v27-parchment: #f0e6d5;
+  --v27-ink: #2c2215;
+  --v27-sanguine: #7a3820;
+  --v27-frame-gold: #a85838;
+  --v27-frame-wood: #3a2c18;
 }

@@ -3337,55 +3337,70 @@ body[data-high-contrast="true"] .fab-main {
 }
 
 /* ================================================================
-   V29 — SIDEBAR MINIMALISTA RENASCENTISTA
-   Conceito: Painel de Intarsia — madeira escura, linhas limpas,
-   sem glow, sem aurora, sem gradientes. Tipografia e proporção.
+   V30 — SIDEBAR REIMAGINADA
+   Conceito: Painel de madeira escura com entalhes minimalistas.
+   Sem gradientes multicamada, sem glow, sem aurora.
+   Tudo plano, limpo, funcional. A sobriedade é o ornamento.
    ================================================================ */
 
-/* Fundo: madeira sólida, sem gradientes multicamada */
+/* ── Fundo: madeira sólida ── */
 .sidebar {
-  background: var(--v25-madeira, var(--sidebar-bg));
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--v25-ouro, var(--accent)) 14%, transparent);
+  background: var(--sidebar-bg);
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--sidebar-text) 8%, transparent);
 }
 .sidebar::after { display: none; }
 
-/* Topo: limpo, sem hairline animada */
+/* ── Topo: logo + colapsar ── */
 .sidebar-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 16px 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
 }
 .sidebar-topo::after { display: none; }
 
-/* Logo: sem glow, sem drop-shadow, só texto */
 .sidebar-logo {
+  display: flex;
+  align-items: center;
   gap: 8px;
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--sidebar-text-active);
+  white-space: nowrap;
+  overflow: hidden;
 }
 .sidebar-logo .icone {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  color: var(--sidebar-text);
+  opacity: 0.7;
   filter: none;
-  color: var(--v25-ouro, var(--accent));
-  opacity: 0.8;
+  flex-shrink: 0;
 }
 .sidebar-logo .rotulo {
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
   -webkit-text-fill-color: initial;
-  color: var(--sidebar-text-active);
+  color: inherit;
   font-family: inherit;
 }
+.sidebar.colapsada .sidebar-logo .rotulo { display: none; }
 
-/* Botão colapsar: discreto */
 .btn-colapsar {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  font-size: 1rem;
+  padding: 4px 6px;
+  border-radius: 3px;
   opacity: 0.5;
-  border-radius: 4px;
-  transition: opacity 0.2s ease;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
 }
 .btn-colapsar:hover {
   opacity: 1;
@@ -3393,131 +3408,156 @@ body[data-high-contrast="true"] .fab-main {
   transform: none;
 }
 
-/* Lista: espaçamento generoso */
+/* ── Lista de navegação ── */
 .nav-lista {
-  padding: 8px 6px;
+  list-style: none;
+  padding: 6px 4px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
-/* Separador: apenas texto, sem linha gradiente */
+/* ── Separador de grupo ── */
 .nav-separador {
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 0.56rem;
+  font-size: 0.52rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--v25-ouro, var(--accent)) 50%, var(--sidebar-text));
-  padding: 16px 12px 4px;
+  letter-spacing: 0.22em;
+  color: var(--sidebar-text);
+  opacity: 0.4;
+  padding: 14px 10px 3px;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .nav-separador::after { display: none; }
+.sidebar.colapsada .nav-separador { display: none; }
 
-/* Nav items: limpos, sem borda, sem gradiente */
+/* ── Item de navegação ── */
 .nav-item {
-  margin: 1px 4px;
-  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
   border-radius: 4px;
+  margin: 1px 0;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
   font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 400;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em;
   border: 1px solid transparent;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.15s ease, color 0.15s ease;
+  position: relative;
 }
+
 .nav-item .icone {
-  font-size: 1rem;
-  width: 20px;
+  font-size: 0.95rem;
+  width: 18px;
   text-align: center;
-  opacity: 0.65;
-  transition: opacity 0.18s ease;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
 }
+
+.nav-item .rotulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar.colapsada .nav-item {
+  justify-content: center;
+  padding: 9px 0;
+  margin: 1px 2px;
+}
+.sidebar.colapsada .nav-item .rotulo { display: none; }
+.sidebar.colapsada .nav-item .icone { font-size: 1.05rem; margin: 0; opacity: 0.7; }
+
+/* Hover: leve aumento de contraste */
 .nav-item:hover {
   background: color-mix(in srgb, var(--sidebar-text) 6%, transparent);
   color: var(--sidebar-text-active);
   transform: none;
   box-shadow: none;
 }
-.nav-item:hover .icone {
-  opacity: 0.9;
-  transform: none;
-}
+.nav-item:hover .icone { opacity: 0.85; }
 
-/* Ativo: barra esquerda + cor de texto, sem gradiente de fundo */
+/* Ativo: barra esquerda sutil + texto claro */
 .nav-item.ativo {
-  background: color-mix(in srgb, var(--v25-ouro, var(--accent)) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   color: var(--sidebar-text-active);
   font-weight: 500;
+  border-color: color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: none;
-  border-color: color-mix(in srgb, var(--v25-ouro, var(--accent)) 18%, transparent);
 }
 .nav-item.ativo .icone {
-  color: var(--v25-ouro, var(--accent));
+  color: var(--accent);
   opacity: 1;
 }
 .nav-item.ativo::before {
+  content: '';
+  position: absolute;
   left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 2px;
-  height: 55%;
+  height: 50%;
   border-radius: 0 1px 1px 0;
-  background: var(--v25-ouro, var(--accent));
+  background: var(--accent);
   box-shadow: none;
 }
-.nav-item.ativo .rotulo {
-  letter-spacing: 0.01em;
-}
 
-/* Rodapé: simples, sem chip, sem backdrop */
+/* ── Rodapé ── */
 .sidebar-rodape {
-  margin: 0;
-  padding: 10px 14px;
-  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
-  font-size: 0.62rem;
+  padding: 8px 12px;
+  font-size: 0.58rem;
   letter-spacing: 0.04em;
   line-height: 1.5;
-  opacity: 0.5;
+  color: var(--sidebar-text);
+  opacity: 0.4;
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
   background: none;
   border-radius: 0;
   backdrop-filter: none;
   border-left: none;
   border-right: none;
   border-bottom: none;
+  margin: 0;
 }
-
-/* Colapsada: centraliza ícone, sem decoração extra */
-.sidebar.colapsada .nav-item {
-  justify-content: center;
-  padding: 10px 0;
-  margin: 1px 2px;
-}
-.sidebar.colapsada .nav-item .rotulo { display: none; }
-.sidebar.colapsada .nav-item .icone { font-size: 1.1rem; margin: 0; }
-.sidebar.colapsada .nav-separador { display: none; }
-.sidebar.colapsada .sidebar-logo .rotulo { display: none; }
 .sidebar.colapsada .sidebar-rodape { opacity: 0; }
 
-/* Sobrepôr temas: sidebar unificada, sem variação por tema */
+/* ── Unificação: todos os temas usam a mesma sidebar ── */
 body[data-tema="dourado"] .sidebar,
 body[data-tema="escuro"] .sidebar,
 body[data-tema="clean"] .sidebar {
-  background: var(--v25-madeira, var(--sidebar-bg));
-}
-body[data-tema="escuro"] .sidebar {
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--v25-ouro) 10%, transparent);
+  background: var(--sidebar-bg);
 }
 
-/* High contrast: preserva acessibilidade */
+/* ── High contrast ── */
 body[data-high-contrast="true"] .sidebar {
   background: #000;
   box-shadow: inset -1px 0 0 #fff;
 }
-body[data-high-contrast="true"] .sidebar-logo .icone { filter: none; }
+body[data-high-contrast="true"] .sidebar-logo .icone { filter: none; opacity: 1; }
 body[data-high-contrast="true"] .nav-item.ativo {
   background: rgba(255, 255, 0, 0.15);
   color: #ffff00;
   border-color: #ffff00;
 }
 body[data-high-contrast="true"] .nav-item.ativo::before { background: #ffff00; }
+body[data-high-contrast="true"] .sidebar-logo .rotulo {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: #ffffff;
+}
 
-/* Reduced motion */
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .nav-item { transition: none; }
   .btn-colapsar { transition: none; }
