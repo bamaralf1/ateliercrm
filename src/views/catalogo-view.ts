@@ -273,10 +273,6 @@ export class CatalogoView extends BaseView {
             <path d="M 288,12 Q 292,185 288,358 Q 284,185 288,12" fill="rgba(0,0,0,0.10)"/>
             <!-- Inner gold filet -->
             <rect x="20" y="20" width="260" height="330" rx="1" fill="none" stroke="url(#gold-${svgId})" stroke-width="1.5"/>
-            <!-- Inner wood edge -->
-            <rect x="23" y="23" width="254" height="324" rx="1" fill="var(--v27-frame-wood, #3a2c1a)"/>
-            <!-- Inner shadow -->
-            <rect x="23" y="23" width="254" height="324" rx="1" fill="url(#inner-${svgId})"/>
           </svg>
           <div class="imagem-frame-container">
             <img class="imagem-obra-museu lazy-img idb-placeholder" src="${this.obterImagem(o)}" alt="${sanitizarHTML(o.titulo)}" loading="lazy"${this.imgDataIdb(o)}>
