@@ -598,3 +598,24 @@ body[data-tema] .view-cabecalho .subtitulo {
   letter-spacing: 0 !important;
 }
 body[data-tema] .view-cabecalho p.subtitulo::before { display: none !important; }
+
+/* ── V30 OVERRIDE: REMOVER moldura dos KPIs e widgets ──────── */
+body[data-view="dashboard"] .kpi-card {
+  border: none !important;
+  border-left: 3px solid var(--kpi-cor) !important;
+  box-shadow: var(--shadow) !important;
+  background-image: none !important;
+  background-color: var(--card) !important;
+  border-radius: var(--radius) !important;
+  text-align: left !important;
+  padding: 18px !important;
+}
+body[data-view="dashboard"] .kpi-card::before { display: none !important; }
+body[data-view="dashboard"] .kpi-card::after { display: none !important; }
+body[data-view="dashboard"] .widget-card {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow) !important;
+  background-image: none !important;
+  background-color: var(--card) !important;
+}
