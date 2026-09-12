@@ -573,3 +573,28 @@ body[data-high-contrast="true"] .diario-card::before {
 body[data-high-contrast="true"] .kpi-valor {
   text-shadow: none !important;
 }
+
+/* ── V30 OVERRIDE: GREETING — último no cascade ────────────── */
+body[data-tema] .view-cabecalho h2 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.3 !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: var(--text) !important;
+  color: var(--text) !important;
+  font-family: var(--font-principal, 'EB Garamond', Georgia, serif) !important;
+}
+body[data-tema] .view-cabecalho h2::after { display: none !important; }
+body[data-tema] .view-cabecalho p.subtitulo,
+body[data-tema] .view-cabecalho .subtitulo {
+  font-size: 0.72rem !important;
+  font-style: normal !important;
+  opacity: 0.55 !important;
+  margin-top: 2px !important;
+  letter-spacing: 0 !important;
+}
+body[data-tema] .view-cabecalho p.subtitulo::before { display: none !important; }

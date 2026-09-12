@@ -3337,30 +3337,30 @@ body[data-high-contrast="true"] .fab-main {
 }
 
 /* ================================================================
-   V30 — SIDEBAR REIMAGINADA
-   Conceito: Painel de madeira escura com entalhes minimalistas.
-   Sem gradientes multicamada, sem glow, sem aurora.
-   Tudo plano, limpo, funcional. A sobriedade é o ornamento.
+   V30 — SIDEBAR + GREETING OVERRIDE
+   Prioridade máxima: body[data-tema] para vencer qualquer
+   regra base de mesma especificidade.
    ================================================================ */
 
-/* ── Fundo: madeira sólida ── */
-.sidebar {
-  background: var(--sidebar-bg);
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+/* ── SIDEBAR: body[data-tema] para especificidade (0,2,0) ── */
+body[data-tema] .sidebar {
+  background: var(--sidebar-bg) !important;
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--sidebar-text) 8%, transparent) !important;
+  border-radius: 0;
 }
-.sidebar::after { display: none; }
+body[data-tema] .sidebar::after { display: none !important; }
+body[data-tema] .sidebar::before { display: none !important; }
 
-/* ── Topo: logo + colapsar ── */
-.sidebar-topo {
+body[data-tema] .sidebar-topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+  padding: 14px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 6%, transparent);
 }
-.sidebar-topo::after { display: none; }
+body[data-tema] .sidebar-topo::after { display: none !important; }
 
-.sidebar-logo {
+body[data-tema] .sidebar-logo {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3373,153 +3373,145 @@ body[data-high-contrast="true"] .fab-main {
   white-space: nowrap;
   overflow: hidden;
 }
-.sidebar-logo .icone {
+body[data-tema] .sidebar-logo .icone {
   font-size: 1rem;
   color: var(--sidebar-text);
-  opacity: 0.7;
+  opacity: 0.6;
   filter: none;
   flex-shrink: 0;
 }
-.sidebar-logo .rotulo {
-  background: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
-  -webkit-text-fill-color: initial;
+body[data-tema] .sidebar-logo .rotulo {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
   color: inherit;
   font-family: inherit;
 }
-.sidebar.colapsada .sidebar-logo .rotulo { display: none; }
+body[data-tema] .sidebar.colapsada .sidebar-logo .rotulo { display: none; }
 
-.btn-colapsar {
+body[data-tema] .btn-colapsar {
   background: transparent;
   border: none;
   color: var(--sidebar-text);
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 4px 6px;
   border-radius: 3px;
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: pointer;
   transition: opacity 0.15s ease;
   flex-shrink: 0;
 }
-.btn-colapsar:hover {
-  opacity: 1;
-  background: color-mix(in srgb, var(--sidebar-text) 8%, transparent);
-  transform: none;
+body[data-tema] .btn-colapsar:hover {
+  opacity: 0.9;
+  background: color-mix(in srgb, var(--sidebar-text) 6%, transparent);
 }
 
-/* ── Lista de navegação ── */
-.nav-lista {
+body[data-tema] .nav-lista {
   list-style: none;
-  padding: 6px 4px;
+  padding: 4px 3px;
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
 }
 
-/* ── Separador de grupo ── */
-.nav-separador {
+body[data-tema] .nav-separador {
   font-family: var(--font-display, 'Cinzel', Georgia, serif);
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--sidebar-text);
-  opacity: 0.4;
-  padding: 14px 10px 3px;
+  opacity: 0.35;
+  padding: 12px 10px 2px;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
 }
-.nav-separador::after { display: none; }
-.sidebar.colapsada .nav-separador { display: none; }
+body[data-tema] .nav-separador::after { display: none !important; }
+body[data-tema] .nav-separador::before { display: none !important; }
+body[data-tema] .sidebar.colapsada .nav-separador { display: none; }
 
-/* ── Item de navegação ── */
-.nav-item {
+body[data-tema] .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 4px;
+  padding: 7px 10px;
+  border-radius: 3px;
   margin: 1px 0;
   color: var(--sidebar-text);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   font-family: var(--font-ui, 'EB Garamond', Georgia, serif);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 400;
   letter-spacing: 0.01em;
-  border: 1px solid transparent;
+  border: none;
+  background: transparent;
   transition: background 0.15s ease, color 0.15s ease;
   position: relative;
+  transform: none !important;
 }
-
-.nav-item .icone {
-  font-size: 0.95rem;
+body[data-tema] .nav-item .icone {
+  font-size: 0.92rem;
   width: 18px;
   text-align: center;
   flex-shrink: 0;
-  opacity: 0.55;
+  opacity: 0.5;
   transition: opacity 0.15s ease;
+  transform: none !important;
 }
+body[data-tema] .nav-item .rotulo { flex: 1; min-width: 0; }
 
-.nav-item .rotulo {
-  flex: 1;
-  min-width: 0;
-}
-
-.sidebar.colapsada .nav-item {
+body[data-tema] .sidebar.colapsada .nav-item {
   justify-content: center;
-  padding: 9px 0;
+  padding: 8px 0;
   margin: 1px 2px;
 }
-.sidebar.colapsada .nav-item .rotulo { display: none; }
-.sidebar.colapsada .nav-item .icone { font-size: 1.05rem; margin: 0; opacity: 0.7; }
+body[data-tema] .sidebar.colapsada .nav-item .rotulo { display: none; }
+body[data-tema] .sidebar.colapsada .nav-item .icone { font-size: 1rem; margin: 0; opacity: 0.6; }
 
-/* Hover: leve aumento de contraste */
-.nav-item:hover {
-  background: color-mix(in srgb, var(--sidebar-text) 6%, transparent);
+body[data-tema] .nav-item:hover {
+  background: color-mix(in srgb, var(--sidebar-text) 5%, transparent);
   color: var(--sidebar-text-active);
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
-.nav-item:hover .icone { opacity: 0.85; }
+body[data-tema] .nav-item:hover .icone { opacity: 0.8; }
 
-/* Ativo: barra esquerda sutil + texto claro */
-.nav-item.ativo {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  color: var(--sidebar-text-active);
+body[data-tema] .nav-item.ativo {
+  background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
+  color: var(--sidebar-text-active) !important;
   font-weight: 500;
-  border-color: color-mix(in srgb, var(--accent) 12%, transparent);
-  box-shadow: none;
+  border: none;
+  box-shadow: none !important;
 }
-.nav-item.ativo .icone {
+body[data-tema] .nav-item.ativo .icone {
   color: var(--accent);
   opacity: 1;
 }
-.nav-item.ativo::before {
+body[data-tema] .nav-item.ativo::before {
   content: '';
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 2px;
-  height: 50%;
+  height: 48%;
   border-radius: 0 1px 1px 0;
   background: var(--accent);
   box-shadow: none;
 }
 
-/* ── Rodapé ── */
-.sidebar-rodape {
+body[data-tema] .sidebar-rodape {
   padding: 8px 12px;
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   letter-spacing: 0.04em;
   line-height: 1.5;
   color: var(--sidebar-text);
-  opacity: 0.4;
-  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 8%, transparent);
+  opacity: 0.35;
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 6%, transparent);
   white-space: nowrap;
   overflow: hidden;
   background: none;
@@ -3530,35 +3522,46 @@ body[data-high-contrast="true"] .fab-main {
   border-bottom: none;
   margin: 0;
 }
-.sidebar.colapsada .sidebar-rodape { opacity: 0; }
+body[data-tema] .sidebar.colapsada .sidebar-rodape { opacity: 0; }
 
-/* ── Unificação: todos os temas usam a mesma sidebar ── */
-body[data-tema="dourado"] .sidebar,
-body[data-tema="escuro"] .sidebar,
-body[data-tema="clean"] .sidebar {
-  background: var(--sidebar-bg);
-}
-
-/* ── High contrast ── */
 body[data-high-contrast="true"] .sidebar {
-  background: #000;
-  box-shadow: inset -1px 0 0 #fff;
+  background: #000 !important;
+  box-shadow: inset -1px 0 0 #fff !important;
 }
 body[data-high-contrast="true"] .sidebar-logo .icone { filter: none; opacity: 1; }
+body[data-high-contrast="true"] .sidebar-logo .rotulo {
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: #fff;
+}
 body[data-high-contrast="true"] .nav-item.ativo {
-  background: rgba(255, 255, 0, 0.15);
-  color: #ffff00;
-  border-color: #ffff00;
+  background: rgba(255, 255, 0, 0.15) !important;
+  color: #ffff00 !important;
 }
 body[data-high-contrast="true"] .nav-item.ativo::before { background: #ffff00; }
-body[data-high-contrast="true"] .sidebar-logo .rotulo {
-  background: none;
-  -webkit-text-fill-color: currentColor;
-  color: #ffffff;
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-tema] .nav-item { transition: none; }
+  body[data-tema] .btn-colapsar { transition: none; }
 }
 
-/* ── Reduced motion ── */
-@media (prefers-reduced-motion: reduce) {
-  .nav-item { transition: none; }
-  .btn-colapsar { transition: none; }
+/* ── GREETING: reduzir tamanho ── */
+body[data-tema] .view-cabecalho h2 {
+  font-size: 1.1rem !important;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: var(--text) !important;
+  color: var(--text);
 }
+body[data-tema] .view-cabecalho h2::after { display: none !important; }
+body[data-tema] .view-cabecalho p.subtitulo {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-top: 2px;
+  display: block;
+}
+body[data-tema] .view-cabecalho p.subtitulo::before { display: none !important; }
